@@ -29,6 +29,9 @@ SAMMENLIGN = [
     ("/mobilabonnement-til-boern/", "Til børn", "Trygt, billigt og uden overraskelser"),
     ("/mobilabonnement-til-unge/", "Til unge og studerende", "Meget data, ingen binding"),
     ("/mobilabonnement-uden-binding/", "Uden binding", "Opsig når du vil"),
+    ("/mobilabonnement-med-streaming/tjenester/", "Streaming: vælg tjeneste",
+     "Netflix, HBO Max, Disney+, Viaplay …"),
+    ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor og 3"),
 ]
 
 MENU = [
@@ -58,6 +61,16 @@ def gb_tekst(gb):
     return f"{gb} GB" if gb > 0 else "Ingen data"
 
 
+def gns12(a):
+    """Reel gennemsnitspris pr. md. over 12 mdr. inkl. intropris og oprettelse."""
+    if a.get("forbrugsafregnet"):
+        return None
+    m = min(a.get("intro_mdr") or 0, 12)
+    ip = a.get("intro_pris")
+    total = (ip * m if (ip is not None and m) else 0) + a["pris"] * (12 - m)
+    return (total + a.get("oprettelse", 0)) / 12
+
+
 def netlabel(u):
     """Kort netværksetiket til tabeller. MVNO = udbyder uden eget net."""
     n = u.get("netvaerk", "")
@@ -65,7 +78,7 @@ def netlabel(u):
         return "MVNO"
     if n == "3":
         return "Nettet fra 3"
-    return f"{e(n)}s net"
+    return f"{e(n)}-nettet" if n == "TDC NET" else f"{e(n)}s net"
 
 
 # ---------------------------------------------------------------- HTML-shell
@@ -227,6 +240,8 @@ def fod(opdateret):
           <li><a href="/mobilabonnement-til-boern/">Til børn</a></li>
           <li><a href="/mobilabonnement-til-unge/">Til unge og studerende</a></li>
           <li><a href="/mobilabonnement-uden-binding/">Uden binding</a></li>
+          <li><a href="/mobilabonnement-med-streaming/tjenester/">Streaming pr. tjeneste</a></li>
+          <li><a href="/netvaerk/">Mobilnetværk</a></li>
           <li><a href="/udbydere/">Alle udbydere</a></li>
         </ul>
       </div>
@@ -341,11 +356,12 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None):
     styrke = 4 if a["data_gb"] >= 900 else (3 if a["data_gb"] >= 50 else (2 if a["data_gb"] >= 15 else (1 if a["data_gb"] > 0 else 0)))
     bjaelker = "".join(f'<i class="{"t" if i < styrke else ""}"></i>' for i in range(4))
 
-    aar = a["pris"] * 12 + a.get("oprettelse", 0)
-    aar_tekst = "Efter forbrug" if forbrug else f"{kr(aar)} kr."
+    g = gns12(a)
+    aar = (g * 12) if g is not None else 0
+    aar_tekst = "Efter forbrug" if forbrug else f"{kr(g)} kr."
     spar = ""
     if gnsnit_aar and not forbrug and aar < gnsnit_aar:
-        spar = f'<span class="spar">Spar {kr(gnsnit_aar - aar)} kr./år</span>'
+        spar = f'<span class="spar">{kr((gnsnit_aar - aar) / 12)} kr. under snittet</span>'
 
     maerker = ""
     if billigst_pr_gb:
@@ -363,12 +379,17 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None):
     if a.get("femg") and a["data_gb"] > 0:
         chips += '<span class="mini">5G</span>'
 
-    foer = f'<s>{kr(a["foer_pris"])}</s>' if a.get("foer_pris") else ""
-    prisvisning = "Pr. forbrug" if forbrug else f'{foer}<b>{kr(a["pris"])}</b><span class="pr">kr./md.</span>'
+    if forbrug:
+        prisvisning = "Pr. forbrug"
+    elif a.get("intro_pris") is not None and a.get("intro_mdr"):
+        prisvisning = (f'<span class="intro">{kr(a["intro_pris"])} kr. i {a["intro_mdr"]} mdr.</span>'
+                       f'<b>{kr(a["pris"])}</b><span class="pr">kr./md. herefter</span>')
+    else:
+        prisvisning = f'<b>{kr(a["pris"])}</b><span class="pr">kr./md.</span>'
     klasse = ' class="fremhaev"' if billigst_pr_gb else ""
     eu = "—" if a["data_gb"] == 0 else ("Fri data" if a.get("eu_gb", 0) >= 900 else f'{a.get("eu_gb", 0)} GB')
 
-    return f"""<tr{klasse} data-gb="{a['data_gb']}" data-pris="{a['pris']}" data-prgb="{pr_gb:.4f}" data-aar="{aar}" data-udbyder="{e(u['navn'])}">
+    return f"""<tr{klasse} data-gb="{a['data_gb']}" data-pris="{a['pris']}" data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}" data-udbyder="{e(u['navn'])}">
   <td>
     <div class="t-udbyder">
       <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy" height="24">
@@ -392,8 +413,9 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None):
 
 def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
               billigst_id=None, id_attr="sammenlign", vis=10):
-    betalte = [x for x in abonnementer if x["pris"] > 0 and not x.get("forbrugsafregnet")]
-    gnsnit_aar = (sum(x["pris"] for x in betalte) / len(betalte) * 12) if betalte else None
+    betalte = [gns12(x) for x in abonnementer if x["pris"] > 0 and not x.get("forbrugsafregnet")]
+    betalte = [x for x in betalte if x]
+    gnsnit_aar = (sum(betalte) / len(betalte) * 12) if betalte else None
 
     raekker = ""
     for i, a in enumerate(abonnementer):
@@ -440,7 +462,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
             <th scope="col">Tale</th>
             <th scope="col">EU-data</th>
             <th scope="col" class="sorter" data-noegle="prgb">Pris pr. GB</th>
-            <th scope="col" class="sorter" data-noegle="aar">Pris 1. år</th>
+            <th scope="col" class="sorter" data-noegle="aar">Gns. 12 mdr.</th>
             <th scope="col" class="sorter" data-noegle="pris" data-retning="op">Pris pr. md.</th>
             <th scope="col"><span class="visuelt-skjult">Bestil</span></th>
           </tr>
@@ -450,7 +472,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     </div>
     {visflere}
     <div class="tabelfod">
-      <span>Sorteret efter laveste månedspris. <strong>Pris 1. år</strong> er 12 måneder plus oprettelse. Priser er vejledende.</span>
+      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> er den reelle månedspris, når intropris, normalpris og oprettelse regnes sammen. Priser er vejledende.</span>
       <span>Kilde: udbydernes egne prislister</span>
     </div>
   </div>

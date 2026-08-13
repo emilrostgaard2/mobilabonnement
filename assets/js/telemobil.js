@@ -222,3 +222,94 @@
     }
   });
 })();
+
+/* ---- Abonnementsfinder ---- */
+(function () {
+  "use strict";
+  var boks = document.querySelector("[data-quiz]");
+  var raa = document.querySelector("[data-quizdata]");
+  if (!boks || !raa) return;
+
+  var planer;
+  try { planer = JSON.parse(raa.textContent); } catch (e) { return; }
+
+  var trin = Array.prototype.slice.call(boks.querySelectorAll(".quiz-trin"));
+  var svarboks = boks.querySelector("[data-svar]");
+  var svar = {};
+
+  function visTrin(i) {
+    trin.forEach(function (t, n) { t.hidden = n !== i; });
+    svarboks.hidden = true;
+  }
+
+  function gbBehov() {
+    return { lav: 5, mellem: 20, hoej: 60, ekstrem: 999 }[svar.forbrug] || 20;
+  }
+
+  function beregn() {
+    var maal = gbBehov();
+    var kandidater = planer.filter(function (p) {
+      if (svar.tale === "fri" && p.tale !== "fri") return false;
+      if (svar.stream === "ja" && p.stream === 0) return false;
+      if (svar.stream === "nej" && p.stream > 0) return false;
+      if (svar.sted === "land" && p.net !== "TDC NET") return false;
+      if (maal >= 999) return p.gb >= 900;
+      return p.gb >= maal && p.gb < 900;
+    });
+
+    // Falder et filter helt ud, løsnes kravet om net frem for at vise ingenting
+    if (!kandidater.length) {
+      kandidater = planer.filter(function (p) {
+        if (svar.tale === "fri" && p.tale !== "fri") return false;
+        if (maal >= 999) return p.gb >= 900;
+        return p.gb >= maal;
+      });
+    }
+    kandidater.sort(function (a, b) { return a.gns - b.gns; });
+    return kandidater.slice(0, 3);
+  }
+
+  function visSvar() {
+    var top = beregn();
+    trin.forEach(function (t) { t.hidden = true; });
+    svarboks.hidden = false;
+
+    if (!top.length) {
+      svarboks.innerHTML = '<p>Vi fandt ingen match. <button type="button" class="knap knap-linje knap-lille" data-igen>Prøv igen</button></p>';
+    } else {
+      var maal = gbBehov();
+      var html = '<div class="quiz-tael">Dit match</div><h3>' +
+        (maal >= 999 ? "Fri data" : maal + " GB eller mere") +
+        (svar.tale === "fri" ? " med fri tale" : "") +
+        (svar.sted === "land" ? " på TDC NET" : "") + "</h3>" +
+        '<p class="quiz-note">Sorteret efter gennemsnitspris over 12 måneder — ikke intropris.</p><div class="quiz-kort">';
+      top.forEach(function (p, i) {
+        html += '<a class="quiz-plan' + (i === 0 ? " bedst" : "") + '" href="/udbydere/' + p.slug + '/">' +
+          (i === 0 ? '<span class="maerke maerke-puls">Bedste match</span>' : "") +
+          '<img src="/assets/img/logoer/' + p.logo + '" alt="" height="20">' +
+          "<b>" + p.navn + "</b>" +
+          "<small>" + (p.gb >= 900 ? "Fri data" : p.gb + " GB") + " · " + p.net + "</small>" +
+          '<span class="quiz-pris">' + p.gns + " kr.<em>/md. i snit</em></span></a>";
+      });
+      html += '</div><button type="button" class="knap knap-linje knap-lille" data-igen>Start forfra</button>';
+      svarboks.innerHTML = html;
+    }
+  }
+
+  boks.addEventListener("click", function (e) {
+    var knap = e.target.closest("button");
+    if (!knap) return;
+
+    if (knap.hasAttribute("data-igen")) {
+      svar = {};
+      visTrin(0);
+      return;
+    }
+    if (!knap.hasAttribute("data-vaerdi")) return;
+
+    var t = knap.closest(".quiz-trin");
+    svar[t.getAttribute("data-noegle")] = knap.getAttribute("data-vaerdi");
+    var i = parseInt(t.getAttribute("data-trin"), 10);
+    if (i + 1 < trin.length) visTrin(i + 1); else visSvar();
+  });
+})();

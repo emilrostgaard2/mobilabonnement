@@ -15,7 +15,7 @@ ROD = os.path.dirname(STI)
 sys.path.insert(0, STI)
 
 from skabelon import (  # noqa: E402
-    shell, e, kr, gb_tekst, netlabel, DOMAENE, SITENAVN, FORFATTER,
+    shell, e, kr, gb_tekst, netlabel, gns12, DOMAENE, SITENAVN, FORFATTER,
     afsloering, forfatterboks, gennemgangslinje, faqblok, laesvidere,
     ctabaand, pristabel,
 )
@@ -509,6 +509,8 @@ def byg_forside():
     krop = f"""
 {hurtigvalg()}
 
+{quiz()}
+
 {pristabel(ABON, UMAP,
            titel=f"Alle mobilabonnementer sammenlignet",
            undertitel=f"{D['antal']} abonnementer fra {D['antal_udbydere']} udbydere, sorteret efter laveste månedspris. "
@@ -803,6 +805,465 @@ def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk), listeld(udvalg, etiket))],
     ), prioritet="0.85")
+
+
+def quiz(plads="forside"):
+    """Interaktivt værktøj: matcher brugeren med abonnementer ud fra forbrug."""
+    data = [{"id": a["id"], "navn": a["navn"], "udbyder": UMAP[a["udbyder"]]["navn"],
+             "slug": a["udbyder"], "logo": UMAP[a["udbyder"]]["logo"],
+             "net": UMAP[a["udbyder"]]["netvaerk"], "gb": a["data_gb"],
+             "pris": a["pris"], "gns": round(gns12(a) or a["pris"]),
+             "tale": a["tale"], "stream": len(a.get("streaming", [])),
+             "link": a["link"]}
+            for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")]
+    return f"""<section class="sektion baand" id="finder">
+  <div class="quiz afslør">
+    <div class="quiz-hoved">
+      <span class="etiket">Gratis værktøj</span>
+      <h2>Find abonnementet der passer til dit forbrug</h2>
+      <p class="led">Fire spørgsmål. Vi matcher mod alle {len(data)} abonnementer og regner
+      på gennemsnitsprisen over 12 måneder — ikke intro­prisen.</p>
+    </div>
+    <div class="quiz-krop" data-quiz>
+      <div class="quiz-trin" data-trin="0" data-noegle="forbrug">
+        <div class="quiz-tael">Spørgsmål 1 af 4</div>
+        <h3>Hvor meget bruger du telefonen uden for wi-fi?</h3>
+        <div class="quiz-valg">
+          <button type="button" data-vaerdi="lav">Næsten aldrig — mest hjemme</button>
+          <button type="button" data-vaerdi="mellem">Lidt hver dag — sociale medier og musik</button>
+          <button type="button" data-vaerdi="hoej">Meget — video og navigation dagligt</button>
+          <button type="button" data-vaerdi="ekstrem">Telefonen er mit internet</button>
+        </div>
+      </div>
+      <div class="quiz-trin" data-trin="1" data-noegle="tale" hidden>
+        <div class="quiz-tael">Spørgsmål 2 af 4</div>
+        <h3>Hvor meget ringer du?</h3>
+        <div class="quiz-valg">
+          <button type="button" data-vaerdi="lidt">Næsten aldrig — jeg skriver</button>
+          <button type="button" data-vaerdi="fri">Dagligt — jeg vil have fri tale</button>
+        </div>
+      </div>
+      <div class="quiz-trin" data-trin="2" data-noegle="sted" hidden>
+        <div class="quiz-tael">Spørgsmål 3 af 4</div>
+        <h3>Hvor bor eller færdes du mest?</h3>
+        <div class="quiz-valg">
+          <button type="button" data-vaerdi="by">I en større by</button>
+          <button type="button" data-vaerdi="land">På landet, ved kysten eller pendler langt</button>
+        </div>
+      </div>
+      <div class="quiz-trin" data-trin="3" data-noegle="stream" hidden>
+        <div class="quiz-tael">Spørgsmål 4 af 4</div>
+        <h3>Vil du have streaming med i abonnementet?</h3>
+        <div class="quiz-valg">
+          <button type="button" data-vaerdi="nej">Nej — bare data og tale til laveste pris</button>
+          <button type="button" data-vaerdi="ja">Ja — jeg betaler for streaming i forvejen</button>
+        </div>
+      </div>
+      <div class="quiz-svar" data-svar hidden></div>
+    </div>
+  </div>
+  <script type="application/json" data-quizdata>{json.dumps(data, ensure_ascii=False)}</script>
+</section>"""
+
+
+# --------------------------------------------------------------- LONG TAIL
+
+TJENESTER_META = {
+    "Netflix": ("netflix", "film og serier",
+                "Netflix er verdens største streamingtjeneste for film og serier og den, flest "
+                "danskere allerede betaler for. Netop derfor er det også den tjeneste, hvor "
+                "regnestykket oftest falder ud til bundlets fordel — du erstatter en udgift, "
+                "du har i forvejen."),
+    "HBO Max": ("hbo-max", "film og serier",
+                "HBO Max har en stærk katalogprofil på serier og er ofte den anden tjeneste, "
+                "folk vælger til. Tjenesten har skiftet navn og pakkestruktur flere gange, så "
+                "tjek hvilken pakke der indgår — reklamefri eller med reklamer gør en forskel "
+                "i værdi."),
+    "Disney+": ("disney-plus", "familie, film og serier",
+                "Disney+ er den mest oplagte tjeneste at få med i et mobilabonnement, hvis der "
+                "er børn i husstanden. Bemærk at udbydere ofte inkluderer standardpakken med "
+                "reklamer, mens den reklamefri koster ekstra."),
+    "Viaplay": ("viaplay", "sport, film og serier",
+                "Viaplay er den dyreste af de store tjenester at købe separat, især hvis "
+                "sportspakken indgår. Det gør den til den tjeneste, hvor et bundle kan spare "
+                "flest kroner — men kun hvis du rent faktisk ser sport."),
+    "TV 2 Play": ("tv2-play", "dansk tv og sport",
+                  "TV 2 Play dækker dansk indhold, nyheder og sport. Tjenesten har flere "
+                  "niveauer, og det er værd at tjekke, om det er basispakken eller en større "
+                  "pakke, der indgår i abonnementet."),
+    "Nordisk Film+": ("nordisk-film-plus", "nordiske film og serier",
+                      "Nordisk Film+ er en mindre tjeneste med nordisk indhold. Den er billig "
+                      "at købe separat, og derfor er den sjældent grunden til at vælge et "
+                      "bundle — men den er et fint tillæg, hvis den følger med."),
+    "SkyShowtime": ("skyshowtime", "film og serier",
+                    "SkyShowtime samler indhold fra flere internationale studier. Tjenesten "
+                    "er relativt ny på det danske marked og dukker oftere op i bundles end i "
+                    "danske husstandes selvstændige abonnementer."),
+    "Prime Video": ("prime-video", "film og serier",
+                    "Prime Video indgår normalt i et Amazon Prime-medlemskab. Får du det via "
+                    "mobilabonnementet, så tjek om det er hele medlemskabet eller kun "
+                    "videodelen — forskellen er reel, hvis du handler på Amazon."),
+    "Deezer": ("deezer", "musik",
+               "Deezer er en musiktjeneste og et alternativ til de større navne. Den fylder "
+               "kun lidt data, hvis du henter musik på wi-fi, og den er derfor et af de "
+               "billigste tillæg at have med i et abonnement."),
+    "Podimo": ("podimo", "podcast og lydbøger",
+               "Podimo dækker podcasts og lydbøger. Pendler du eller træner du meget, er det "
+               "et af de tillæg med højest reel værdi pr. krone — og det bruger meget lidt "
+               "data sammenlignet med video."),
+    "Mofibo": ("mofibo", "lydbøger",
+               "Mofibo er en lydbogstjeneste. Værdien afhænger helt af, hvor meget du lytter "
+               "— for en storforbruger af lydbøger er det et af de dyreste separate "
+               "abonnementer at have, og dermed et af de bedste at få med."),
+    "Telmore Musik": ("telmore-musik", "musik",
+                      "Telmore Musik er udbyderens egen musiktjeneste. Den kan ikke købes "
+                      "separat på samme måde som de store tjenester, hvilket gør den svær at "
+                      "værdisætte i et regnestykke — vurder den efter, om du reelt vil bruge den."),
+    "YouSee Musik": ("yousee-musik", "musik",
+                     "YouSee Musik er udbyderens egen musiktjeneste og følger med flere "
+                     "YouSee-abonnementer. Som ved andre operatørejede tjenester bør du "
+                     "vurdere, om den erstatter et abonnement, du har i forvejen."),
+}
+
+TJENESTER = [t for t in TJENESTER_META
+             if any(t in a.get("streaming", []) for a in ABON)]
+
+NETVAERK = [
+    {
+        "slug": "tdc-net", "navn": "TDC NET", "kort": "Danmarks mest udbyggede mobilnet",
+        "styrke": ("TDC NET er det mest finmaskede mobilnet i Danmark og har gennem en "
+                   "årrække klaret sig bedst i uafhængige målinger af netkvalitet. Nettet "
+                   "står særligt stærkt i landdistrikter, sommerhusområder, langs jernbanen "
+                   "og indendørs i ældre bygninger med tykke mure."),
+        "svaghed": ("Brands, der kører på TDC NET, ligger typisk højere i pris end "
+                    "discountselskaber på de to andre net. Du betaler reelt et tillæg for "
+                    "dækning — og det er kun pengene værd, hvis du færdes steder, hvor "
+                    "forskellen mærkes."),
+        "hvem": ("Vælg TDC NET hvis du bor uden for de større byer, har sommerhus, pendler "
+                 "langt med tog eller bil, eller ofte opholder dig i områder med svingende "
+                 "dækning."),
+    },
+    {
+        "slug": "telenor", "navn": "Telenor", "kort": "Bred dækning til fornuftig pris",
+        "styrke": ("Telenors net leverer bred dækning i hele landet og rammer for de fleste "
+                   "brugere en god balance mellem kvalitet og pris. Flere af de billigste "
+                   "abonnementer på markedet kører på dette net, hvilket gør det til det "
+                   "mest oplagte valg for prisbevidste brugere med almindeligt forbrug."),
+        "svaghed": ("Der findes enkelte huller i tyndt befolkede områder, hvor TDC NET "
+                    "står stærkere. Forskellen er dog mindre, end den var for få år siden."),
+        "hvem": ("Vælg Telenors net hvis du vil have solid dækning uden at betale "
+                 "premiumpris — for langt de fleste danskere er det den rigtige balance."),
+    },
+    {
+        "slug": "3", "navn": "3", "kort": "Hastighed og kapacitet i byerne",
+        "styrke": ("3's net er bygget med fokus på kapacitet og hastighed der, hvor der er "
+                   "mange mennesker. Selskabet var tidligt ude med både 4G og 5G, og i byer "
+                   "leverer nettet høje hastigheder, også når mange er på samtidig."),
+        "svaghed": ("Nettet er historisk mindre finmasket i landdistrikter, langs kysten og "
+                    "i visse indendørsmiljøer. Bor du uden for en større by, bør du tjekke "
+                    "dækningskortet grundigt, før du vælger."),
+        "hvem": ("Vælg 3's net hvis du bor i en større by og bruger meget data — så får du "
+                 "typisk flest gigabyte for pengene og høje hastigheder."),
+    },
+]
+
+
+def byg_streamingoversigt():
+    sti = "/mobilabonnement-med-streaming/tjenester/"
+    krumme = [("/", "Forside"), ("/mobilabonnement-med-streaming/", "Med streaming"),
+              (None, "Tjenester")]
+    kort = ""
+    for t in TJENESTER:
+        slug, kat, _ = TJENESTER_META[t]
+        planer = [a for a in ABON if t in a.get("streaming", [])]
+        billigst_t = min(planer, key=lambda a: gns12(a) or 9e9)
+        kort += (f'<a class="kort" href="/mobilabonnement-med-{slug}/" '
+                 f'style="text-decoration:none;color:inherit">'
+                 f'<h3>Mobilabonnement med {e(t)}</h3>'
+                 f'<p>{len(planer)} abonnementer · {kat} · fra {kr(gns12(billigst_t))} kr./md. '
+                 f'i gennemsnit over 12 mdr.</p></a>')
+    krop = f"""<section class="sektion baand">
+  <div class="sektion-hoved afslør"><span class="etiket">Streamingtjenester</span>
+  <h2>Vælg tjenesten, du vil have med</h2>
+  <p class="led">Vi har en side pr. streamingtjeneste med præcis de abonnementer, hvor
+  netop den tjeneste indgår — og hvad merprisen er mod at købe den selv.</p></div>
+  <div class="kortgitter kg-3">{kort}</div>
+</section>
+<section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>"""
+    return skriv(sti, shell(
+        sti=sti, titel=f"Mobilabonnement med streaming — {len(TJENESTER)} tjenester sammenlignet",
+        beskrivelse=("Se hvilke mobilabonnementer der inkluderer Netflix, HBO Max, Disney+, "
+                     "Viaplay og andre streamingtjenester. Én oversigt pr. tjeneste."),
+        opdateret=OPDATERET,
+        hero=hero_side("Streamingtjenester", "Mobilabonnement med streaming — tjeneste for tjeneste",
+                       "Vi har delt det op, så du kan se præcis de abonnementer, hvor din "
+                       "tjeneste indgår."),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop,
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme))],
+    ), prioritet="0.7")
+
+
+def byg_tjenesteside(tjeneste):
+    slug, kategori, intro_tekst = TJENESTER_META[tjeneste]
+    sti = f"/mobilabonnement-med-{slug}/"
+    planer = sorted([a for a in ABON if tjeneste in a.get("streaming", [])],
+                    key=lambda a: gns12(a) or 9e9)
+    if not planer:
+        return
+    billigst_t = planer[0]
+    ub = sorted({UMAP[a["udbyder"]]["navn"] for a in planer})
+    # Benchmark: billigste abonnement uden streaming med tilsvarende data
+    uden = [a for a in ABON if not a.get("streaming") and a["data_gb"] > 0 and a["pris"] > 0]
+    ref = min(uden, key=lambda a: gns12(a) or 9e9)
+    merpris = (gns12(billigst_t) or 0) - (gns12(ref) or 0)
+
+    krumme = [("/", "Forside"), ("/mobilabonnement-med-streaming/", "Med streaming"),
+              (None, tjeneste)]
+    andre = "".join(
+        f'<a href="/mobilabonnement-med-{TJENESTER_META[t][0]}/">{e(t)}</a>'
+        for t in TJENESTER if t != tjeneste)
+
+    faq = [
+        {"sp": f"Hvilke mobilabonnementer inkluderer {tjeneste}?",
+         "sv": f"Lige nu inkluderer {len(planer)} abonnementer fra {' og '.join(ub)} {tjeneste}. "
+               f"Billigst er {billigst_t['navn']} til {kr(gns12(billigst_t))} kr. om måneden i "
+               "gennemsnit over 12 måneder."},
+        {"sp": f"Kan det betale sig at få {tjeneste} med i mobilabonnementet?",
+         "sv": f"Det afhænger af ét regnestykke: merprisen mod at købe {tjeneste} separat. "
+               f"Sammenlignet med det billigste abonnement uden streaming er merprisen her "
+               f"cirka {kr(abs(merpris))} kr. om måneden. Koster {tjeneste} mere end det "
+               "separat, sparer du penge."},
+        {"sp": f"Hvad sker der med {tjeneste}, hvis jeg opsiger abonnementet?",
+         "sv": f"Adgangen til {tjeneste} stopper sammen med mobilabonnementet. Din profil og "
+               "historik ligger hos tjenesten selv og overlever typisk skiftet, så du kan "
+               "oprette et almindeligt abonnement direkte bagefter."},
+        {"sp": "Bruger streaming meget af min datamængde?",
+         "sv": "Video koster cirka 0,7-1 GB i timen i standardkvalitet og 2-3 GB i HD. Musik "
+               "og podcasts fylder langt mindre. Vælger du et abonnement med video, bør du "
+               "have mindst 50 GB, ellers kan du kun bruge tjenesten på wi-fi."},
+        {"sp": "Er prisen i tabellen intropris eller normalpris?",
+         "sv": "Vi viser begge dele og regner desuden gennemsnitsprisen over 12 måneder, så "
+               "du kan se, hvad abonnementet reelt koster, når introrabatten er udløbet."},
+    ]
+
+    krop = f"""
+{pristabel(planer, UMAP, titel=f"Abonnementer med {tjeneste} inkluderet",
+           undertitel=f"{len(planer)} abonnementer fra {' og '.join(ub)}. Sorteret efter pris.",
+           filtre=False, billigst_id=billigst_t["id"], vis=10)}
+
+<section class="sektion baand-smal artikel">
+  {gennemgangslinje(OPDATERET, "Priser og pakkeindhold kontrolleret hos udbyderne")}
+
+  <div class="udtag">
+  <p><strong>Kort svar:</strong> {len(planer)} mobilabonnementer fra
+  {' og '.join(ub)} inkluderer {e(tjeneste)} lige nu. Billigst er
+  {e(billigst_t['navn'])} til {kr(gns12(billigst_t))} kr. om måneden regnet som gennemsnit
+  over 12 måneder. Til sammenligning koster det billigste abonnement helt uden streaming
+  {kr(gns12(ref))} kr. — merprisen for {e(tjeneste)} er altså cirka
+  {kr(abs(merpris))} kr. om måneden.</p>
+  </div>
+
+  <h2>Er {e(tjeneste)} i mobilabonnementet en god forretning?</h2>
+  <p>{e(intro_tekst)}</p>
+  <p>Regnestykket er det samme uanset tjeneste, og det er værd at lave, før du bestiller:
+  find den plan, du ellers ville have valgt, og se hvad planen med {e(tjeneste)} koster
+  ekstra om måneden. Er merprisen lavere end tjenestens egen pris, sparer du penge. Er den
+  højere, betaler du for at have det samlet ét sted.</p>
+
+  <div class="tip">
+  <h3>Benchmark: hvad koster det uden streaming?</h3>
+  <p>Det billigste abonnement på markedet uden streamingtillæg er lige nu
+  <strong>{e(ref['navn'])}</strong> med {gb_tekst(ref['data_gb'])} til
+  {kr(gns12(ref))} kr. om måneden. Brug det tal som udgangspunkt, når du vurderer, om
+  {e(tjeneste)}-abonnementet er pengene værd.</p>
+  </div>
+
+  <h2>Sådan læser du tabellen</h2>
+  <ul>
+    <li><strong>Gns. 12 mdr.</strong> er den reelle månedspris, når intropris, normalpris og
+    oprettelse regnes sammen. Det er det tal, du skal sammenligne på — ikke intro­prisen.</li>
+    <li><strong>Data</strong> afgør, om du kan bruge tjenesten uden for wi-fi.
+    {'Video kræver rigelig data — mindst 50 GB.' if kategori.startswith(('film', 'sport', 'dansk', 'familie', 'nordiske')) else 'Musik og lyd fylder lidt, så datamængden er mindre kritisk her.'}</li>
+    <li><strong>Antal tjenester</strong> står som mærkat ved abonnementet. Flere tjenester er
+    kun mere værd, hvis du bruger dem.</li>
+  </ul>
+
+  <h2>Det du skal være opmærksom på</h2>
+  <p>Pakkeindhold ændrer sig. En tjeneste kan ryge ud af en pakke, når aftalen mellem
+  udbyderen og indholdsleverandøren udløber, og prisen falder ikke nødvendigvis
+  tilsvarende. Tjek vilkårene for, hvad der sker med prisen, hvis {e(tjeneste)} fjernes.</p>
+  <p>Vær også opmærksom på, hvilken <em>pakke</em> af tjenesten der indgår. Flere tjenester
+  har både en billigere version med reklamer og en dyrere reklamefri. Det fremgår ikke
+  altid tydeligt af mobilabonnementets markedsføring, og forskellen er reel, når du
+  sammenligner med tjenestens egen pris.</p>
+
+  <h2>Andre tjenester</h2>
+  <p class="tjenestelinks">{andre}</p>
+  <p>Se også <a href="/mobilabonnement-med-streaming/">alle abonnementer med streaming</a>,
+  <a href="/billigste-mobilabonnement/">billigste mobilabonnement</a> og
+  <a href="/mobilabonnement-med-fri-data/">abonnementer med fri data</a>.</p>
+</section>
+
+<section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>
+"""
+
+    return skriv(sti, shell(
+        sti=sti,
+        titel=f"Mobilabonnement med {tjeneste} — {len(planer)} planer fra {kr(gns12(billigst_t))} kr./md.",
+        beskrivelse=(f"Se de {len(planer)} mobilabonnementer der inkluderer {tjeneste}. "
+                     f"Fra {kr(gns12(billigst_t))} kr./md. i gennemsnit over 12 mdr. "
+                     "Med normalpris, ikke kun intropris."),
+        opdateret=OPDATERET,
+        hero=hero_side(f"{tjeneste} inkluderet", f"Mobilabonnement med {e(tjeneste)}",
+                       f"{len(planer)} abonnementer inkluderer {tjeneste}. Vi viser "
+                       "gennemsnitsprisen over 12 måneder, så introrabatten ikke skjuler "
+                       "den reelle pris.",
+                       '<a href="#sammenlign" class="knap knap-primaer">Se abonnementerne</a>',
+                       [("Planer", str(len(planer))), ("Fra", f"{kr(gns12(billigst_t))} kr."),
+                        ("Merpris", f"{kr(abs(merpris))} kr.")]),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, f"Mobilabonnement med {tjeneste}", ""),
+                     listeld(planer, f"Mobilabonnementer med {tjeneste}"))],
+    ), prioritet="0.75")
+
+
+def byg_netvaerksoversigt():
+    sti = "/netvaerk/"
+    krumme = [("/", "Forside"), (None, "Mobilnetværk")]
+    kort = ""
+    for n in NETVAERK:
+        paa = [a for a in ABON if UMAP[a["udbyder"]]["netvaerk"] == n["navn"] and a["pris"] > 0]
+        billigst_n = min(paa, key=lambda a: gns12(a) or 9e9) if paa else None
+        pris = f"fra {kr(gns12(billigst_n))} kr./md." if billigst_n else "se udbyderne"
+        kort += (f'<a class="kort" href="/netvaerk/{n["slug"]}/" style="text-decoration:none;color:inherit">'
+                 f'<h3>{e(n["navn"])}</h3><p>{e(n["kort"])} · {pris}</p></a>')
+    krop = f"""<section class="sektion baand">
+  <div class="sektion-hoved afslør"><span class="etiket">Mobilnetværk</span>
+  <h2>Der findes kun tre mobilnet i Danmark</h2>
+  <p class="led">Alle andre selskaber lejer sig ind hos en af dem. Vælger du udbyder,
+  vælger du reelt to ting: et net og et selskab.</p></div>
+  <div class="kortgitter kg-3">{kort}</div>
+</section>
+<section class="sektion baand-smal artikel">
+  <h2>Nettet bestemmer dækningen — selskabet bestemmer prisen</h2>
+  <p>Det er den vigtigste enkeltindsigt om det danske mobilmarked. Et discountabonnement
+  til 44 kr. og et premiumabonnement til 299 kr. kan køre på præcis de samme master med
+  præcis samme hastighed, hvis de ligger på samme net.</p>
+  <p>Spørgsmålet er derfor aldrig, om et billigt selskab har "dårligere dækning". Det er,
+  hvilket net selskabet lejer sig ind på — og under hvilke vilkår. Nogle MVNO-aftaler
+  indeholder hastighedsloft eller lavere prioritet i myldretiden. Det står i vilkårene, men
+  sjældent med store bogstaver.</p>
+  <p>Se hvilket net hver udbyder kører på i vores
+  <a href="/udbydere/">oversigt over mobilselskaber</a>, eller læs
+  <a href="/guides/daekning-og-netvaerk/">guiden til dækning og netværk</a>.</p>
+</section>
+<section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>"""
+    return skriv(sti, shell(
+        sti=sti, titel="Mobilnetværk i Danmark — TDC NET, Telenor og 3 sammenlignet",
+        beskrivelse=("Der findes kun tre mobilnet i Danmark. Se forskellen på TDC NET, "
+                     "Telenor og 3 — og hvilke selskaber der kører på hvert net."),
+        opdateret=OPDATERET,
+        hero=hero_side("Mobilnetværk", "De tre danske mobilnet",
+                       "Dit valg af udbyder er i virkeligheden et valg af net. Her er "
+                       "forskellen, og hvornår den betyder noget."),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop,
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme))],
+    ), prioritet="0.7")
+
+
+def byg_netvaerksside(n):
+    sti = f"/netvaerk/{n['slug']}/"
+    krumme = [("/", "Forside"), ("/netvaerk/", "Mobilnetværk"), (None, n["navn"])]
+    selskaber = [u for u in UDBYDERE if u["netvaerk"] == n["navn"]]
+    planer = sorted([a for a in ABON if UMAP[a["udbyder"]]["netvaerk"] == n["navn"] and a["pris"] > 0],
+                    key=lambda a: gns12(a) or 9e9)
+    if not planer:
+        return
+    billigst_n = planer[0]
+    liste = ", ".join(u["navn"] for u in selskaber) or "ingen i vores sammenligning"
+
+    faq = [
+        {"sp": f"Hvilke selskaber kører på {n['navn']}?",
+         "sv": f"I vores sammenligning er det {liste}. Bemærk at MVNO-aftaler kan ændre sig, "
+               "så tjek altid udbyderens egen side, hvis dækning er afgørende."},
+        {"sp": f"Hvad koster det billigste abonnement på {n['navn']}?",
+         "sv": f"Billigst er {billigst_n['navn']} til {kr(gns12(billigst_n))} kr. om måneden "
+               "regnet som gennemsnit over 12 måneder inklusive intropris."},
+        {"sp": f"Er {n['navn']} godt til mig?",
+         "sv": n["hvem"]},
+        {"sp": "Hvordan tjekker jeg dækningen på min adresse?",
+         "sv": "Alle tre netværksejere har offentlige dækningskort. Tjek din bopæl, din "
+               "arbejdsplads og din pendlerrute — ikke kun ét sted."},
+    ]
+
+    krop = f"""
+{pristabel(planer, UMAP, titel=f"Abonnementer på {n['navn']}",
+           undertitel=f"Alle abonnementer i vores sammenligning, der kører på {n['navn']}.",
+           billigst_id=billigst_n["id"])}
+
+<section class="sektion baand-smal artikel">
+  {gennemgangslinje(OPDATERET, "Netværksangivelser kontrolleret hos udbyderne")}
+
+  <div class="udtag">
+  <p><strong>Kort svar:</strong> {e(n['navn'])} er et af de tre mobilnet i Danmark.
+  {len(selskaber)} selskaber i vores sammenligning kører på det: {e(liste)}. Billigste
+  abonnement er {e(billigst_n['navn'])} til {kr(gns12(billigst_n))} kr. om måneden i
+  gennemsnit over 12 måneder.</p>
+  </div>
+
+  <h2>Styrken ved {e(n['navn'])}</h2>
+  <p>{e(n['styrke'])}</p>
+
+  <h2>Svagheden</h2>
+  <p>{e(n['svaghed'])}</p>
+
+  <h2>Hvem bør vælge {e(n['navn'])}?</h2>
+  <p>{e(n['hvem'])}</p>
+
+  <h2>Selskaber på {e(n['navn'])}</h2>
+  <div class="kortgitter kg-3" style="margin:1.6rem 0">
+    {"".join(udbyderkort(u) for u in selskaber)}
+  </div>
+
+  <h2>Sådan tjekker du dækningen, før du bestiller</h2>
+  <ol class="trin">
+    <li><strong>Slå netværksejerens dækningskort op</strong>
+    Det er den bedste offentligt tilgængelige kilde, fordi det bygger på operatørens egne
+    måledata.</li>
+    <li><strong>Tjek tre steder, ikke ét</strong>
+    Din bopæl, din arbejdsplads og din pendlerrute. Det er der, du bruger telefonen.</li>
+    <li><strong>Spørg en nabo på samme net</strong>
+    Den mest undervurderede metode, og den eneste der siger noget om virkeligheden
+    indendørs hos dig.</li>
+    <li><strong>Brug fortrydelsesretten aktivt</strong>
+    Køber du online, har du som udgangspunkt fortrydelsesret. Test dækningen grundigt de
+    første dage.</li>
+  </ol>
+
+  <p>Se alle net i vores <a href="/netvaerk/">oversigt over mobilnetværk</a>, eller
+  sammenlign hele markedet på <a href="/billigste-mobilabonnement/">billigste
+  mobilabonnement</a>.</p>
+</section>
+
+<section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>
+"""
+    return skriv(sti, shell(
+        sti=sti,
+        titel=f"{n['navn']} — abonnementer og dækning fra {kr(gns12(billigst_n))} kr./md.",
+        beskrivelse=(f"Se hvilke mobilselskaber der kører på {n['navn']}, hvad de koster, "
+                     "og hvornår nettet er det rigtige valg for dig."),
+        opdateret=OPDATERET,
+        hero=hero_side("Mobilnetværk", f"{e(n['navn'])} — {e(n['kort'])}",
+                       f"{len(selskaber)} selskaber i vores sammenligning kører på "
+                       f"{n['navn']}. Her er styrker, svagheder og priser.",
+                       '<a href="#sammenlign" class="knap knap-primaer">Se abonnementerne</a>',
+                       [("Selskaber", str(len(selskaber))), ("Planer", str(len(planer))),
+                        ("Fra", f"{kr(gns12(billigst_n))} kr.")]),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     listeld(planer, f"Abonnementer på {n['navn']}"))],
+    ), prioritet="0.75")
 
 
 # --------------------------------------------------------------- UDBYDERE
@@ -1551,6 +2012,16 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
                ("/bedste-mobilabonnement/", "Bedste mobilabonnement")])
+
+    # ---------------- Long-tail: én side pr. streamingtjeneste ----------------
+    byg_streamingoversigt()
+    for tj in TJENESTER:
+        byg_tjenesteside(tj)
+
+    # ---------------- Netværkssider ----------------
+    byg_netvaerksoversigt()
+    for n in NETVAERK:
+        byg_netvaerksside(n)
 
     # Udbydere
     byg_udbyderoversigt()

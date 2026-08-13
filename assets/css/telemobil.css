@@ -645,3 +645,52 @@ table.pris th{white-space:nowrap}
 table.pris td:first-child,table.pris th:first-child{min-width:270px}
 table.pris th:nth-child(2),table.pris td:nth-child(2){min-width:96px}
 table.pris td:last-child{min-width:150px}
+
+.t-pris .intro{display:block;font-family:var(--font-brod);font-size:.72rem;font-weight:700;
+  color:var(--puls-dyb);background:rgba(0,209,143,.13);border-radius:5px;padding:.14rem .4rem;margin-bottom:.25rem}
+
+.tjenestelinks{display:flex;flex-wrap:wrap;gap:.5rem}
+.tjenestelinks a{background:#fff;border:1px solid var(--graa-lys);border-radius:999px;
+  padding:.4rem .9rem;font-size:.88rem;font-weight:550;text-decoration:none;transition:.18s}
+.tjenestelinks a:hover{border-color:var(--signal);background:#F2F5FF}
+.nav-menu-liste{width:660px}
+
+/* ==========================================================================
+   Abonnementsfinder
+   ========================================================================== */
+.quiz{background:var(--grad-nat);border-radius:var(--r-xl);padding:2.4rem 2.2rem;color:#fff;
+  position:relative;overflow:hidden}
+.quiz::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(500px 240px at 88% 8%,rgba(0,209,143,.22),transparent 65%)}
+.quiz>*{position:relative}
+.quiz-hoved{max-width:600px;margin-bottom:1.8rem}
+.quiz h2{color:#fff;margin-bottom:.4rem}
+.quiz .led{color:#C3CBEE}
+.quiz .etiket{color:#8CE0C4}
+.quiz .etiket::before{background:linear-gradient(90deg,#00D18F,#7CE0FF)}
+.quiz h3{color:#fff;font-size:1.28rem;margin-bottom:1.1rem}
+.quiz-tael{font-family:var(--font-tal);font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;
+  color:#8B96C8;margin-bottom:.6rem}
+.quiz-valg{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+@media(max-width:640px){.quiz-valg{grid-template-columns:1fr}.quiz{padding:1.8rem 1.3rem}}
+.quiz-valg button{
+  text-align:left;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);
+  color:#fff;padding:.95rem 1.15rem;border-radius:var(--r-m);cursor:pointer;font-size:.96rem;
+  font-family:var(--font-brod);font-weight:500;transition:.18s;
+}
+.quiz-valg button:hover{background:rgba(0,209,143,.18);border-color:var(--puls);transform:translateY(-2px)}
+.quiz-note{color:#95A0D0;font-size:.86rem;margin-bottom:1.1rem}
+.quiz-kort{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin-bottom:1.3rem}
+@media(max-width:760px){.quiz-kort{grid-template-columns:1fr}}
+.quiz-plan{display:flex;flex-direction:column;gap:.3rem;background:#fff;color:var(--blaek);
+  border-radius:var(--r-m);padding:1.1rem;text-decoration:none;transition:.2s}
+.quiz-plan:hover{transform:translateY(-3px);color:var(--blaek);box-shadow:var(--skygge-loft)}
+.quiz-plan.bedst{outline:2px solid var(--puls)}
+.quiz-plan img{width:auto;max-width:88px;object-fit:contain;object-position:left;margin-bottom:.3rem}
+.quiz-plan b{font-size:1rem}
+.quiz-plan small{color:var(--graa);font-size:.82rem}
+.quiz-pris{font-family:var(--font-tal);font-size:1.35rem;font-weight:600;margin-top:.5rem}
+.quiz-pris em{font-style:normal;font-size:.7rem;color:var(--graa);font-weight:400}
+
+.quiz-svar .knap-linje{border-color:rgba(255,255,255,.35);color:#fff;background:rgba(255,255,255,.06)}
+.quiz-svar .knap-linje:hover{border-color:var(--puls);color:#fff;background:rgba(0,209,143,.16)}
