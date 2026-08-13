@@ -70,6 +70,16 @@ for a in ABON:
     if a["udbyder"] not in UMAP:
         raise SystemExit(f"Ukendt udbyder i abonnementer.json: {a['udbyder']}")
 
+# Faktiske logodimensioner → korrekte width/height-attributter uden layoutskred
+try:
+    from PIL import Image as _Img
+    for _u in UDBYDERE:
+        with _Img.open(os.path.join(ROD, "assets", "img", "logoer", _u["logo"])) as _im:
+            _u["logo_w"], _u["logo_h"] = _im.size
+except Exception:
+    for _u in UDBYDERE:
+        _u["logo_w"], _u["logo_h"] = 240, 96
+
 skabelon.NAV_UDBYDERE = UDBYDERE
 
 IDAG = date.today()
@@ -217,7 +227,8 @@ def listeld(abonnementer, navn):
 
 def logobaand(titel="Vi sammenligner priser fra"):
     logoer = "".join(
-        f'<img src="/assets/img/logoer/{u["logo"]}" alt="{e(u["navn"])}" loading="lazy" height="30">'
+        f'<img src="/assets/img/logoer/{u["logo"]}" alt="{e(u["navn"])}" loading="lazy"'
+        f' width="{round(u["logo_w"] * 30 / u["logo_h"])}" height="30" decoding="async">'
         for u in UDBYDERE
     )
     overskrift = f'<div class="logobaand-titel">{e(titel)}</div>' if titel else ""
@@ -346,7 +357,7 @@ def hurtigvalg():
         kort += f"""<div class="valgkort v{i}">
   <span class="valg-badge">{e(kat)}</span>
   <div class="valg-top">
-    <span class="valg-logo"><img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy"></span>
+    <span class="valg-logo"><img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy" width="{round(u['logo_w'] * 26 / u['logo_h'])}" height="26" decoding="async"></span>
     <div>
       <b>{e(a['navn'])}</b>
       <small>{netlabel(u)}</small>
@@ -505,7 +516,7 @@ def udbydergitter():
         betalte = [a["pris"] for a in planer if a["pris"] > 0]
         fra = f"fra {kr(min(betalte))} kr./md." if betalte else "se udbyder"
         kort += f"""<a class="ugkort" href="/udbydere/{u['slug']}/">
-  <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy" height="24">
+  <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy" width="{round(u["logo_w"] * 24 / u["logo_h"])}" height="24" decoding="async">
   <b>{e(u['navn'])}</b>
   <span class="ug-net">{netlabel(u)}</span>
   <span class="ug-pris">{fra}</span>
@@ -591,7 +602,7 @@ def redaktionens_valg():
         kort += f"""<div class="rvkort">
   <div class="rv-kat">{e(kat)}</div>
   <div class="rv-top">
-    <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy" height="22">
+    <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy" width="{round(u["logo_w"] * 22 / u["logo_h"])}" height="22" decoding="async">
     <div><b>{e(a['navn'])}</b><small>{netlabel(u)} · {gb_tekst(a['data_gb'])}</small></div>
   </div>
   <div class="rv-pris">{kr(g)} kr.<em>/md. i snit over 12 mdr.</em></div>
@@ -805,7 +816,7 @@ def udbyderkort(u):
     priser = [a["pris"] for a in ABON if a["udbyder"] == u["slug"]]
     fra = min(priser) if priser else None
     return f"""<a class="udbyderkort" href="/udbydere/{u['slug']}/">
-  <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])} logo" loading="lazy" height="30">
+  <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])} logo" loading="lazy" width="{round(u['logo_w'] * 30 / u['logo_h'])}" height="30" decoding="async">
   <h3>{e(u['navn'])}</h3>
   <p>{e(u['kort'])}</p>
   <div class="fra">{'fra ' + kr(fra) + ' kr./md.' if fra else ''} <em>· {netlabel(u)}</em></div>
@@ -1020,6 +1031,7 @@ def quiz(plads="forside"):
     """Interaktivt værktøj: matcher brugeren med abonnementer ud fra forbrug."""
     data = [{"id": a["id"], "navn": a["navn"], "udbyder": UMAP[a["udbyder"]]["navn"],
              "slug": a["udbyder"], "logo": UMAP[a["udbyder"]]["logo"],
+             "lw": round(UMAP[a["udbyder"]]["logo_w"] * 22 / UMAP[a["udbyder"]]["logo_h"]),
              "net": UMAP[a["udbyder"]]["netvaerk"], "gb": a["data_gb"],
              "pris": a["pris"], "gns": round(gns12(a) or a["pris"]),
              "tale": a["tale"], "stream": len(a.get("streaming", [])),
@@ -2175,12 +2187,19 @@ ErrorDocument 404 /404.html
   ExpiresActive On
   ExpiresByType text/css "access plus 1 year"
   ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType text/javascript "access plus 1 year"
+  ExpiresByType application/x-javascript "access plus 1 year"
   ExpiresByType image/webp "access plus 1 year"
   ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
   ExpiresByType text/html "access plus 1 hour"
 </IfModule>
 
 <IfModule mod_headers.c>
+  # Statiske filer er versionsuafhaengige og kan caches i et aar
+  <FilesMatch "\\.(css|js|webp|svg|woff2|png|jpg)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
   Header set X-Content-Type-Options "nosniff"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
   Header set X-Frame-Options "SAMEORIGIN"

@@ -149,7 +149,8 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
     )
     udbyder_punkter = "".join(
         f'<a href="/udbydere/{u["slug"]}/"{aktiv("/udbydere/" + u["slug"] + "/")}>'
-        f'<img src="/assets/img/logoer/{u["logo"]}" alt="" loading="lazy" height="18">'
+        f'<img src="/assets/img/logoer/{u["logo"]}" alt="" loading="lazy"'
+        f' width="{round(u.get("logo_w", 240) * 18 / u.get("logo_h", 96))}" height="18" decoding="async">'
         f'<span>{e(u["navn"])}</span></a>'
         for u in NAV_UDBYDERE
     )
@@ -219,7 +220,10 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <meta name="theme-color" content="#0B1026">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400..700&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <script>document.documentElement.className+=" js";</script>
 <link rel="stylesheet" href="/assets/css/telemobil.css">
 {ekstra_hoved}
@@ -489,14 +493,15 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
 
     spar = ""
     if gnsnit_aar and not forbrug and aar < gnsnit_aar:
-        spar = (f'<div class="p-spar">{kr((gnsnit_aar - aar) / 12)} kr./md. '
-                "under gennemsnittet</div>")
+        spar = f'<div class="p-spar">{kr((gnsnit_aar - aar) / 12)} kr./md. under snittet</div>'
 
     klasse = " fremhaev" if billigst_pr_gb else ""
     return f"""<article class="plan{klasse}" data-gb="{a['data_gb']}" data-pris="{a['pris']}"
   data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}" data-udbyder="{e(u['navn'])}">
   <div class="plan-ident">
-    <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy" height="26">
+    <span class="plan-logo"><img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy"
+      width="{round(u.get('logo_w', 240) * 46 / u.get('logo_h', 96))}" height="46"
+      decoding="async"></span>
     <div class="plan-net">
       {'<span class="netbadge">5G</span>' if a.get("femg") and a["data_gb"] > 0 else ''}
       <span class="netnavn">{netlabel(u)}</span>
@@ -509,12 +514,14 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     <div class="plan-chips">{"".join(chips)}</div>
   </div>
   <div class="plan-pris">
+    <div class="pris-boks">
     {prisblok}
     {spar}
     <a class="knap knap-primaer" href="{a['link']}" rel="sponsored nofollow noopener" target="_blank"
        data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
        aria-label="Se tilbud på {e(a['navn'])} hos {e(u['navn'])}">Se tilbud <span aria-hidden="true">→</span></a>
     <a class="p-laes" href="/udbydere/{u['slug']}/">Læs mere om {e(u['navn'])} →</a>
+    </div>
     <small class="p-hos">Annoncelink · vi kan modtage provision</small>
   </div>
 </article>"""

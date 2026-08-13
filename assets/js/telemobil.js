@@ -68,11 +68,20 @@
   /* ---- Skygge under sticky header ---- */
   var hoved = document.querySelector(".hoved");
   if (hoved) {
+    var skygget = false;
+    var venter = false;
     var opdaterSkygge = function () {
-      hoved.classList.toggle("skygget", window.scrollY > 8);
+      venter = false;
+      var skalHave = window.scrollY > 8;
+      if (skalHave !== skygget) {
+        skygget = skalHave;
+        hoved.classList.toggle("skygget", skalHave);
+      }
     };
     opdaterSkygge();
-    window.addEventListener("scroll", opdaterSkygge, { passive: true });
+    window.addEventListener("scroll", function () {
+      if (!venter) { venter = true; requestAnimationFrame(opdaterSkygge); }
+    }, { passive: true });
   }
 
   /* ---- Scroll-afsløring ---- */
@@ -304,7 +313,7 @@
       top.forEach(function (p, i) {
         html += '<a class="quiz-plan' + (i === 0 ? " bedst" : "") + '" href="/udbydere/' + p.slug + '/">' +
           (i === 0 ? '<span class="maerke maerke-puls">Bedste match</span>' : "") +
-          '<img src="/assets/img/logoer/' + p.logo + '" alt="" height="20">' +
+          '<img src="/assets/img/logoer/' + p.logo + '" alt="" width="' + (p.lw || 50) + '" height="22" loading="lazy">' +
           "<b>" + p.navn + "</b>" +
           "<small>" + (p.gb >= 900 ? "Fri data" : p.gb + " GB") + " · " + p.net + "</small>" +
           '<span class="quiz-pris">' + p.gns + " kr.<em>/md. i snit</em></span></a>";

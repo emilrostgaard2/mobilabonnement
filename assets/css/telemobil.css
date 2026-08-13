@@ -709,10 +709,9 @@ table.pris tbody tr[hidden]{display:none}
 .v2 .valg-badge{background:var(--signal-dyb)}
 .v3 .valg-badge{background:var(--berry)}
 
-.valg-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.9rem}
-.valg-logo{width:42px;height:42px;border:1px solid var(--graa-lys);border-radius:11px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:5px;background:#fff}
-.valg-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.valg-top{display:flex;flex-direction:column;align-items:flex-start;gap:.6rem;margin-bottom:.9rem}
+.valg-logo{display:flex;align-items:center;flex-shrink:0}
+.valg-logo img{height:26px;width:auto;max-width:104px;object-fit:contain;object-position:left center}
 .valg-top b{display:block;font-family:var(--font-display);font-size:1.02rem;line-height:1.2;letter-spacing:-.02em}
 .valg-top small{color:var(--graa);font-size:.78rem}
 
@@ -927,3 +926,49 @@ table.pris tbody tr[hidden]{display:none}
   .plan-ident{flex-wrap:wrap}
   .plan-mrk .mrk{font-size:.62rem}
 }
+
+/* ==========================================================================
+   Rækkekort — større logo og samlet prispanel
+   ========================================================================== */
+.plan{grid-template-columns:minmax(168px,.8fr) minmax(320px,2fr) 232px;
+  gap:1.6rem;padding:1.4rem;align-items:stretch}
+.plan-ident{justify-content:center;gap:.9rem;padding:.3rem 0}
+.plan-logo{display:flex;align-items:center;justify-content:flex-start;min-height:46px}
+.plan-logo img{height:46px;width:auto;max-width:150px;object-fit:contain;object-position:left center}
+.plan-net{gap:.4rem}
+
+/* Prisen samles i en tonet boks, så højresiden får en tydelig ramme */
+.plan-pris{padding:0;gap:0;justify-content:space-between}
+.pris-boks{background:#F7F9FF;border:1px solid #E7EDFB;border-radius:var(--r-m);
+  padding:1.05rem 1.1rem;text-align:center;display:flex;flex-direction:column;align-items:center}
+.plan.fremhaev .pris-boks{background:rgba(0,209,143,.07);border-color:rgba(0,209,143,.32)}
+.pris-boks .p-tal b{font-size:2.15rem}
+.pris-boks .p-intro{background:var(--puls);color:#04301F;border-radius:5px;
+  padding:.18rem .55rem;margin-bottom:.4rem;font-size:.65rem}
+.pris-boks .p-normal,.pris-boks .p-gns{font-size:.74rem;line-height:1.4}
+.pris-boks .p-spar{margin-top:.45rem;padding-top:.45rem;border-top:1px dashed #D8E1F5;width:100%}
+.plan-pris .knap{margin-top:.75rem}
+.p-laes{display:block;text-align:center;margin-top:.55rem}
+.p-hos{display:block;text-align:center}
+
+@media(max-width:1000px){
+  .plan{grid-template-columns:1fr!important}
+  .plan-ident{flex-direction:row;align-items:center;justify-content:flex-start}
+  .plan-logo{min-height:38px}
+  .plan-logo img{height:38px;max-width:120px}
+  .pris-boks{text-align:left;align-items:flex-start}
+  .pris-boks .p-spar{text-align:left}
+  .plan-pris{border-top:none;padding-top:0}
+}
+
+/* Strammere kort — mindre luft, samme læsbarhed */
+.plan{align-items:center;padding:1.25rem 1.4rem;gap:1.4rem}
+.plan-ident{justify-content:center;gap:.7rem;padding:0}
+.pris-boks{padding:.9rem 1rem}
+.pris-boks .p-tal b{font-size:1.95rem}
+.pris-boks .p-spar{margin-top:.4rem;padding-top:.4rem;white-space:nowrap}
+.plan-pris .knap{margin-top:.6rem;padding:.62rem 1rem}
+.p-laes{margin-top:.45rem;font-size:.76rem}
+.plan-navn{margin-bottom:.75rem}
+.plan-chips{margin-top:.6rem}
+.plan-mrk{margin:0 0 .55rem}
