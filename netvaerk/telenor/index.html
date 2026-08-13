@@ -104,225 +104,219 @@
     <p class="led">Alle abonnementer i vores sammenligning, der kører på Telenor.</p>
   </div>
   <div class="filtre">
-  <span class="maerkat">Filtrér</span>
+  <span class="maerkat">Datamængde</span>
   <button class="chip" data-filter="alle" aria-pressed="true">Alle</button>
   <button class="chip" data-filter="lille" aria-pressed="false">Op til 15 GB</button>
   <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
   <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
   <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
 </div>
-  <div class="tabelramme afslør">
-    <div class="tabelrul">
-      <table class="pris">
-        <caption>Klik på en kolonneoverskrift for at sortere. <span data-antal-vist>10</span> abonnementer vist.</caption>
-        <thead>
-          <tr>
-            <th scope="col" class="sorter" data-noegle="udbyder">Abonnement</th>
-            <th scope="col" class="sorter" data-noegle="gb">Data</th>
-            <th scope="col">Tale</th>
-            <th scope="col">EU-data</th>
-            <th scope="col" class="sorter" data-noegle="prgb">Pris pr. GB</th>
-            <th scope="col" class="sorter" data-noegle="aar">Gns. 12 mdr.</th>
-            <th scope="col" class="sorter" data-noegle="pris" data-retning="op">Pris pr. md.</th>
-            <th scope="col"><span class="visuelt-skjult">Bestil</span></th>
-          </tr>
-        </thead>
-        <tbody><tr class="fremhaev" data-gb="0" data-pris="19" data-prgb="0.0000" data-aar="228" data-udbyder="Lebara">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="24">
-      <span><b>Lebara Tale 5 timer</b><small>Telenors net</small></span>
+  <div class="listeramme afslør">
+    <div class="liste-top">
+      <span class="liste-antal"><span data-antal-vist>10</span> abonnementer</span>
+      <div class="sorter-bar">
+        <span class="maerkat">Sortér</span>
+        <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
+        <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
+        <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
+        <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
+      </div>
     </div>
-    <div class="t-maerker"><span class="maerke maerke-puls">Bedste værdi</span><span class="maerke maerke-sol">Laveste pris</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span></div>
-  </td>
-  <td class="t-data">Ingen data<div class="bjaelke" aria-hidden="true"><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>5 timer</td>
-  <td class="t-eu">—</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">19 kr.<span class="spar">83 kr. under snittet</span></td>
-  <td class="t-pris"><b>19</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="lebara" data-abonnement="lebara-udendata"
-        aria-label="Se tilbud på Lebara Tale 5 timer hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Lebara</small></td>
-</tr><tr data-gb="5" data-pris="49" data-prgb="9.8000" data-aar="588" data-udbyder="CBB Mobil">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="24">
-      <span><b>CBB 5 GB</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">5 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">5 GB</td>
-  <td class="t-pr-gb">9,80 kr.</td>
-  <td class="t-aar">49 kr.<span class="spar">53 kr. under snittet</span></td>
-  <td class="t-pris"><b>49</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="cbb-mobil" data-abonnement="cbb-5"
-        aria-label="Se tilbud på CBB 5 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos CBB Mobil</small></td>
-</tr><tr data-gb="10" data-pris="59" data-prgb="5.9000" data-aar="708" data-udbyder="Lebara">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="24">
-      <span><b>Lebara 10 GB</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">10 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">10 GB</td>
-  <td class="t-pr-gb">5,90 kr.</td>
-  <td class="t-aar">59 kr.<span class="spar">43 kr. under snittet</span></td>
-  <td class="t-pris"><b>59</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="lebara" data-abonnement="lebara-10"
-        aria-label="Se tilbud på Lebara 10 GB hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Lebara</small></td>
-</tr><tr data-gb="15" data-pris="69" data-prgb="4.6000" data-aar="788" data-udbyder="CBB Mobil">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="24">
-      <span><b>CBB 15 GB</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">15 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">15 GB</td>
-  <td class="t-pr-gb">4,60 kr.</td>
-  <td class="t-aar">66 kr.<span class="spar">36 kr. under snittet</span></td>
-  <td class="t-pris"><span class="intro">49 kr. i 2 mdr.</span><b>69</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="cbb-mobil" data-abonnement="cbb-15"
-        aria-label="Se tilbud på CBB 15 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos CBB Mobil</small></td>
-</tr><tr data-gb="30" data-pris="89" data-prgb="2.9667" data-aar="1068" data-udbyder="Lebara">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="24">
-      <span><b>Lebara 30 GB</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">30 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">30 GB</td>
-  <td class="t-pr-gb">2,97 kr.</td>
-  <td class="t-aar">89 kr.<span class="spar">13 kr. under snittet</span></td>
-  <td class="t-pris"><b>89</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="lebara" data-abonnement="lebara-30"
-        aria-label="Se tilbud på Lebara 30 GB hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Lebara</small></td>
-</tr><tr data-gb="60" data-pris="109" data-prgb="1.8167" data-aar="1208" data-udbyder="CBB Mobil">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="24">
-      <span><b>CBB 60 GB</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">60 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">60 GB</td>
-  <td class="t-pr-gb">1,82 kr.</td>
-  <td class="t-aar">101 kr.<span class="spar">2 kr. under snittet</span></td>
-  <td class="t-pris"><span class="intro">59 kr. i 2 mdr.</span><b>109</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="cbb-mobil" data-abonnement="cbb-60"
-        aria-label="Se tilbud på CBB 60 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos CBB Mobil</small></td>
-</tr><tr data-gb="100" data-pris="109" data-prgb="1.0900" data-aar="1218" data-udbyder="Lebara">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="24">
-      <span><b>Lebara 100 GB</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">100 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">15 GB</td>
-  <td class="t-pr-gb">1,09 kr.</td>
-  <td class="t-aar">102 kr.<span class="spar">1 kr. under snittet</span></td>
-  <td class="t-pris"><span class="intro">79 kr. i 3 mdr.</span><b>109</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="lebara" data-abonnement="lebara-100"
-        aria-label="Se tilbud på Lebara 100 GB hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Lebara</small></td>
-</tr><tr data-gb="999" data-pris="179" data-prgb="0.0000" data-aar="1888" data-udbyder="CBB Mobil">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="24">
-      <span><b>CBB Fri Data</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">Fri data<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class="t"></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">30 GB</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">157 kr.</td>
-  <td class="t-pris"><span class="intro">49 kr. i 2 mdr.</span><b>179</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="cbb-mobil" data-abonnement="cbb-fri"
-        aria-label="Se tilbud på CBB Fri Data hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos CBB Mobil</small></td>
-</tr><tr data-gb="200" data-pris="200" data-prgb="1.0000" data-aar="2118" data-udbyder="CBB Mobil">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="24">
-      <span><b>CBB MIX 200 GB</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"><span class="maerke maerke-signal">8 streamingtjenester</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">200 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">50 GB</td>
-  <td class="t-pr-gb">1,00 kr.</td>
-  <td class="t-aar">176 kr.</td>
-  <td class="t-pris"><span class="intro">59 kr. i 2 mdr.</span><b>200</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="cbb-mobil" data-abonnement="cbb-mix"
-        aria-label="Se tilbud på CBB MIX 200 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos CBB Mobil</small></td>
-</tr><tr data-gb="999" data-pris="230" data-prgb="0.0000" data-aar="2448" data-udbyder="CBB Mobil">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="24">
-      <span><b>CBB MIX Fri Data</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"><span class="maerke maerke-signal">8 streamingtjenester</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">Fri data<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class="t"></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">50 GB</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">204 kr.</td>
-  <td class="t-pris"><span class="intro">74 kr. i 2 mdr.</span><b>230</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="cbb-mobil" data-abonnement="cbb-mix-fri"
-        aria-label="Se tilbud på CBB MIX Fri Data hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos CBB Mobil</small></td>
-</tr></tbody>
-      </table>
-    </div>
+    <div class="planliste"><article class="plan fremhaev" data-gb="0" data-pris="19"
+  data-prgb="0.0000" data-aar="228" data-udbyder="Lebara">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="26">
+    <div><b>Lebara Tale 5 timer</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-puls">Bedste værdi</span><span class="mrk mrk-sol">Laveste pris</span></div>
+    <div class="plan-stats"><div class="stat"><b>Ingen data</b><span>data i DK</span></div><div class="stat"><b>5 timer</b><span>tale</span></div><div class="stat"><b>—</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>19</b><span>kr./md.</span></div><div class="p-gns">228 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">83 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="lebara" data-abonnement="lebara-udendata"
+       aria-label="Se tilbud på Lebara Tale 5 timer hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Lebara</small>
+  </div>
+</article><article class="plan" data-gb="5" data-pris="49"
+  data-prgb="9.8000" data-aar="588" data-udbyder="CBB Mobil">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="26">
+    <div><b>CBB 5 GB</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>5 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>5 GB</b><span>EU-data</span></div><div class="stat"><b>9,80 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>49</b><span>kr./md.</span></div><div class="p-gns">588 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">53 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="cbb-mobil" data-abonnement="cbb-5"
+       aria-label="Se tilbud på CBB 5 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos CBB Mobil</small>
+  </div>
+</article><article class="plan" data-gb="10" data-pris="59"
+  data-prgb="5.9000" data-aar="708" data-udbyder="Lebara">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="26">
+    <div><b>Lebara 10 GB</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>10 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>10 GB</b><span>EU-data</span></div><div class="stat"><b>5,90 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>59</b><span>kr./md.</span></div><div class="p-gns">708 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">43 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="lebara" data-abonnement="lebara-10"
+       aria-label="Se tilbud på Lebara 10 GB hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Lebara</small>
+  </div>
+</article><article class="plan" data-gb="15" data-pris="69"
+  data-prgb="4.6000" data-aar="788" data-udbyder="CBB Mobil">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="26">
+    <div><b>CBB 15 GB</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>15 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>15 GB</b><span>EU-data</span></div><div class="stat"><b>4,60 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 2 mdr.</div><div class="p-tal"><b>49</b><span>kr./md.</span></div><div class="p-normal">Normalpris 69 kr./md.</div><div class="p-gns">Gns. <strong>66 kr./md.</strong> over 12 mdr.</div>
+    <div class="p-spar">36 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="cbb-mobil" data-abonnement="cbb-15"
+       aria-label="Se tilbud på CBB 15 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos CBB Mobil</small>
+  </div>
+</article><article class="plan" data-gb="30" data-pris="89"
+  data-prgb="2.9667" data-aar="1068" data-udbyder="Lebara">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="26">
+    <div><b>Lebara 30 GB</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>30 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>30 GB</b><span>EU-data</span></div><div class="stat"><b>2,97 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>89</b><span>kr./md.</span></div><div class="p-gns">1.068 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">13 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="lebara" data-abonnement="lebara-30"
+       aria-label="Se tilbud på Lebara 30 GB hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Lebara</small>
+  </div>
+</article><article class="plan" data-gb="60" data-pris="109"
+  data-prgb="1.8167" data-aar="1208" data-udbyder="CBB Mobil">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="26">
+    <div><b>CBB 60 GB</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>60 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>60 GB</b><span>EU-data</span></div><div class="stat"><b>1,82 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 2 mdr.</div><div class="p-tal"><b>59</b><span>kr./md.</span></div><div class="p-normal">Normalpris 109 kr./md.</div><div class="p-gns">Gns. <strong>101 kr./md.</strong> over 12 mdr.</div>
+    <div class="p-spar">2 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="cbb-mobil" data-abonnement="cbb-60"
+       aria-label="Se tilbud på CBB 60 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos CBB Mobil</small>
+  </div>
+</article><article class="plan" data-gb="100" data-pris="109"
+  data-prgb="1.0900" data-aar="1218" data-udbyder="Lebara">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="26">
+    <div><b>Lebara 100 GB</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>100 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>15 GB</b><span>EU-data</span></div><div class="stat"><b>1,09 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>79</b><span>kr./md.</span></div><div class="p-normal">Normalpris 109 kr./md.</div><div class="p-gns">Gns. <strong>102 kr./md.</strong> over 12 mdr.</div>
+    <div class="p-spar">1 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="lebara" data-abonnement="lebara-100"
+       aria-label="Se tilbud på Lebara 100 GB hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Lebara</small>
+  </div>
+</article><article class="plan" data-gb="999" data-pris="179"
+  data-prgb="0.0000" data-aar="1888" data-udbyder="CBB Mobil">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="26">
+    <div><b>CBB Fri Data</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>Fri data</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>30 GB</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 2 mdr.</div><div class="p-tal"><b>49</b><span>kr./md.</span></div><div class="p-normal">Normalpris 179 kr./md.</div><div class="p-gns">Gns. <strong>157 kr./md.</strong> over 12 mdr.</div>
     
-    <div class="tabelfod">
-      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> er den reelle månedspris, når intropris, normalpris og oprettelse regnes sammen. Priser er vejledende.</span>
+    <a class="knap knap-primaer" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="cbb-mobil" data-abonnement="cbb-fri"
+       aria-label="Se tilbud på CBB Fri Data hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos CBB Mobil</small>
+  </div>
+</article><article class="plan" data-gb="200" data-pris="200"
+  data-prgb="1.0000" data-aar="2118" data-udbyder="CBB Mobil">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="26">
+    <div><b>CBB MIX 200 GB</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-signal">Introtilbud</span><span class="mrk mrk-berry">8 streamingtjenester</span></div>
+    <div class="plan-stats"><div class="stat"><b>200 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>50 GB</b><span>EU-data</span></div><div class="stat"><b>1,00 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span><span class="chp">Netflix, HBO Max, TV 2 Play…</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 2 mdr.</div><div class="p-tal"><b>59</b><span>kr./md.</span></div><div class="p-normal">Normalpris 200 kr./md.</div><div class="p-gns">Gns. <strong>176 kr./md.</strong> over 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="cbb-mobil" data-abonnement="cbb-mix"
+       aria-label="Se tilbud på CBB MIX 200 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos CBB Mobil</small>
+  </div>
+</article><article class="plan" data-gb="999" data-pris="230"
+  data-prgb="0.0000" data-aar="2448" data-udbyder="CBB Mobil">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="26">
+    <div><b>CBB MIX Fri Data</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-signal">Introtilbud</span><span class="mrk mrk-berry">8 streamingtjenester</span></div>
+    <div class="plan-stats"><div class="stat"><b>Fri data</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>50 GB</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span><span class="chp">Netflix, HBO Max, TV 2 Play…</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 2 mdr.</div><div class="p-tal"><b>74</b><span>kr./md.</span></div><div class="p-normal">Normalpris 230 kr./md.</div><div class="p-gns">Gns. <strong>204 kr./md.</strong> over 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="cbb-mobil" data-abonnement="cbb-mix-fri"
+       aria-label="Se tilbud på CBB MIX Fri Data hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos CBB Mobil</small>
+  </div>
+</article></div>
+    
+    <div class="listefod">
+      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> regner intropris,
+      normalpris og oprettelse sammen — det er den reelle pris.</span>
       <span>Kilde: udbydernes egne prislister</span>
     </div>
   </div>

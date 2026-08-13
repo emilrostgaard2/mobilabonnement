@@ -104,104 +104,98 @@
     <p class="led">Alle Duka-abonnementer vi følger, sorteret efter pris.</p>
   </div>
   
-  <div class="tabelramme afslør">
-    <div class="tabelrul">
-      <table class="pris">
-        <caption>Klik på en kolonneoverskrift for at sortere. <span data-antal-vist>4</span> abonnementer vist.</caption>
-        <thead>
-          <tr>
-            <th scope="col" class="sorter" data-noegle="udbyder">Abonnement</th>
-            <th scope="col" class="sorter" data-noegle="gb">Data</th>
-            <th scope="col">Tale</th>
-            <th scope="col">EU-data</th>
-            <th scope="col" class="sorter" data-noegle="prgb">Pris pr. GB</th>
-            <th scope="col" class="sorter" data-noegle="aar">Gns. 12 mdr.</th>
-            <th scope="col" class="sorter" data-noegle="pris" data-retning="op">Pris pr. md.</th>
-            <th scope="col"><span class="visuelt-skjult">Bestil</span></th>
-          </tr>
-        </thead>
-        <tbody><tr class="fremhaev" data-gb="0" data-pris="45" data-prgb="0.0000" data-aar="540" data-udbyder="Duka">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="24">
-      <span><b>dukaTALE Basis</b><small>MVNO</small></span>
+  <div class="listeramme afslør">
+    <div class="liste-top">
+      <span class="liste-antal"><span data-antal-vist>4</span> abonnementer</span>
+      <div class="sorter-bar">
+        <span class="maerkat">Sortér</span>
+        <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
+        <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
+        <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
+        <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
+      </div>
     </div>
-    <div class="t-maerker"><span class="maerke maerke-puls">Bedste værdi</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span></div>
-  </td>
-  <td class="t-data">Ingen data<div class="bjaelke" aria-hidden="true"><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">—</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">45 kr.<span class="spar">47 kr. under snittet</span></td>
-  <td class="t-pris"><b>45</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="duka" data-abonnement="duka-tale"
-        aria-label="Se tilbud på dukaTALE Basis hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Duka</small></td>
-</tr><tr data-gb="6" data-pris="50" data-prgb="8.3333" data-aar="600" data-udbyder="Duka">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="24">
-      <span><b>Duka 6 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">6 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">6 GB</td>
-  <td class="t-pr-gb">8,33 kr.</td>
-  <td class="t-aar">50 kr.<span class="spar">42 kr. under snittet</span></td>
-  <td class="t-pris"><b>50</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="duka" data-abonnement="duka-6"
-        aria-label="Se tilbud på Duka 6 GB hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Duka</small></td>
-</tr><tr data-gb="30" data-pris="89" data-prgb="2.9667" data-aar="1008" data-udbyder="Duka">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="24">
-      <span><b>dukaTALE 30 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">30 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">30 GB</td>
-  <td class="t-pr-gb">2,97 kr.</td>
-  <td class="t-aar">84 kr.<span class="spar">8 kr. under snittet</span></td>
-  <td class="t-pris"><span class="intro">69 kr. i 3 mdr.</span><b>89</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="duka" data-abonnement="duka-30"
-        aria-label="Se tilbud på dukaTALE 30 GB hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Duka</small></td>
-</tr><tr data-gb="999" data-pris="189" data-prgb="0.0000" data-aar="2268" data-udbyder="Duka">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="24">
-      <span><b>Duka Fri Data</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">Fri data<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class="t"></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">40 GB</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">189 kr.</td>
-  <td class="t-pris"><b>189</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="duka" data-abonnement="duka-fri"
-        aria-label="Se tilbud på Duka Fri Data hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Duka</small></td>
-</tr></tbody>
-      </table>
-    </div>
+    <div class="planliste"><article class="plan fremhaev" data-gb="0" data-pris="45"
+  data-prgb="0.0000" data-aar="540" data-udbyder="Duka">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="26">
+    <div><b>dukaTALE Basis</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-puls">Bedste værdi</span></div>
+    <div class="plan-stats"><div class="stat"><b>Ingen data</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>—</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>45</b><span>kr./md.</span></div><div class="p-gns">540 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">47 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="duka" data-abonnement="duka-tale"
+       aria-label="Se tilbud på dukaTALE Basis hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Duka</small>
+  </div>
+</article><article class="plan" data-gb="6" data-pris="50"
+  data-prgb="8.3333" data-aar="600" data-udbyder="Duka">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="26">
+    <div><b>Duka 6 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>6 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>6 GB</b><span>EU-data</span></div><div class="stat"><b>8,33 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>50</b><span>kr./md.</span></div><div class="p-gns">600 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">42 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="duka" data-abonnement="duka-6"
+       aria-label="Se tilbud på Duka 6 GB hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Duka</small>
+  </div>
+</article><article class="plan" data-gb="30" data-pris="89"
+  data-prgb="2.9667" data-aar="1008" data-udbyder="Duka">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="26">
+    <div><b>dukaTALE 30 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>30 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>30 GB</b><span>EU-data</span></div><div class="stat"><b>2,97 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>69</b><span>kr./md.</span></div><div class="p-normal">Normalpris 89 kr./md.</div><div class="p-gns">Gns. <strong>84 kr./md.</strong> over 12 mdr.</div>
+    <div class="p-spar">8 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="duka" data-abonnement="duka-30"
+       aria-label="Se tilbud på dukaTALE 30 GB hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Duka</small>
+  </div>
+</article><article class="plan" data-gb="999" data-pris="189"
+  data-prgb="0.0000" data-aar="2268" data-udbyder="Duka">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="26">
+    <div><b>Duka Fri Data</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>Fri data</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>40 GB</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>189</b><span>kr./md.</span></div><div class="p-gns">2.268 kr. samlet på 12 mdr.</div>
     
-    <div class="tabelfod">
-      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> er den reelle månedspris, når intropris, normalpris og oprettelse regnes sammen. Priser er vejledende.</span>
+    <a class="knap knap-primaer" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="duka" data-abonnement="duka-fri"
+       aria-label="Se tilbud på Duka Fri Data hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Duka</small>
+  </div>
+</article></div>
+    
+    <div class="listefod">
+      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> regner intropris,
+      normalpris og oprettelse sammen — det er den reelle pris.</span>
       <span>Kilde: udbydernes egne prislister</span>
     </div>
   </div>

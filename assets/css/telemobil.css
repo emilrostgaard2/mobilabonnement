@@ -214,33 +214,6 @@ p{margin:0 0 1.15em}
 .sektion-hoved.midt .etiket{justify-content:center}
 
 /* ==========================================================================
-   Fire hurtigvalg over tabellen
-   ========================================================================== */
-.hurtigvalg{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;margin-top:2.6rem;position:relative;z-index:20}
-@media(max-width:980px){.hurtigvalg{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){.hurtigvalg{grid-template-columns:1fr;margin-top:1.8rem}}
-
-.valgkort{
-  background:#fff;border-radius:var(--r-l);padding:1.4rem 1.3rem 1.25rem;
-  box-shadow:var(--skygge-loft);border:1px solid rgba(255,255,255,.7);
-  display:flex;flex-direction:column;position:relative;overflow:hidden;
-  transition:transform .22s,box-shadow .22s;text-decoration:none;color:inherit;
-}
-.valgkort::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--grad-signal)}
-.valgkort:nth-child(2)::before{background:var(--grad-puls)}
-.valgkort:nth-child(3)::before{background:linear-gradient(90deg,#FFC53D,#FF8A3D)}
-.valgkort:nth-child(4)::before{background:linear-gradient(90deg,#FF5C7A,#7C4DFF)}
-.valgkort:hover{transform:translateY(-5px);box-shadow:0 24px 50px -18px rgba(19,23,53,.34);color:inherit}
-.valgkort .kat{font-family:var(--font-tal);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--graa);margin-bottom:.55rem}
-.valgkort .navn{font-family:var(--font-display);font-weight:700;font-size:1.16rem;margin-bottom:.15rem;letter-spacing:-.02em}
-.valgkort .detalje{font-size:.85rem;color:var(--graa);margin-bottom:.9rem}
-.valgkort .pris{font-family:var(--font-tal);font-size:1.75rem;font-weight:600;color:var(--blaek);line-height:1;margin-top:auto}
-.valgkort .pris span{font-size:.8rem;color:var(--graa);font-weight:400}
-.valgkort .pil{margin-top:.75rem;font-size:.86rem;font-weight:600;color:var(--signal-dyb);display:flex;align-items:center;gap:.35rem}
-.valgkort:hover .pil{gap:.6rem}
-.valgkort .logo-lille{height:22px;width:auto;max-width:104px;object-fit:contain;object-position:left center;margin-bottom:.8rem}
-
-/* ==========================================================================
    Sammenligningstabel
    ========================================================================== */
 .filtre{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1.3rem;padding:1rem 1.1rem;background:#fff;border-radius:var(--r-m);box-shadow:var(--skygge-blod)}
@@ -594,68 +567,6 @@ table.pris tbody tr[hidden]{display:none}
 }
 
 /* ==========================================================================
-   Pristabel — CRO-udgave
-   ========================================================================== */
-table.pris{min-width:1020px}
-table.pris td{padding:1.05rem 1rem;vertical-align:middle}
-table.pris tbody tr{transition:background .16s,box-shadow .16s}
-table.pris tbody tr:hover{background:#F7F9FF;box-shadow:inset 3px 0 0 var(--signal)}
-table.pris tbody tr.fremhaev{
-  background:linear-gradient(90deg,rgba(0,209,143,.1),rgba(0,209,143,.02));
-  box-shadow:inset 3px 0 0 var(--puls);
-}
-table.pris tbody tr.fremhaev:hover{background:linear-gradient(90deg,rgba(0,209,143,.16),rgba(0,209,143,.04))}
-
-.t-udbyder img{height:24px;width:80px}
-.t-udbyder b{font-size:1rem;font-weight:700}
-.t-maerker{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.5rem}
-.t-maerker:empty{display:none}
-.t-mini{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem}
-.mini{
-  font-size:.68rem;font-family:var(--font-tal);color:var(--graa);
-  background:#F1F4FC;border-radius:5px;padding:.16rem .42rem;white-space:nowrap;
-}
-.mini-advar{background:rgba(255,197,61,.2);color:#8A6100}
-
-.t-eu{font-family:var(--font-tal);font-size:.86rem;color:var(--graa)}
-.t-aar{font-family:var(--font-tal);font-size:.9rem;color:var(--blaek);white-space:nowrap}
-.spar{display:block;font-family:var(--font-brod);font-size:.7rem;font-weight:700;color:var(--puls-dyb);margin-top:.2rem}
-
-.t-pris{white-space:nowrap;text-align:right}
-.t-pris b{font-family:var(--font-tal);font-size:1.5rem;font-weight:600;display:block;line-height:1.05}
-.t-pris .pr{font-family:var(--font-tal);font-size:.72rem;color:var(--graa)}
-.t-pris s{font-family:var(--font-tal);color:var(--graa);font-size:.76rem;display:block}
-
-.t-cta{text-align:right;white-space:nowrap}
-.t-cta .knap{width:100%;justify-content:center;padding:.62rem 1.1rem;font-size:.9rem}
-.t-hos{display:block;font-size:.68rem;color:var(--graa);margin-top:.3rem;text-align:center}
-
-table.pris th{padding:.9rem 1rem;background:var(--blaek)}
-table.pris caption{padding:1.25rem 1.3rem .6rem;font-size:.88rem}
-
-.filtre{padding:1.1rem 1.2rem;border-radius:var(--r-l)}
-.chip[aria-pressed="true"]{background:var(--puls);border-color:var(--puls);color:#04301F}
-
-@media(max-width:760px){
-  .t-cta .knap{padding:.55rem .7rem;font-size:.82rem}
-}
-
-.valgkort-aar{font-family:var(--font-tal);font-size:.74rem;color:var(--graa);margin-top:.25rem}
-table.pris th{white-space:nowrap}
-table.pris td:first-child,table.pris th:first-child{min-width:270px}
-table.pris th:nth-child(2),table.pris td:nth-child(2){min-width:96px}
-table.pris td:last-child{min-width:150px}
-
-.t-pris .intro{display:block;font-family:var(--font-brod);font-size:.72rem;font-weight:700;
-  color:var(--puls-dyb);background:rgba(0,209,143,.13);border-radius:5px;padding:.14rem .4rem;margin-bottom:.25rem}
-
-.tjenestelinks{display:flex;flex-wrap:wrap;gap:.5rem}
-.tjenestelinks a{background:#fff;border:1px solid var(--graa-lys);border-radius:999px;
-  padding:.4rem .9rem;font-size:.88rem;font-weight:550;text-decoration:none;transition:.18s}
-.tjenestelinks a:hover{border-color:var(--signal);background:#F2F5FF}
-.nav-menu-liste{width:660px}
-
-/* ==========================================================================
    Abonnementsfinder
    ========================================================================== */
 .quiz{background:var(--grad-nat);border-radius:var(--r-xl);padding:2.4rem 2.2rem;color:#fff;
@@ -694,3 +605,127 @@ table.pris td:last-child{min-width:150px}
 
 .quiz-svar .knap-linje{border-color:rgba(255,255,255,.35);color:#fff;background:rgba(255,255,255,.06)}
 .quiz-svar .knap-linje:hover{border-color:var(--puls);color:#fff;background:rgba(0,209,143,.16)}
+
+/* ==========================================================================
+   Prisliste — rækkekort
+   ========================================================================== */
+.listeramme{background:transparent}
+.liste-top{
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;justify-content:space-between;
+  background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);
+  padding:.9rem 1.15rem;margin-bottom:.9rem;box-shadow:var(--skygge-blod);
+}
+.liste-antal{font-family:var(--font-tal);font-size:.82rem;color:var(--graa)}
+.liste-antal span{color:var(--blaek);font-weight:600}
+.sorter-bar{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+.chip-sort{padding:.36rem .8rem;font-size:.83rem}
+
+.planliste{display:flex;flex-direction:column;gap:.85rem}
+.plan[hidden]{display:none}
+.plan{
+  display:grid;grid-template-columns:minmax(200px,1fr) minmax(300px,1.7fr) minmax(210px,auto);
+  gap:1.4rem;align-items:center;background:#fff;border:1px solid var(--graa-lys);
+  border-radius:var(--r-l);padding:1.35rem 1.5rem;box-shadow:var(--skygge-blod);
+  transition:transform .2s,box-shadow .2s,border-color .2s;position:relative;
+}
+.plan:hover{transform:translateY(-2px);box-shadow:var(--skygge-loft);border-color:#C8D2F0}
+.plan.fremhaev{border-color:var(--puls);box-shadow:0 0 0 1px var(--puls),var(--skygge-blod)}
+.plan.fremhaev::before{
+  content:"";position:absolute;left:-1px;top:18px;bottom:18px;width:4px;
+  background:var(--puls);border-radius:0 4px 4px 0;
+}
+
+.plan-ident{display:flex;flex-direction:column;gap:.7rem}
+.plan-ident img{height:26px;width:auto;max-width:110px;object-fit:contain;object-position:left center}
+.plan-ident b{display:block;font-family:var(--font-display);font-size:1.12rem;letter-spacing:-.02em;line-height:1.2}
+.plan-ident small{color:var(--graa);font-size:.8rem}
+
+.plan-mrk{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem}
+.plan-mrk:empty{display:none}
+.mrk{font-size:.67rem;font-weight:700;letter-spacing:.045em;text-transform:uppercase;
+  padding:.24rem .6rem;border-radius:999px;white-space:nowrap}
+.mrk-puls{background:rgba(0,209,143,.16);color:var(--puls-dyb)}
+.mrk-sol{background:rgba(255,197,61,.24);color:#8A6100}
+.mrk-signal{background:rgba(61,90,254,.13);color:var(--signal-dyb)}
+.mrk-berry{background:rgba(124,77,255,.13);color:#5B2FD6}
+
+.plan-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.stat{background:#F5F7FD;border:1px solid #E6EBF9;border-radius:var(--r-m);
+  padding:.6rem .5rem;text-align:center}
+.stat b{display:block;font-family:var(--font-tal);font-size:.98rem;font-weight:600;
+  line-height:1.2;color:var(--blaek)}
+.stat span{display:block;font-size:.68rem;color:var(--graa);margin-top:.15rem}
+
+.plan-chips{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.7rem}
+.chp{font-size:.72rem;color:var(--graa);display:inline-flex;align-items:center;gap:.3rem}
+.chp::before{content:"✓";color:var(--puls-dyb);font-weight:700;font-size:.8rem}
+.chp-advar{color:#8A6100}
+.chp-advar::before{content:"!";color:var(--sol)}
+
+.plan-pris{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:.1rem}
+.p-intro{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--puls-dyb);margin-bottom:.1rem}
+.p-tal b{font-family:var(--font-tal);font-size:2rem;font-weight:600;line-height:1}
+.p-tal span{font-family:var(--font-tal);font-size:.8rem;color:var(--graa);margin-left:.15rem}
+.p-normal{font-size:.75rem;color:var(--graa)}
+.p-gns{font-size:.75rem;color:var(--graa);margin-top:.1rem}
+.p-gns strong{color:var(--blaek)}
+.p-spar{font-size:.72rem;font-weight:700;color:var(--puls-dyb);margin-top:.25rem}
+.plan-pris .knap{margin-top:.7rem;width:100%;justify-content:center;padding:.72rem 1.3rem}
+.p-hos{font-size:.68rem;color:var(--graa);margin-top:.3rem}
+
+.listefod{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+  font-size:.8rem;color:var(--graa);padding:1rem .3rem 0}
+.listefod strong{color:var(--blaek)}
+.vis-flere{display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1.3rem;background:transparent;border:none}
+
+@media(max-width:1000px){
+  .plan{grid-template-columns:1fr;gap:1.1rem;padding:1.2rem}
+  .plan-ident{flex-direction:row;align-items:center;gap:1rem}
+  .plan-pris{text-align:left;align-items:stretch;border-top:1px solid var(--graa-lys);padding-top:1rem}
+  .plan-pris .knap{width:auto}
+}
+@media(max-width:520px){
+  .plan-stats{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ==========================================================================
+   Fire hurtigvalg over listen
+   ========================================================================== */
+.hurtigvalg{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;margin-top:2.4rem;
+  position:relative;z-index:20}
+@media(max-width:1040px){.hurtigvalg{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.hurtigvalg{grid-template-columns:1fr}}
+
+.valgkort{
+  background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);
+  padding:1.9rem 1.35rem 1.35rem;box-shadow:var(--skygge-blod);
+  display:flex;flex-direction:column;position:relative;transition:transform .22s,box-shadow .22s;
+}
+.valgkort:hover{transform:translateY(-4px);box-shadow:var(--skygge-loft)}
+.valg-badge{
+  position:absolute;top:-11px;left:1.2rem;font-size:.7rem;font-weight:700;
+  letter-spacing:.045em;padding:.32rem .8rem;border-radius:999px;color:#fff;white-space:nowrap;
+  box-shadow:0 4px 12px -4px rgba(19,23,53,.4);
+}
+.v0 .valg-badge{background:var(--blaek)}
+.v1 .valg-badge{background:var(--puls-dyb)}
+.v2 .valg-badge{background:var(--signal-dyb)}
+.v3 .valg-badge{background:var(--berry)}
+
+.valg-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.9rem}
+.valg-logo{width:42px;height:42px;border:1px solid var(--graa-lys);border-radius:11px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:5px;background:#fff}
+.valg-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.valg-top b{display:block;font-family:var(--font-display);font-size:1.02rem;line-height:1.2;letter-spacing:-.02em}
+.valg-top small{color:var(--graa);font-size:.78rem}
+
+.valg-tag{background:#F1F4FC;color:var(--graa);font-size:.74rem;border-radius:8px;
+  padding:.42rem .6rem;margin-bottom:.95rem;line-height:1.4;min-height:3.1em;
+  display:flex;align-items:center}
+.valg-pris{font-family:var(--font-tal);font-size:2rem;font-weight:600;line-height:1;color:var(--blaek)}
+.valg-pris span{font-size:.78rem;color:var(--graa);font-weight:400}
+.valg-under{font-size:.74rem;color:var(--graa);line-height:1.45;margin-top:.4rem;
+  min-height:3.2em;margin-bottom:1rem}
+.valg-knap{margin-top:auto;justify-content:center;padding:.62rem 1rem;font-size:.88rem}
+.valgkort:hover .valg-knap{border-color:var(--puls);color:var(--puls-dyb)}

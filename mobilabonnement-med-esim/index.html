@@ -104,339 +104,333 @@
     <p class="led">Alle abonnementer her kan leveres som eSIM. Du får en QR-kode og kan være i gang få minutter efter bestilling.</p>
   </div>
   <div class="filtre">
-  <span class="maerkat">Filtrér</span>
+  <span class="maerkat">Datamængde</span>
   <button class="chip" data-filter="alle" aria-pressed="true">Alle</button>
   <button class="chip" data-filter="lille" aria-pressed="false">Op til 15 GB</button>
   <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
   <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
   <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
 </div>
-  <div class="tabelramme afslør">
-    <div class="tabelrul">
-      <table class="pris">
-        <caption>Klik på en kolonneoverskrift for at sortere. <span data-antal-vist>16</span> abonnementer vist.</caption>
-        <thead>
-          <tr>
-            <th scope="col" class="sorter" data-noegle="udbyder">Abonnement</th>
-            <th scope="col" class="sorter" data-noegle="gb">Data</th>
-            <th scope="col">Tale</th>
-            <th scope="col">EU-data</th>
-            <th scope="col" class="sorter" data-noegle="prgb">Pris pr. GB</th>
-            <th scope="col" class="sorter" data-noegle="aar">Gns. 12 mdr.</th>
-            <th scope="col" class="sorter" data-noegle="pris" data-retning="op">Pris pr. md.</th>
-            <th scope="col"><span class="visuelt-skjult">Bestil</span></th>
-          </tr>
-        </thead>
-        <tbody><tr class="fremhaev" data-gb="0" data-pris="19" data-prgb="0.0000" data-aar="228" data-udbyder="Lebara">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="24">
-      <span><b>Lebara Tale 5 timer</b><small>Telenors net</small></span>
+  <div class="listeramme afslør">
+    <div class="liste-top">
+      <span class="liste-antal"><span data-antal-vist>16</span> abonnementer</span>
+      <div class="sorter-bar">
+        <span class="maerkat">Sortér</span>
+        <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
+        <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
+        <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
+        <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
+      </div>
     </div>
-    <div class="t-maerker"><span class="maerke maerke-puls">Bedste værdi</span><span class="maerke maerke-sol">Laveste pris</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span></div>
-  </td>
-  <td class="t-data">Ingen data<div class="bjaelke" aria-hidden="true"><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>5 timer</td>
-  <td class="t-eu">—</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">19 kr.<span class="spar">35 kr. under snittet</span></td>
-  <td class="t-pris"><b>19</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="lebara" data-abonnement="lebara-udendata"
-        aria-label="Se tilbud på Lebara Tale 5 timer hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Lebara</small></td>
-</tr><tr data-gb="0" data-pris="29" data-prgb="0.0000" data-aar="348" data-udbyder="Lyca Mobile">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/lyca-mobile.webp" alt="Lyca Mobile logo" loading="lazy" height="24">
-      <span><b>Lyca Tale 3 timer</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span></div>
-  </td>
-  <td class="t-data">Ingen data<div class="bjaelke" aria-hidden="true"><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>3 timer</td>
-  <td class="t-eu">—</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">29 kr.<span class="spar">25 kr. under snittet</span></td>
-  <td class="t-pris"><b>29</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/lyca-mobile" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="lyca-mobile" data-abonnement="lyca-udendata"
-        aria-label="Se tilbud på Lyca Tale 3 timer hos Lyca Mobile">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Lyca Mobile</small></td>
-</tr><tr data-gb="0" data-pris="39" data-prgb="0.0000" data-aar="468" data-udbyder="Flexii">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="24">
-      <span><b>Flexii Fri Tale</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span></div>
-  </td>
-  <td class="t-data">Ingen data<div class="bjaelke" aria-hidden="true"><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">—</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">39 kr.<span class="spar">15 kr. under snittet</span></td>
-  <td class="t-pris"><b>39</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/flexii" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="flexii" data-abonnement="flexii-fritale"
-        aria-label="Se tilbud på Flexii Fri Tale hos Flexii">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Flexii</small></td>
-</tr><tr data-gb="5" data-pris="44" data-prgb="8.8000" data-aar="450" data-udbyder="Oister">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="24">
-      <span><b>Oister 5 GB</b><small>Nettet fra 3</small></span>
-    </div>
-    <div class="t-maerker"><span class="maerke maerke-sol">Mest valgte</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">5 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">5 GB</td>
-  <td class="t-pr-gb">8,80 kr.</td>
-  <td class="t-aar">38 kr.<span class="spar">16 kr. under snittet</span></td>
-  <td class="t-pris"><span class="intro">18 kr. i 3 mdr.</span><b>44</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="oister" data-abonnement="oister-5"
-        aria-label="Se tilbud på Oister 5 GB hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Oister</small></td>
-</tr><tr data-gb="0" data-pris="45" data-prgb="0.0000" data-aar="540" data-udbyder="Duka">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="24">
-      <span><b>dukaTALE Basis</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span></div>
-  </td>
-  <td class="t-data">Ingen data<div class="bjaelke" aria-hidden="true"><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">—</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">45 kr.<span class="spar">9 kr. under snittet</span></td>
-  <td class="t-pris"><b>45</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="duka" data-abonnement="duka-tale"
-        aria-label="Se tilbud på dukaTALE Basis hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Duka</small></td>
-</tr><tr data-gb="5" data-pris="49" data-prgb="9.8000" data-aar="588" data-udbyder="CBB Mobil">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="24">
-      <span><b>CBB 5 GB</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">5 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">5 GB</td>
-  <td class="t-pr-gb">9,80 kr.</td>
-  <td class="t-aar">49 kr.<span class="spar">5 kr. under snittet</span></td>
-  <td class="t-pris"><b>49</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="cbb-mobil" data-abonnement="cbb-5"
-        aria-label="Se tilbud på CBB 5 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos CBB Mobil</small></td>
-</tr><tr data-gb="6" data-pris="50" data-prgb="8.3333" data-aar="600" data-udbyder="Duka">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="24">
-      <span><b>Duka 6 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">6 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">6 GB</td>
-  <td class="t-pr-gb">8,33 kr.</td>
-  <td class="t-aar">50 kr.<span class="spar">4 kr. under snittet</span></td>
-  <td class="t-pris"><b>50</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="duka" data-abonnement="duka-6"
-        aria-label="Se tilbud på Duka 6 GB hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Duka</small></td>
-</tr><tr data-gb="10" data-pris="55" data-prgb="5.5000" data-aar="660" data-udbyder="Lyca Mobile">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/lyca-mobile.webp" alt="Lyca Mobile logo" loading="lazy" height="24">
-      <span><b>Lyca 10 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">10 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">10 GB</td>
-  <td class="t-pr-gb">5,50 kr.</td>
-  <td class="t-aar">55 kr.</td>
-  <td class="t-pris"><b>55</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/lyca-mobile" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="lyca-mobile" data-abonnement="lyca-10"
-        aria-label="Se tilbud på Lyca 10 GB hos Lyca Mobile">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Lyca Mobile</small></td>
-</tr><tr data-gb="10" data-pris="59" data-prgb="5.9000" data-aar="708" data-udbyder="Lebara">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="24">
-      <span><b>Lebara 10 GB</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">10 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">10 GB</td>
-  <td class="t-pr-gb">5,90 kr.</td>
-  <td class="t-aar">59 kr.</td>
-  <td class="t-pris"><b>59</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="lebara" data-abonnement="lebara-10"
-        aria-label="Se tilbud på Lebara 10 GB hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Lebara</small></td>
-</tr><tr data-gb="8" data-pris="59" data-prgb="7.3750" data-aar="708" data-udbyder="eesy">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/eesy.webp" alt="eesy logo" loading="lazy" height="24">
-      <span><b>eesy 8 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">8 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">8 GB</td>
-  <td class="t-pr-gb">7,38 kr.</td>
-  <td class="t-aar">59 kr.</td>
-  <td class="t-pris"><b>59</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/eesy" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="eesy" data-abonnement="eesy-8"
-        aria-label="Se tilbud på eesy 8 GB hos eesy">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos eesy</small></td>
-</tr><tr hidden data-gb="8" data-pris="59" data-prgb="7.3750" data-aar="708" data-udbyder="Greentel">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="24">
-      <span><b>Greentel 8 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">8 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">8 GB</td>
-  <td class="t-pr-gb">7,38 kr.</td>
-  <td class="t-aar">59 kr.</td>
-  <td class="t-pris"><b>59</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="greentel" data-abonnement="greentel-8"
-        aria-label="Se tilbud på Greentel 8 GB hos Greentel">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Greentel</small></td>
-</tr><tr hidden data-gb="15" data-pris="69" data-prgb="4.6000" data-aar="788" data-udbyder="CBB Mobil">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="24">
-      <span><b>CBB 15 GB</b><small>Telenors net</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">15 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">15 GB</td>
-  <td class="t-pr-gb">4,60 kr.</td>
-  <td class="t-aar">66 kr.</td>
-  <td class="t-pris"><span class="intro">49 kr. i 2 mdr.</span><b>69</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="cbb-mobil" data-abonnement="cbb-15"
-        aria-label="Se tilbud på CBB 15 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos CBB Mobil</small></td>
-</tr><tr hidden data-gb="20" data-pris="69" data-prgb="3.4500" data-aar="828" data-udbyder="Flexii">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="24">
-      <span><b>Flexii 20 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">20 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">20 GB</td>
-  <td class="t-pr-gb">3,45 kr.</td>
-  <td class="t-aar">69 kr.</td>
-  <td class="t-pris"><b>69</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/flexii" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="flexii" data-abonnement="flexii-20"
-        aria-label="Se tilbud på Flexii 20 GB hos Flexii">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Flexii</small></td>
-</tr><tr hidden data-gb="20" data-pris="74" data-prgb="3.7000" data-aar="888" data-udbyder="Oister">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="24">
-      <span><b>Oister 20 GB</b><small>Nettet fra 3</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">20 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">20 GB</td>
-  <td class="t-pr-gb">3,70 kr.</td>
-  <td class="t-aar">74 kr.</td>
-  <td class="t-pris"><b>74</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="oister" data-abonnement="oister-20"
-        aria-label="Se tilbud på Oister 20 GB hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Oister</small></td>
-</tr><tr hidden data-gb="25" data-pris="79" data-prgb="3.1600" data-aar="948" data-udbyder="Greentel">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="24">
-      <span><b>Greentel 25 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">25 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">25 GB</td>
-  <td class="t-pr-gb">3,16 kr.</td>
-  <td class="t-aar">79 kr.</td>
-  <td class="t-pris"><b>79</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="greentel" data-abonnement="greentel-25"
-        aria-label="Se tilbud på Greentel 25 GB hos Greentel">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Greentel</small></td>
-</tr><tr hidden data-gb="30" data-pris="85" data-prgb="2.8333" data-aar="819" data-udbyder="Lyca Mobile">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/lyca-mobile.webp" alt="Lyca Mobile logo" loading="lazy" height="24">
-      <span><b>Lyca 30 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">30 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">30 GB</td>
-  <td class="t-pr-gb">2,83 kr.</td>
-  <td class="t-aar">68 kr.</td>
-  <td class="t-pris"><span class="intro">18 kr. i 3 mdr.</span><b>85</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/lyca-mobile" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="lyca-mobile" data-abonnement="lyca-30"
-        aria-label="Se tilbud på Lyca 30 GB hos Lyca Mobile">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Lyca Mobile</small></td>
-</tr></tbody>
-      </table>
-    </div>
-    <div class="vis-flere"><button type="button" class="knap knap-linje" data-vis-flere>Vis flere abonnementer</button><small data-resterende>6 abonnementer tilbage</small></div>
-    <div class="tabelfod">
-      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> er den reelle månedspris, når intropris, normalpris og oprettelse regnes sammen. Priser er vejledende.</span>
+    <div class="planliste"><article class="plan fremhaev" data-gb="0" data-pris="19"
+  data-prgb="0.0000" data-aar="228" data-udbyder="Lebara">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="26">
+    <div><b>Lebara Tale 5 timer</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-puls">Bedste værdi</span><span class="mrk mrk-sol">Laveste pris</span></div>
+    <div class="plan-stats"><div class="stat"><b>Ingen data</b><span>data i DK</span></div><div class="stat"><b>5 timer</b><span>tale</span></div><div class="stat"><b>—</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>19</b><span>kr./md.</span></div><div class="p-gns">228 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">35 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="lebara" data-abonnement="lebara-udendata"
+       aria-label="Se tilbud på Lebara Tale 5 timer hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Lebara</small>
+  </div>
+</article><article class="plan" data-gb="0" data-pris="29"
+  data-prgb="0.0000" data-aar="348" data-udbyder="Lyca Mobile">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/lyca-mobile.webp" alt="Lyca Mobile logo" loading="lazy" height="26">
+    <div><b>Lyca Tale 3 timer</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>Ingen data</b><span>data i DK</span></div><div class="stat"><b>3 timer</b><span>tale</span></div><div class="stat"><b>—</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>29</b><span>kr./md.</span></div><div class="p-gns">348 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">25 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/lyca-mobile" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="lyca-mobile" data-abonnement="lyca-udendata"
+       aria-label="Se tilbud på Lyca Tale 3 timer hos Lyca Mobile">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Lyca Mobile</small>
+  </div>
+</article><article class="plan" data-gb="0" data-pris="39"
+  data-prgb="0.0000" data-aar="468" data-udbyder="Flexii">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="26">
+    <div><b>Flexii Fri Tale</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>Ingen data</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>—</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>39</b><span>kr./md.</span></div><div class="p-gns">468 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">15 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/flexii" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="flexii" data-abonnement="flexii-fritale"
+       aria-label="Se tilbud på Flexii Fri Tale hos Flexii">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Flexii</small>
+  </div>
+</article><article class="plan" data-gb="5" data-pris="44"
+  data-prgb="8.8000" data-aar="450" data-udbyder="Oister">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
+    <div><b>Oister 5 GB</b><small>Nettet fra 3</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-sol">Mest valgte</span><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>5 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>5 GB</b><span>EU-data</span></div><div class="stat"><b>8,80 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>18</b><span>kr./md.</span></div><div class="p-normal">Normalpris 44 kr./md.</div><div class="p-gns">Gns. <strong>38 kr./md.</strong> over 12 mdr.</div>
+    <div class="p-spar">16 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="oister" data-abonnement="oister-5"
+       aria-label="Se tilbud på Oister 5 GB hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Oister</small>
+  </div>
+</article><article class="plan" data-gb="0" data-pris="45"
+  data-prgb="0.0000" data-aar="540" data-udbyder="Duka">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="26">
+    <div><b>dukaTALE Basis</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>Ingen data</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>—</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>45</b><span>kr./md.</span></div><div class="p-gns">540 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">9 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="duka" data-abonnement="duka-tale"
+       aria-label="Se tilbud på dukaTALE Basis hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Duka</small>
+  </div>
+</article><article class="plan" data-gb="5" data-pris="49"
+  data-prgb="9.8000" data-aar="588" data-udbyder="CBB Mobil">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="26">
+    <div><b>CBB 5 GB</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>5 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>5 GB</b><span>EU-data</span></div><div class="stat"><b>9,80 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>49</b><span>kr./md.</span></div><div class="p-gns">588 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">5 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="cbb-mobil" data-abonnement="cbb-5"
+       aria-label="Se tilbud på CBB 5 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos CBB Mobil</small>
+  </div>
+</article><article class="plan" data-gb="6" data-pris="50"
+  data-prgb="8.3333" data-aar="600" data-udbyder="Duka">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="26">
+    <div><b>Duka 6 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>6 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>6 GB</b><span>EU-data</span></div><div class="stat"><b>8,33 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>50</b><span>kr./md.</span></div><div class="p-gns">600 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">4 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/duka" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="duka" data-abonnement="duka-6"
+       aria-label="Se tilbud på Duka 6 GB hos Duka">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Duka</small>
+  </div>
+</article><article class="plan" data-gb="10" data-pris="55"
+  data-prgb="5.5000" data-aar="660" data-udbyder="Lyca Mobile">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/lyca-mobile.webp" alt="Lyca Mobile logo" loading="lazy" height="26">
+    <div><b>Lyca 10 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>10 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>10 GB</b><span>EU-data</span></div><div class="stat"><b>5,50 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>55</b><span>kr./md.</span></div><div class="p-gns">660 kr. samlet på 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/lyca-mobile" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="lyca-mobile" data-abonnement="lyca-10"
+       aria-label="Se tilbud på Lyca 10 GB hos Lyca Mobile">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Lyca Mobile</small>
+  </div>
+</article><article class="plan" data-gb="10" data-pris="59"
+  data-prgb="5.9000" data-aar="708" data-udbyder="Lebara">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="26">
+    <div><b>Lebara 10 GB</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>10 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>10 GB</b><span>EU-data</span></div><div class="stat"><b>5,90 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>59</b><span>kr./md.</span></div><div class="p-gns">708 kr. samlet på 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/lebara" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="lebara" data-abonnement="lebara-10"
+       aria-label="Se tilbud på Lebara 10 GB hos Lebara">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Lebara</small>
+  </div>
+</article><article class="plan" data-gb="8" data-pris="59"
+  data-prgb="7.3750" data-aar="708" data-udbyder="eesy">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/eesy.webp" alt="eesy logo" loading="lazy" height="26">
+    <div><b>eesy 8 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>8 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>8 GB</b><span>EU-data</span></div><div class="stat"><b>7,38 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>59</b><span>kr./md.</span></div><div class="p-gns">708 kr. samlet på 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/eesy" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="eesy" data-abonnement="eesy-8"
+       aria-label="Se tilbud på eesy 8 GB hos eesy">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos eesy</small>
+  </div>
+</article><article hidden class="plan" data-gb="8" data-pris="59"
+  data-prgb="7.3750" data-aar="708" data-udbyder="Greentel">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="26">
+    <div><b>Greentel 8 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>8 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>8 GB</b><span>EU-data</span></div><div class="stat"><b>7,38 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>59</b><span>kr./md.</span></div><div class="p-gns">708 kr. samlet på 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="greentel" data-abonnement="greentel-8"
+       aria-label="Se tilbud på Greentel 8 GB hos Greentel">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Greentel</small>
+  </div>
+</article><article hidden class="plan" data-gb="15" data-pris="69"
+  data-prgb="4.6000" data-aar="788" data-udbyder="CBB Mobil">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="26">
+    <div><b>CBB 15 GB</b><small>Telenors net</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>15 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>15 GB</b><span>EU-data</span></div><div class="stat"><b>4,60 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 2 mdr.</div><div class="p-tal"><b>49</b><span>kr./md.</span></div><div class="p-normal">Normalpris 69 kr./md.</div><div class="p-gns">Gns. <strong>66 kr./md.</strong> over 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="cbb-mobil" data-abonnement="cbb-15"
+       aria-label="Se tilbud på CBB 15 GB hos CBB Mobil">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos CBB Mobil</small>
+  </div>
+</article><article hidden class="plan" data-gb="20" data-pris="69"
+  data-prgb="3.4500" data-aar="828" data-udbyder="Flexii">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="26">
+    <div><b>Flexii 20 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>20 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>20 GB</b><span>EU-data</span></div><div class="stat"><b>3,45 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>69</b><span>kr./md.</span></div><div class="p-gns">828 kr. samlet på 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/flexii" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="flexii" data-abonnement="flexii-20"
+       aria-label="Se tilbud på Flexii 20 GB hos Flexii">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Flexii</small>
+  </div>
+</article><article hidden class="plan" data-gb="20" data-pris="74"
+  data-prgb="3.7000" data-aar="888" data-udbyder="Oister">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
+    <div><b>Oister 20 GB</b><small>Nettet fra 3</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>20 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>20 GB</b><span>EU-data</span></div><div class="stat"><b>3,70 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>74</b><span>kr./md.</span></div><div class="p-gns">888 kr. samlet på 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="oister" data-abonnement="oister-20"
+       aria-label="Se tilbud på Oister 20 GB hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Oister</small>
+  </div>
+</article><article hidden class="plan" data-gb="25" data-pris="79"
+  data-prgb="3.1600" data-aar="948" data-udbyder="Greentel">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="26">
+    <div><b>Greentel 25 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>25 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>25 GB</b><span>EU-data</span></div><div class="stat"><b>3,16 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>79</b><span>kr./md.</span></div><div class="p-gns">948 kr. samlet på 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="greentel" data-abonnement="greentel-25"
+       aria-label="Se tilbud på Greentel 25 GB hos Greentel">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Greentel</small>
+  </div>
+</article><article hidden class="plan" data-gb="30" data-pris="85"
+  data-prgb="2.8333" data-aar="819" data-udbyder="Lyca Mobile">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/lyca-mobile.webp" alt="Lyca Mobile logo" loading="lazy" height="26">
+    <div><b>Lyca 30 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>30 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>30 GB</b><span>EU-data</span></div><div class="stat"><b>2,83 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>18</b><span>kr./md.</span></div><div class="p-normal">Normalpris 85 kr./md.</div><div class="p-gns">Gns. <strong>68 kr./md.</strong> over 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/lyca-mobile" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="lyca-mobile" data-abonnement="lyca-30"
+       aria-label="Se tilbud på Lyca 30 GB hos Lyca Mobile">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Lyca Mobile</small>
+  </div>
+</article></div>
+    <div class="vis-flere"><button type="button" class="knap knap-linje" data-vis-flere>Vis 6 abonnementer mere</button><small data-resterende>6 abonnementer tilbage</small></div>
+    <div class="listefod">
+      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> regner intropris,
+      normalpris og oprettelse sammen — det er den reelle pris.</span>
       <span>Kilde: udbydernes egne prislister</span>
     </div>
   </div>

@@ -332,18 +332,30 @@ def hurtigvalg():
         valg.append((kat, val, detalje))
 
     kort = ""
-    for kat, a, detalje in valg:
+    for i, (kat, a, detalje) in enumerate(valg):
         u = UMAP[a["udbyder"]]
-        aar = a["pris"] * 12
-        kort += f"""<a class="valgkort" href="/udbydere/{u['slug']}/">
-  <div class="kat">{e(kat)}</div>
-  <img class="logo-lille" src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy" height="20">
-  <div class="navn">{e(a['navn'])}</div>
-  <div class="detalje">{e(detalje)} · {gb_tekst(a['data_gb'])}</div>
-  <div class="pris">{kr(a['pris'])}<span> kr./md.</span></div>
-  <div class="valgkort-aar">{kr(aar)} kr. første år</div>
-  <div class="pil">Se abonnementet →</div>
-</a>"""
+        g = gns12(a) or a["pris"]
+        if a.get("intro_pris") is not None and a.get("intro_mdr"):
+            vist = a["intro_pris"]
+            under = (f'i {a["intro_mdr"]} mdr. — derefter {kr(a["pris"])} kr./md. · '
+                     f'gns. {kr(g)} kr./md. over 12 mdr.')
+        else:
+            vist = a["pris"]
+            under = f'fast pris · {kr(g * 12)} kr. samlet på 12 mdr.'
+        kort += f"""<div class="valgkort v{i}">
+  <span class="valg-badge">{e(kat)}</span>
+  <div class="valg-top">
+    <span class="valg-logo"><img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy"></span>
+    <div>
+      <b>{e(a['navn'])}</b>
+      <small>{netlabel(u)}</small>
+    </div>
+  </div>
+  <div class="valg-tag">{gb_tekst(a['data_gb'])} · {e(detalje)}</div>
+  <div class="valg-pris">{kr(vist)}<span> kr./md.</span></div>
+  <div class="valg-under">{under}</div>
+  <a class="knap knap-linje valg-knap" href="/udbydere/{u['slug']}/">Se abonnementet →</a>
+</div>"""
 
     return f'<div class="baand"><div class="hurtigvalg">{kort}</div></div>'
 
@@ -509,13 +521,13 @@ def byg_forside():
     krop = f"""
 {hurtigvalg()}
 
-{quiz()}
-
 {pristabel(ABON, UMAP,
            titel=f"Alle mobilabonnementer sammenlignet",
            undertitel=f"{D['antal']} abonnementer fra {D['antal_udbydere']} udbydere, sorteret efter laveste månedspris. "
                       "Klik på en overskrift for at sortere efter data, pris pr. GB eller pris.",
            billigst_id=bedste_pr_gb['id'])}
+
+{quiz()}
 
 <section class="sektion baand-smal artikel">
   {gennemgangslinje(OPDATERET)}

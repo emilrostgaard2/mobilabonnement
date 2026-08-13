@@ -104,85 +104,79 @@
     <p class="led">Alle Flexii-abonnementer vi følger, sorteret efter pris.</p>
   </div>
   
-  <div class="tabelramme afslør">
-    <div class="tabelrul">
-      <table class="pris">
-        <caption>Klik på en kolonneoverskrift for at sortere. <span data-antal-vist>3</span> abonnementer vist.</caption>
-        <thead>
-          <tr>
-            <th scope="col" class="sorter" data-noegle="udbyder">Abonnement</th>
-            <th scope="col" class="sorter" data-noegle="gb">Data</th>
-            <th scope="col">Tale</th>
-            <th scope="col">EU-data</th>
-            <th scope="col" class="sorter" data-noegle="prgb">Pris pr. GB</th>
-            <th scope="col" class="sorter" data-noegle="aar">Gns. 12 mdr.</th>
-            <th scope="col" class="sorter" data-noegle="pris" data-retning="op">Pris pr. md.</th>
-            <th scope="col"><span class="visuelt-skjult">Bestil</span></th>
-          </tr>
-        </thead>
-        <tbody><tr class="fremhaev" data-gb="0" data-pris="39" data-prgb="0.0000" data-aar="468" data-udbyder="Flexii">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="24">
-      <span><b>Flexii Fri Tale</b><small>MVNO</small></span>
+  <div class="listeramme afslør">
+    <div class="liste-top">
+      <span class="liste-antal"><span data-antal-vist>3</span> abonnementer</span>
+      <div class="sorter-bar">
+        <span class="maerkat">Sortér</span>
+        <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
+        <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
+        <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
+        <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
+      </div>
     </div>
-    <div class="t-maerker"><span class="maerke maerke-puls">Bedste værdi</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span></div>
-  </td>
-  <td class="t-data">Ingen data<div class="bjaelke" aria-hidden="true"><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">—</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">39 kr.<span class="spar">30 kr. under snittet</span></td>
-  <td class="t-pris"><b>39</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/flexii" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="flexii" data-abonnement="flexii-fritale"
-        aria-label="Se tilbud på Flexii Fri Tale hos Flexii">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Flexii</small></td>
-</tr><tr data-gb="20" data-pris="69" data-prgb="3.4500" data-aar="828" data-udbyder="Flexii">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="24">
-      <span><b>Flexii 20 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">20 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">20 GB</td>
-  <td class="t-pr-gb">3,45 kr.</td>
-  <td class="t-aar">69 kr.</td>
-  <td class="t-pris"><b>69</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/flexii" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="flexii" data-abonnement="flexii-20"
-        aria-label="Se tilbud på Flexii 20 GB hos Flexii">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Flexii</small></td>
-</tr><tr data-gb="100" data-pris="119" data-prgb="1.1900" data-aar="1188" data-udbyder="Flexii">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="24">
-      <span><b>Flexii 100 GB</b><small>MVNO</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">100 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">100 GB</td>
-  <td class="t-pr-gb">1,19 kr.</td>
-  <td class="t-aar">99 kr.</td>
-  <td class="t-pris"><span class="intro">79 kr. i 6 mdr.</span><b>119</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/flexii" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="flexii" data-abonnement="flexii-100"
-        aria-label="Se tilbud på Flexii 100 GB hos Flexii">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Flexii</small></td>
-</tr></tbody>
-      </table>
-    </div>
+    <div class="planliste"><article class="plan fremhaev" data-gb="0" data-pris="39"
+  data-prgb="0.0000" data-aar="468" data-udbyder="Flexii">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="26">
+    <div><b>Flexii Fri Tale</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-puls">Bedste værdi</span></div>
+    <div class="plan-stats"><div class="stat"><b>Ingen data</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>—</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>39</b><span>kr./md.</span></div><div class="p-gns">468 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">30 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/flexii" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="flexii" data-abonnement="flexii-fritale"
+       aria-label="Se tilbud på Flexii Fri Tale hos Flexii">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Flexii</small>
+  </div>
+</article><article class="plan" data-gb="20" data-pris="69"
+  data-prgb="3.4500" data-aar="828" data-udbyder="Flexii">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="26">
+    <div><b>Flexii 20 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>20 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>20 GB</b><span>EU-data</span></div><div class="stat"><b>3,45 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>69</b><span>kr./md.</span></div><div class="p-gns">828 kr. samlet på 12 mdr.</div>
     
-    <div class="tabelfod">
-      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> er den reelle månedspris, når intropris, normalpris og oprettelse regnes sammen. Priser er vejledende.</span>
+    <a class="knap knap-primaer" href="https://example.dk/flexii" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="flexii" data-abonnement="flexii-20"
+       aria-label="Se tilbud på Flexii 20 GB hos Flexii">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Flexii</small>
+  </div>
+</article><article class="plan" data-gb="100" data-pris="119"
+  data-prgb="1.1900" data-aar="1188" data-udbyder="Flexii">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="26">
+    <div><b>Flexii 100 GB</b><small>MVNO</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>100 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>100 GB</b><span>EU-data</span></div><div class="stat"><b>1,19 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 6 mdr.</div><div class="p-tal"><b>79</b><span>kr./md.</span></div><div class="p-normal">Normalpris 119 kr./md.</div><div class="p-gns">Gns. <strong>99 kr./md.</strong> over 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/flexii" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="flexii" data-abonnement="flexii-100"
+       aria-label="Se tilbud på Flexii 100 GB hos Flexii">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Flexii</small>
+  </div>
+</article></div>
+    
+    <div class="listefod">
+      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> regner intropris,
+      normalpris og oprettelse sammen — det er den reelle pris.</span>
       <span>Kilde: udbydernes egne prislister</span>
     </div>
   </div>

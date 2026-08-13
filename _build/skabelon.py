@@ -348,67 +348,87 @@ def ctabaand(titel, tekst, knaptekst="Sammenlign alle abonnementer", href="/bill
 # ---------------------------------------------------------------- Tabel
 
 def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None):
-    """Én række i sammenligningstabellen."""
+    """Ét abonnement som rækkekort."""
     logo = f"/assets/img/logoer/{u['logo']}"
     forbrug = a.get("forbrugsafregnet")
     pr_gb = a["pris"] / a["data_gb"] if 0 < a["data_gb"] < 900 else 0
     pr_gb_tekst = (f"{pr_gb:.2f}".replace(".", ",") + " kr.") if pr_gb else "—"
-    styrke = 4 if a["data_gb"] >= 900 else (3 if a["data_gb"] >= 50 else (2 if a["data_gb"] >= 15 else (1 if a["data_gb"] > 0 else 0)))
-    bjaelker = "".join(f'<i class="{"t" if i < styrke else ""}"></i>' for i in range(4))
-
     g = gns12(a)
     aar = (g * 12) if g is not None else 0
-    aar_tekst = "Efter forbrug" if forbrug else f"{kr(g)} kr."
-    spar = ""
-    if gnsnit_aar and not forbrug and aar < gnsnit_aar:
-        spar = f'<span class="spar">{kr((gnsnit_aar - aar) / 12)} kr. under snittet</span>'
 
+    # Mærkater
     maerker = ""
     if billigst_pr_gb:
-        maerker += '<span class="maerke maerke-puls">Bedste værdi</span>'
+        maerker += '<span class="mrk mrk-puls">Bedste værdi</span>'
     if a.get("badge"):
-        maerker += f'<span class="maerke maerke-sol">{e(a["badge"])}</span>'
+        maerker += f'<span class="mrk mrk-sol">{e(a["badge"])}</span>'
+    if a.get("intro_pris") is not None and a.get("intro_mdr"):
+        maerker += '<span class="mrk mrk-signal">Introtilbud</span>'
     if a.get("streaming"):
-        maerker += f'<span class="maerke maerke-signal">{len(a["streaming"])} streamingtjenester</span>'
+        n = len(a["streaming"])
+        maerker += f'<span class="mrk mrk-berry">{n} streamingtjeneste{"r" if n > 1 else ""}</span>'
 
-    chips = '<span class="mini">Ingen binding</span>' if a["binding"] == 0 else f'<span class="mini mini-advar">{a["binding"]} mdr. binding</span>'
+    # Statbokse
+    stats = [
+        (gb_tekst(a["data_gb"]), "data i DK"),
+        ("Fri" if a["tale"] == "fri" else e(a["tale"]), "tale"),
+        ("—" if a["data_gb"] == 0 else ("Fri" if a.get("eu_gb", 0) >= 900 else f'{a.get("eu_gb", 0)} GB'), "EU-data"),
+        (pr_gb_tekst, "pris pr. GB"),
+    ]
+    statbokse = "".join(f'<div class="stat"><b>{v}</b><span>{t}</span></div>' for v, t in stats)
+
+    # Chips
+    chips = ['<span class="chp">Ingen binding</span>' if a["binding"] == 0
+             else f'<span class="chp chp-advar">{a["binding"]} mdr. binding</span>']
     if a.get("oprettelse", 0) == 0:
-        chips += '<span class="mini">0 kr. oprettelse</span>'
+        chips.append('<span class="chp">0 kr. i oprettelse</span>')
     if a.get("esim"):
-        chips += '<span class="mini">eSIM</span>'
+        chips.append('<span class="chp">eSIM samme dag</span>')
     if a.get("femg") and a["data_gb"] > 0:
-        chips += '<span class="mini">5G</span>'
+        chips.append('<span class="chp">5G</span>')
+    if a.get("streaming"):
+        chips.append('<span class="chp">' + e(", ".join(a["streaming"][:3]))
+                     + ("…" if len(a["streaming"]) > 3 else "") + "</span>")
 
+    # Prisblok
     if forbrug:
-        prisvisning = "Pr. forbrug"
+        prisblok = ('<div class="p-tal"><b>Pr. forbrug</b></div>'
+                    '<div class="p-gns">Ingen fast månedspris</div>')
     elif a.get("intro_pris") is not None and a.get("intro_mdr"):
-        prisvisning = (f'<span class="intro">{kr(a["intro_pris"])} kr. i {a["intro_mdr"]} mdr.</span>'
-                       f'<b>{kr(a["pris"])}</b><span class="pr">kr./md. herefter</span>')
+        prisblok = (f'<div class="p-intro">Tilbud i {a["intro_mdr"]} mdr.</div>'
+                    f'<div class="p-tal"><b>{kr(a["intro_pris"])}</b><span>kr./md.</span></div>'
+                    f'<div class="p-normal">Normalpris {kr(a["pris"])} kr./md.</div>'
+                    f'<div class="p-gns">Gns. <strong>{kr(g)} kr./md.</strong> over 12 mdr.</div>')
     else:
-        prisvisning = f'<b>{kr(a["pris"])}</b><span class="pr">kr./md.</span>'
-    klasse = ' class="fremhaev"' if billigst_pr_gb else ""
-    eu = "—" if a["data_gb"] == 0 else ("Fri data" if a.get("eu_gb", 0) >= 900 else f'{a.get("eu_gb", 0)} GB')
+        prisblok = (f'<div class="p-tal"><b>{kr(a["pris"])}</b><span>kr./md.</span></div>'
+                    f'<div class="p-gns">{kr(aar)} kr. samlet på 12 mdr.</div>')
 
-    return f"""<tr{klasse} data-gb="{a['data_gb']}" data-pris="{a['pris']}" data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}" data-udbyder="{e(u['navn'])}">
-  <td>
-    <div class="t-udbyder">
-      <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy" height="24">
-      <span><b>{e(a['navn'])}</b><small>{netlabel(u)}</small></span>
-    </div>
-    <div class="t-maerker">{maerker}</div>
-    <div class="t-mini">{chips}</div>
-  </td>
-  <td class="t-data">{gb_tekst(a['data_gb'])}<div class="bjaelke" aria-hidden="true">{bjaelker}</div></td>
-  <td>{'Fri' if a['tale'] == 'fri' else e(a['tale'])}</td>
-  <td class="t-eu">{eu}</td>
-  <td class="t-pr-gb">{pr_gb_tekst}</td>
-  <td class="t-aar">{aar_tekst}{spar}</td>
-  <td class="t-pris">{prisvisning}</td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="{a['link']}" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
-        aria-label="Se tilbud på {e(a['navn'])} hos {e(u['navn'])}">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos {e(u['navn'])}</small></td>
-</tr>"""
+    spar = ""
+    if gnsnit_aar and not forbrug and aar < gnsnit_aar:
+        spar = (f'<div class="p-spar">{kr((gnsnit_aar - aar) / 12)} kr./md. '
+                "under gennemsnittet</div>")
+
+    klasse = " fremhaev" if billigst_pr_gb else ""
+    return f"""<article class="plan{klasse}" data-gb="{a['data_gb']}" data-pris="{a['pris']}"
+  data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}" data-udbyder="{e(u['navn'])}">
+  <div class="plan-ident">
+    <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy" height="26">
+    <div><b>{e(a['navn'])}</b><small>{netlabel(u)}</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk">{maerker}</div>
+    <div class="plan-stats">{statbokse}</div>
+    <div class="plan-chips">{"".join(chips)}</div>
+  </div>
+  <div class="plan-pris">
+    {prisblok}
+    {spar}
+    <a class="knap knap-primaer" href="{a['link']}" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
+       aria-label="Se tilbud på {e(a['navn'])} hos {e(u['navn'])}">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos {e(u['navn'])}</small>
+  </div>
+</article>"""
 
 
 def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
@@ -417,26 +437,26 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     betalte = [x for x in betalte if x]
     gnsnit_aar = (sum(betalte) / len(betalte) * 12) if betalte else None
 
-    raekker = ""
+    kort = ""
     for i, a in enumerate(abonnementer):
         u = udbydere_map[a["udbyder"]]
         r = prisrække(a, u, billigst_pr_gb=(a["id"] == billigst_id), gnsnit_aar=gnsnit_aar)
         if vis and i >= vis:
-            r = r.replace("<tr", "<tr hidden", 1)
-        raekker += r
+            r = r.replace('<article class="plan', '<article hidden class="plan', 1)
+        kort += r
 
     resten = max(0, len(abonnementer) - vis) if vis else 0
     visflere = ""
     if resten:
         visflere = (f'<div class="vis-flere">'
                     f'<button type="button" class="knap knap-linje" data-vis-flere>'
-                    f'Vis flere abonnementer</button>'
+                    f'Vis {min(10, resten)} abonnementer mere</button>'
                     f'<small data-resterende>{resten} abonnementer tilbage</small></div>')
 
     filterhtml = ""
     if filtre:
         filterhtml = """<div class="filtre">
-  <span class="maerkat">Filtrér</span>
+  <span class="maerkat">Datamængde</span>
   <button class="chip" data-filter="alle" aria-pressed="true">Alle</button>
   <button class="chip" data-filter="lille" aria-pressed="false">Op til 15 GB</button>
   <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
@@ -451,28 +471,22 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     <p class="led">{undertitel}</p>
   </div>
   {filterhtml}
-  <div class="tabelramme afslør">
-    <div class="tabelrul">
-      <table class="pris">
-        <caption>Klik på en kolonneoverskrift for at sortere. <span data-antal-vist>{len(abonnementer)}</span> abonnementer vist.</caption>
-        <thead>
-          <tr>
-            <th scope="col" class="sorter" data-noegle="udbyder">Abonnement</th>
-            <th scope="col" class="sorter" data-noegle="gb">Data</th>
-            <th scope="col">Tale</th>
-            <th scope="col">EU-data</th>
-            <th scope="col" class="sorter" data-noegle="prgb">Pris pr. GB</th>
-            <th scope="col" class="sorter" data-noegle="aar">Gns. 12 mdr.</th>
-            <th scope="col" class="sorter" data-noegle="pris" data-retning="op">Pris pr. md.</th>
-            <th scope="col"><span class="visuelt-skjult">Bestil</span></th>
-          </tr>
-        </thead>
-        <tbody>{raekker}</tbody>
-      </table>
+  <div class="listeramme afslør">
+    <div class="liste-top">
+      <span class="liste-antal"><span data-antal-vist>{len(abonnementer)}</span> abonnementer</span>
+      <div class="sorter-bar">
+        <span class="maerkat">Sortér</span>
+        <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
+        <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
+        <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
+        <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
+      </div>
     </div>
+    <div class="planliste">{kort}</div>
     {visflere}
-    <div class="tabelfod">
-      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> er den reelle månedspris, når intropris, normalpris og oprettelse regnes sammen. Priser er vejledende.</span>
+    <div class="listefod">
+      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> regner intropris,
+      normalpris og oprettelse sammen — det er den reelle pris.</span>
       <span>Kilde: udbydernes egne prislister</span>
     </div>
   </div>

@@ -118,16 +118,16 @@
   }
 
   /* ---- Tabel: vis flere ad gangen ---- */
-  document.querySelectorAll(".tabelramme").forEach(function (ramme) {
+  document.querySelectorAll(".listeramme").forEach(function (ramme) {
     var knap = ramme.querySelector("[data-vis-flere]");
     if (!knap) return;
     var tael = ramme.querySelector("[data-resterende]");
-    var krop = ramme.querySelector("tbody");
+    var krop = ramme.querySelector(".planliste");
     var PORTION = 10;
 
     knap.addEventListener("click", function () {
       var skjulte = Array.prototype.filter.call(
-        krop.querySelectorAll("tr"),
+        krop.querySelectorAll(".plan"),
         function (r) { return r.hidden && r.getAttribute("data-filtreret") !== "ja"; }
       );
       skjulte.slice(0, PORTION).forEach(function (r) { r.hidden = false; });
@@ -142,9 +142,9 @@
 
   /* ---- Tabel: filtrering ---- */
   var chips = document.querySelectorAll(".chip[data-filter]");
-  var tabel = document.querySelector("table.pris");
+  var tabel = document.querySelector(".planliste");
   if (chips.length && tabel) {
-    var raekker = Array.prototype.slice.call(tabel.querySelectorAll("tbody tr"));
+    var raekker = Array.prototype.slice.call(tabel.querySelectorAll(".plan"));
     var visTaeller = document.querySelector("[data-antal-vist]");
     var visFlereBoks = document.querySelector(".vis-flere");
 
@@ -175,38 +175,34 @@
     });
   }
 
-  /* ---- Tabel: sortering ---- */
-  var sorterbare = document.querySelectorAll("table.pris th.sorter");
-  sorterbare.forEach(function (th) {
-    th.setAttribute("tabindex", "0");
-    th.setAttribute("role", "button");
+  /* ---- Liste: sortering ---- */
+  document.querySelectorAll(".listeramme").forEach(function (ramme) {
+    var knapper = Array.prototype.slice.call(ramme.querySelectorAll("[data-sorter]"));
+    var krop = ramme.querySelector(".planliste");
+    if (!knapper.length || !krop) return;
 
-    function sorter() {
-      var t = th.closest("table");
-      var krop = t.querySelector("tbody");
-      var noegle = th.getAttribute("data-noegle");
-      var nuvaerende = th.getAttribute("data-retning");
-      var retning = nuvaerende === "op" ? "ned" : "op";
+    knapper.forEach(function (k) {
+      k.addEventListener("click", function () {
+        var noegle = k.getAttribute("data-sorter");
+        var faldende = noegle === "gb";
+        knapper.forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+        k.setAttribute("aria-pressed", "true");
 
-      t.querySelectorAll("th.sorter").forEach(function (x) { x.removeAttribute("data-retning"); });
-      th.setAttribute("data-retning", retning);
-
-      var raekker = Array.prototype.slice.call(krop.querySelectorAll("tr"));
-      raekker.sort(function (a, b) {
-        var va = a.getAttribute("data-" + noegle);
-        var vb = b.getAttribute("data-" + noegle);
-        var na = parseFloat(va), nb = parseFloat(vb);
-        var res;
-        if (!isNaN(na) && !isNaN(nb)) res = na - nb;
-        else res = String(va).localeCompare(String(vb), "da");
-        return retning === "op" ? res : -res;
+        var planer = Array.prototype.slice.call(krop.querySelectorAll(".plan"));
+        planer.sort(function (a, b) {
+          var va = parseFloat(a.getAttribute("data-" + noegle));
+          var vb = parseFloat(b.getAttribute("data-" + noegle));
+          if (isNaN(va)) va = faldende ? -Infinity : Infinity;
+          if (isNaN(vb)) vb = faldende ? -Infinity : Infinity;
+          // Abonnementer uden data hører nederst ved pris pr. GB
+          if (noegle === "prgb") {
+            if (va === 0) va = Infinity;
+            if (vb === 0) vb = Infinity;
+          }
+          return faldende ? vb - va : va - vb;
+        });
+        planer.forEach(function (p) { krop.appendChild(p); });
       });
-      raekker.forEach(function (r) { krop.appendChild(r); });
-    }
-
-    th.addEventListener("click", sorter);
-    th.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); sorter(); }
     });
   });
 

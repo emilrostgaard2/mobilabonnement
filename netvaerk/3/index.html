@@ -104,168 +104,162 @@
     <p class="led">Alle abonnementer i vores sammenligning, der kører på 3.</p>
   </div>
   <div class="filtre">
-  <span class="maerkat">Filtrér</span>
+  <span class="maerkat">Datamængde</span>
   <button class="chip" data-filter="alle" aria-pressed="true">Alle</button>
   <button class="chip" data-filter="lille" aria-pressed="false">Op til 15 GB</button>
   <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
   <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
   <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
 </div>
-  <div class="tabelramme afslør">
-    <div class="tabelrul">
-      <table class="pris">
-        <caption>Klik på en kolonneoverskrift for at sortere. <span data-antal-vist>7</span> abonnementer vist.</caption>
-        <thead>
-          <tr>
-            <th scope="col" class="sorter" data-noegle="udbyder">Abonnement</th>
-            <th scope="col" class="sorter" data-noegle="gb">Data</th>
-            <th scope="col">Tale</th>
-            <th scope="col">EU-data</th>
-            <th scope="col" class="sorter" data-noegle="prgb">Pris pr. GB</th>
-            <th scope="col" class="sorter" data-noegle="aar">Gns. 12 mdr.</th>
-            <th scope="col" class="sorter" data-noegle="pris" data-retning="op">Pris pr. md.</th>
-            <th scope="col"><span class="visuelt-skjult">Bestil</span></th>
-          </tr>
-        </thead>
-        <tbody><tr class="fremhaev" data-gb="5" data-pris="44" data-prgb="8.8000" data-aar="450" data-udbyder="Oister">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="24">
-      <span><b>Oister 5 GB</b><small>Nettet fra 3</small></span>
+  <div class="listeramme afslør">
+    <div class="liste-top">
+      <span class="liste-antal"><span data-antal-vist>7</span> abonnementer</span>
+      <div class="sorter-bar">
+        <span class="maerkat">Sortér</span>
+        <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
+        <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
+        <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
+        <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
+      </div>
     </div>
-    <div class="t-maerker"><span class="maerke maerke-puls">Bedste værdi</span><span class="maerke maerke-sol">Mest valgte</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">5 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">5 GB</td>
-  <td class="t-pr-gb">8,80 kr.</td>
-  <td class="t-aar">38 kr.<span class="spar">79 kr. under snittet</span></td>
-  <td class="t-pris"><span class="intro">18 kr. i 3 mdr.</span><b>44</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="oister" data-abonnement="oister-5"
-        aria-label="Se tilbud på Oister 5 GB hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Oister</small></td>
-</tr><tr data-gb="20" data-pris="74" data-prgb="3.7000" data-aar="888" data-udbyder="Oister">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="24">
-      <span><b>Oister 20 GB</b><small>Nettet fra 3</small></span>
-    </div>
-    <div class="t-maerker"></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">20 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">20 GB</td>
-  <td class="t-pr-gb">3,70 kr.</td>
-  <td class="t-aar">74 kr.<span class="spar">43 kr. under snittet</span></td>
-  <td class="t-pris"><b>74</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="oister" data-abonnement="oister-20"
-        aria-label="Se tilbud på Oister 20 GB hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Oister</small></td>
-</tr><tr data-gb="50" data-pris="99" data-prgb="1.9800" data-aar="1098" data-udbyder="Oister">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="24">
-      <span><b>Oister 50 GB</b><small>Nettet fra 3</small></span>
-    </div>
-    <div class="t-maerker"><span class="maerke maerke-sol">Mest data pr. krone</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">50 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">50 GB</td>
-  <td class="t-pr-gb">1,98 kr.</td>
-  <td class="t-aar">92 kr.<span class="spar">25 kr. under snittet</span></td>
-  <td class="t-pris"><span class="intro">69 kr. i 3 mdr.</span><b>99</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="oister" data-abonnement="oister-50"
-        aria-label="Se tilbud på Oister 50 GB hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Oister</small></td>
-</tr><tr data-gb="999" data-pris="149" data-prgb="0.0000" data-aar="1638" data-udbyder="Oister">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="24">
-      <span><b>Oister Fri Data</b><small>Nettet fra 3</small></span>
-    </div>
-    <div class="t-maerker"><span class="maerke maerke-sol">Billigste fri data</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">Fri data<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class="t"></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">30 GB</td>
-  <td class="t-pr-gb">—</td>
-  <td class="t-aar">136 kr.</td>
-  <td class="t-pris"><span class="intro">99 kr. i 3 mdr.</span><b>149</b><span class="pr">kr./md. herefter</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="oister" data-abonnement="oister-fri"
-        aria-label="Se tilbud på Oister Fri Data hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Oister</small></td>
-</tr><tr data-gb="45" data-pris="139" data-prgb="3.0889" data-aar="1668" data-udbyder="Oister">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="24">
-      <span><b>Oister 45 GB + Disney+</b><small>Nettet fra 3</small></span>
-    </div>
-    <div class="t-maerker"><span class="maerke maerke-signal">1 streamingtjenester</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">45 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">45 GB</td>
-  <td class="t-pr-gb">3,09 kr.</td>
-  <td class="t-aar">139 kr.</td>
-  <td class="t-pris"><b>139</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="oister" data-abonnement="oister-disney"
-        aria-label="Se tilbud på Oister 45 GB + Disney+ hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Oister</small></td>
-</tr><tr data-gb="100" data-pris="169" data-prgb="1.6900" data-aar="2028" data-udbyder="Oister">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="24">
-      <span><b>Oister 100 GB + Stream</b><small>Nettet fra 3</small></span>
-    </div>
-    <div class="t-maerker"><span class="maerke maerke-signal">3 streamingtjenester</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">100 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">30 GB</td>
-  <td class="t-pr-gb">1,69 kr.</td>
-  <td class="t-aar">169 kr.</td>
-  <td class="t-pris"><b>169</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="oister" data-abonnement="oister-stream"
-        aria-label="Se tilbud på Oister 100 GB + Stream hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Oister</small></td>
-</tr><tr data-gb="45" data-pris="169" data-prgb="3.7556" data-aar="2028" data-udbyder="Oister">
-  <td>
-    <div class="t-udbyder">
-      <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="24">
-      <span><b>Oister 45 GB + TV 2 Play</b><small>Nettet fra 3</small></span>
-    </div>
-    <div class="t-maerker"><span class="maerke maerke-signal">1 streamingtjenester</span></div>
-    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
-  </td>
-  <td class="t-data">45 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
-  <td>Fri</td>
-  <td class="t-eu">45 GB</td>
-  <td class="t-pr-gb">3,76 kr.</td>
-  <td class="t-aar">169 kr.</td>
-  <td class="t-pris"><b>169</b><span class="pr">kr./md.</span></td>
-  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="oister" data-abonnement="oister-tv2"
-        aria-label="Se tilbud på Oister 45 GB + TV 2 Play hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="t-hos">hos Oister</small></td>
-</tr></tbody>
-      </table>
-    </div>
+    <div class="planliste"><article class="plan fremhaev" data-gb="5" data-pris="44"
+  data-prgb="8.8000" data-aar="450" data-udbyder="Oister">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
+    <div><b>Oister 5 GB</b><small>Nettet fra 3</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-puls">Bedste værdi</span><span class="mrk mrk-sol">Mest valgte</span><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>5 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>5 GB</b><span>EU-data</span></div><div class="stat"><b>8,80 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>18</b><span>kr./md.</span></div><div class="p-normal">Normalpris 44 kr./md.</div><div class="p-gns">Gns. <strong>38 kr./md.</strong> over 12 mdr.</div>
+    <div class="p-spar">79 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="oister" data-abonnement="oister-5"
+       aria-label="Se tilbud på Oister 5 GB hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Oister</small>
+  </div>
+</article><article class="plan" data-gb="20" data-pris="74"
+  data-prgb="3.7000" data-aar="888" data-udbyder="Oister">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
+    <div><b>Oister 20 GB</b><small>Nettet fra 3</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"></div>
+    <div class="plan-stats"><div class="stat"><b>20 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>20 GB</b><span>EU-data</span></div><div class="stat"><b>3,70 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>74</b><span>kr./md.</span></div><div class="p-gns">888 kr. samlet på 12 mdr.</div>
+    <div class="p-spar">43 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="oister" data-abonnement="oister-20"
+       aria-label="Se tilbud på Oister 20 GB hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Oister</small>
+  </div>
+</article><article class="plan" data-gb="50" data-pris="99"
+  data-prgb="1.9800" data-aar="1098" data-udbyder="Oister">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
+    <div><b>Oister 50 GB</b><small>Nettet fra 3</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-sol">Mest data pr. krone</span><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>50 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>50 GB</b><span>EU-data</span></div><div class="stat"><b>1,98 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>69</b><span>kr./md.</span></div><div class="p-normal">Normalpris 99 kr./md.</div><div class="p-gns">Gns. <strong>92 kr./md.</strong> over 12 mdr.</div>
+    <div class="p-spar">25 kr./md. under gennemsnittet</div>
+    <a class="knap knap-primaer" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="oister" data-abonnement="oister-50"
+       aria-label="Se tilbud på Oister 50 GB hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Oister</small>
+  </div>
+</article><article class="plan" data-gb="999" data-pris="149"
+  data-prgb="0.0000" data-aar="1638" data-udbyder="Oister">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
+    <div><b>Oister Fri Data</b><small>Nettet fra 3</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-sol">Billigste fri data</span><span class="mrk mrk-signal">Introtilbud</span></div>
+    <div class="plan-stats"><div class="stat"><b>Fri data</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>30 GB</b><span>EU-data</span></div><div class="stat"><b>—</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>99</b><span>kr./md.</span></div><div class="p-normal">Normalpris 149 kr./md.</div><div class="p-gns">Gns. <strong>136 kr./md.</strong> over 12 mdr.</div>
     
-    <div class="tabelfod">
-      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> er den reelle månedspris, når intropris, normalpris og oprettelse regnes sammen. Priser er vejledende.</span>
+    <a class="knap knap-primaer" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="oister" data-abonnement="oister-fri"
+       aria-label="Se tilbud på Oister Fri Data hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Oister</small>
+  </div>
+</article><article class="plan" data-gb="45" data-pris="139"
+  data-prgb="3.0889" data-aar="1668" data-udbyder="Oister">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
+    <div><b>Oister 45 GB + Disney+</b><small>Nettet fra 3</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-berry">1 streamingtjeneste</span></div>
+    <div class="plan-stats"><div class="stat"><b>45 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>45 GB</b><span>EU-data</span></div><div class="stat"><b>3,09 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span><span class="chp">Disney+</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>139</b><span>kr./md.</span></div><div class="p-gns">1.668 kr. samlet på 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="oister" data-abonnement="oister-disney"
+       aria-label="Se tilbud på Oister 45 GB + Disney+ hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Oister</small>
+  </div>
+</article><article class="plan" data-gb="100" data-pris="169"
+  data-prgb="1.6900" data-aar="2028" data-udbyder="Oister">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
+    <div><b>Oister 100 GB + Stream</b><small>Nettet fra 3</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-berry">3 streamingtjenester</span></div>
+    <div class="plan-stats"><div class="stat"><b>100 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>30 GB</b><span>EU-data</span></div><div class="stat"><b>1,69 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span><span class="chp">Podimo, Deezer, Disney+</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>169</b><span>kr./md.</span></div><div class="p-gns">2.028 kr. samlet på 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="oister" data-abonnement="oister-stream"
+       aria-label="Se tilbud på Oister 100 GB + Stream hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Oister</small>
+  </div>
+</article><article class="plan" data-gb="45" data-pris="169"
+  data-prgb="3.7556" data-aar="2028" data-udbyder="Oister">
+  <div class="plan-ident">
+    <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
+    <div><b>Oister 45 GB + TV 2 Play</b><small>Nettet fra 3</small></div>
+  </div>
+  <div class="plan-midt">
+    <div class="plan-mrk"><span class="mrk mrk-berry">1 streamingtjeneste</span></div>
+    <div class="plan-stats"><div class="stat"><b>45 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>45 GB</b><span>EU-data</span></div><div class="stat"><b>3,76 kr.</b><span>pris pr. GB</span></div></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span><span class="chp">TV 2 Play</span></div>
+  </div>
+  <div class="plan-pris">
+    <div class="p-tal"><b>169</b><span>kr./md.</span></div><div class="p-gns">2.028 kr. samlet på 12 mdr.</div>
+    
+    <a class="knap knap-primaer" href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="oister" data-abonnement="oister-tv2"
+       aria-label="Se tilbud på Oister 45 GB + TV 2 Play hos Oister">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="p-hos">hos Oister</small>
+  </div>
+</article></div>
+    
+    <div class="listefod">
+      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> regner intropris,
+      normalpris og oprettelse sammen — det er den reelle pris.</span>
       <span>Kilde: udbydernes egne prislister</span>
     </div>
   </div>
