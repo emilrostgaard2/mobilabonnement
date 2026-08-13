@@ -8,7 +8,7 @@
   --nat:#0B1026;
   --dyb:#141B3D;
   --skygge:#1E2750;
-  --papir:#F5F7FD;
+  --papir:#F8FAFE;
   --hvid:#FFFFFF;
   --blaek:#131735;
   --graa:#5C6489;
@@ -610,15 +610,11 @@ table.pris tbody tr[hidden]{display:none}
    Prisliste — rækkekort
    ========================================================================== */
 .listeramme{background:transparent}
-.liste-top{
-  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;justify-content:space-between;
-  background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);
-  padding:.9rem 1.15rem;margin-bottom:.9rem;box-shadow:var(--skygge-blod);
-}
-.liste-antal{font-family:var(--font-tal);font-size:.82rem;color:var(--graa)}
+
+
 .liste-antal span{color:var(--blaek);font-weight:600}
-.sorter-bar{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
-.chip-sort{padding:.36rem .8rem;font-size:.83rem}
+
+
 
 .planliste{display:flex;flex-direction:column;gap:.85rem}
 .plan[hidden]{display:none}
@@ -650,7 +646,7 @@ table.pris tbody tr[hidden]{display:none}
 .mrk-berry{background:rgba(124,77,255,.13);color:#5B2FD6}
 
 .plan-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
-.stat{background:#F5F7FD;border:1px solid #E6EBF9;border-radius:var(--r-m);
+.stat{background:#FBFCFF;border:1px solid #E8EDFA;border-radius:var(--r-m);
   padding:.6rem .5rem;text-align:center}
 .stat b{display:block;font-family:var(--font-tal);font-size:.98rem;font-weight:600;
   line-height:1.2;color:var(--blaek)}
@@ -832,7 +828,7 @@ table.pris tbody tr[hidden]{display:none}
 .toc a{font-size:.93rem;text-decoration:none;font-weight:500;display:flex;gap:.5rem}
 .toc a::before{content:"→";color:var(--signal);opacity:.6}
 .toc a:hover{text-decoration:underline}
-.filtre+.filtre{margin-top:-.4rem}
+
 
 /* Redaktionens valg */
 .rvkort-gitter{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin:1.5rem 0}
@@ -851,3 +847,83 @@ table.pris tbody tr[hidden]{display:none}
 .rvkort p{font-size:.9rem;color:var(--graa);margin-bottom:.9rem}
 .rv-links{display:flex;gap:1rem;flex-wrap:wrap;font-size:.86rem;font-weight:600}
 .rv-note{font-size:.82rem;color:var(--graa)}
+
+/* ==========================================================================
+   Samlet filterpanel
+   ========================================================================== */
+.filterpanel{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-xl);
+  padding:.4rem 1.4rem;margin-bottom:1.2rem;box-shadow:var(--skygge-blod)}
+.fp-raekke{display:flex;align-items:center;gap:1.1rem;flex-wrap:wrap;
+  padding:.95rem 0;border-bottom:1px solid #EEF1FA}
+.fp-raekke:last-child{border-bottom:none}
+.fp-titel{font-family:var(--font-tal);font-size:.7rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--graa);min-width:104px}
+.fp-valg{display:flex;gap:.45rem;flex-wrap:wrap;flex:1}
+.fp-antal{font-family:var(--font-tal);font-size:.82rem;color:var(--graa);white-space:nowrap}
+.fp-antal span{color:var(--blaek);font-weight:600}
+.chip{padding:.42rem .95rem;font-size:.86rem}
+@media(max-width:720px){
+  .fp-raekke{flex-direction:column;align-items:flex-start;gap:.6rem}
+  .fp-titel{min-width:0}
+}
+
+/* ==========================================================================
+   Rækkekort — navn øverst, badges under logo
+   ========================================================================== */
+.plan{grid-template-columns:minmax(160px,.85fr) minmax(320px,2fr) minmax(200px,auto);
+  align-items:start;padding:1.5rem 1.6rem}
+.plan-ident{align-items:flex-start;gap:.85rem;padding-top:.2rem}
+.plan-net{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+.netbadge{font-family:var(--font-tal);font-size:.66rem;font-weight:600;border:1px solid var(--graa-lys);
+  border-radius:5px;padding:.1rem .35rem;color:var(--signal-dyb);background:#F4F7FF}
+.netnavn{font-size:.8rem;color:var(--graa)}
+.plan-navn{font-family:var(--font-display);font-size:1.28rem;letter-spacing:-.025em;
+  margin:0 0 .9rem;line-height:1.2}
+.plan-chips{margin-top:.75rem;gap:.45rem}
+.chp{background:#F3F7FF;border:1px solid #E4ECFC;border-radius:8px;padding:.34rem .65rem;
+  font-size:.78rem;color:var(--blaek)}
+.chp::before{color:var(--puls-dyb)}
+.chp-advar{background:rgba(255,197,61,.14);border-color:rgba(255,197,61,.4)}
+.plan-mrk{margin:0 0 .7rem}
+.plan-pris{padding-top:.2rem}
+@media(max-width:1000px){
+  .plan-ident{flex-direction:row;align-items:center}
+  .plan-navn{font-size:1.15rem}
+}
+
+/* ==========================================================================
+   Pænere indholdsfortegnelse
+   ========================================================================== */
+.toc{background:linear-gradient(160deg,#fff,#F6F9FF);border:1px solid #E4EAF8;
+  border-radius:var(--r-xl);padding:1.5rem 1.7rem;box-shadow:var(--skygge-blod);position:relative;
+  overflow:hidden}
+.toc::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad-signal)}
+.toc-titel{display:flex;align-items:center;gap:.55rem;font-family:var(--font-display);
+  font-size:1rem;font-weight:700;letter-spacing:-.01em;color:var(--blaek);
+  text-transform:none;margin-bottom:1rem}
+.toc-titel::before{content:"";width:16px;height:16px;border-radius:4px;background:var(--grad-signal);
+  flex-shrink:0}
+.toc ol{counter-reset:toc}
+.toc li{counter-increment:toc;margin-bottom:.15rem}
+.toc a{align-items:center;gap:.65rem;padding:.5rem .6rem;border-radius:var(--r-s);
+  color:var(--blaek);transition:background .16s,color .16s}
+.toc a::before{content:counter(toc);font-family:var(--font-tal);font-size:.72rem;font-weight:600;
+  color:var(--signal-dyb);background:#EAEFFF;border-radius:5px;width:21px;height:21px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:1}
+.toc a:hover{background:#fff;color:var(--signal-dyb);text-decoration:none}
+.toc a:hover::before{background:var(--signal);color:#fff}
+
+/* Mobiloverstyring skal stå sidst for at vinde over grid-reglen ovenfor */
+@media(max-width:1000px){
+  .plan{grid-template-columns:1fr!important;gap:1.1rem;padding:1.25rem}
+  .plan-ident{flex-direction:row;align-items:center;gap:.9rem;padding-top:0}
+  .plan-navn{font-size:1.12rem;margin-bottom:.75rem}
+  .plan-pris{text-align:left;align-items:stretch;border-top:1px solid var(--graa-lys);padding-top:1rem}
+  .plan-pris .knap{width:100%}
+  .p-laes,.p-hos{text-align:center}
+}
+@media(max-width:560px){
+  .plan-stats{grid-template-columns:repeat(2,1fr)}
+  .plan-ident{flex-wrap:wrap}
+  .plan-mrk .mrk{font-size:.62rem}
+}

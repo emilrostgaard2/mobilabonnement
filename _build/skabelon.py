@@ -469,8 +469,6 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
         chips.append('<span class="chp">0 kr. i oprettelse</span>')
     if a.get("esim"):
         chips.append('<span class="chp">eSIM samme dag</span>')
-    if a.get("femg") and a["data_gb"] > 0:
-        chips.append('<span class="chp">5G</span>')
     if a.get("streaming"):
         chips.append('<span class="chp">' + e(", ".join(a["streaming"][:3]))
                      + ("…" if len(a["streaming"]) > 3 else "") + "</span>")
@@ -499,10 +497,14 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
   data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}" data-udbyder="{e(u['navn'])}">
   <div class="plan-ident">
     <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy" height="26">
-    <div><b>{e(a['navn'])}</b><small>{netlabel(u)}</small></div>
+    <div class="plan-net">
+      {'<span class="netbadge">5G</span>' if a.get("femg") and a["data_gb"] > 0 else ''}
+      <span class="netnavn">{netlabel(u)}</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk">{maerker}</div>
+    <h3 class="plan-navn">{e(a['navn'])}</h3>
     <div class="plan-stats">{statbokse}</div>
     <div class="plan-chips">{"".join(chips)}</div>
   </div>
@@ -544,22 +546,39 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
 
     filterhtml = ""
     if filtre:
-        filterhtml = """<div class="filtre">
-  <span class="maerkat">Datamængde</span>
-  <button class="chip" data-filter="alle" aria-pressed="true">Alle</button>
-  <button class="chip" data-filter="lille" aria-pressed="false">Op til 15 GB</button>
-  <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
-  <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
-  <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
-</div>
-<div class="filtre">
-  <span class="maerkat">Pris pr. md.</span>
-  <button class="chip" data-pris="alle" aria-pressed="true">Alle</button>
-  <button class="chip" data-pris="u50" aria-pressed="false">Under 50 kr.</button>
-  <button class="chip" data-pris="50-99" aria-pressed="false">50–99 kr.</button>
-  <button class="chip" data-pris="100-199" aria-pressed="false">100–199 kr.</button>
-  <button class="chip" data-pris="o200" aria-pressed="false">Over 200 kr.</button>
+        filterhtml = """<div class="filterpanel">
+  <div class="fp-raekke">
+    <span class="fp-titel">Datamængde</span>
+    <div class="fp-valg">
+      <button class="chip" data-filter="alle" aria-pressed="true">Alle</button>
+      <button class="chip" data-filter="lille" aria-pressed="false">Op til 15 GB</button>
+      <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
+      <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
+      <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
+    </div>
+  </div>
+  <div class="fp-raekke">
+    <span class="fp-titel">Pris pr. md.</span>
+    <div class="fp-valg">
+      <button class="chip" data-pris="alle" aria-pressed="true">Alle</button>
+      <button class="chip" data-pris="u50" aria-pressed="false">Under 50 kr.</button>
+      <button class="chip" data-pris="50-99" aria-pressed="false">50–99 kr.</button>
+      <button class="chip" data-pris="100-199" aria-pressed="false">100–199 kr.</button>
+      <button class="chip" data-pris="o200" aria-pressed="false">Over 200 kr.</button>
+    </div>
+  </div>
+  <div class="fp-raekke fp-sort">
+    <span class="fp-titel">Sortér efter</span>
+    <div class="fp-valg">
+      <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
+      <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
+      <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
+      <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
+    </div>
+    <span class="fp-antal"><span data-antal-vist>ANTAL</span> abonnementer</span>
+  </div>
 </div>"""
+        filterhtml = filterhtml.replace("ANTAL", str(len(abonnementer)))
 
     return f"""<section class="sektion baand" id="{id_attr}">
   <div class="sektion-hoved afslør">
@@ -569,16 +588,6 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
   </div>
   {filterhtml}
   <div class="listeramme afslør">
-    <div class="liste-top">
-      <span class="liste-antal"><span data-antal-vist>{len(abonnementer)}</span> abonnementer</span>
-      <div class="sorter-bar">
-        <span class="maerkat">Sortér</span>
-        <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
-        <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
-        <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
-        <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
-      </div>
-    </div>
     <div class="planliste">{kort}</div>
     {visflere}
     <div class="listefod">

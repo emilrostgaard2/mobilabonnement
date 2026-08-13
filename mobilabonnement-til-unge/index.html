@@ -107,43 +107,53 @@
     <h2 id="bedste-valg-unge-og-studerende">Bedste valg — unge og studerende</h2>
     <p class="led">Meget data til lav pris og ingen binding — de tre ting der betyder mest, når man er studerende og flytter ofte.</p>
   </div>
-  <div class="filtre">
-  <span class="maerkat">Datamængde</span>
-  <button class="chip" data-filter="alle" aria-pressed="true">Alle</button>
-  <button class="chip" data-filter="lille" aria-pressed="false">Op til 15 GB</button>
-  <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
-  <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
-  <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
-</div>
-<div class="filtre">
-  <span class="maerkat">Pris pr. md.</span>
-  <button class="chip" data-pris="alle" aria-pressed="true">Alle</button>
-  <button class="chip" data-pris="u50" aria-pressed="false">Under 50 kr.</button>
-  <button class="chip" data-pris="50-99" aria-pressed="false">50–99 kr.</button>
-  <button class="chip" data-pris="100-199" aria-pressed="false">100–199 kr.</button>
-  <button class="chip" data-pris="o200" aria-pressed="false">Over 200 kr.</button>
+  <div class="filterpanel">
+  <div class="fp-raekke">
+    <span class="fp-titel">Datamængde</span>
+    <div class="fp-valg">
+      <button class="chip" data-filter="alle" aria-pressed="true">Alle</button>
+      <button class="chip" data-filter="lille" aria-pressed="false">Op til 15 GB</button>
+      <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
+      <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
+      <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
+    </div>
+  </div>
+  <div class="fp-raekke">
+    <span class="fp-titel">Pris pr. md.</span>
+    <div class="fp-valg">
+      <button class="chip" data-pris="alle" aria-pressed="true">Alle</button>
+      <button class="chip" data-pris="u50" aria-pressed="false">Under 50 kr.</button>
+      <button class="chip" data-pris="50-99" aria-pressed="false">50–99 kr.</button>
+      <button class="chip" data-pris="100-199" aria-pressed="false">100–199 kr.</button>
+      <button class="chip" data-pris="o200" aria-pressed="false">Over 200 kr.</button>
+    </div>
+  </div>
+  <div class="fp-raekke fp-sort">
+    <span class="fp-titel">Sortér efter</span>
+    <div class="fp-valg">
+      <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
+      <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
+      <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
+      <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
+    </div>
+    <span class="fp-antal"><span data-antal-vist>12</span> abonnementer</span>
+  </div>
 </div>
   <div class="listeramme afslør">
-    <div class="liste-top">
-      <span class="liste-antal"><span data-antal-vist>12</span> abonnementer</span>
-      <div class="sorter-bar">
-        <span class="maerkat">Sortér</span>
-        <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
-        <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
-        <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
-        <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
-      </div>
-    </div>
     <div class="planliste"><article class="plan fremhaev" data-gb="20" data-pris="69"
   data-prgb="3.4500" data-aar="828" data-udbyder="Flexii">
   <div class="plan-ident">
     <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="26">
-    <div><b>Flexii 20 GB</b><small>MVNO</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">MVNO</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"><span class="mrk mrk-puls">Billigst i alt</span></div>
+    <h3 class="plan-navn">Flexii 20 GB</h3>
     <div class="plan-stats"><div class="stat"><b>20 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>20 GB</b><span>EU-data</span></div><div class="stat"><b>3,45 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-tal"><b>69</b><span>kr./md.</span></div><div class="p-gns">828 kr. samlet på 12 mdr.</div>
@@ -158,12 +168,16 @@
   data-prgb="3.7000" data-aar="888" data-udbyder="Oister">
   <div class="plan-ident">
     <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
-    <div><b>Oister 20 GB</b><small>Nettet fra 3</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">Nettet fra 3</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"></div>
+    <h3 class="plan-navn">Oister 20 GB</h3>
     <div class="plan-stats"><div class="stat"><b>20 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>20 GB</b><span>EU-data</span></div><div class="stat"><b>3,70 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-tal"><b>74</b><span>kr./md.</span></div><div class="p-gns">888 kr. samlet på 12 mdr.</div>
@@ -178,12 +192,16 @@
   data-prgb="3.1600" data-aar="948" data-udbyder="Greentel">
   <div class="plan-ident">
     <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="26">
-    <div><b>Greentel 25 GB</b><small>MVNO</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">MVNO</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"></div>
+    <h3 class="plan-navn">Greentel 25 GB</h3>
     <div class="plan-stats"><div class="stat"><b>25 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>25 GB</b><span>EU-data</span></div><div class="stat"><b>3,16 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-tal"><b>79</b><span>kr./md.</span></div><div class="p-gns">948 kr. samlet på 12 mdr.</div>
@@ -198,12 +216,16 @@
   data-prgb="2.8333" data-aar="819" data-udbyder="Lyca Mobile">
   <div class="plan-ident">
     <img src="/assets/img/logoer/lyca-mobile.webp" alt="Lyca Mobile logo" loading="lazy" height="26">
-    <div><b>Lyca 30 GB</b><small>MVNO</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">MVNO</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"><span class="mrk mrk-puls">Lavest over 12 mdr.</span><span class="mrk mrk-sol">Tilbud i 3 mdr.</span></div>
+    <h3 class="plan-navn">Lyca 30 GB</h3>
     <div class="plan-stats"><div class="stat"><b>30 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>30 GB</b><span>EU-data</span></div><div class="stat"><b>2,83 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>18</b><span>kr./md.</span></div><div class="p-normal">Normalpris 85 kr./md.</div><div class="p-gns">Gns. <strong>68 kr./md.</strong> over 12 mdr.</div>
@@ -218,12 +240,16 @@
   data-prgb="2.9667" data-aar="1008" data-udbyder="Duka">
   <div class="plan-ident">
     <img src="/assets/img/logoer/duka.webp" alt="Duka logo" loading="lazy" height="26">
-    <div><b>dukaTALE 30 GB</b><small>MVNO</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">MVNO</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"><span class="mrk mrk-sol">Tilbud i 3 mdr.</span></div>
+    <h3 class="plan-navn">dukaTALE 30 GB</h3>
     <div class="plan-stats"><div class="stat"><b>30 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>30 GB</b><span>EU-data</span></div><div class="stat"><b>2,97 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>69</b><span>kr./md.</span></div><div class="p-normal">Normalpris 89 kr./md.</div><div class="p-gns">Gns. <strong>84 kr./md.</strong> over 12 mdr.</div>
@@ -238,12 +264,16 @@
   data-prgb="2.9667" data-aar="834" data-udbyder="eesy">
   <div class="plan-ident">
     <img src="/assets/img/logoer/eesy.webp" alt="eesy logo" loading="lazy" height="26">
-    <div><b>eesy 30 GB</b><small>MVNO</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">MVNO</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"><span class="mrk mrk-sol">Tilbud i 3 mdr.</span></div>
+    <h3 class="plan-navn">eesy 30 GB</h3>
     <div class="plan-stats"><div class="stat"><b>30 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>30 GB</b><span>EU-data</span></div><div class="stat"><b>2,97 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>11</b><span>kr./md.</span></div><div class="p-normal">Normalpris 89 kr./md.</div><div class="p-gns">Gns. <strong>70 kr./md.</strong> over 12 mdr.</div>
@@ -258,12 +288,16 @@
   data-prgb="2.9667" data-aar="1068" data-udbyder="Lebara">
   <div class="plan-ident">
     <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="26">
-    <div><b>Lebara 30 GB</b><small>Telenors net</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">Telenors net</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"></div>
+    <h3 class="plan-navn">Lebara 30 GB</h3>
     <div class="plan-stats"><div class="stat"><b>30 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>30 GB</b><span>EU-data</span></div><div class="stat"><b>2,97 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-tal"><b>89</b><span>kr./md.</span></div><div class="p-gns">1.068 kr. samlet på 12 mdr.</div>
@@ -278,12 +312,16 @@
   data-prgb="1.9800" data-aar="1098" data-udbyder="Oister">
   <div class="plan-ident">
     <img src="/assets/img/logoer/oister.webp" alt="Oister logo" loading="lazy" height="26">
-    <div><b>Oister 50 GB</b><small>Nettet fra 3</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">Nettet fra 3</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"><span class="mrk mrk-sol">Tilbud i 3 mdr.</span></div>
+    <h3 class="plan-navn">Oister 50 GB</h3>
     <div class="plan-stats"><div class="stat"><b>50 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>50 GB</b><span>EU-data</span></div><div class="stat"><b>1,98 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>69</b><span>kr./md.</span></div><div class="p-normal">Normalpris 99 kr./md.</div><div class="p-gns">Gns. <strong>92 kr./md.</strong> over 12 mdr.</div>
@@ -298,12 +336,16 @@
   data-prgb="1.8167" data-aar="1208" data-udbyder="CBB Mobil">
   <div class="plan-ident">
     <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="26">
-    <div><b>CBB 60 GB</b><small>Telenors net</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">Telenors net</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"><span class="mrk mrk-sol">Tilbud i 2 mdr.</span></div>
+    <h3 class="plan-navn">CBB 60 GB</h3>
     <div class="plan-stats"><div class="stat"><b>60 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>60 GB</b><span>EU-data</span></div><div class="stat"><b>1,82 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-intro">Tilbud i 2 mdr.</div><div class="p-tal"><b>59</b><span>kr./md.</span></div><div class="p-normal">Normalpris 109 kr./md.</div><div class="p-gns">Gns. <strong>101 kr./md.</strong> over 12 mdr.</div>
@@ -318,12 +360,16 @@
   data-prgb="1.0900" data-aar="1218" data-udbyder="Lebara">
   <div class="plan-ident">
     <img src="/assets/img/logoer/lebara.webp" alt="Lebara logo" loading="lazy" height="26">
-    <div><b>Lebara 100 GB</b><small>Telenors net</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">Telenors net</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"><span class="mrk mrk-puls">Bedste pris pr. GB</span><span class="mrk mrk-signal">Mest data</span><span class="mrk mrk-sol">Tilbud i 3 mdr.</span></div>
+    <h3 class="plan-navn">Lebara 100 GB</h3>
     <div class="plan-stats"><div class="stat"><b>100 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>15 GB</b><span>EU-data</span></div><div class="stat"><b>1,09 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>79</b><span>kr./md.</span></div><div class="p-normal">Normalpris 109 kr./md.</div><div class="p-gns">Gns. <strong>102 kr./md.</strong> over 12 mdr.</div>
@@ -338,12 +384,16 @@
   data-prgb="1.1900" data-aar="1188" data-udbyder="Flexii">
   <div class="plan-ident">
     <img src="/assets/img/logoer/flexii.webp" alt="Flexii logo" loading="lazy" height="26">
-    <div><b>Flexii 100 GB</b><small>MVNO</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">MVNO</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"><span class="mrk mrk-berry">Flest EU-data</span><span class="mrk mrk-sol">Længst introperiode</span><span class="mrk mrk-sol">Tilbud i 6 mdr.</span></div>
+    <h3 class="plan-navn">Flexii 100 GB</h3>
     <div class="plan-stats"><div class="stat"><b>100 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>100 GB</b><span>EU-data</span></div><div class="stat"><b>1,19 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-intro">Tilbud i 6 mdr.</div><div class="p-tal"><b>79</b><span>kr./md.</span></div><div class="p-normal">Normalpris 119 kr./md.</div><div class="p-gns">Gns. <strong>99 kr./md.</strong> over 12 mdr.</div>
@@ -358,12 +408,16 @@
   data-prgb="1.2500" data-aar="1392" data-udbyder="Greentel">
   <div class="plan-ident">
     <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="26">
-    <div><b>Greentel 100 GB</b><small>MVNO</small></div>
+    <div class="plan-net">
+      <span class="netbadge">5G</span>
+      <span class="netnavn">MVNO</span>
+    </div>
   </div>
   <div class="plan-midt">
     <div class="plan-mrk"><span class="mrk mrk-sol">Tilbud i 3 mdr.</span></div>
+    <h3 class="plan-navn">Greentel 100 GB</h3>
     <div class="plan-stats"><div class="stat"><b>100 GB</b><span>data i DK</span></div><div class="stat"><b>Fri</b><span>tale</span></div><div class="stat"><b>100 GB</b><span>EU-data</span></div><div class="stat"><b>1,25 kr.</b><span>pris pr. GB</span></div></div>
-    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span><span class="chp">5G</span></div>
+    <div class="plan-chips"><span class="chp">Ingen binding</span><span class="chp">0 kr. i oprettelse</span><span class="chp">eSIM samme dag</span></div>
   </div>
   <div class="plan-pris">
     <div class="p-intro">Tilbud i 3 mdr.</div><div class="p-tal"><b>89</b><span>kr./md.</span></div><div class="p-normal">Normalpris 125 kr./md.</div><div class="p-gns">Gns. <strong>116 kr./md.</strong> over 12 mdr.</div>

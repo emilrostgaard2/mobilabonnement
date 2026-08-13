@@ -44,26 +44,6 @@
    "intro_mdr": 0
   },
   {
-   "id": "greentel-forbrug",
-   "udbyder": "greentel",
-   "navn": "Greentel Forbrugsafregnet",
-   "data_gb": 0,
-   "pris": 0,
-   "tale": "Pr. minut",
-   "sms": "fri",
-   "binding": 0,
-   "oprettelse": 0,
-   "eu_gb": 0,
-   "femg": true,
-   "esim": true,
-   "streaming": [],
-   "forbrugsafregnet": true,
-   "badge": "Betal pr. brug",
-   "link": "https://example.dk/greentel",
-   "intro_pris": null,
-   "intro_mdr": 0
-  },
-  {
    "id": "lyca-udendata",
    "udbyder": "lyca-mobile",
    "navn": "Lyca Tale 3 timer",

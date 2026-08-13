@@ -749,7 +749,7 @@ def byg_forside():
   </div>
 </section>
 
-<section class="sektion sektion-nat">
+<section class="sektion sektion-hvid">
   <div class="baand">
     <div class="sektion-hoved midt afslør">
       <span class="etiket">Kategorier</span>
@@ -757,16 +757,16 @@ def byg_forside():
       <p class="led">Vi har lavet dedikerede sammenligninger til de mest almindelige situationer.</p>
     </div>
     <div class="kortgitter kg-4 afslør">
-      <a class="kort kort-nat" href="/billigste-mobilabonnement/" style="text-decoration:none;color:inherit">
+      <a class="kort" href="/billigste-mobilabonnement/" style="text-decoration:none;color:inherit">
         <div class="ikon">💰</div><h3>Billigste abonnement</h3>
         <p>Hele markedet sorteret efter pris, med gennemgang af de skjulte omkostninger.</p></a>
-      <a class="kort kort-nat" href="/mobilabonnement-med-fri-data/" style="text-decoration:none;color:inherit">
+      <a class="kort" href="/mobilabonnement-med-fri-data/" style="text-decoration:none;color:inherit">
         <div class="ikon">∞</div><h3>Fri data</h3>
         <p>Hvad fri data koster — og hvorfor de fleste ikke har brug for det.</p></a>
-      <a class="kort kort-nat" href="/mobilabonnement-til-unge/" style="text-decoration:none;color:inherit">
+      <a class="kort" href="/mobilabonnement-til-unge/" style="text-decoration:none;color:inherit">
         <div class="ikon">🎓</div><h3>Unge og studerende</h3>
         <p>Meget data, lav pris og ingen binding, så du kan skifte når du flytter.</p></a>
-      <a class="kort kort-nat" href="/mobilabonnement-uden-binding/" style="text-decoration:none;color:inherit">
+      <a class="kort" href="/mobilabonnement-uden-binding/" style="text-decoration:none;color:inherit">
         <div class="ikon">🔓</div><h3>Uden binding</h3>
         <p>Abonnementer du kan opsige med kort varsel, hvis behovet ændrer sig.</p></a>
     </div>
