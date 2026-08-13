@@ -456,3 +456,51 @@
   knap.addEventListener("click", slaaOp);
   felt.addEventListener("keydown", function (e) { if (e.key === "Enter") slaaOp(); });
 })();
+
+/* ---- Hastighedstest ---- */
+(function () {
+  "use strict";
+  var knap = document.querySelector("[data-speedtest]");
+  if (!knap) return;
+  var boks = document.querySelector("[data-st-resultat]");
+  var tal = document.querySelector("[data-st-mbit]");
+  var vurdering = document.querySelector("[data-st-vurdering]");
+
+  function beskriv(mbit) {
+    if (mbit < 1) return "Meget lav. Er din datamængde brugt op? Mange udbydere sætter " +
+      "hastigheden ned frem for at stoppe forbindelsen.";
+    if (mbit < 3) return "Nok til beskeder, sociale medier og musik, men video vil " +
+      "sandsynligvis buffe.";
+    if (mbit < 10) return "Fint til video i standardkvalitet og videomøder. Dækker de " +
+      "flestes hverdagsbrug.";
+    if (mbit < 30) return "God forbindelse. Rækker til HD-video og hotspot til en laptop.";
+    return "Meget god forbindelse. Du mærker ikke begrænsninger i almindelig brug.";
+  }
+
+  knap.addEventListener("click", function () {
+    knap.disabled = true;
+    knap.textContent = "Måler …";
+    boks.hidden = false;
+    tal.textContent = "—";
+    vurdering.textContent = "";
+
+    var url = "/assets/hastighedstest.bin?n=" + Date.now();
+    var start = performance.now();
+
+    fetch(url, { cache: "no-store" })
+      .then(function (r) { return r.arrayBuffer(); })
+      .then(function (buf) {
+        var sek = (performance.now() - start) / 1000;
+        var mbit = (buf.byteLength * 8) / sek / 1000000;
+        tal.textContent = mbit < 10 ? mbit.toFixed(1).replace(".", ",") : Math.round(mbit);
+        vurdering.textContent = beskriv(mbit);
+        knap.disabled = false;
+        knap.textContent = "Test igen";
+      })
+      .catch(function () {
+        vurdering.textContent = "Testen kunne ikke gennemføres. Tjek din forbindelse og prøv igen.";
+        knap.disabled = false;
+        knap.textContent = "Prøv igen";
+      });
+  });
+})();

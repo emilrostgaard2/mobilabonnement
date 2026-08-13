@@ -35,6 +35,13 @@ SAMMENLIGN = [
     ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor og 3"),
     ("/landekoder/", "Landekoder", "Alle telefonkoder med søgning"),
     ("/hvem-ringer-til-mig/", "Hvem ringer til mig?", "Slå ukendt nummer op"),
+    ("/mobilabonnement-med-musik/", "Med musik", "Musik, podcast og lydbøger"),
+    ("/mobilabonnement-til-aeldre/", "Til ældre", "Tryghed frem for laveste pris"),
+    ("/mobilabonnement-med-telefon/", "Med telefon", "Regn efter før du binder dig"),
+    ("/taletidskort/", "Taletidskort", "Forudbetalt uden overraskelser"),
+    ("/sammenlign/", "Udbyder mod udbyder", "To selskaber side om side"),
+    ("/daekningskort/", "Dækningstjek", "Se hvilket net der dækker"),
+    ("/speedtest/", "Hastighedstest", "Mål din forbindelse"),
 ]
 
 MENU = [
@@ -296,6 +303,11 @@ def fod(opdateret):
           <li><a href="/mobilabonnement-uden-binding/">Uden binding</a></li>
           <li><a href="/mobilabonnement-med-streaming/tjenester/">Streaming pr. tjeneste</a></li>
           <li><a href="/netvaerk/">Mobilnetværk</a></li>
+          <li><a href="/mobilabonnement-med-musik/">Med musik</a></li>
+          <li><a href="/mobilabonnement-til-aeldre/">Til ældre</a></li>
+          <li><a href="/mobilabonnement-med-telefon/">Med telefon</a></li>
+          <li><a href="/taletidskort/">Taletidskort</a></li>
+          <li><a href="/sammenlign/">Udbyder mod udbyder</a></li>
           <li><a href="/udbydere/">Alle udbydere</a></li>
         </ul>
       </div>
@@ -309,6 +321,8 @@ def fod(opdateret):
           <li><a href="/guides/">Alle guides</a></li>
           <li><a href="/landekoder/">Landekoder</a></li>
           <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
+          <li><a href="/daekningskort/">Dækningstjek</a></li>
+          <li><a href="/speedtest/">Hastighedstest</a></li>
         </ul>
       </div>
       <div>
@@ -473,6 +487,9 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
         chips.append('<span class="chp">0 kr. i oprettelse</span>')
     if a.get("esim"):
         chips.append('<span class="chp">eSIM samme dag</span>')
+    chips.insert(0, f'<span class="chp chp-net">{netlabel(u)}</span>')
+    if a.get("femg") and a["data_gb"] > 0:
+        chips.append('<span class="chp">5G</span>')
     if a.get("streaming"):
         chips.append('<span class="chp">' + e(", ".join(a["streaming"][:3]))
                      + ("…" if len(a["streaming"]) > 3 else "") + "</span>")
@@ -499,13 +516,9 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     return f"""<article class="plan{klasse}" data-gb="{a['data_gb']}" data-pris="{a['pris']}"
   data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}" data-udbyder="{e(u['navn'])}">
   <div class="plan-ident">
-    <span class="plan-logo"><img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy"
-      width="{round(u.get('logo_w', 240) * 46 / u.get('logo_h', 96))}" height="46"
-      decoding="async"></span>
-    <div class="plan-net">
-      {'<span class="netbadge">5G</span>' if a.get("femg") and a["data_gb"] > 0 else ''}
-      <span class="netnavn">{netlabel(u)}</span>
-    </div>
+    <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy"
+      width="{round(u.get('logo_w', 240) * 56 / u.get('logo_h', 96))}" height="56"
+      decoding="async">
   </div>
   <div class="plan-midt">
     <div class="plan-mrk">{maerker}</div>
