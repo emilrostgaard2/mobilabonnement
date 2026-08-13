@@ -18,13 +18,28 @@ FORFATTER = {
             "Telemobils tabeller bygger på."),
 }
 
+SAMMENLIGN = [
+    ("/billigste-mobilabonnement/", "Billigste mobilabonnement", "Hele markedet sorteret efter pris"),
+    ("/bedste-mobilabonnement/", "Bedste mobilabonnement", "Bedst samlet værdi, ikke bare lavest pris"),
+    ("/mobilabonnement-med-fri-data/", "Fri data", "Ubegrænset data i Danmark"),
+    ("/mobilabonnement-med-fri-tale/", "Fri tale", "Ubegrænsede opkald og sms"),
+    ("/mobilabonnement-uden-data/", "Uden data", "Kun tale og sms"),
+    ("/mobilabonnement-med-streaming/", "Med streaming", "Netflix og co. i abonnementet"),
+    ("/mobilabonnement-med-esim/", "Med eSIM", "Digitalt simkort, klar samme dag"),
+    ("/mobilabonnement-til-boern/", "Til børn", "Trygt, billigt og uden overraskelser"),
+    ("/mobilabonnement-til-unge/", "Til unge og studerende", "Meget data, ingen binding"),
+    ("/mobilabonnement-uden-binding/", "Uden binding", "Opsig når du vil"),
+]
+
 MENU = [
     ("/billigste-mobilabonnement/", "Billigste abonnement"),
-    ("/mobilabonnement-med-fri-data/", "Fri data"),
-    ("/udbydere/", "Udbydere"),
+    ("/bedste-mobilabonnement/", "Bedste abonnement"),
     ("/guides/", "Guides"),
     ("/om-os/", "Om os"),
 ]
+
+
+NAV_UDBYDERE = []
 
 
 def e(t):
@@ -38,7 +53,9 @@ def kr(v):
 
 
 def gb_tekst(gb):
-    return "Fri data" if gb >= 900 else f"{gb} GB"
+    if gb >= 900:
+        return "Fri data"
+    return f"{gb} GB" if gb > 0 else "Ingen data"
 
 
 def netlabel(u):
@@ -63,10 +80,42 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
                    + json.dumps(blok, ensure_ascii=False, separators=(",", ":"))
                    + "</script>\n")
 
-    navpunkter = ""
+    def aktiv(href):
+        return ' aria-current="page"' if sti == href else ""
+
+    sammenlign_punkter = "".join(
+        f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span>'
+        f'<span class="mp-under">{e(b)}</span></a>'
+        for h, t, b in SAMMENLIGN
+    )
+    udbyder_punkter = "".join(
+        f'<a href="/udbydere/{u["slug"]}/"{aktiv("/udbydere/" + u["slug"] + "/")}>'
+        f'<img src="/assets/img/logoer/{u["logo"]}" alt="" loading="lazy" height="18">'
+        f'<span>{e(u["navn"])}</span></a>'
+        for u in NAV_UDBYDERE
+    )
+
+    navpunkter = f'''
+<div class="nav-gruppe">
+  <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-sammenlign">
+    Sammenlign <span class="pil-ned" aria-hidden="true"></span>
+  </button>
+  <div class="nav-menu nav-menu-liste" id="menu-sammenlign">{sammenlign_punkter}</div>
+</div>
+<div class="nav-gruppe">
+  <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-udbydere">
+    Udbydere <span class="pil-ned" aria-hidden="true"></span>
+  </button>
+  <div class="nav-menu nav-menu-logoer" id="menu-udbydere">
+    {udbyder_punkter}
+    <a href="/udbydere/" class="nav-alle">Se alle udbydere og anmeldelser →</a>
+  </div>
+</div>'''
     for href, tekst in MENU:
-        aktiv = ' aria-current="page"' if sti == href or (href != "/" and sti.startswith(href)) else ""
-        navpunkter += f'<a href="{href}"{aktiv}>{e(tekst)}</a>'
+        if href in ("/billigste-mobilabonnement/", "/bedste-mobilabonnement/"):
+            continue
+        a = ' aria-current="page"' if sti == href or (href != "/" and sti.startswith(href)) else ""
+        navpunkter += f'<a href="{href}"{a}>{e(tekst)}</a>'
     navpunkter += '<a href="/billigste-mobilabonnement/" class="nav-cta">Se priser</a>'
 
     krummehtml = ""
@@ -168,7 +217,13 @@ def fod(opdateret):
         <div class="fodtitel">Sammenlign</div>
         <ul>
           <li><a href="/billigste-mobilabonnement/">Billigste mobilabonnement</a></li>
+          <li><a href="/bedste-mobilabonnement/">Bedste mobilabonnement</a></li>
           <li><a href="/mobilabonnement-med-fri-data/">Fri data</a></li>
+          <li><a href="/mobilabonnement-med-fri-tale/">Fri tale</a></li>
+          <li><a href="/mobilabonnement-uden-data/">Uden data</a></li>
+          <li><a href="/mobilabonnement-med-streaming/">Med streaming</a></li>
+          <li><a href="/mobilabonnement-med-esim/">Med eSIM</a></li>
+          <li><a href="/mobilabonnement-til-boern/">Til børn</a></li>
           <li><a href="/mobilabonnement-til-unge/">Til unge og studerende</a></li>
           <li><a href="/mobilabonnement-uden-binding/">Uden binding</a></li>
           <li><a href="/udbydere/">Alle udbydere</a></li>
@@ -279,9 +334,9 @@ def ctabaand(titel, tekst, knaptekst="Sammenlign alle abonnementer", href="/bill
 def prisrække(a, u, billigst_pr_gb=False):
     """Én række i sammenligningstabellen."""
     logo = f"/assets/img/logoer/{u['logo']}"
-    pr_gb = a["pris"] / a["data_gb"] if a["data_gb"] < 900 else 0
+    pr_gb = a["pris"] / a["data_gb"] if 0 < a["data_gb"] < 900 else 0
     pr_gb_tekst = (f"{pr_gb:.2f}".replace(".", ",") + " kr.") if pr_gb else "—"
-    styrke = 4 if a["data_gb"] >= 900 else (3 if a["data_gb"] >= 50 else (2 if a["data_gb"] >= 15 else 1))
+    styrke = 4 if a["data_gb"] >= 900 else (3 if a["data_gb"] >= 50 else (2 if a["data_gb"] >= 15 else (1 if a["data_gb"] > 0 else 0)))
     bjaelker = "".join(f'<i class="{"t" if i < styrke else ""}"></i>' for i in range(4))
 
     maerker = ""

@@ -109,17 +109,7 @@ p{margin:0 0 1.15em}
 .burger[aria-expanded="true"] span:nth-child(2){opacity:0}
 .burger[aria-expanded="true"] span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
 
-@media(max-width:940px){
-  .burger{display:flex}
-  .nav{
-    position:absolute;top:70px;left:0;right:0;background:#fff;flex-direction:column;
-    align-items:stretch;padding:.6rem 1.25rem 1.2rem;gap:.15rem;border-bottom:1px solid var(--graa-lys);
-    box-shadow:var(--skygge-loft);display:none;
-  }
-  .nav.aaben{display:flex}
-  .nav a{padding:.75rem .6rem}
-  .nav-cta{text-align:center;margin-top:.5rem}
-}
+
 
 /* ==========================================================================
    Hero — kompakt, men levende
@@ -546,3 +536,58 @@ table.pris tbody tr[hidden]{display:none}
 .radar .chip-fly:nth-child(6){bottom:10%;left:12%;animation-delay:2.8s}
 .radar .chip-fly b{color:#00E5A8;font-weight:600}
 @keyframes svaev{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+
+/* ==========================================================================
+   Dropdown-navigation
+   ========================================================================== */
+.nav-gruppe{position:relative}
+.nav-knap{
+  display:inline-flex;align-items:center;gap:.4rem;background:none;border:none;cursor:pointer;
+  font-family:var(--font-brod);font-size:.94rem;font-weight:500;color:var(--blaek);
+  padding:.5rem .78rem;border-radius:var(--r-s);transition:background .18s,color .18s;
+}
+.nav-knap:hover,.nav-knap[aria-expanded="true"]{background:var(--graa-lys);color:var(--signal-dyb)}
+.pil-ned{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:5px solid currentColor;opacity:.6;transition:transform .2s}
+.nav-knap[aria-expanded="true"] .pil-ned{transform:rotate(180deg)}
+
+.nav-menu{
+  position:absolute;top:calc(100% + .55rem);left:0;background:#fff;border:1px solid var(--graa-lys);
+  border-radius:var(--r-l);box-shadow:0 24px 56px -20px rgba(19,23,53,.34);padding:.6rem;
+  opacity:0;visibility:hidden;transform:translateY(-6px);transition:.18s;z-index:120;
+}
+.nav-gruppe:hover .nav-menu,.nav-menu.aaben,.nav-gruppe:focus-within .nav-menu{
+  opacity:1;visibility:visible;transform:none;
+}
+.nav-menu a{display:block;padding:.55rem .7rem;border-radius:var(--r-s);text-decoration:none;
+  color:var(--blaek);transition:background .15s}
+.nav-menu a:hover{background:#F2F5FF;color:var(--signal-dyb)}
+.nav-menu a[aria-current="page"]{background:rgba(61,90,254,.09);color:var(--signal-dyb)}
+
+.nav-menu-liste{width:610px;display:grid;grid-template-columns:1fr 1fr;gap:.1rem}
+.mp-navn{display:block;font-weight:600;font-size:.93rem;line-height:1.3}
+.mp-under{display:block;font-size:.79rem;color:var(--graa);line-height:1.35;margin-top:.1rem}
+
+.nav-menu-logoer{width:440px;display:grid;grid-template-columns:1fr 1fr;gap:.1rem}
+.nav-menu-logoer a{display:flex;align-items:center;gap:.6rem;font-size:.9rem;font-weight:550}
+.nav-menu-logoer img{width:52px;height:18px;object-fit:contain;object-position:left center;flex-shrink:0}
+.nav-alle{grid-column:1/-1;margin-top:.35rem;border-top:1px solid var(--graa-lys);
+  padding-top:.7rem!important;font-size:.86rem;font-weight:600;color:var(--signal-dyb)!important}
+
+@media(max-width:1040px){
+  .burger{display:flex}
+  .nav{position:absolute;top:70px;left:0;right:0;background:#fff;flex-direction:column;
+    align-items:stretch;padding:.6rem 1.25rem 1.4rem;gap:.15rem;border-bottom:1px solid var(--graa-lys);
+    box-shadow:var(--skygge-loft);display:none;max-height:calc(100vh - 70px);overflow-y:auto}
+  .nav.aaben{display:flex}
+  .nav-gruppe{position:static}
+  .nav-knap{width:100%;justify-content:space-between;padding:.75rem .6rem;font-weight:600}
+  .nav-menu{position:static;width:auto!important;opacity:1;visibility:visible;transform:none;
+    box-shadow:none;border:none;border-radius:0;padding:0 0 .6rem .6rem;display:none;
+    grid-template-columns:1fr}
+  .nav-gruppe:hover .nav-menu,.nav-gruppe:focus-within .nav-menu{display:none}
+  .nav-gruppe .nav-menu.aaben{display:grid}
+  .nav-menu-logoer{grid-template-columns:1fr 1fr}
+  .nav a{padding:.7rem .6rem}
+  .nav-cta{text-align:center;margin-top:.6rem}
+}

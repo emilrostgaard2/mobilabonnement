@@ -3,6 +3,52 @@
   "use strict";
   var roligt = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ---- Dropdown-menuer ---- */
+  var grupper = Array.prototype.slice.call(document.querySelectorAll(".nav-gruppe"));
+  grupper.forEach(function (g) {
+    var knap = g.querySelector(".nav-knap");
+    var menu = g.querySelector(".nav-menu");
+    if (!knap || !menu) return;
+
+    knap.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var aaben = menu.classList.contains("aaben");
+      grupper.forEach(function (anden) {
+        anden.querySelector(".nav-menu").classList.remove("aaben");
+        anden.querySelector(".nav-knap").setAttribute("aria-expanded", "false");
+      });
+      if (!aaben) {
+        menu.classList.add("aaben");
+        knap.setAttribute("aria-expanded", "true");
+      }
+    });
+
+    menu.addEventListener("click", function (e) {
+      if (e.target.closest("a")) {
+        menu.classList.remove("aaben");
+        knap.setAttribute("aria-expanded", "false");
+      }
+    });
+  });
+
+  document.addEventListener("click", function () {
+    grupper.forEach(function (g) {
+      g.querySelector(".nav-menu").classList.remove("aaben");
+      g.querySelector(".nav-knap").setAttribute("aria-expanded", "false");
+    });
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    grupper.forEach(function (g) {
+      if (g.querySelector(".nav-menu").classList.contains("aaben")) {
+        g.querySelector(".nav-menu").classList.remove("aaben");
+        g.querySelector(".nav-knap").setAttribute("aria-expanded", "false");
+        g.querySelector(".nav-knap").focus();
+      }
+    });
+  });
+
   /* ---- Mobilmenu ---- */
   var burger = document.querySelector(".burger");
   var nav = document.querySelector(".nav");
