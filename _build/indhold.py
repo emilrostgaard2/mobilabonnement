@@ -14,9 +14,10 @@ def billigste_brodtekst(d):
 <section class="sektion baand-smal artikel">
 
 <div class="udtag">
-<p><strong>Kort svar:</strong> Det billigste mobilabonnement i Danmark koster lige nu
-{kr(d['min_pris'])} kr. om måneden. Til under 100 kr. får du typisk fri tale, fri sms og
-mellem 5 og 20 GB data uden binding. Skal du bruge over 50 GB, starter priserne omkring
+<p><strong>Kort svar:</strong> Det billigste mobilabonnement i Danmark koster
+{kr(d['min_pris'])} kr. om måneden — det er et taleabonnement uden data. Vil du have
+mobildata med, starter priserne ved {kr(d['min_pris_data'])} kr. for {d['min_data_gb']} GB
+med fri tale og fri sms uden binding. Skal du bruge over 50 GB, starter priserne omkring
 {kr(d['pris_stor'])} kr., og fri data fås fra {kr(d['pris_fri'])} kr. om måneden.
 Prisforskellen mellem billigste og dyreste abonnement med samme indhold er ofte over
 100 kr. om måneden — altså mere end 1.200 kr. om året for præcis det samme.</p>
@@ -36,7 +37,7 @@ de aldrig har skiftet.</p>
 <table>
 <thead><tr><th>Niveau</th><th>Pris pr. md.</th><th>Typisk indhold</th><th>Passer til</th></tr></thead>
 <tbody>
-<tr><td><strong>Discount</strong></td><td>{kr(d['min_pris'])}–99 kr.</td><td>Fri tale og sms, 5–20 GB</td><td>Let bruger, wi-fi det meste af dagen</td></tr>
+<tr><td><strong>Discount</strong></td><td>{kr(d['min_pris_data'])}–99 kr.</td><td>Fri tale og sms, 5–20 GB</td><td>Let bruger, wi-fi det meste af dagen</td></tr>
 <tr><td><strong>Mellem</strong></td><td>100–149 kr.</td><td>Fri tale og sms, 25–60 GB</td><td>Almindelig bruger med daglig pendling</td></tr>
 <tr><td><strong>Stor</strong></td><td>150–199 kr.</td><td>80–150 GB eller fri data</td><td>Streaming på farten, hotspot til laptop</td></tr>
 <tr><td><strong>Premium</strong></td><td>200–350 kr.</td><td>Fri data, streaming, bedste dækning</td><td>Landdistrikter, erhverv, samlet husstand</td></tr>
@@ -44,7 +45,7 @@ de aldrig har skiftet.</p>
 </table>
 
 <p>Den vigtigste erkendelse er, at niveauerne ikke afspejler kvalitetsforskelle i selve
-mobilforbindelsen. Et abonnement til {kr(d['min_pris'])} kr. og et til 300 kr. kan køre på
+mobilforbindelsen. Et abonnement til {kr(d['min_pris_data'])} kr. og et til 300 kr. kan køre på
 nøjagtig det samme netværk, med den samme dækning, de samme master og den samme hastighed.
 Det, du betaler ekstra for i toppen, er tillægsydelser, kundeservice og i visse tilfælde
 adgang til det mest udbyggede net — ikke bedre mobilnet i sig selv.</p>

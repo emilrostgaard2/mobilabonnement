@@ -179,7 +179,7 @@ p{margin:0 0 1.15em}
 .logospor img{height:30px;width:auto;max-width:120px;object-fit:contain;opacity:.75;transition:opacity .25s,transform .25s;filter:saturate(.85)}
 .logospor img:hover{opacity:1;transform:scale(1.06);filter:none}
 @keyframes rul{to{transform:translateX(-50%)}}
-.logobaand:hover .logospor{animation-play-state:paused}
+
 
 /* ==========================================================================
    Knapper
@@ -465,8 +465,9 @@ table.pris tbody tr:last-child td{border-bottom:none}
 /* ==========================================================================
    Scroll-afsløring + tilgængelighed
    ========================================================================== */
-.afslør{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.2,.8,.3,1),transform .6s cubic-bezier(.2,.8,.3,1)}
-.afslør.vist{opacity:1;transform:none}
+.html-uden-js .afslør{opacity:1;transform:none}
+.js .afslør{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.2,.8,.3,1),transform .6s cubic-bezier(.2,.8,.3,1)}
+.js .afslør.vist{opacity:1;transform:none}
 
 .spring{position:absolute;left:-9999px;top:0;background:#fff;padding:.8rem 1.2rem;z-index:200;border-radius:0 0 var(--r-s) 0}
 .spring:focus{left:0}
@@ -552,12 +553,12 @@ table.pris tbody tr[hidden]{display:none}
 .nav-knap[aria-expanded="true"] .pil-ned{transform:rotate(180deg)}
 
 .nav-menu{
-  position:absolute;top:calc(100% + .55rem);left:0;background:#fff;border:1px solid var(--graa-lys);
+  position:absolute;top:calc(100% + .55rem);left:50%;background:#fff;border:1px solid var(--graa-lys);
   border-radius:var(--r-l);box-shadow:0 24px 56px -20px rgba(19,23,53,.34);padding:.6rem;
-  opacity:0;visibility:hidden;transform:translateY(-6px);transition:.18s;z-index:120;
+  opacity:0;visibility:hidden;transform:translate(-50%,-6px);transition:.18s;z-index:120;
 }
 .nav-gruppe:hover .nav-menu,.nav-menu.aaben,.nav-gruppe:focus-within .nav-menu{
-  opacity:1;visibility:visible;transform:none;
+  opacity:1;visibility:visible;transform:translate(-50%,0);
 }
 .nav-menu a{display:block;padding:.55rem .7rem;border-radius:var(--r-s);text-decoration:none;
   color:var(--blaek);transition:background .15s}
@@ -582,7 +583,7 @@ table.pris tbody tr[hidden]{display:none}
   .nav.aaben{display:flex}
   .nav-gruppe{position:static}
   .nav-knap{width:100%;justify-content:space-between;padding:.75rem .6rem;font-weight:600}
-  .nav-menu{position:static;width:auto!important;opacity:1;visibility:visible;transform:none;
+  .nav-menu{position:static;left:auto;width:auto!important;opacity:1;visibility:visible;transform:none!important;
     box-shadow:none;border:none;border-radius:0;padding:0 0 .6rem .6rem;display:none;
     grid-template-columns:1fr}
   .nav-gruppe:hover .nav-menu,.nav-gruppe:focus-within .nav-menu{display:none}
@@ -591,3 +592,56 @@ table.pris tbody tr[hidden]{display:none}
   .nav a{padding:.7rem .6rem}
   .nav-cta{text-align:center;margin-top:.6rem}
 }
+
+/* ==========================================================================
+   Pristabel — CRO-udgave
+   ========================================================================== */
+table.pris{min-width:1020px}
+table.pris td{padding:1.05rem 1rem;vertical-align:middle}
+table.pris tbody tr{transition:background .16s,box-shadow .16s}
+table.pris tbody tr:hover{background:#F7F9FF;box-shadow:inset 3px 0 0 var(--signal)}
+table.pris tbody tr.fremhaev{
+  background:linear-gradient(90deg,rgba(0,209,143,.1),rgba(0,209,143,.02));
+  box-shadow:inset 3px 0 0 var(--puls);
+}
+table.pris tbody tr.fremhaev:hover{background:linear-gradient(90deg,rgba(0,209,143,.16),rgba(0,209,143,.04))}
+
+.t-udbyder img{height:24px;width:80px}
+.t-udbyder b{font-size:1rem;font-weight:700}
+.t-maerker{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.5rem}
+.t-maerker:empty{display:none}
+.t-mini{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem}
+.mini{
+  font-size:.68rem;font-family:var(--font-tal);color:var(--graa);
+  background:#F1F4FC;border-radius:5px;padding:.16rem .42rem;white-space:nowrap;
+}
+.mini-advar{background:rgba(255,197,61,.2);color:#8A6100}
+
+.t-eu{font-family:var(--font-tal);font-size:.86rem;color:var(--graa)}
+.t-aar{font-family:var(--font-tal);font-size:.9rem;color:var(--blaek);white-space:nowrap}
+.spar{display:block;font-family:var(--font-brod);font-size:.7rem;font-weight:700;color:var(--puls-dyb);margin-top:.2rem}
+
+.t-pris{white-space:nowrap;text-align:right}
+.t-pris b{font-family:var(--font-tal);font-size:1.5rem;font-weight:600;display:block;line-height:1.05}
+.t-pris .pr{font-family:var(--font-tal);font-size:.72rem;color:var(--graa)}
+.t-pris s{font-family:var(--font-tal);color:var(--graa);font-size:.76rem;display:block}
+
+.t-cta{text-align:right;white-space:nowrap}
+.t-cta .knap{width:100%;justify-content:center;padding:.62rem 1.1rem;font-size:.9rem}
+.t-hos{display:block;font-size:.68rem;color:var(--graa);margin-top:.3rem;text-align:center}
+
+table.pris th{padding:.9rem 1rem;background:var(--blaek)}
+table.pris caption{padding:1.25rem 1.3rem .6rem;font-size:.88rem}
+
+.filtre{padding:1.1rem 1.2rem;border-radius:var(--r-l)}
+.chip[aria-pressed="true"]{background:var(--puls);border-color:var(--puls);color:#04301F}
+
+@media(max-width:760px){
+  .t-cta .knap{padding:.55rem .7rem;font-size:.82rem}
+}
+
+.valgkort-aar{font-family:var(--font-tal);font-size:.74rem;color:var(--graa);margin-top:.25rem}
+table.pris th{white-space:nowrap}
+table.pris td:first-child,table.pris th:first-child{min-width:270px}
+table.pris th:nth-child(2),table.pris td:nth-child(2){min-width:96px}
+table.pris td:last-child{min-width:150px}

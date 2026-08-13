@@ -27,6 +27,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400..700&display=swap">
+<script>document.documentElement.className+=" js";</script>
 <link rel="stylesheet" href="/assets/css/telemobil.css">
 
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://telemobil.dk/#organisation","name":"Telemobil","url":"https://telemobil.dk/","description":"Uafhængig dansk sammenligning af mobilabonnementer.","areaServed":{"@type":"Country","name":"Danmark"},"founder":{"@id":"https://telemobil.dk/om/emil-rostgaard/#person"},"sameAs":["https://www.linkedin.com/in/emil-rostgaard-702809195/"]},{"@type":"Person","@id":"https://telemobil.dk/om/emil-rostgaard/#person","name":"Emil Rostgaard","url":"https://telemobil.dk/om/emil-rostgaard/","jobTitle":"Stifter og redaktør, Telemobil","image":"https://telemobil.dk/assets/img/emil-rostgaard.webp","sameAs":["https://www.linkedin.com/in/emil-rostgaard-702809195/"],"knowsAbout":["Mobilabonnementer","Telemarkedet i Danmark","Forbrugerøkonomi","Prissammenligning"],"worksFor":{"@id":"https://telemobil.dk/#organisation"}},{"@type":"WebSite","@id":"https://telemobil.dk/#website","url":"https://telemobil.dk/","name":"Telemobil","inLanguage":"da-DK","publisher":{"@id":"https://telemobil.dk/#organisation"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Forside","item":"https://telemobil.dk/"},{"@type":"ListItem","position":2,"name":"Udbydere","item":"https://telemobil.dk/udbydere/"},{"@type":"ListItem","position":3,"name":"Greentel"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Er billige selskaber som Greentel dårligere?","acceptedAnswer":{"@type":"Answer","text":"Ikke nødvendigvis. Discountselskaber lejer sig ind på de samme master som de store. Forskellen ligger typisk i kundeservice, tillægsydelser og i nogle tilfælde prioritering af trafik i myldretiden."}},{"@type":"Question","name":"Hvad er en MVNO?","acceptedAnswer":{"@type":"Answer","text":"En MVNO er et selskab uden eget mobilnet, der lejer kapacitet hos en netværksejer. I Danmark er netværksejerne TDC NET, Telenor og 3. Din dækning bestemmes af det net, din udbyder lejer sig ind på."}},{"@type":"Question","name":"Kan jeg beholde mit nummer?","acceptedAnswer":{"@type":"Answer","text":"Ja. Nummerportering er en rettighed i Danmark, og din nye udbyder klarer flytningen for dig."}}]},{"@type":"Article","@id":"https://telemobil.dk/udbydere/greentel/#artikel","headline":"Greentel — priser, netværk og anmeldelse","description":"Greentel lejer sig ind på et af de danske netværk. Se priser, fordele, ulemper og hvem Greentel passer til.","inLanguage":"da-DK","datePublished":"2026-08-13","dateModified":"2026-08-13","author":{"@id":"https://telemobil.dk/om/emil-rostgaard/#person"},"publisher":{"@id":"https://telemobil.dk/#organisation"},"isPartOf":{"@id":"https://telemobil.dk/#website"},"mainEntityOfPage":"https://telemobil.dk/udbydere/greentel/"},{"@type":"Organization","name":"Greentel","url":"https://greentel.dk","logo":"https://telemobil.dk/assets/img/logoer/greentel.webp"}]}</script>
@@ -82,7 +83,7 @@
       </div>
       <div class="radar" aria-hidden="true">
   <span class="ring"></span><span class="ring"></span><span class="ring"></span>
-  <span class="chip-fly">Fra <b>44 kr.</b></span><span class="chip-fly">Uden <b>binding</b></span><span class="chip-fly">Udbydere <b>10</b></span>
+  <span class="chip-fly">Fra <b>19 kr.</b></span><span class="chip-fly">Uden <b>binding</b></span><span class="chip-fly">Udbydere <b>10</b></span>
   <span class="kerne"><i></i><i></i><i></i></span>
 </div>
     </div>
@@ -112,78 +113,95 @@
             <th scope="col" class="sorter" data-noegle="udbyder">Abonnement</th>
             <th scope="col" class="sorter" data-noegle="gb">Data</th>
             <th scope="col">Tale</th>
+            <th scope="col">EU-data</th>
             <th scope="col" class="sorter" data-noegle="prgb">Pris pr. GB</th>
-            <th scope="col">Binding</th>
+            <th scope="col" class="sorter" data-noegle="aar">Pris 1. år</th>
             <th scope="col" class="sorter" data-noegle="pris" data-retning="op">Pris pr. md.</th>
-            <th scope="col"><span class="visuelt-skjult">Link</span></th>
+            <th scope="col"><span class="visuelt-skjult">Bestil</span></th>
           </tr>
         </thead>
-        <tbody><tr class="fremhaev" data-gb="0" data-pris="0" data-prgb="0.0000" data-udbyder="Greentel">
+        <tbody><tr class="fremhaev" data-gb="0" data-pris="0" data-prgb="0.0000" data-aar="0" data-udbyder="Greentel">
   <td>
     <div class="t-udbyder">
-      <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="22">
+      <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="24">
       <span><b>Greentel Forbrugsafregnet</b><small>MVNO</small></span>
     </div>
-    <span class="maerke maerke-puls">Bedste pris pr. GB</span><span class="maerke maerke-sol">Betal pr. brug</span>
+    <div class="t-maerker"><span class="maerke maerke-puls">Bedste værdi</span><span class="maerke maerke-sol">Betal pr. brug</span></div>
+    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span></div>
   </td>
   <td class="t-data">Ingen data<div class="bjaelke" aria-hidden="true"><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div></td>
   <td>Pr. minut</td>
+  <td class="t-eu">—</td>
   <td class="t-pr-gb">—</td>
-  <td>Nej</td>
-  <td class="t-pris">0 kr.</td>
-  <td><a class="knap knap-primaer knap-lille" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="greentel" data-abonnement="greentel-forbrug">Se tilbud</a></td>
-</tr><tr data-gb="8" data-pris="59" data-prgb="7.3750" data-udbyder="Greentel">
+  <td class="t-aar">Efter forbrug</td>
+  <td class="t-pris">Pr. forbrug</td>
+  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
+        data-udgaaende="greentel" data-abonnement="greentel-forbrug"
+        aria-label="Se tilbud på Greentel Forbrugsafregnet hos Greentel">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="t-hos">hos Greentel</small></td>
+</tr><tr data-gb="8" data-pris="59" data-prgb="7.3750" data-aar="708" data-udbyder="Greentel">
   <td>
     <div class="t-udbyder">
-      <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="22">
+      <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="24">
       <span><b>Greentel 8 GB</b><small>MVNO</small></span>
     </div>
-    
+    <div class="t-maerker"></div>
+    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
   </td>
   <td class="t-data">8 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class=""></i><i class=""></i><i class=""></i></div></td>
   <td>Fri</td>
+  <td class="t-eu">8 GB</td>
   <td class="t-pr-gb">7,38 kr.</td>
-  <td>Nej</td>
-  <td class="t-pris">59 kr.</td>
-  <td><a class="knap knap-primaer knap-lille" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="greentel" data-abonnement="greentel-8">Se tilbud</a></td>
-</tr><tr data-gb="25" data-pris="79" data-prgb="3.1600" data-udbyder="Greentel">
+  <td class="t-aar">708 kr.<span class="spar">Spar 344 kr./år</span></td>
+  <td class="t-pris"><b>59</b><span class="pr">kr./md.</span></td>
+  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
+        data-udgaaende="greentel" data-abonnement="greentel-8"
+        aria-label="Se tilbud på Greentel 8 GB hos Greentel">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="t-hos">hos Greentel</small></td>
+</tr><tr data-gb="25" data-pris="79" data-prgb="3.1600" data-aar="948" data-udbyder="Greentel">
   <td>
     <div class="t-udbyder">
-      <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="22">
+      <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="24">
       <span><b>Greentel 25 GB</b><small>MVNO</small></span>
     </div>
-    
+    <div class="t-maerker"></div>
+    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
   </td>
   <td class="t-data">25 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class=""></i><i class=""></i></div></td>
   <td>Fri</td>
+  <td class="t-eu">25 GB</td>
   <td class="t-pr-gb">3,16 kr.</td>
-  <td>Nej</td>
-  <td class="t-pris">79 kr.</td>
-  <td><a class="knap knap-primaer knap-lille" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="greentel" data-abonnement="greentel-25">Se tilbud</a></td>
-</tr><tr data-gb="100" data-pris="125" data-prgb="1.2500" data-udbyder="Greentel">
+  <td class="t-aar">948 kr.<span class="spar">Spar 104 kr./år</span></td>
+  <td class="t-pris"><b>79</b><span class="pr">kr./md.</span></td>
+  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
+        data-udgaaende="greentel" data-abonnement="greentel-25"
+        aria-label="Se tilbud på Greentel 25 GB hos Greentel">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="t-hos">hos Greentel</small></td>
+</tr><tr data-gb="100" data-pris="125" data-prgb="1.2500" data-aar="1500" data-udbyder="Greentel">
   <td>
     <div class="t-udbyder">
-      <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="22">
+      <img src="/assets/img/logoer/greentel.webp" alt="Greentel logo" loading="lazy" height="24">
       <span><b>Greentel 100 GB</b><small>MVNO</small></span>
     </div>
-    
+    <div class="t-maerker"></div>
+    <div class="t-mini"><span class="mini">Ingen binding</span><span class="mini">0 kr. oprettelse</span><span class="mini">eSIM</span><span class="mini">5G</span></div>
   </td>
   <td class="t-data">100 GB<div class="bjaelke" aria-hidden="true"><i class="t"></i><i class="t"></i><i class="t"></i><i class=""></i></div></td>
   <td>Fri</td>
+  <td class="t-eu">100 GB</td>
   <td class="t-pr-gb">1,25 kr.</td>
-  <td>Nej</td>
-  <td class="t-pris">125 kr.</td>
-  <td><a class="knap knap-primaer knap-lille" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
-        data-udgaaende="greentel" data-abonnement="greentel-100">Se tilbud</a></td>
+  <td class="t-aar">1.500 kr.</td>
+  <td class="t-pris"><b>125</b><span class="pr">kr./md.</span></td>
+  <td class="t-cta"><a class="knap knap-primaer knap-lille" href="https://example.dk/greentel" rel="sponsored nofollow noopener" target="_blank"
+        data-udgaaende="greentel" data-abonnement="greentel-100"
+        aria-label="Se tilbud på Greentel 100 GB hos Greentel">Se tilbud <span aria-hidden="true">→</span></a>
+    <small class="t-hos">hos Greentel</small></td>
 </tr></tbody>
       </table>
     </div>
     
     <div class="tabelfod">
-      <span>Sorteret efter laveste månedspris. Priser er vejledende og kan ændre sig uden varsel.</span>
+      <span>Sorteret efter laveste månedspris. <strong>Pris 1. år</strong> er 12 måneder plus oprettelse. Priser er vejledende.</span>
       <span>Kilde: udbydernes egne prislister</span>
     </div>
   </div>
@@ -197,7 +215,7 @@
   <span>Vilkår gennemgået på Greentels egen hjemmeside</span>
 </div>
 
-  <h2>Vores vurdering af Greentel</h2>
+  <h2>Greentel vurderet: enkelhed som produkt</h2>
   <p>Greentel hører til den gruppe af danske MVNO&#x27;er, der har valgt den enkle vej: få abonnementer, lave priser, ingen binding og ingen forsøg på at sælge dig streaming, forsikring eller tv oveni. For en overraskende stor gruppe forbrugere er det præcis det rigtige produkt, fordi de fleste af de fordele, de store selskaber tager sig betalt for, aldrig bliver brugt.</p><p>Styrken ved den type selskab er gennemsigtighed. Prislisten er kort nok til, at du kan overskue den på et halvt minut, og du behøver ikke regne på, hvad en pakke er værd. Svagheden er, at der ikke er nogen buffer, hvis noget går galt. Kundeservice er digital og lille, og du kan ikke gå ind i en butik. Skal din telefon sættes op af en anden, eller er du utryg ved selv at håndtere et simkort, er en discountudbyder sjældent det rigtige valg uanset prisen.</p><p>Som ved alle MVNO&#x27;er er det centrale spørgsmål, hvilket net selskabet lejer sig ind på, og under hvilke vilkår. Nogle MVNO-aftaler giver adgang til fuld hastighed og 5G, andre begrænser til 4G eller nedprioriterer trafikken i myldretiden. Det står sjældent med store bogstaver, men det er den vigtigste enkeltoplysning, når man vælger discount. Tjek altid netværk og eventuel hastighedsbegrænsning på udbyderens egen produktside, før du bestiller.</p>
 
   <div class="plusminus">
@@ -205,12 +223,14 @@
     <div class="pm pm-minus"><h3>Det taler imod</h3><ul><li>Ingen fysiske butikker og begrænset kundeservice</li><li>Ingen streaming, forsikring eller andre fordele</li><li>Netværksvilkår og eventuelle hastighedsbegrænsninger bør tjekkes</li></ul></div>
   </div>
 
-  <h2>Netværk og dækning hos Greentel</h2>
-  <p>Greentel er en MVNO — et selskab uden eget mobilnet, der lejer kapacitet hos en af de tre danske netværksejere: TDC NET, Telenor eller 3. Netværksaftaler bliver løbende genforhandlet og kan skifte, og derfor angiver vi ikke et net her uden at have verificeret det. Tjek den aktuelle netværksangivelse på Greentels egen side, hvis dækning er afgørende for dit valg — det er den vigtigste enkeltoplysning om enhver udbyder, fordi den bestemmer, hvor godt din telefon virker.</p>
-  <p>Bor du i en større by, er forskellen mellem de tre net lille i praksis. Bor du på
-  landet, i et sommerhusområde eller pendler gennem tyndt befolkede områder, kan forskellen
-  være mærkbar. Tjek altid dækningskortet på din egen adresse, før du bestiller.
-  <a href="/guides/daekning-og-netvaerk/">Læs vores gennemgang af de tre netværk</a>.</p>
+  <h2>Forbrugsafregning: den oversete løsning til meget lavt forbrug</h2><p>Greentel er blandt de danske selskaber, der tilbyder forbrugsafregnede abonnementer — altså ingen fast månedspris, men betaling pr. minut og pr. sms. Det er en produkttype, de fleste sammenligningssider springer over, fordi den ikke passer ind i en pristabel med månedspriser.</p><p>For den rigtige bruger er det dog den billigste løsning på hele markedet. Har du en telefon nummer to, en sommerhustelefon, en telefon i bilen eller et nummer, du bare vil holde i live, betaler du reelt ingenting i de måneder, hvor den ikke bruges.</p><p>Regnestykket vender omkring 100 minutter om måneden. Derover bliver et almindeligt abonnement med fri tale billigere. Se vores gennemgang af <a href="/mobilabonnement-uden-data/">abonnementer uden data</a> for den fulde udregning.</p><h2>Hvad du opgiver ved at vælge en lille udbyder</h2><p>Vi mener, det er mere nyttigt at være konkret om, hvad du <em>ikke</em> får, end at gentage at prisen er lav. Hos et lille dansk discountselskab opgiver du typisk fire ting.</p><p>Der er ingen fysisk butik, du kan gå ind i. Kundeservice er digital og bemandet af få mennesker, så svartiden er længere end hos de store. Der følger ingen streaming, forsikring eller fordelsklub med. Og du bør selv tjekke, om MVNO-aftalen indeholder hastighedsloft eller lavere prioritet i myldretiden — det står i vilkårene, men sjældent med store bogstaver.</p><p>For en digitalt tryg bruger med et almindeligt forbrug er ingen af de fire ting reelle ulemper. For en, der har brug for hjælp til opsætning eller vil kunne ringe til et menneske samme dag, er de det.</p>
+
+  <h2>Greentel er en MVNO — hvad det betyder for din dækning</h2>
+  <p>Greentel er en MVNO — et selskab uden eget mobilnet, der lejer kapacitet hos en af de tre danske netværksejere. Vi angiver ikke et net her uden at have verificeret det, fordi MVNO-aftaler bliver genforhandlet. Tjek den aktuelle angivelse hos Greentel, hvis dækning er afgørende.</p>
+  <p>Bor du i en større by, er forskellen mellem de tre danske net lille i praksis. Bor du
+  på landet, i et sommerhusområde eller pendler du gennem tyndt befolkede områder, kan
+  forskellen være mærkbar. <a href="/guides/daekning-og-netvaerk/">Læs vores gennemgang af
+  de tre netværk</a>.</p>
 
   <h2>Hvem passer Greentel til?</h2>
   <div class="kortgitter kg-2" style="margin:1.6rem 0">
@@ -218,7 +238,7 @@
     <div class="kort"><h3>Vælg noget andet hvis…</h3><p>Dig der har brug for hjælp til opsætning eller vil have fordele ud over selve abonnementet.</p></div>
   </div>
 
-  <h2>Greentel sammenlignet med alternativerne</h2>
+  <h2>Greentel mod de øvrige danske discountselskaber</h2>
   <p>Her er de abonnementer fra andre udbydere, der ligger tættest på
   Greentels prisniveau. Bemærk især netværkskolonnen — det er der, den reelle forskel
   ofte ligger.</p>
@@ -230,6 +250,7 @@
   billigste mobilabonnement</a>.</p>
 
   <h2>Sådan skifter du til Greentel</h2>
+  <p>Hos en lille udbyder som Greentel er kundeservice digital og begrænset. Sørg for at have adgang til din mail og dit MitID, når du bestiller, så du kan klare oprettelsen uden at skulle vente på svar.</p>
   <ol class="trin">
     <li><strong>Tjek din nuværende aftale</strong>
     Notér din binding og eventuel restgæld på en telefon købt på afbetaling. Restgælden
@@ -255,7 +276,7 @@
 <section class="sektion baand-smal">
   <aside class="laesvidere">
   <h3>Læs videre</h3>
-  <ul><li><a href="/billigste-mobilabonnement/">Billigste mobilabonnement — hele markedet</a></li><li><a href="/udbydere/">Sammenlign Greentel med de andre udbydere</a></li><li><a href="/guides/daekning-og-netvaerk/">Hvilket netværk skal du vælge?</a></li><li><a href="/guides/skift-mobilselskab/">Sådan skifter du mobilselskab</a></li></ul>
+  <ul><li><a href="/billigste-mobilabonnement/">Billigste mobilabonnement — hele markedet</a></li><li><a href="/bedste-mobilabonnement/">Bedste mobilabonnement — vores kriterier</a></li><li><a href="/udbydere/">Sammenlign Greentel med de andre udbydere</a></li><li><a href="/guides/daekning-og-netvaerk/">Hvilket netværk skal du vælge?</a></li></ul>
 </aside>
   <aside class="forfatter">
   <img src="/assets/img/emil-rostgaard.webp" width="88" height="88" alt="Emil Rostgaard, stifter af Telemobil" loading="lazy">

@@ -22,6 +22,7 @@ from skabelon import (  # noqa: E402
 import indhold  # noqa: E402
 import sider  # noqa: E402
 import sider2  # noqa: E402
+from udbyder_unik import UNIK  # noqa: E402
 import skabelon  # noqa: E402
 
 MAANEDER = ["januar", "februar", "marts", "april", "maj", "juni", "juli",
@@ -77,11 +78,16 @@ ISO = IDAG.isoformat()
 # Afledte nøgletal — bruges i tekst, så tal og tabeller aldrig kan komme i utakt
 med_gb = [a for a in ABON if 0 < a["data_gb"] < 900]
 fri = [a for a in ABON if a["data_gb"] >= 900]
-billigst = min((a for a in ABON if a["data_gb"] > 0), key=lambda a: a["pris"])
+billigst = min((a for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")),
+               key=lambda a: a["pris"])
+billigst_med_data = min((a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0),
+                        key=lambda a: a["pris"])
 bedste_pr_gb = min(med_gb, key=lambda a: a["pris"] / a["data_gb"])
 
 D = {
     "min_pris": billigst["pris"],
+    "min_pris_data": billigst_med_data["pris"],
+    "min_data_gb": billigst_med_data["data_gb"],
     "pris_lille": min(a["pris"] for a in ABON if 0 < a["data_gb"] <= 10),
     "pris_mellem": min(a["pris"] for a in ABON if 15 <= a["data_gb"] <= 30),
     "pris_stor": min(a["pris"] for a in ABON if 50 <= a["data_gb"] < 900),
@@ -299,27 +305,43 @@ def hero_side(etiket, h1, tekst, knapper="", chips=None):
 
 
 def hurtigvalg():
-    """Fire kort over tabellen — de mest søgte indgange."""
-    billigste_fri = min(fri, key=lambda a: a["pris"]) if fri else ABON[0]
-    daekning = next((a for a in ABON if a["udbyder"] == "yousee"), ABON[-1])
-    udland = next((a for a in ABON if a["udbyder"] == "lebara"), ABON[0])
+    """Fire kort over tabellen. Vælger fra forskellige udbydere, så de ikke gentages."""
+    med_data = [a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0]
+    tdc = [a for a in med_data if UMAP[a["udbyder"]]["netvaerk"] == "TDC NET"]
+    frie = [a for a in ABON if a["data_gb"] >= 900]
 
-    valg = [
-        ("Billigst i alt", billigst, "Laveste månedspris på markedet"),
-        ("Bedst pris pr. GB", bedste_pr_gb, "Flest gigabyte for pengene"),
-        ("Bedst dækning", daekning, "TDC NET — landets mest udbyggede"),
-        ("Bedst til udlandet", udland, "Skarpe priser på udlandsopkald"),
+    kandidater = [
+        ("Billigst med data", sorted(med_data, key=lambda a: a["pris"]),
+         "Laveste månedspris med mobildata"),
+        ("Mest data pr. krone", sorted([a for a in med_data if a["data_gb"] < 900],
+                                       key=lambda a: a["pris"] / a["data_gb"]),
+         "Laveste pris pr. gigabyte"),
+        ("Bedst dækning", sorted(tdc, key=lambda a: a["pris"]),
+         "TDC NET — landets mest udbyggede"),
+        ("Billigste fri data", sorted(frie, key=lambda a: a["pris"]),
+         "Ubegrænset data i Danmark"),
     ]
+
+    brugte = set()
+    valg = []
+    for kat, liste, detalje in kandidater:
+        val = next((a for a in liste if a["udbyder"] not in brugte), liste[0] if liste else None)
+        if not val:
+            continue
+        brugte.add(val["udbyder"])
+        valg.append((kat, val, detalje))
 
     kort = ""
     for kat, a, detalje in valg:
         u = UMAP[a["udbyder"]]
+        aar = a["pris"] * 12
         kort += f"""<a class="valgkort" href="/udbydere/{u['slug']}/">
   <div class="kat">{e(kat)}</div>
   <img class="logo-lille" src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy" height="20">
   <div class="navn">{e(a['navn'])}</div>
   <div class="detalje">{e(detalje)} · {gb_tekst(a['data_gb'])}</div>
   <div class="pris">{kr(a['pris'])}<span> kr./md.</span></div>
+  <div class="valgkort-aar">{kr(aar)} kr. første år</div>
   <div class="pil">Se abonnementet →</div>
 </a>"""
 
@@ -902,13 +924,18 @@ def byg_udbyder(u):
                           undertitel=f"Alle {u['navn']}-abonnementer vi følger, sorteret efter pris.",
                           filtre=False, billigst_id=min(egne, key=lambda a: a['pris'])['id'])
 
+    uq = UNIK.get(u["slug"], {})
+    unikke = "".join(f"<h2>{h}</h2>{t}" for h, t in uq.get("sektioner", []))
+    netafsnit = uq.get("net_note", netafsnit)
+    skiftnote = uq.get("skift_note", "")
+
     krop = f"""
 {tabel}
 
 <section class="sektion baand-smal artikel">
   {gennemgangslinje(OPDATERET, f"Vilkår gennemgået på {u['navn']}s egen hjemmeside")}
 
-  <h2>Vores vurdering af {e(u['navn'])}</h2>
+  <h2>{e(uq.get("h2_vurdering", f"Vores vurdering af {u['navn']}"))}</h2>
   {afsnit}
 
   <div class="plusminus">
@@ -916,20 +943,22 @@ def byg_udbyder(u):
     <div class="pm pm-minus"><h3>Det taler imod</h3><ul>{ulemper}</ul></div>
   </div>
 
-  <h2>Netværk og dækning hos {e(u['navn'])}</h2>
-  <p>{netafsnit}</p>
-  <p>Bor du i en større by, er forskellen mellem de tre net lille i praksis. Bor du på
-  landet, i et sommerhusområde eller pendler gennem tyndt befolkede områder, kan forskellen
-  være mærkbar. Tjek altid dækningskortet på din egen adresse, før du bestiller.
-  <a href="/guides/daekning-og-netvaerk/">Læs vores gennemgang af de tre netværk</a>.</p>
+  {unikke}
 
-  <h2>Hvem passer {e(u['navn'])} til?</h2>
+  <h2>{e(uq.get("h2_net", f"Netværk og dækning hos {u['navn']}"))}</h2>
+  <p>{netafsnit}</p>
+  <p>Bor du i en større by, er forskellen mellem de tre danske net lille i praksis. Bor du
+  på landet, i et sommerhusområde eller pendler du gennem tyndt befolkede områder, kan
+  forskellen være mærkbar. <a href="/guides/daekning-og-netvaerk/">Læs vores gennemgang af
+  de tre netværk</a>.</p>
+
+  <h2>{e(uq.get("h2_hvem", f"Hvem passer {u['navn']} til?"))}</h2>
   <div class="kortgitter kg-2" style="margin:1.6rem 0">
     <div class="kort"><h3>Vælg {e(u['navn'])} hvis…</h3><p>{e(u['bedst_til'])}</p></div>
     <div class="kort"><h3>Vælg noget andet hvis…</h3><p>{e(u['daarligt_til'])}</p></div>
   </div>
 
-  <h2>{e(u['navn'])} sammenlignet med alternativerne</h2>
+  <h2>{e(uq.get("h2_sammenlign", f"{u['navn']} sammenlignet med alternativerne"))}</h2>
   <p>Her er de abonnementer fra andre udbydere, der ligger tættest på
   {e(u['navn'])}s prisniveau. Bemærk især netværkskolonnen — det er der, den reelle forskel
   ofte ligger.</p>
@@ -940,7 +969,8 @@ def byg_udbyder(u):
   <p>Se hele markedet i vores <a href="/billigste-mobilabonnement/">sammenligning af
   billigste mobilabonnement</a>.</p>
 
-  <h2>Sådan skifter du til {e(u['navn'])}</h2>
+  <h2>{e(uq.get("h2_skift", f"Sådan skifter du til {u['navn']}"))}</h2>
+  {f"<p>{skiftnote}</p>" if skiftnote else ""}
   <ol class="trin">
     <li><strong>Tjek din nuværende aftale</strong>
     Notér din binding og eventuel restgæld på en telefon købt på afbetaling. Restgælden
@@ -966,9 +996,9 @@ def byg_udbyder(u):
 <section class="sektion baand-smal">
   {laesvidere([
       ("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+      ("/bedste-mobilabonnement/", "Bedste mobilabonnement — vores kriterier"),
       ("/udbydere/", f"Sammenlign {u['navn']} med de andre udbydere"),
       ("/guides/daekning-og-netvaerk/", "Hvilket netværk skal du vælge?"),
-      ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
   ])}
   {forfatterboks()}
   {afsloering()}
