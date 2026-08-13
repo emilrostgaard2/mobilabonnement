@@ -29,6 +29,8 @@
   <url><loc>https://telemobil.dk/netvaerk/tdc-net/</loc><lastmod>2026-08-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://telemobil.dk/netvaerk/telenor/</loc><lastmod>2026-08-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://telemobil.dk/netvaerk/3/</loc><lastmod>2026-08-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://telemobil.dk/landekoder/</loc><lastmod>2026-08-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://telemobil.dk/hvem-ringer-til-mig/</loc><lastmod>2026-08-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://telemobil.dk/udbydere/</loc><lastmod>2026-08-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://telemobil.dk/udbydere/cbb-mobil/</loc><lastmod>2026-08-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://telemobil.dk/udbydere/yousee/</loc><lastmod>2026-08-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -50,5 +52,7 @@
   <url><loc>https://telemobil.dk/metode/</loc><lastmod>2026-08-13</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://telemobil.dk/om/emil-rostgaard/</loc><lastmod>2026-08-13</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://telemobil.dk/kontakt/</loc><lastmod>2026-08-13</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://telemobil.dk/cookiepolitik/</loc><lastmod>2026-08-13</lastmod><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://telemobil.dk/presse/</loc><lastmod>2026-08-13</lastmod><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://telemobil.dk/privatlivspolitik/</loc><lastmod>2026-08-13</lastmod><changefreq>monthly</changefreq><priority>0.3</priority></url>
 </urlset>

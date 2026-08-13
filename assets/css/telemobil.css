@@ -788,3 +788,66 @@ table.pris tbody tr[hidden]{display:none}
 .p-laes{font-size:.78rem;font-weight:600;margin-top:.5rem;text-decoration:none}
 .p-laes:hover{text-decoration:underline}
 .p-hos{font-size:.66rem;color:var(--graa);margin-top:.35rem;opacity:.85}
+
+/* ==========================================================================
+   Værktøjer: landekoder og nummeropslag
+   ========================================================================== */
+.vaerktoej{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-xl);
+  padding:1.8rem;box-shadow:var(--skygge-blod)}
+.vt-hoved{margin-bottom:1.1rem}
+.vt-hoved h2{margin-bottom:.3rem}
+.vt-soeg{width:100%;padding:.95rem 1.2rem;border:1.5px solid var(--graa-lys);border-radius:999px;
+  font-size:1rem;font-family:var(--font-brod);transition:border-color .18s}
+.vt-soeg:focus{outline:none;border-color:var(--signal)}
+.vt-note{font-size:.8rem;color:var(--graa);margin:.9rem 0 0}
+.vt-tom{text-align:center;color:var(--graa);padding:1.5rem}
+
+.landetabel{width:100%;border-collapse:collapse;margin-top:1.2rem;font-size:.94rem}
+.landetabel th{background:var(--blaek);color:#fff;text-align:left;padding:.75rem .9rem;
+  font-family:var(--font-tal);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500}
+.landetabel td{padding:.7rem .9rem;border-bottom:1px solid var(--graa-lys)}
+.landetabel tbody tr:hover{background:#F7F9FF}
+.landetabel tr[hidden]{display:none}
+.landetabel .kode{font-family:var(--font-tal);font-weight:600}
+.landetabel caption{text-align:left;padding:.9rem 0 .2rem;font-size:.85rem;color:var(--graa)}
+.flag{font-size:1.15rem;margin-right:.4rem}
+
+.opslag{display:flex;gap:.7rem;flex-wrap:wrap}
+.opslag .vt-soeg{flex:1;min-width:220px}
+.opslag-svar{margin-top:1.2rem;padding:1.3rem 1.5rem;border-radius:var(--r-m);border:1px solid}
+.opslag-svar h3{margin-bottom:.5rem;font-size:1.15rem}
+.opslag-svar p:last-child{margin-bottom:0}
+.opslag-svar.neutral{background:rgba(61,90,254,.06);border-color:rgba(61,90,254,.25)}
+.opslag-svar.advar{background:rgba(255,197,61,.12);border-color:rgba(255,197,61,.5)}
+.opslag-svar.advar h3{color:#8A6100}
+
+/* Indholdsfortegnelse */
+.toc{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);
+  padding:1.3rem 1.5rem;box-shadow:var(--skygge-blod)}
+.toc-titel{font-family:var(--font-tal);font-size:.72rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--graa);margin-bottom:.8rem}
+.toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2rem}
+@media(max-width:700px){.toc ol{columns:1}}
+.toc li{margin-bottom:.45rem;break-inside:avoid}
+.toc a{font-size:.93rem;text-decoration:none;font-weight:500;display:flex;gap:.5rem}
+.toc a::before{content:"→";color:var(--signal);opacity:.6}
+.toc a:hover{text-decoration:underline}
+.filtre+.filtre{margin-top:-.4rem}
+
+/* Redaktionens valg */
+.rvkort-gitter{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin:1.5rem 0}
+@media(max-width:760px){.rvkort-gitter{grid-template-columns:1fr}}
+.rvkort{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);
+  padding:1.4rem;position:relative;transition:.2s}
+.rvkort:hover{box-shadow:var(--skygge-loft);transform:translateY(-2px)}
+.rv-kat{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--signal-dyb);margin-bottom:.8rem}
+.rv-top{display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem}
+.rv-top img{max-width:76px;object-fit:contain;object-position:left}
+.rv-top b{display:block;font-family:var(--font-display);font-size:1.05rem;line-height:1.2}
+.rv-top small{color:var(--graa);font-size:.78rem}
+.rv-pris{font-family:var(--font-tal);font-size:1.5rem;font-weight:600;margin-bottom:.7rem}
+.rv-pris em{font-style:normal;font-size:.72rem;color:var(--graa);font-weight:400}
+.rvkort p{font-size:.9rem;color:var(--graa);margin-bottom:.9rem}
+.rv-links{display:flex;gap:1rem;flex-wrap:wrap;font-size:.86rem;font-weight:600}
+.rv-note{font-size:.82rem;color:var(--graa)}

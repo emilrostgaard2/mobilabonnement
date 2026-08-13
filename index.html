@@ -8,6 +8,10 @@
 <link rel="canonical" href="https://telemobil.dk/">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
 <meta name="author" content="Emil Rostgaard">
+<meta name="twitter:label1" content="Estimeret læsetid">
+<meta name="twitter:data1" content="20 minutter">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="geo.region" content="DK">
 <meta name="geo.placename" content="Danmark">
 <meta property="og:type" content="website">
@@ -57,7 +61,7 @@
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-sammenlign">
     Sammenlign <span class="pil-ned" aria-hidden="true"></span>
   </button>
-  <div class="nav-menu nav-menu-liste" id="menu-sammenlign"><a href="/billigste-mobilabonnement/"><span class="mp-navn">Billigste mobilabonnement</span><span class="mp-under">Hele markedet sorteret efter pris</span></a><a href="/bedste-mobilabonnement/"><span class="mp-navn">Bedste mobilabonnement</span><span class="mp-under">Bedst samlet værdi, ikke bare lavest pris</span></a><a href="/mobilabonnement-med-fri-data/"><span class="mp-navn">Fri data</span><span class="mp-under">Ubegrænset data i Danmark</span></a><a href="/mobilabonnement-med-fri-tale/"><span class="mp-navn">Fri tale</span><span class="mp-under">Ubegrænsede opkald og sms</span></a><a href="/mobilabonnement-uden-data/"><span class="mp-navn">Uden data</span><span class="mp-under">Kun tale og sms</span></a><a href="/mobilabonnement-med-streaming/"><span class="mp-navn">Med streaming</span><span class="mp-under">Netflix og co. i abonnementet</span></a><a href="/mobilabonnement-med-esim/"><span class="mp-navn">Med eSIM</span><span class="mp-under">Digitalt simkort, klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><span class="mp-navn">Til børn</span><span class="mp-under">Trygt, billigt og uden overraskelser</span></a><a href="/mobilabonnement-til-unge/"><span class="mp-navn">Til unge og studerende</span><span class="mp-under">Meget data, ingen binding</span></a><a href="/mobilabonnement-uden-binding/"><span class="mp-navn">Uden binding</span><span class="mp-under">Opsig når du vil</span></a><a href="/mobilabonnement-med-streaming/tjenester/"><span class="mp-navn">Streaming: vælg tjeneste</span><span class="mp-under">Netflix, HBO Max, Disney+, Viaplay …</span></a><a href="/netvaerk/"><span class="mp-navn">Mobilnetværk</span><span class="mp-under">TDC NET, Telenor og 3</span></a></div>
+  <div class="nav-menu nav-menu-liste" id="menu-sammenlign"><a href="/billigste-mobilabonnement/"><span class="mp-navn">Billigste mobilabonnement</span><span class="mp-under">Hele markedet sorteret efter pris</span></a><a href="/bedste-mobilabonnement/"><span class="mp-navn">Bedste mobilabonnement</span><span class="mp-under">Bedst samlet værdi, ikke bare lavest pris</span></a><a href="/mobilabonnement-med-fri-data/"><span class="mp-navn">Fri data</span><span class="mp-under">Ubegrænset data i Danmark</span></a><a href="/mobilabonnement-med-fri-tale/"><span class="mp-navn">Fri tale</span><span class="mp-under">Ubegrænsede opkald og sms</span></a><a href="/mobilabonnement-uden-data/"><span class="mp-navn">Uden data</span><span class="mp-under">Kun tale og sms</span></a><a href="/mobilabonnement-med-streaming/"><span class="mp-navn">Med streaming</span><span class="mp-under">Netflix og co. i abonnementet</span></a><a href="/mobilabonnement-med-esim/"><span class="mp-navn">Med eSIM</span><span class="mp-under">Digitalt simkort, klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><span class="mp-navn">Til børn</span><span class="mp-under">Trygt, billigt og uden overraskelser</span></a><a href="/mobilabonnement-til-unge/"><span class="mp-navn">Til unge og studerende</span><span class="mp-under">Meget data, ingen binding</span></a><a href="/mobilabonnement-uden-binding/"><span class="mp-navn">Uden binding</span><span class="mp-under">Opsig når du vil</span></a><a href="/mobilabonnement-med-streaming/tjenester/"><span class="mp-navn">Streaming: vælg tjeneste</span><span class="mp-under">Netflix, HBO Max, Disney+, Viaplay …</span></a><a href="/netvaerk/"><span class="mp-navn">Mobilnetværk</span><span class="mp-under">TDC NET, Telenor og 3</span></a><a href="/landekoder/"><span class="mp-navn">Landekoder</span><span class="mp-under">Alle telefonkoder med søgning</span></a><a href="/hvem-ringer-til-mig/"><span class="mp-navn">Hvem ringer til mig?</span><span class="mp-under">Slå ukendt nummer op</span></a></div>
 </div>
 <div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-udbydere">
@@ -161,7 +165,7 @@
 <section class="sektion baand" id="sammenlign">
   <div class="sektion-hoved afslør">
     <span class="etiket">Sammenligning</span>
-    <h2>Alle mobilabonnementer sammenlignet</h2>
+    <h2 id="alle-mobilabonnementer-sammenlignet">Alle mobilabonnementer sammenlignet</h2>
     <p class="led">45 abonnementer fra 10 udbydere, sorteret efter laveste månedspris. Klik på en overskrift for at sortere efter data, pris pr. GB eller pris.</p>
   </div>
   <div class="filtre">
@@ -171,6 +175,14 @@
   <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
   <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
   <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
+</div>
+<div class="filtre">
+  <span class="maerkat">Pris pr. md.</span>
+  <button class="chip" data-pris="alle" aria-pressed="true">Alle</button>
+  <button class="chip" data-pris="u50" aria-pressed="false">Under 50 kr.</button>
+  <button class="chip" data-pris="50-99" aria-pressed="false">50–99 kr.</button>
+  <button class="chip" data-pris="100-199" aria-pressed="false">100–199 kr.</button>
+  <button class="chip" data-pris="o200" aria-pressed="false">Over 200 kr.</button>
 </div>
   <div class="listeramme afslør">
     <div class="liste-top">
@@ -1098,7 +1110,7 @@
   <div class="quiz afslør">
     <div class="quiz-hoved">
       <span class="etiket">Gratis værktøj</span>
-      <h2>Find abonnementet der passer til dit forbrug</h2>
+      <h2 id="find-abonnementet-der-passer-til-dit-forbrug">Find abonnementet der passer til dit forbrug</h2>
       <p class="led">Fire spørgsmål. Vi matcher mod alle 44 abonnementer og regner
       på gennemsnitsprisen over 12 måneder — ikke intro­prisen.</p>
     </div>
@@ -1143,13 +1155,16 @@
   <script type="application/json" data-quizdata>[{"id": "lebara-udendata", "navn": "Lebara Tale 5 timer", "udbyder": "Lebara", "slug": "lebara", "logo": "lebara.webp", "net": "Telenor", "gb": 0, "pris": 19, "gns": 19, "tale": "5 timer", "stream": 0, "link": "https://example.dk/lebara"}, {"id": "lyca-udendata", "navn": "Lyca Tale 3 timer", "udbyder": "Lyca Mobile", "slug": "lyca-mobile", "logo": "lyca-mobile.webp", "net": "MVNO", "gb": 0, "pris": 29, "gns": 29, "tale": "3 timer", "stream": 0, "link": "https://example.dk/lyca-mobile"}, {"id": "flexii-fritale", "navn": "Flexii Fri Tale", "udbyder": "Flexii", "slug": "flexii", "logo": "flexii.webp", "net": "MVNO", "gb": 0, "pris": 39, "gns": 39, "tale": "fri", "stream": 0, "link": "https://example.dk/flexii"}, {"id": "oister-5", "navn": "Oister 5 GB", "udbyder": "Oister", "slug": "oister", "logo": "oister.webp", "net": "3", "gb": 5, "pris": 44, "gns": 38, "tale": "fri", "stream": 0, "link": "https://example.dk/oister"}, {"id": "duka-tale", "navn": "dukaTALE Basis", "udbyder": "Duka", "slug": "duka", "logo": "duka.webp", "net": "MVNO", "gb": 0, "pris": 45, "gns": 45, "tale": "fri", "stream": 0, "link": "https://example.dk/duka"}, {"id": "cbb-5", "navn": "CBB 5 GB", "udbyder": "CBB Mobil", "slug": "cbb-mobil", "logo": "cbb-mobil.webp", "net": "Telenor", "gb": 5, "pris": 49, "gns": 49, "tale": "fri", "stream": 0, "link": "https://example.dk/cbb-mobil"}, {"id": "duka-6", "navn": "Duka 6 GB", "udbyder": "Duka", "slug": "duka", "logo": "duka.webp", "net": "MVNO", "gb": 6, "pris": 50, "gns": 50, "tale": "fri", "stream": 0, "link": "https://example.dk/duka"}, {"id": "lyca-10", "navn": "Lyca 10 GB", "udbyder": "Lyca Mobile", "slug": "lyca-mobile", "logo": "lyca-mobile.webp", "net": "MVNO", "gb": 10, "pris": 55, "gns": 55, "tale": "fri", "stream": 0, "link": "https://example.dk/lyca-mobile"}, {"id": "lebara-10", "navn": "Lebara 10 GB", "udbyder": "Lebara", "slug": "lebara", "logo": "lebara.webp", "net": "Telenor", "gb": 10, "pris": 59, "gns": 59, "tale": "fri", "stream": 0, "link": "https://example.dk/lebara"}, {"id": "eesy-8", "navn": "eesy 8 GB", "udbyder": "eesy", "slug": "eesy", "logo": "eesy.webp", "net": "MVNO", "gb": 8, "pris": 59, "gns": 59, "tale": "fri", "stream": 0, "link": "https://example.dk/eesy"}, {"id": "greentel-8", "navn": "Greentel 8 GB", "udbyder": "Greentel", "slug": "greentel", "logo": "greentel.webp", "net": "MVNO", "gb": 8, "pris": 59, "gns": 59, "tale": "fri", "stream": 0, "link": "https://example.dk/greentel"}, {"id": "cbb-15", "navn": "CBB 15 GB", "udbyder": "CBB Mobil", "slug": "cbb-mobil", "logo": "cbb-mobil.webp", "net": "Telenor", "gb": 15, "pris": 69, "gns": 66, "tale": "fri", "stream": 0, "link": "https://example.dk/cbb-mobil"}, {"id": "flexii-20", "navn": "Flexii 20 GB", "udbyder": "Flexii", "slug": "flexii", "logo": "flexii.webp", "net": "MVNO", "gb": 20, "pris": 69, "gns": 69, "tale": "fri", "stream": 0, "link": "https://example.dk/flexii"}, {"id": "oister-20", "navn": "Oister 20 GB", "udbyder": "Oister", "slug": "oister", "logo": "oister.webp", "net": "3", "gb": 20, "pris": 74, "gns": 74, "tale": "fri", "stream": 0, "link": "https://example.dk/oister"}, {"id": "greentel-25", "navn": "Greentel 25 GB", "udbyder": "Greentel", "slug": "greentel", "logo": "greentel.webp", "net": "MVNO", "gb": 25, "pris": 79, "gns": 79, "tale": "fri", "stream": 0, "link": "https://example.dk/greentel"}, {"id": "lyca-30", "navn": "Lyca 30 GB", "udbyder": "Lyca Mobile", "slug": "lyca-mobile", "logo": "lyca-mobile.webp", "net": "MVNO", "gb": 30, "pris": 85, "gns": 68, "tale": "fri", "stream": 0, "link": "https://example.dk/lyca-mobile"}, {"id": "duka-30", "navn": "dukaTALE 30 GB", "udbyder": "Duka", "slug": "duka", "logo": "duka.webp", "net": "MVNO", "gb": 30, "pris": 89, "gns": 84, "tale": "fri", "stream": 0, "link": "https://example.dk/duka"}, {"id": "eesy-30", "navn": "eesy 30 GB", "udbyder": "eesy", "slug": "eesy", "logo": "eesy.webp", "net": "MVNO", "gb": 30, "pris": 89, "gns": 70, "tale": "fri", "stream": 0, "link": "https://example.dk/eesy"}, {"id": "lebara-30", "navn": "Lebara 30 GB", "udbyder": "Lebara", "slug": "lebara", "logo": "lebara.webp", "net": "Telenor", "gb": 30, "pris": 89, "gns": 89, "tale": "fri", "stream": 0, "link": "https://example.dk/lebara"}, {"id": "oister-50", "navn": "Oister 50 GB", "udbyder": "Oister", "slug": "oister", "logo": "oister.webp", "net": "3", "gb": 50, "pris": 99, "gns": 92, "tale": "fri", "stream": 0, "link": "https://example.dk/oister"}, {"id": "cbb-60", "navn": "CBB 60 GB", "udbyder": "CBB Mobil", "slug": "cbb-mobil", "logo": "cbb-mobil.webp", "net": "Telenor", "gb": 60, "pris": 109, "gns": 101, "tale": "fri", "stream": 0, "link": "https://example.dk/cbb-mobil"}, {"id": "lebara-100", "navn": "Lebara 100 GB", "udbyder": "Lebara", "slug": "lebara", "logo": "lebara.webp", "net": "Telenor", "gb": 100, "pris": 109, "gns": 102, "tale": "fri", "stream": 0, "link": "https://example.dk/lebara"}, {"id": "flexii-100", "navn": "Flexii 100 GB", "udbyder": "Flexii", "slug": "flexii", "logo": "flexii.webp", "net": "MVNO", "gb": 100, "pris": 119, "gns": 99, "tale": "fri", "stream": 0, "link": "https://example.dk/flexii"}, {"id": "greentel-100", "navn": "Greentel 100 GB", "udbyder": "Greentel", "slug": "greentel", "logo": "greentel.webp", "net": "MVNO", "gb": 100, "pris": 125, "gns": 116, "tale": "fri", "stream": 0, "link": "https://example.dk/greentel"}, {"id": "telmore-20", "navn": "Telmore 20 GB", "udbyder": "Telmore", "slug": "telmore", "logo": "telmore.webp", "net": "TDC NET", "gb": 20, "pris": 129, "gns": 129, "tale": "fri", "stream": 0, "link": "https://example.dk/telmore"}, {"id": "eesy-100", "navn": "eesy 100 GB", "udbyder": "eesy", "slug": "eesy", "logo": "eesy.webp", "net": "MVNO", "gb": 100, "pris": 129, "gns": 116, "tale": "fri", "stream": 0, "link": "https://example.dk/eesy"}, {"id": "oister-disney", "navn": "Oister 45 GB + Disney+", "udbyder": "Oister", "slug": "oister", "logo": "oister.webp", "net": "3", "gb": 45, "pris": 139, "gns": 139, "tale": "fri", "stream": 1, "link": "https://example.dk/oister"}, {"id": "yousee-20", "navn": "YouSee 20 GB", "udbyder": "YouSee", "slug": "yousee", "logo": "yousee.webp", "net": "TDC NET", "gb": 20, "pris": 149, "gns": 149, "tale": "fri", "stream": 0, "link": "https://example.dk/yousee"}, {"id": "oister-fri", "navn": "Oister Fri Data", "udbyder": "Oister", "slug": "oister", "logo": "oister.webp", "net": "3", "gb": 999, "pris": 149, "gns": 136, "tale": "fri", "stream": 0, "link": "https://example.dk/oister"}, {"id": "oister-stream", "navn": "Oister 100 GB + Stream", "udbyder": "Oister", "slug": "oister", "logo": "oister.webp", "net": "3", "gb": 100, "pris": 169, "gns": 169, "tale": "fri", "stream": 3, "link": "https://example.dk/oister"}, {"id": "oister-tv2", "navn": "Oister 45 GB + TV 2 Play", "udbyder": "Oister", "slug": "oister", "logo": "oister.webp", "net": "3", "gb": 45, "pris": 169, "gns": 169, "tale": "fri", "stream": 1, "link": "https://example.dk/oister"}, {"id": "cbb-fri", "navn": "CBB Fri Data", "udbyder": "CBB Mobil", "slug": "cbb-mobil", "logo": "cbb-mobil.webp", "net": "Telenor", "gb": 999, "pris": 179, "gns": 157, "tale": "fri", "stream": 0, "link": "https://example.dk/cbb-mobil"}, {"id": "telmore-musik", "navn": "Telmore 100 GB + Musik", "udbyder": "Telmore", "slug": "telmore", "logo": "telmore.webp", "net": "TDC NET", "gb": 100, "pris": 179, "gns": 179, "tale": "fri", "stream": 2, "link": "https://example.dk/telmore"}, {"id": "duka-fri", "navn": "Duka Fri Data", "udbyder": "Duka", "slug": "duka", "logo": "duka.webp", "net": "MVNO", "gb": 999, "pris": 189, "gns": 189, "tale": "fri", "stream": 0, "link": "https://example.dk/duka"}, {"id": "yousee-musik", "navn": "YouSee 50 GB + Musik", "udbyder": "YouSee", "slug": "yousee", "logo": "yousee.webp", "net": "TDC NET", "gb": 50, "pris": 189, "gns": 189, "tale": "fri", "stream": 1, "link": "https://example.dk/yousee"}, {"id": "yousee-100", "navn": "YouSee 100 GB", "udbyder": "YouSee", "slug": "yousee", "logo": "yousee.webp", "net": "TDC NET", "gb": 100, "pris": 199, "gns": 199, "tale": "fri", "stream": 0, "link": "https://example.dk/yousee"}, {"id": "telmore-play", "navn": "Telmore Play 50 GB", "udbyder": "Telmore", "slug": "telmore", "logo": "telmore.webp", "net": "TDC NET", "gb": 50, "pris": 199, "gns": 191, "tale": "fri", "stream": 6, "link": "https://example.dk/telmore"}, {"id": "cbb-mix", "navn": "CBB MIX 200 GB", "udbyder": "CBB Mobil", "slug": "cbb-mobil", "logo": "cbb-mobil.webp", "net": "Telenor", "gb": 200, "pris": 200, "gns": 176, "tale": "fri", "stream": 8, "link": "https://example.dk/cbb-mobil"}, {"id": "telmore-prime", "navn": "Telmore 50 GB + Prime", "udbyder": "Telmore", "slug": "telmore", "logo": "telmore.webp", "net": "TDC NET", "gb": 50, "pris": 209, "gns": 209, "tale": "fri", "stream": 2, "link": "https://example.dk/telmore"}, {"id": "eesy-fri", "navn": "eesy Fri Data", "udbyder": "eesy", "slug": "eesy", "logo": "eesy.webp", "net": "MVNO", "gb": 999, "pris": 219, "gns": 192, "tale": "fri", "stream": 0, "link": "https://example.dk/eesy"}, {"id": "yousee-sky", "navn": "YouSee 50 GB + SkyShowtime", "udbyder": "YouSee", "slug": "yousee", "logo": "yousee.webp", "net": "TDC NET", "gb": 50, "pris": 219, "gns": 219, "tale": "fri", "stream": 2, "link": "https://example.dk/yousee"}, {"id": "cbb-mix-fri", "navn": "CBB MIX Fri Data", "udbyder": "CBB Mobil", "slug": "cbb-mobil", "logo": "cbb-mobil.webp", "net": "Telenor", "gb": 999, "pris": 230, "gns": 204, "tale": "fri", "stream": 8, "link": "https://example.dk/cbb-mobil"}, {"id": "yousee-fri", "navn": "YouSee Fri Data", "udbyder": "YouSee", "slug": "yousee", "logo": "yousee.webp", "net": "TDC NET", "gb": 999, "pris": 269, "gns": 234, "tale": "fri", "stream": 0, "link": "https://example.dk/yousee"}, {"id": "telmore-play-fri", "navn": "Telmore Play Fri Data", "udbyder": "Telmore", "slug": "telmore", "logo": "telmore.webp", "net": "TDC NET", "gb": 999, "pris": 279, "gns": 268, "tale": "fri", "stream": 9, "link": "https://example.dk/telmore"}]</script>
 </section>
 
-<section class="sektion baand-smal artikel">
+<section class="sektion baand-smal"><nav class="toc" aria-label="Indhold">
+  <div class="toc-titel">Indhold på siden</div>
+  <ol><li><a href="#alle-mobilabonnementer-sammenlignet">Alle mobilabonnementer sammenlignet</a></li><li><a href="#find-abonnementet-der-passer-til-dit-forbrug">Find abonnementet der passer til dit forbrug</a></li><li><a href="#saadan-bruger-du-sammenligningen">Sådan bruger du sammenligningen</a></li><li><a href="#find-abonnementet-efter-dit-behov">Find abonnementet efter dit behov</a></li><li><a href="#de-10-udbydere-vi-foelger">De 10 udbydere vi følger</a></li><li><a href="#ofte-stillede-spoergsmaal">Ofte stillede spørgsmål</a></li></ol>
+</nav></section><section class="sektion baand-smal artikel">
   <div class="gennemgang">
   <span>Skrevet af <b>Emil Rostgaard</b></span>
   <span>Opdateret <b>13. august 2026</b></span>
   <span>Alle priser kontrolleret mod udbydernes egne sider</span>
 </div>
-  <h2>Sådan bruger du sammenligningen</h2>
+  <h2 id="saadan-bruger-du-sammenligningen">Sådan bruger du sammenligningen</h2>
   <p>Tabellen ovenfor viser alle abonnementer, vi følger, sorteret efter laveste månedspris.
   Men den billigste række er ikke automatisk det rigtige valg for dig. Tre kolonner er
   vigtigere end prisen alene:</p>
@@ -1174,7 +1189,7 @@
   <div class="baand">
     <div class="sektion-hoved midt afslør">
       <span class="etiket">Kategorier</span>
-      <h2>Find abonnementet efter dit behov</h2>
+      <h2 id="find-abonnementet-efter-dit-behov">Find abonnementet efter dit behov</h2>
       <p class="led">Vi har lavet dedikerede sammenligninger til de mest almindelige situationer.</p>
     </div>
     <div class="kortgitter kg-4 afslør">
@@ -1197,7 +1212,7 @@
 <section class="sektion baand">
   <div class="sektion-hoved afslør">
     <span class="etiket">Udbydere</span>
-    <h2>De 10 udbydere vi følger</h2>
+    <h2 id="de-10-udbydere-vi-foelger">De 10 udbydere vi følger</h2>
     <p class="led">Uafhængige gennemgange med både fordele og ulemper. Vi skriver også, hvem
     udbyderen <em>ikke</em> passer til.</p>
   </div>
@@ -1274,7 +1289,7 @@
   <p class="afsloering"><strong>Annoncørinformation:</strong> Telemobil er gratis at bruge. Vi modtager provision fra udvalgte udbydere, når du klikker videre og bestiller. Det koster dig ikke ekstra, og det ændrer ikke sorteringen i vores tabeller, som altid er efter pris. Udbydere kan ikke betale sig til en bedre placering eller en bedre omtale. <a href="/saadan-tjener-vi-penge/">Se hele forretningsmodellen</a>.</p>
 </section>
 <section class="sektion baand-smal">
-  <h2>Ofte stillede spørgsmål</h2>
+  <h2 id="ofte-stillede-spoergsmaal">Ofte stillede spørgsmål</h2>
   <div class="faq"><details><summary>Hvad er det billigste mobilabonnement i Danmark?</summary><p>Det billigste mobilabonnement i vores sammenligning koster 19 kr. om måneden og indeholder fri tale, fri sms og ingen data. Priserne ændrer sig løbende, så tjek tabellen for de aktuelle tal.</p></details><details><summary>Hvor meget data har jeg brug for?</summary><p>De fleste danskere klarer sig med 15-30 GB om måneden. Bruger du primært wi-fi hjemme og på arbejde, rækker 5-10 GB. Streamer du video på farten eller bruger telefonen som hotspot, bør du vælge 50 GB eller mere.</p></details><details><summary>Kan jeg beholde mit mobilnummer, når jeg skifter?</summary><p>Ja. Nummerportering er en rettighed i Danmark. Du bestiller hos den nye udbyder og oplyser dit nummer, hvorefter de klarer flytningen. Du skal ikke selv opsige dit gamle abonnement.</p></details><details><summary>Er billige mobilabonnementer dårligere?</summary><p>Nej, ikke nødvendigvis. Der findes kun tre mobilnetværk i Danmark, og de billige selskaber lejer sig ind på de samme master som de dyre. Forskellen ligger typisk i kundeservice, tillægsydelser og i nogle tilfælde prioritering i myldretiden.</p></details><details><summary>Hvor ofte bør jeg skifte mobilabonnement?</summary><p>Tjek dit abonnement en gang om året. De bedste priser går til nye kunder, så har du haft samme abonnement i flere år, betaler du sandsynligvis mere end nødvendigt for det samme.</p></details><details><summary>Hvad koster det at skifte mobilselskab?</summary><p>Selve skiftet er gratis. Du skal dog være opmærksom på eventuel binding og på restgæld, hvis du har købt telefon på afbetaling — den følger ikke med til det nye selskab.</p></details></div>
 </section>
 </main>
@@ -1318,6 +1333,8 @@
           <li><a href="/guides/daekning-og-netvaerk/">Dækning og netværk</a></li>
           <li><a href="/guides/esim/">eSIM forklaret</a></li>
           <li><a href="/guides/">Alle guides</a></li>
+          <li><a href="/landekoder/">Landekoder</a></li>
+          <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
         </ul>
       </div>
       <div>
@@ -1328,7 +1345,9 @@
           <li><a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></li>
           <li><a href="/metode/">Vores metode</a></li>
           <li><a href="/kontakt/">Kontakt</a></li>
-          <li><a href="/privatlivspolitik/">Privatliv og cookies</a></li>
+          <li><a href="/presse/">Presse</a></li>
+          <li><a href="/privatlivspolitik/">Privatlivspolitik</a></li>
+          <li><a href="/cookiepolitik/">Cookiepolitik</a></li>
         </ul>
       </div>
     </div>

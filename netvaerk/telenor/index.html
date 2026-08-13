@@ -8,6 +8,10 @@
 <link rel="canonical" href="https://telemobil.dk/netvaerk/telenor/">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
 <meta name="author" content="Emil Rostgaard">
+<meta name="twitter:label1" content="Estimeret læsetid">
+<meta name="twitter:data1" content="7 minutter">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="geo.region" content="DK">
 <meta name="geo.placename" content="Danmark">
 <meta property="og:type" content="website">
@@ -57,7 +61,7 @@
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-sammenlign">
     Sammenlign <span class="pil-ned" aria-hidden="true"></span>
   </button>
-  <div class="nav-menu nav-menu-liste" id="menu-sammenlign"><a href="/billigste-mobilabonnement/"><span class="mp-navn">Billigste mobilabonnement</span><span class="mp-under">Hele markedet sorteret efter pris</span></a><a href="/bedste-mobilabonnement/"><span class="mp-navn">Bedste mobilabonnement</span><span class="mp-under">Bedst samlet værdi, ikke bare lavest pris</span></a><a href="/mobilabonnement-med-fri-data/"><span class="mp-navn">Fri data</span><span class="mp-under">Ubegrænset data i Danmark</span></a><a href="/mobilabonnement-med-fri-tale/"><span class="mp-navn">Fri tale</span><span class="mp-under">Ubegrænsede opkald og sms</span></a><a href="/mobilabonnement-uden-data/"><span class="mp-navn">Uden data</span><span class="mp-under">Kun tale og sms</span></a><a href="/mobilabonnement-med-streaming/"><span class="mp-navn">Med streaming</span><span class="mp-under">Netflix og co. i abonnementet</span></a><a href="/mobilabonnement-med-esim/"><span class="mp-navn">Med eSIM</span><span class="mp-under">Digitalt simkort, klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><span class="mp-navn">Til børn</span><span class="mp-under">Trygt, billigt og uden overraskelser</span></a><a href="/mobilabonnement-til-unge/"><span class="mp-navn">Til unge og studerende</span><span class="mp-under">Meget data, ingen binding</span></a><a href="/mobilabonnement-uden-binding/"><span class="mp-navn">Uden binding</span><span class="mp-under">Opsig når du vil</span></a><a href="/mobilabonnement-med-streaming/tjenester/"><span class="mp-navn">Streaming: vælg tjeneste</span><span class="mp-under">Netflix, HBO Max, Disney+, Viaplay …</span></a><a href="/netvaerk/"><span class="mp-navn">Mobilnetværk</span><span class="mp-under">TDC NET, Telenor og 3</span></a></div>
+  <div class="nav-menu nav-menu-liste" id="menu-sammenlign"><a href="/billigste-mobilabonnement/"><span class="mp-navn">Billigste mobilabonnement</span><span class="mp-under">Hele markedet sorteret efter pris</span></a><a href="/bedste-mobilabonnement/"><span class="mp-navn">Bedste mobilabonnement</span><span class="mp-under">Bedst samlet værdi, ikke bare lavest pris</span></a><a href="/mobilabonnement-med-fri-data/"><span class="mp-navn">Fri data</span><span class="mp-under">Ubegrænset data i Danmark</span></a><a href="/mobilabonnement-med-fri-tale/"><span class="mp-navn">Fri tale</span><span class="mp-under">Ubegrænsede opkald og sms</span></a><a href="/mobilabonnement-uden-data/"><span class="mp-navn">Uden data</span><span class="mp-under">Kun tale og sms</span></a><a href="/mobilabonnement-med-streaming/"><span class="mp-navn">Med streaming</span><span class="mp-under">Netflix og co. i abonnementet</span></a><a href="/mobilabonnement-med-esim/"><span class="mp-navn">Med eSIM</span><span class="mp-under">Digitalt simkort, klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><span class="mp-navn">Til børn</span><span class="mp-under">Trygt, billigt og uden overraskelser</span></a><a href="/mobilabonnement-til-unge/"><span class="mp-navn">Til unge og studerende</span><span class="mp-under">Meget data, ingen binding</span></a><a href="/mobilabonnement-uden-binding/"><span class="mp-navn">Uden binding</span><span class="mp-under">Opsig når du vil</span></a><a href="/mobilabonnement-med-streaming/tjenester/"><span class="mp-navn">Streaming: vælg tjeneste</span><span class="mp-under">Netflix, HBO Max, Disney+, Viaplay …</span></a><a href="/netvaerk/"><span class="mp-navn">Mobilnetværk</span><span class="mp-under">TDC NET, Telenor og 3</span></a><a href="/landekoder/"><span class="mp-navn">Landekoder</span><span class="mp-under">Alle telefonkoder med søgning</span></a><a href="/hvem-ringer-til-mig/"><span class="mp-navn">Hvem ringer til mig?</span><span class="mp-under">Slå ukendt nummer op</span></a></div>
 </div>
 <div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-udbydere">
@@ -100,7 +104,7 @@
 <section class="sektion baand" id="sammenlign">
   <div class="sektion-hoved afslør">
     <span class="etiket">Sammenligning</span>
-    <h2>Abonnementer på Telenor</h2>
+    <h2 id="abonnementer-paa-telenor">Abonnementer på Telenor</h2>
     <p class="led">Alle abonnementer i vores sammenligning, der kører på Telenor.</p>
   </div>
   <div class="filtre">
@@ -110,6 +114,14 @@
   <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
   <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
   <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
+</div>
+<div class="filtre">
+  <span class="maerkat">Pris pr. md.</span>
+  <button class="chip" data-pris="alle" aria-pressed="true">Alle</button>
+  <button class="chip" data-pris="u50" aria-pressed="false">Under 50 kr.</button>
+  <button class="chip" data-pris="50-99" aria-pressed="false">50–99 kr.</button>
+  <button class="chip" data-pris="100-199" aria-pressed="false">100–199 kr.</button>
+  <button class="chip" data-pris="o200" aria-pressed="false">Over 200 kr.</button>
 </div>
   <div class="listeramme afslør">
     <div class="liste-top">
@@ -333,7 +345,10 @@
   <p class="afsloering"><strong>Sådan tjener vi penge:</strong> Telemobil modtager provision, når du bestiller via vores links. Det påvirker ikke rækkefølgen i tabellerne, som altid sorteres efter pris. <a href="/saadan-tjener-vi-penge/">Læs mere</a>.</p>
 </section>
 
-<section class="sektion baand-smal artikel">
+<section class="sektion baand-smal"><nav class="toc" aria-label="Indhold">
+  <div class="toc-titel">Indhold på siden</div>
+  <ol><li><a href="#abonnementer-paa-telenor">Abonnementer på Telenor</a></li><li><a href="#styrken-ved-telenor">Styrken ved Telenor</a></li><li><a href="#svagheden">Svagheden</a></li><li><a href="#hvem-boer-vaelge-telenor">Hvem bør vælge Telenor?</a></li><li><a href="#selskaber-paa-telenor">Selskaber på Telenor</a></li><li><a href="#saadan-tjekker-du-daekningen-foer-du-bestiller">Sådan tjekker du dækningen, før du bestiller</a></li><li><a href="#ofte-stillede-spoergsmaal">Ofte stillede spørgsmål</a></li></ol>
+</nav></section><section class="sektion baand-smal artikel">
   <div class="gennemgang">
   <span>Skrevet af <b>Emil Rostgaard</b></span>
   <span>Opdateret <b>13. august 2026</b></span>
@@ -347,16 +362,16 @@
   gennemsnit over 12 måneder.</p>
   </div>
 
-  <h2>Styrken ved Telenor</h2>
+  <h2 id="styrken-ved-telenor">Styrken ved Telenor</h2>
   <p>Telenors net leverer bred dækning i hele landet og rammer for de fleste brugere en god balance mellem kvalitet og pris. Flere af de billigste abonnementer på markedet kører på dette net, hvilket gør det til det mest oplagte valg for prisbevidste brugere med almindeligt forbrug.</p>
 
-  <h2>Svagheden</h2>
+  <h2 id="svagheden">Svagheden</h2>
   <p>Der findes enkelte huller i tyndt befolkede områder, hvor TDC NET står stærkere. Forskellen er dog mindre, end den var for få år siden.</p>
 
-  <h2>Hvem bør vælge Telenor?</h2>
+  <h2 id="hvem-boer-vaelge-telenor">Hvem bør vælge Telenor?</h2>
   <p>Vælg Telenors net hvis du vil have solid dækning uden at betale premiumpris — for langt de fleste danskere er det den rigtige balance.</p>
 
-  <h2>Selskaber på Telenor</h2>
+  <h2 id="selskaber-paa-telenor">Selskaber på Telenor</h2>
   <div class="kortgitter kg-3" style="margin:1.6rem 0">
     <a class="udbyderkort" href="/udbydere/cbb-mobil/">
   <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil logo" loading="lazy" height="30">
@@ -371,7 +386,7 @@
 </a>
   </div>
 
-  <h2>Sådan tjekker du dækningen, før du bestiller</h2>
+  <h2 id="saadan-tjekker-du-daekningen-foer-du-bestiller">Sådan tjekker du dækningen, før du bestiller</h2>
   <ol class="trin">
     <li><strong>Slå netværksejerens dækningskort op</strong>
     Det er den bedste offentligt tilgængelige kilde, fordi det bygger på operatørens egne
@@ -405,7 +420,7 @@
   </div>
 </aside><p class="afsloering"><strong>Annoncørinformation:</strong> Telemobil er gratis at bruge. Vi modtager provision fra udvalgte udbydere, når du klikker videre og bestiller. Det koster dig ikke ekstra, og det ændrer ikke sorteringen i vores tabeller, som altid er efter pris. Udbydere kan ikke betale sig til en bedre placering eller en bedre omtale. <a href="/saadan-tjener-vi-penge/">Se hele forretningsmodellen</a>.</p></section>
 <section class="sektion baand-smal">
-  <h2>Ofte stillede spørgsmål</h2>
+  <h2 id="ofte-stillede-spoergsmaal">Ofte stillede spørgsmål</h2>
   <div class="faq"><details><summary>Hvilke selskaber kører på Telenor?</summary><p>I vores sammenligning er det CBB Mobil, Lebara. Bemærk at MVNO-aftaler kan ændre sig, så tjek altid udbyderens egen side, hvis dækning er afgørende.</p></details><details><summary>Hvad koster det billigste abonnement på Telenor?</summary><p>Billigst er Lebara Tale 5 timer til 19 kr. om måneden regnet som gennemsnit over 12 måneder inklusive intropris.</p></details><details><summary>Er Telenor godt til mig?</summary><p>Vælg Telenors net hvis du vil have solid dækning uden at betale premiumpris — for langt de fleste danskere er det den rigtige balance.</p></details><details><summary>Hvordan tjekker jeg dækningen på min adresse?</summary><p>Alle tre netværksejere har offentlige dækningskort. Tjek din bopæl, din arbejdsplads og din pendlerrute — ikke kun ét sted.</p></details></div>
 </section>
 </main>
@@ -449,6 +464,8 @@
           <li><a href="/guides/daekning-og-netvaerk/">Dækning og netværk</a></li>
           <li><a href="/guides/esim/">eSIM forklaret</a></li>
           <li><a href="/guides/">Alle guides</a></li>
+          <li><a href="/landekoder/">Landekoder</a></li>
+          <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
         </ul>
       </div>
       <div>
@@ -459,7 +476,9 @@
           <li><a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></li>
           <li><a href="/metode/">Vores metode</a></li>
           <li><a href="/kontakt/">Kontakt</a></li>
-          <li><a href="/privatlivspolitik/">Privatliv og cookies</a></li>
+          <li><a href="/presse/">Presse</a></li>
+          <li><a href="/privatlivspolitik/">Privatlivspolitik</a></li>
+          <li><a href="/cookiepolitik/">Cookiepolitik</a></li>
         </ul>
       </div>
     </div>

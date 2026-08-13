@@ -61,6 +61,7 @@ def indlaes(navn):
 site = indlaes("site.json")
 ud_data = indlaes("udbydere.json")
 ab_data = indlaes("abonnementer.json")
+LANDE = indlaes("landekoder.json")["landekoder"]
 
 UDBYDERE = ud_data["udbydere"]
 UMAP = {u["slug"]: u for u in UDBYDERE}
@@ -547,6 +548,97 @@ abonnementer i kategorien.</p>
 <div class="vejviser">{punkter}</div>"""
 
 
+def redaktionens_valg():
+    """Fire redaktionelle picks med begrundelse — ikke bare beregnede tal."""
+    med_data = [a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0]
+    tdc = [a for a in med_data if UMAP[a["udbyder"]]["netvaerk"] == "TDC NET"]
+    frie = [a for a in ABON if a["data_gb"] >= 900 and a["pris"] > 0]
+    fast = [a for a in med_data if not a.get("intro_pris")]
+
+    valg = []
+    if fast:
+        v = min(fast, key=lambda a: a["pris"])
+        valg.append((v, "Billigst uden intro-fælde",
+            f"Fast pris fra dag ét. Ingen kampagneperiode der udløber, ingen påmindelse du "
+            f"skal huske at sætte. Prisen du ser, er prisen om tolv måneder — og det er "
+            f"mere værd end de tyve kroner, du kan spare på et introtilbud, du glemmer at "
+            f"genforhandle."))
+    endelig = [a for a in med_data if a["data_gb"] < 900]
+    if endelig:
+        v = min(endelig, key=lambda a: a["pris"] / a["data_gb"])
+        valg.append((v, "Mest for pengene",
+            f"Laveste pris pr. gigabyte i hele sammenligningen. Det er det tal, der gør "
+            f"abonnementer af forskellig størrelse sammenlignelige, og her er der ikke "
+            f"nogen tæt på. Har du et forbrug i den størrelse, er det svært at argumentere "
+            f"for noget andet."))
+    if tdc:
+        v = min(tdc, key=lambda a: gns12(a) or 9e9)
+        valg.append((v, "Bedst hvis dækning betyder noget",
+            f"Billigste vej ind på TDC NET, som er det mest udbyggede net i Danmark. Bor du "
+            f"på landet, i et sommerhusområde eller pendler du langt, er det her, du skal "
+            f"kigge — også selvom der findes billigere abonnementer på de andre net."))
+    if frie:
+        v = min(frie, key=lambda a: gns12(a) or 9e9)
+        valg.append((v, "Til dig uden fastnet",
+            f"Billigste fri data regnet over tolv måneder. Bruger du mobilen som husstandens "
+            f"internet via hotspot, er det her, regnestykket vender — under cirka 80 GB om "
+            f"måneden er et almindeligt stort abonnement stadig billigere."))
+
+    kort = ""
+    for a, kat, tekst in valg[:4]:
+        u = UMAP[a["udbyder"]]
+        g = gns12(a) or a["pris"]
+        kort += f"""<div class="rvkort">
+  <div class="rv-kat">{e(kat)}</div>
+  <div class="rv-top">
+    <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy" height="22">
+    <div><b>{e(a['navn'])}</b><small>{netlabel(u)} · {gb_tekst(a['data_gb'])}</small></div>
+  </div>
+  <div class="rv-pris">{kr(g)} kr.<em>/md. i snit over 12 mdr.</em></div>
+  <p>{e(tekst)}</p>
+  <div class="rv-links">
+    <a href="{a['link']}" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}">Se hos {e(u['navn'])} →</a>
+    <a href="/udbydere/{u['slug']}/">Læs vores gennemgang →</a>
+  </div>
+</div>"""
+
+    return f"""<h2>De fire abonnementer vi selv ville pege på</h2>
+<p>Vi gennemgår markedet ved hver opdatering og udpeger ét abonnement i hver hovedkategori.
+Udvælgelsen er ikke rangeret efter, hvad vi tjener på — det er, hvad vi ville sige til en
+ven, der spurgte, hvad de skulle skifte til.</p>
+<div class="rvkort-gitter">{kort}</div>
+<p class="rv-note">Verificeret {OPDATERET} mod priserne i vores sammenligning. Bemærk at
+priserne er placeholders, indtil datakilden er koblet på.</p>"""
+
+
+def overforbrug():
+    return """<h2>Hvad sker der, når datamængden er brugt op?</h2>
+<p>Det er en af de vigtigste forskelle mellem udbyderne, og den står sjældent i en
+pristabel. Der findes tre modeller, og de har vidt forskellige konsekvenser for din regning.</p>
+<table>
+<thead><tr><th>Model</th><th>Hvad der sker</th><th>Konsekvens for dig</th></tr></thead>
+<tbody>
+<tr><td><strong>Nedsat hastighed</strong></td><td>Forbindelsen fortsætter, men langsomt — ofte
+ned til et par hundrede kilobit</td><td>Ingen ekstra regning. Beskeder og kort virker, video
+gør ikke</td></tr>
+<tr><td><strong>Automatisk køb</strong></td><td>Udbyderen køber ekstra datapakker på dine
+vegne, når du løber tør</td><td>Bekvemt, men det er her de store overraskelsesregninger
+opstår</td></tr>
+<tr><td><strong>Fuld spærring</strong></td><td>Mobildata stopper helt indtil næste
+afregningsperiode</td><td>Kan ikke koste ekstra. Til gengæld står du uden data</td></tr>
+</tbody>
+</table>
+<div class="advarsel">
+<p><strong>Sådan finder du din udbyders model:</strong> Den står i abonnementsvilkårene under
+overforbrug eller datastop. Uanset hvilken model din udbyder bruger, bør du slå datastop til
+i appen — det gør spørgsmålet irrelevant, fordi forbindelsen så aldrig kan udløse et køb.</p>
+</div>
+<p>Vi arbejder på at kortlægge modellen for hver enkelt udbyder. Indtil den kortlægning er
+verificeret, vil vi ikke gætte — se udbyderens egne vilkår, eller
+<a href="/kontakt/">skriv til os</a>, hvis du kender svaret for et selskab, vi mangler.</p>"""
+
+
 def begrebstabel():
     return """<h2>Begreber du møder, når du sammenligner</h2>
 <p>Udbydernes produktsider bruger en række ord, der ikke betyder helt det, man tror. Her er
@@ -767,8 +859,8 @@ def byg_billigste():
     '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1
 ).replace(
     '<h2>De skjulte omkostninger, folk overser</h2>',
-    prisfordeling() + tabel_billigst_pr_udbyder() + tabel_prgb_rangliste()
-    + tabel_aarsomkostning() + '<h2>De skjulte omkostninger, folk overser</h2>', 1
+    redaktionens_valg() + prisfordeling() + tabel_billigst_pr_udbyder()
+    + tabel_prgb_rangliste() + tabel_aarsomkostning() + overforbrug() + '<h2>De skjulte omkostninger, folk overser</h2>', 1
 ).replace(
     '<h2>Hvilket abonnement passer til din situation?</h2>',
     tabel_pr_datamaengde() + udbydergitter() + '<h2>Hvilket abonnement passer til din situation?</h2>', 1
@@ -1383,6 +1475,311 @@ def byg_netvaerksside(n):
     ), prioritet="0.75")
 
 
+# --------------------------------------------------------------- VÆRKTØJER
+
+def landetabel():
+    raekker = ""
+    for l in LANDE:
+        risiko = ' data-risiko="1"' if l["risiko"] else ""
+        merkat = '<span class="mrk mrk-sol">Vær opmærksom</span>' if l["risiko"] else (
+            '<span class="mrk mrk-puls">EU/EØS-takst</span>' if l["eu"] else "")
+        raekker += (f'<tr data-land="{e(l["navn"].lower())}" data-kode="{l["kode"]}"'
+                    f' data-region="{e(l["region"])}"{risiko}>'
+                    f'<td><span class="flag">{l["flag"]}</span> {e(l["navn"])}</td>'
+                    f'<td class="kode">+{l["kode"]}</td>'
+                    f'<td class="kode">{e(l["iso"])}</td>'
+                    f'<td>{e(l["region"])}</td><td>{merkat}</td></tr>')
+    return raekker
+
+
+def byg_landekoder():
+    sti = "/landekoder/"
+    krumme = [("/", "Forside"), (None, "Landekoder")]
+    regioner = sorted({l["region"] for l in LANDE})
+    regionknapper = "".join(
+        f'<button class="chip" data-region="{e(r)}" aria-pressed="false">{e(r)}</button>'
+        for r in regioner)
+
+    faq = [
+        {"sp": "Hvad er Danmarks landekode?",
+         "sv": "Danmarks landekode er +45. Når nogen ringer til dig fra udlandet, taster de +45 "
+               "efterfulgt af dit 8-cifrede danske nummer. Danmark har ingen områdenumre — alle "
+               "danske numre er præcis otte cifre."},
+        {"sp": "Skal jeg bruge + eller 00?",
+         "sv": "De betyder præcis det samme og fortæller nettet, at opkaldet er internationalt. "
+               "På mobil bør du altid bruge +, fordi det virker uanset hvilket land du selv "
+               "befinder dig i. Hold 0-tasten nede i et par sekunder for at få + frem."},
+        {"sp": "Hvorfor virker mit udlandsopkald ikke?",
+         "sv": "Næsten altid én af tre ting: du har glemt at fjerne et indledende 0 fra det "
+               "nationale nummer, du har tastet en forkert landekode, eller nummeret er et "
+               "kortnummer, der kun virker inden for landet."},
+        {"sp": "Hvad koster det at ringe til udlandet fra Danmark?",
+         "sv": "Opkald fra Danmark til andre EU- og EØS-lande er prisreguleret. Uden for EU "
+               "sætter udbyderen selv taksten, og den varierer voldsomt fra land til land. Tjek "
+               "prisen for netop dit land hos din udbyder, før du ringer."},
+        {"sp": "Er udlandsopkald inkluderet i fri tale?",
+         "sv": "Nej. Fri tale dækker opkald til danske numre. At ringe fra Danmark til et "
+               "udenlandsk nummer er noget andet og koster ekstra hos de fleste udbydere."},
+        {"sp": "Hvad er forskellen på landekode og ISO-kode?",
+         "sv": "Telefoni-landekoden (+45) følger ITU's nummerplan. ISO-koden (DK, DNK) bruges "
+               "til data, formularer og domæner. De to systemer hænger ikke sammen, og et land "
+               "kan have flere telefonkoder eller dele kode med andre lande."},
+    ]
+
+    krop = f"""
+<section class="sektion baand">
+  <div class="vaerktoej">
+    <div class="vt-hoved">
+      <h2>Slå landekoden op</h2>
+      <p class="led">Skriv landets navn eller koden. Tabellen filtrerer med det samme.</p>
+    </div>
+    <input type="search" class="vt-soeg" data-landesoeg placeholder="Søg på land eller kode — fx Tyskland eller 49"
+           aria-label="Søg efter land eller landekode">
+    <div class="filtre" style="margin-top:.9rem">
+      <span class="maerkat">Region</span>
+      <button class="chip" data-region="alle" aria-pressed="true">Alle</button>
+      {regionknapper}
+    </div>
+    <div class="tabelrul">
+      <table class="landetabel">
+        <caption><span data-landeantal>{len(LANDE)}</span> landekoder vist</caption>
+        <thead><tr><th scope="col">Land</th><th scope="col">Landekode</th>
+        <th scope="col">ISO</th><th scope="col">Region</th><th scope="col">Bemærk</th></tr></thead>
+        <tbody>{landetabel()}</tbody>
+      </table>
+    </div>
+    <p class="vt-tom" data-landetom hidden>Ingen lande matcher din søgning.</p>
+  </div>
+</section>
+
+<section class="sektion baand-smal artikel">
+  {gennemgangslinje(OPDATERET, "Koder kontrolleret mod ITU-T E.164 og ISO 3166-1")}
+
+  <div class="udtag">
+  <p><strong>Kort svar:</strong> Danmarks landekode er <strong>+45</strong>. Skal du ringe til
+  udlandet fra Danmark, taster du + efterfulgt af landekoden og derefter nummeret uden det
+  indledende nul. Skal nogen ringe til dig fra udlandet, taster de +45 og dit 8-cifrede
+  nummer. Danske numre har ingen områdenumre.</p>
+  </div>
+
+  <h2>Sådan ringer du til udlandet fra Danmark</h2>
+  <ol class="trin">
+    <li><strong>Start med + i stedet for 00</strong>
+    Begge virker, men + virker også, når du selv er i udlandet. Hold 0-tasten nede på
+    mobilen, indtil + kommer frem.</li>
+    <li><strong>Tast landekoden</strong>
+    Find den i tabellen ovenfor. Tyskland er 49, Sverige 46, Storbritannien 44.</li>
+    <li><strong>Fjern det indledende nul</strong>
+    Mange lande skriver deres numre med et 0 foran til national brug. Det skal væk ved
+    internationale opkald. Svensk 070 123 4567 bliver til +46 70 123 4567.</li>
+    <li><strong>Tast resten af nummeret</strong>
+    Uden mellemrum, bindestreger eller parenteser.</li>
+  </ol>
+
+  <div class="tip">
+  <h3>Gem numre i internationalt format</h3>
+  <p>Gemmer du alle dine kontakter som +45 12 34 56 78 frem for 12 34 56 78, virker de også,
+  når du selv er i udlandet. Det er den enkleste måde at undgå, at opkald mislykkes på
+  rejsen — og det tager to minutter at rette de vigtigste numre.</p>
+  </div>
+
+  <h2>Roaming og udlandsopkald er ikke det samme</h2>
+  <p>Det er den forveksling, der koster flest danskere penge, og den er værd at få helt på
+  plads.</p>
+  <table>
+  <thead><tr><th></th><th>Roaming</th><th>Udlandsopkald</th></tr></thead>
+  <tbody>
+  <tr><td><strong>Hvor er du?</strong></td><td>I udlandet</td><td>I Danmark</td></tr>
+  <tr><td><strong>Hvem ringer du til?</strong></td><td>Typisk danske numre</td><td>Et udenlandsk nummer</td></tr>
+  <tr><td><strong>Reguleret?</strong></td><td>Ja, inden for EU/EØS</td><td>Delvist — EU-opkald har prisloft</td></tr>
+  <tr><td><strong>Inkluderet i fri tale?</strong></td><td>Ja, inden for EU</td><td>Nej, hos de fleste udbydere</td></tr>
+  </tbody>
+  </table>
+  <p>Ringer du fast til udlandet, bør du vælge et abonnement bygget til det frem for at betale
+  minuttakst. Se vores gennemgang af
+  <a href="/udbydere/lebara/">Lebara</a> og <a href="/udbydere/lyca-mobile/">Lyca Mobile</a>,
+  som begge er specialiseret i internationale opkald — og husk at tjekke, om landelisten
+  dækker mobilnumre eller kun fastnet.</p>
+
+  <h2>Lande der deler landekode</h2>
+  <p>Et par steder kan koden ikke stå alene. +1 dækker både USA, Canada og en række caribiske
+  øer, som skelnes på områdenummeret. +7 dækker både Rusland og Kasakhstan. Det betyder, at
+  du ikke altid kan aflæse landet af koden alene.</p>
+
+  <h2>Fik du et opkald fra et ukendt land?</h2>
+  <p>Så er det ikke landekodetabellen, du skal bruge — det er vores værktøj til at slå
+  nummeret op og vurdere, om det er svindel.
+  <a href="/hvem-ringer-til-mig/">Se hvem der ringer til dig</a>.</p>
+</section>
+
+<section class="sektion baand-smal">
+  {laesvidere([
+      ("/hvem-ringer-til-mig/", "Hvem ringer til mig? Slå nummeret op"),
+      ("/mobilabonnement-med-fri-tale/", "Mobilabonnement med fri tale"),
+      ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
+      ("/guides/esim/", "eSIM til rejsen — undgå dyr roaming"),
+  ])}
+  {forfatterboks()}
+  {afsloering()}
+</section>
+"""
+    return skriv(sti, shell(
+        sti=sti, titel=f"Landekoder — komplet oversigt over {len(LANDE)} telefonkoder",
+        beskrivelse=(f"Søg blandt {len(LANDE)} landekoder til telefon. Danmarks landekode er +45. "
+                     "Se ISO-koder, EU-takst og hvordan du ringer til udlandet."),
+        opdateret=OPDATERET,
+        hero=hero_side("Værktøj", "Landekoder til telefon",
+                       f"Søg blandt {len(LANDE)} landekoder. Se koden, ISO-forkortelsen og om "
+                       "opkaldet er dækket af EU-prisloftet.",
+                       '<a href="#indhold" class="knap knap-primaer">Søg i tabellen</a>',
+                       [("Landekoder", str(len(LANDE))), ("Danmark", "+45"), ("Kilde", "ITU-T")]),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, "Landekoder", ""))],
+    ), prioritet="0.8")
+
+
+def byg_hvem_ringer():
+    sti = "/hvem-ringer-til-mig/"
+    krumme = [("/", "Forside"), (None, "Hvem ringer til mig?")]
+    faq = [
+        {"sp": "Hvem ringer til mig fra et ukendt nummer?",
+         "sv": "Starter nummeret med +, kan du aflæse landet af landekoden. Indsæt nummeret i "
+               "værktøjet ovenfor, så finder vi landet og fortæller, om koden er kendt fra "
+               "svindelopkald."},
+        {"sp": "Hvad er wangiri-svindel?",
+         "sv": "Et opkald der ringer én gang og lægger på, så du ringer tilbage til et dyrt "
+               "udlandsnummer. Regningen kan løbe op på få minutter. Ring aldrig tilbage til et "
+               "ukendt udenlandsk nummer, du ikke forventede."},
+        {"sp": "Koster det noget at modtage et opkald fra udlandet?",
+         "sv": "Nej. At modtage et opkald i Danmark er gratis, uanset hvor det kommer fra. Det "
+               "er kun, hvis du ringer tilbage, at det kan blive dyrt."},
+        {"sp": "Hvordan blokerer jeg et nummer?",
+         "sv": "På iPhone: åbn opkaldet i Seneste, tryk på i-ikonet og vælg Bloker denne "
+               "opkalder. På Android: hold nummeret nede i opkaldslisten og vælg Bloker. Du kan "
+               "også bede din udbyder spærre for udgående udlandsopkald."},
+        {"sp": "Kan afsenderen forfalske nummeret?",
+         "sv": "Ja. Nummervisning kan manipuleres, så et opkald ser ud til at komme fra et dansk "
+               "nummer eller fra en myndighed. Vær derfor altid skeptisk over for uventede "
+               "opkald, der beder om oplysninger — uanset hvad displayet viser."},
+    ]
+
+    krop = f"""
+<section class="sektion baand">
+  <div class="vaerktoej">
+    <div class="vt-hoved">
+      <h2>Slå nummeret op</h2>
+      <p class="led">Indsæt hele nummeret med landekode. Vi finder landet og vurderer risikoen.</p>
+    </div>
+    <div class="opslag">
+      <input type="tel" class="vt-soeg" data-nummer placeholder="+216 71 123 456"
+             aria-label="Indtast telefonnummer med landekode">
+      <button type="button" class="knap knap-primaer" data-slaa-op>Slå op</button>
+    </div>
+    <div class="opslag-svar" data-opslagsvar hidden></div>
+    <p class="vt-note">Vi gemmer ikke det nummer, du indtaster. Opslaget sker i din egen browser.</p>
+  </div>
+  <script type="application/json" data-landedata>{json.dumps([
+      {"navn": l["navn"], "kode": l["kode"], "risiko": l["risiko"], "flag": l["flag"]}
+      for l in LANDE], ensure_ascii=False)}</script>
+</section>
+
+<section class="sektion baand-smal artikel">
+  {gennemgangslinje(OPDATERET, "Landekoder kontrolleret mod ITU-T E.164")}
+
+  <div class="udtag">
+  <p><strong>Kort svar:</strong> Starter nummeret med +, fortæller de første cifre hvilket land
+  opkaldet kommer fra. Modtager du et opkald fra et land, du ingen forbindelse har til, og det
+  ringer kun én gang — så ring ikke tilbage. Det er den mest udbredte form for
+  telefonsvindel i Danmark, og det koster kun penge, hvis du selv ringer op.</p>
+  </div>
+
+  <h2>Wangiri: ét ring og læg på</h2>
+  <p>Metoden hedder wangiri efter det japanske ord for netop det: ring én gang og læg på.
+  Svindleren ringer til tusindvis af numre samtidig og lægger på efter et enkelt ring. Formålet
+  er ikke at tale med dig — det er at få dig til at ringe tilbage.</p>
+  <p>Nummeret, du ringer tilbage til, er et betalingsnummer i udlandet, hvor svindleren får en
+  andel af minutprisen. Samtalen trækkes i langdrag med ventemusik eller en optaget besked, og
+  regningen kan løbe op i mange hundrede kroner på få minutter.</p>
+
+  <div class="advarsel">
+  <p><strong>Den eneste regel du skal huske:</strong> Det koster ikke noget at modtage et
+  opkald. Det koster kun, hvis du ringer tilbage. Forventer du ikke et opkald fra det land,
+  så lad være.</p>
+  </div>
+
+  <h2>Sådan vurderer du et ukendt opkald</h2>
+  <ol class="trin">
+    <li><strong>Se på landekoden</strong>
+    Slå den op i værktøjet ovenfor eller i vores
+    <a href="/landekoder/">oversigt over landekoder</a>. Kender du ingen i det land, er det et
+    dårligt tegn.</li>
+    <li><strong>Tæl ringene</strong>
+    Et enkelt ring uden besked er det klassiske mønster. Rigtige opkald ringer flere gange
+    eller lægger en besked.</li>
+    <li><strong>Ring aldrig tilbage til et ukendt udlandsnummer</strong>
+    Er det vigtigt, ringer de igen eller skriver. Skal du endelig undersøge det, så søg på
+    nummeret først.</li>
+    <li><strong>Bloker og meld</strong>
+    Bloker nummeret i telefonen, og overvej at bede din udbyder spærre for udgående
+    udlandsopkald, hvis det gentager sig.</li>
+  </ol>
+
+  <h2>Opkald der ser danske ud</h2>
+  <p>Nummervisning kan forfalskes. Det betyder, at et opkald kan se ud til at komme fra et
+  dansk nummer, fra din bank eller fra en myndighed, selvom det gør det modsatte. Teknikken
+  hedder spoofing, og den er svær at opdage for modtageren.</p>
+  <p>Beskyttelsen er ikke teknisk, men en vane: giv aldrig NemID- eller MitID-oplysninger,
+  kortnumre eller koder til nogen, der ringer til dig. Læg på, find selv nummeret til banken
+  eller myndigheden, og ring op selv. Ingen legitim afsender vil have noget imod det.</p>
+
+  <h2>Hvad du kan gøre forebyggende</h2>
+  <ul>
+    <li><strong>Bed om spærring for overtakserede numre</strong> hos din udbyder. Det er gratis
+    og lukker den dyreste kategori helt.</li>
+    <li><strong>Slå spærring for udgående udlandsopkald til</strong>, hvis du aldrig ringer til
+    udlandet. Så kan et tilbagekald ikke lykkes.</li>
+    <li><strong>Tjek regningen</strong> hver måned. Opdager du en post, du ikke kan forklare,
+    så kontakt udbyderen med det samme — det er lettere at få rettet i den periode, det sker.</li>
+    <li><strong>Sæt datastop til</strong> på børns telefoner, og forklar dem reglen om ikke at
+    ringe tilbage.</li>
+  </ul>
+
+  <h2>Ringer du selv meget til udlandet?</h2>
+  <p>Så er minuttaksten din største udgift, ikke svindel. Et abonnement med inkluderede
+  udlandsminutter kan spare hundredvis af kroner om måneden. Se
+  <a href="/mobilabonnement-med-fri-tale/">abonnementer med fri tale</a> og vores gennemgang af
+  <a href="/udbydere/lebara/">Lebara</a>.</p>
+</section>
+
+<section class="sektion baand-smal">
+  {laesvidere([
+      ("/landekoder/", "Alle landekoder — komplet oversigt"),
+      ("/mobilabonnement-med-fri-tale/", "Mobilabonnement med fri tale"),
+      ("/mobilabonnement-til-boern/", "Mobilabonnement til børn — sådan undgår du regninger"),
+      ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
+  ])}
+  {forfatterboks()}
+  {afsloering()}
+</section>
+"""
+    return skriv(sti, shell(
+        sti=sti, titel="Hvem ringer til mig? Slå nummeret og landekoden op",
+        beskrivelse=("Indsæt nummeret og se hvilket land det kommer fra. Lær at genkende "
+                     "wangiri-svindel, og find ud af hvornår du aldrig skal ringe tilbage."),
+        opdateret=OPDATERET,
+        hero=hero_side("Værktøj", "Hvem ringer til mig?",
+                       "Indsæt nummeret med landekode, så finder vi landet og fortæller, om "
+                       "koden er kendt fra svindelopkald.",
+                       '<a href="#indhold" class="knap knap-primaer">Slå nummeret op</a>',
+                       [("Landekoder", str(len(LANDE))), ("Opslag", "i din browser"),
+                        ("Vi gemmer", "intet")]),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, "Hvem ringer til mig?", ""))],
+    ), prioritet="0.8")
+
+
 # --------------------------------------------------------------- UDBYDERE
 
 def byg_udbyderoversigt():
@@ -1965,7 +2362,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=bedste_udvalg, tekstfunktion=sider.bedste,
         chips=[("Vurderet på", "5 kriterier"), ("Udbydere", str(D['antal_udbydere'])), ("Fra", f"{D['min_pris']} kr.")],
         tabeltitel="Bedste værdi for pengene lige nu",
-        ekstra_tabeller=[prisfordeling(), tabel_billigst_pr_udbyder(), tabel_prgb_rangliste(),
+        ekstra_tabeller=[redaktionens_valg(), prisfordeling(), tabel_billigst_pr_udbyder(),
+                         tabel_prgb_rangliste(), overforbrug(),
                          udbydergitter(), fejltabel(), begrebstabel(), vejviser('/bedste-mobilabonnement/')],
         faq=[
             {"sp": "Hvad er det bedste mobilabonnement i Danmark?",
@@ -2141,6 +2539,10 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_netvaerksoversigt()
     for n in NETVAERK:
         byg_netvaerksside(n)
+
+    # Værktøjer
+    byg_landekoder()
+    byg_hvem_ringer()
 
     # Udbydere
     byg_udbyderoversigt()
@@ -2405,6 +2807,62 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     byg_statisk("/kontakt/", "Kontakt Telemobil — rettelser, spørgsmål og presse",
                 "Kontakt Telemobil om faktuelle rettelser i priser, spørgsmål til vores sammenligninger eller henvendelser fra presse og udbydere.",
                 "Kontakt", "Kontakt os", kontakt_krop, prioritet="0.4")
+
+    cookie_krop = """<section class="sektion baand-smal artikel">
+  <h2>Hvad er cookies?</h2>
+  <p>Cookies er små tekstfiler, som gemmes i din browser, når du besøger et website. De
+  bruges til at huske dine valg og til at måle, hvordan siden bliver brugt.</p>
+  <h2>Hvilke cookies bruger Telemobil?</h2>
+  <table>
+  <thead><tr><th>Type</th><th>Formål</th><th>Levetid</th></tr></thead>
+  <tbody>
+  <tr><td><strong>Nødvendige</strong></td><td>Får siden til at fungere. Kan ikke fravælges.</td><td>Sessionen</td></tr>
+  <tr><td><strong>Statistik</strong></td><td>Måler hvilke sider der bruges, så vi kan forbedre dem. Anonymiseret.</td><td>Op til 24 mdr.</td></tr>
+  <tr><td><strong>Affiliatesporing</strong></td><td>Registrerer at du kom fra os, så vi kan modtage provision ved bestilling.</td><td>Sættes af udbyderen</td></tr>
+  </tbody>
+  </table>
+  <h2>Sådan afviser eller sletter du cookies</h2>
+  <p>Du kan til enhver tid slette cookies i din browsers indstillinger. I Chrome, Safari,
+  Firefox og Edge findes det under indstillinger for privatliv. Bemærk at siden stadig
+  fungerer uden statistik- og sporingscookies.</p>
+  <h2>Tredjeparter</h2>
+  <p>Klikker du videre til en udbyder, gælder deres cookiepolitik på deres site. Vi har
+  ingen kontrol over, hvad de sætter.</p>
+  <p>Læs også vores <a href="/privatlivspolitik/">privatlivspolitik</a> og
+  <a href="/saadan-tjener-vi-penge/">hvordan vi tjener penge</a>.</p>
+</section>"""
+    byg_statisk("/cookiepolitik/", "Cookiepolitik — sådan bruger Telemobil cookies",
+                "Se hvilke cookies Telemobil bruger, hvad de gør, og hvordan du sletter dem.",
+                "Cookies", "Cookiepolitik", cookie_krop, prioritet="0.3")
+
+    presse_krop = """<section class="sektion baand-smal artikel">
+  <h2>Om Telemobil</h2>
+  <p>Telemobil er en uafhængig dansk prissammenligning for mobilabonnementer. Vi følger
+  markedets udbydere, regner priserne om til sammenlignelige tal og skriver om, hvad
+  forskellene betyder for forbrugeren.</p>
+  <h2>Til journalister</h2>
+  <p>Vi stiller gerne op til interview om det danske mobilmarked, prisudvikling,
+  intropriser og forbrugerrettigheder ved skift af udbyder. Vi udtaler os kun om det, vores
+  egne data dækker, og oplyser altid tydeligt, hvad der er beregnet og hvad der er vurderet.</p>
+  <h2>Brug af vores tal</h2>
+  <p>Vores prissammenligninger må gerne citeres med kildeangivelse og link til den konkrete
+  side. Skriv til os, hvis du har brug for et udtræk til en bestemt periode eller kategori.</p>
+  <h2>Kontakt</h2>
+  <p>Henvendelser fra presse kan sendes via <a href="/kontakt/">kontaktsiden</a> eller gennem
+  <a href="https://www.linkedin.com/in/emil-rostgaard-702809195/" rel="noopener nofollow" target="_blank">LinkedIn</a>.
+  Vi svarer normalt samme hverdag.</p>
+  <h2>Faktaark</h2>
+  <ul>
+    <li><strong>Navn:</strong> Telemobil</li>
+    <li><strong>Stiftet af:</strong> Emil Rostgaard</li>
+    <li><strong>Dækker:</strong> Danske mobilabonnementer og mobilselskaber</li>
+    <li><strong>Forretningsmodel:</strong> Affiliateprovision — <a href="/saadan-tjener-vi-penge/">se hvordan</a></li>
+    <li><strong>Metode:</strong> <a href="/metode/">Sådan sammenligner vi</a></li>
+  </ul>
+</section>"""
+    byg_statisk("/presse/", "Presse — Telemobil",
+                "Information til journalister om Telemobil, vores data og brug af vores tal.",
+                "Presse", "Presse og fakta", presse_krop, prioritet="0.3")
 
     privat_krop = """<section class="sektion baand-smal artikel">
   <h2>Cookies</h2>

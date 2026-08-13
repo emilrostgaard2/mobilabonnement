@@ -148,15 +148,25 @@
     var visTaeller = document.querySelector("[data-antal-vist]");
     var visFlereBoks = document.querySelector(".vis-flere");
 
+    var prisfilter = "alle";
+
     function anvend(filter) {
       var vist = 0;
       raekker.forEach(function (r) {
         var gb = parseInt(r.getAttribute("data-gb"), 10);
+        var pris = parseFloat(r.getAttribute("data-pris"));
         var ok = true;
         if (filter === "lille") ok = gb <= 15;
         else if (filter === "mellem") ok = gb > 15 && gb <= 50;
         else if (filter === "stor") ok = gb > 50 && gb < 900;
         else if (filter === "fri") ok = gb >= 900;
+
+        if (ok && prisfilter !== "alle") {
+          if (prisfilter === "u50") ok = pris > 0 && pris < 50;
+          else if (prisfilter === "50-99") ok = pris >= 50 && pris <= 99;
+          else if (prisfilter === "100-199") ok = pris >= 100 && pris <= 199;
+          else if (prisfilter === "o200") ok = pris >= 200;
+        }
         r.setAttribute("data-filtreret", ok ? "nej" : "ja");
         r.hidden = !ok;
         if (ok) vist++;
@@ -166,11 +176,23 @@
       if (visFlereBoks) visFlereBoks.hidden = (filter !== "alle");
     }
 
+    var aktivtData = "alle";
     chips.forEach(function (c) {
       c.addEventListener("click", function () {
         chips.forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
         c.setAttribute("aria-pressed", "true");
-        anvend(c.getAttribute("data-filter"));
+        aktivtData = c.getAttribute("data-filter");
+        anvend(aktivtData);
+      });
+    });
+
+    var prischips = document.querySelectorAll(".chip[data-pris]");
+    prischips.forEach(function (c) {
+      c.addEventListener("click", function () {
+        prischips.forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+        c.setAttribute("aria-pressed", "true");
+        prisfilter = c.getAttribute("data-pris");
+        anvend(aktivtData);
       });
     });
   }
@@ -308,4 +330,120 @@
     var i = parseInt(t.getAttribute("data-trin"), 10);
     if (i + 1 < trin.length) visTrin(i + 1); else visSvar();
   });
+})();
+
+/* ---- Landekodesøgning ---- */
+(function () {
+  "use strict";
+  var soeg = document.querySelector("[data-landesoeg]");
+  var tabel = document.querySelector(".landetabel");
+  if (!soeg || !tabel) return;
+  var raekker = Array.prototype.slice.call(tabel.querySelectorAll("tbody tr"));
+  var tael = document.querySelector("[data-landeantal]");
+  var tom = document.querySelector("[data-landetom]");
+  var region = "alle";
+
+  function anvend() {
+    var q = soeg.value.trim().toLowerCase().replace(/^\+/, "");
+    var vist = 0;
+    raekker.forEach(function (r) {
+      var okRegion = region === "alle" || r.getAttribute("data-region") === region;
+      var okSoeg = !q ||
+        r.getAttribute("data-land").indexOf(q) > -1 ||
+        r.getAttribute("data-kode").indexOf(q) === 0;
+      var ok = okRegion && okSoeg;
+      r.hidden = !ok;
+      if (ok) vist++;
+    });
+    if (tael) tael.textContent = vist;
+    if (tom) tom.hidden = vist > 0;
+  }
+
+  soeg.addEventListener("input", anvend);
+  document.querySelectorAll("[data-region]").forEach(function (k) {
+    if (k.tagName !== "BUTTON") return;
+    k.addEventListener("click", function () {
+      document.querySelectorAll("button[data-region]").forEach(function (x) {
+        x.setAttribute("aria-pressed", "false");
+      });
+      k.setAttribute("aria-pressed", "true");
+      region = k.getAttribute("data-region");
+      anvend();
+    });
+  });
+})();
+
+/* ---- Nummeropslag ---- */
+(function () {
+  "use strict";
+  var felt = document.querySelector("[data-nummer]");
+  var knap = document.querySelector("[data-slaa-op]");
+  var svar = document.querySelector("[data-opslagsvar]");
+  if (!felt || !knap || !svar) return;
+
+  var lande = [];
+  var kilde = document.querySelector("[data-landedata]");
+  if (kilde) {
+    try { lande = JSON.parse(kilde.textContent); } catch (e) { lande = []; }
+  }
+  if (!lande.length) {
+    document.querySelectorAll(".landetabel tbody tr").forEach(function (r) {
+      lande.push({ navn: r.cells[0].textContent.trim(), kode: r.getAttribute("data-kode"),
+                   risiko: r.hasAttribute("data-risiko"), flag: "" });
+    });
+  }
+  if (!lande.length) return;
+
+  function slaaOp() {
+    var raa = felt.value.replace(/[^\d+]/g, "");
+    svar.hidden = false;
+
+    if (!raa) {
+      svar.className = "opslag-svar";
+      svar.innerHTML = "<p>Indtast et nummer med landekode, fx +49 30 123456.</p>";
+      return;
+    }
+    if (raa.indexOf("+") !== 0 && raa.indexOf("00") !== 0) {
+      svar.className = "opslag-svar neutral";
+      svar.innerHTML = "<h3>Ser ud til at være et dansk nummer</h3><p>Nummeret starter ikke " +
+        "med + eller 00, så det er sandsynligvis nationalt. Danske numre er otte cifre uden " +
+        "landekode. Er du i tvivl, så søg på nummeret, før du ringer tilbage.</p>";
+      return;
+    }
+    var cifre = raa.replace(/^\+/, "").replace(/^00/, "");
+    // Længste kode først, så +298 ikke forveksles med +29
+    var fund = null;
+    lande.slice().sort(function (a, b) { return b.kode.length - a.kode.length; })
+      .some(function (l) {
+        if (cifre.indexOf(l.kode) === 0) { fund = l; return true; }
+        return false;
+      });
+
+    if (!fund) {
+      svar.className = "opslag-svar advar";
+      svar.innerHTML = "<h3>Landekoden er ikke i vores oversigt</h3><p>Vi dækker de mest " +
+        "brugte landekoder. Kender du ingen i udlandet, så ring ikke tilbage — det koster " +
+        "ikke noget at modtage opkaldet, kun at besvare det.</p>";
+      return;
+    }
+    if (fund.risiko) {
+      svar.className = "opslag-svar advar";
+      svar.innerHTML = "<h3>" + (fund.flag || "") + " " + fund.navn + " — vær opmærksom</h3>" +
+        "<p>Nummeret kommer fra <strong>" + fund.navn + "</strong> (+" + fund.kode + "). " +
+        "Denne landekode optræder ofte i wangiri-svindel, hvor telefonen ringer én gang for " +
+        "at lokke dig til at ringe tilbage til et dyrt nummer.</p>" +
+        "<p><strong>Ring ikke tilbage</strong>, medmindre du forventede opkaldet. Bloker " +
+        "nummeret, og overvej at bede din udbyder spærre for udgående udlandsopkald.</p>";
+    } else {
+      svar.className = "opslag-svar neutral";
+      svar.innerHTML = "<h3>" + (fund.flag || "") + " " + fund.navn + "</h3>" +
+        "<p>Nummeret kommer fra <strong>" + fund.navn + "</strong> (+" + fund.kode + "). " +
+        "Vi har ikke markeret denne landekode som hyppig i svindelopkald.</p>" +
+        "<p>Husk at det er gratis at modtage opkaldet. Ringer du tilbage til et udenlandsk " +
+        "nummer, betaler du selv taksten — og nummervisning kan forfalskes.</p>";
+    }
+  }
+
+  knap.addEventListener("click", slaaOp);
+  felt.addEventListener("keydown", function (e) { if (e.key === "Enter") slaaOp(); });
 })();

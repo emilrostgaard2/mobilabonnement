@@ -1,3 +1,4 @@
+import re
 # -*- coding: utf-8 -*-
 """Skabelonlag for telemobil.dk — HTML-shell, navigation og genbrugelige komponenter."""
 
@@ -32,6 +33,8 @@ SAMMENLIGN = [
     ("/mobilabonnement-med-streaming/tjenester/", "Streaming: vælg tjeneste",
      "Netflix, HBO Max, Disney+, Viaplay …"),
     ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor og 3"),
+    ("/landekoder/", "Landekoder", "Alle telefonkoder med søgning"),
+    ("/hvem-ringer-til-mig/", "Hvem ringer til mig?", "Slå ukendt nummer op"),
 ]
 
 MENU = [
@@ -83,8 +86,51 @@ def netlabel(u):
 
 # ---------------------------------------------------------------- HTML-shell
 
+def indholdsfortegnelse(html, minimum=4):
+    """Bygger ToC af H2'er og giver dem id, så de kan linkes til."""
+    fundne = re.findall(r"<h2>(.*?)</h2>", html, re.S)
+    rene = []
+    for f in fundne:
+        t = re.sub(r"<[^>]+>", "", f).strip()
+        if t and t not in rene:
+            rene.append(t)
+    if len(rene) < minimum:
+        return html, ""
+
+    def slug(t):
+        s = t.lower()
+        for a, b in (("æ", "ae"), ("ø", "oe"), ("å", "aa"), ("é", "e")):
+            s = s.replace(a, b)
+        s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+        return s[:60]
+
+    brugte = {}
+    for t in rene:
+        s = slug(t)
+        brugte[t] = s
+        html = html.replace(f"<h2>{t}</h2>", f'<h2 id="{s}">{t}</h2>', 1)
+
+    punkter = "".join(f'<li><a href="#{brugte[t]}">{e(t)}</a></li>' for t in rene)
+    toc = f'''<nav class="toc" aria-label="Indhold">
+  <div class="toc-titel">Indhold på siden</div>
+  <ol>{punkter}</ol>
+</nav>'''
+    return html, toc
+
+
+def laesetid(html):
+    tekst = re.sub(r"<[^>]+>", " ", re.sub(r"<script.*?</script>", " ", html, flags=re.S))
+    return max(1, round(len(tekst.split()) / 200))
+
+
 def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
           hero=None, efter_hero="", opdateret="", ekstra_hoved=""):
+    indhold, toc = indholdsfortegnelse(indhold)
+    if toc:
+        indhold = indhold.replace('<section class="sektion baand-smal artikel">',
+                                  f'<section class="sektion baand-smal">{toc}</section>'
+                                  '<section class="sektion baand-smal artikel">', 1)
+    minutter = laesetid(indhold)
     """Bygger en komplet HTML-side."""
     kanonisk = DOMAENE + sti
     blokke = ""
@@ -151,6 +197,10 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <link rel="canonical" href="{kanonisk}">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
 <meta name="author" content="{e(FORFATTER['navn'])}">
+<meta name="twitter:label1" content="Estimeret læsetid">
+<meta name="twitter:data1" content="{minutter} minutter">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="geo.region" content="DK">
 <meta name="geo.placename" content="Danmark">
 <meta property="og:type" content="website">
@@ -253,6 +303,8 @@ def fod(opdateret):
           <li><a href="/guides/daekning-og-netvaerk/">Dækning og netværk</a></li>
           <li><a href="/guides/esim/">eSIM forklaret</a></li>
           <li><a href="/guides/">Alle guides</a></li>
+          <li><a href="/landekoder/">Landekoder</a></li>
+          <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
         </ul>
       </div>
       <div>
@@ -263,7 +315,9 @@ def fod(opdateret):
           <li><a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></li>
           <li><a href="/metode/">Vores metode</a></li>
           <li><a href="/kontakt/">Kontakt</a></li>
-          <li><a href="/privatlivspolitik/">Privatliv og cookies</a></li>
+          <li><a href="/presse/">Presse</a></li>
+          <li><a href="/privatlivspolitik/">Privatlivspolitik</a></li>
+          <li><a href="/cookiepolitik/">Cookiepolitik</a></li>
         </ul>
       </div>
     </div>
@@ -497,6 +551,14 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
   <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
   <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
   <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
+</div>
+<div class="filtre">
+  <span class="maerkat">Pris pr. md.</span>
+  <button class="chip" data-pris="alle" aria-pressed="true">Alle</button>
+  <button class="chip" data-pris="u50" aria-pressed="false">Under 50 kr.</button>
+  <button class="chip" data-pris="50-99" aria-pressed="false">50–99 kr.</button>
+  <button class="chip" data-pris="100-199" aria-pressed="false">100–199 kr.</button>
+  <button class="chip" data-pris="o200" aria-pressed="false">Over 200 kr.</button>
 </div>"""
 
     return f"""<section class="sektion baand" id="{id_attr}">

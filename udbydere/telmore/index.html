@@ -8,6 +8,10 @@
 <link rel="canonical" href="https://telemobil.dk/udbydere/telmore/">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
 <meta name="author" content="Emil Rostgaard">
+<meta name="twitter:label1" content="Estimeret læsetid">
+<meta name="twitter:data1" content="8 minutter">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="geo.region" content="DK">
 <meta name="geo.placename" content="Danmark">
 <meta property="og:type" content="website">
@@ -57,7 +61,7 @@
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-sammenlign">
     Sammenlign <span class="pil-ned" aria-hidden="true"></span>
   </button>
-  <div class="nav-menu nav-menu-liste" id="menu-sammenlign"><a href="/billigste-mobilabonnement/"><span class="mp-navn">Billigste mobilabonnement</span><span class="mp-under">Hele markedet sorteret efter pris</span></a><a href="/bedste-mobilabonnement/"><span class="mp-navn">Bedste mobilabonnement</span><span class="mp-under">Bedst samlet værdi, ikke bare lavest pris</span></a><a href="/mobilabonnement-med-fri-data/"><span class="mp-navn">Fri data</span><span class="mp-under">Ubegrænset data i Danmark</span></a><a href="/mobilabonnement-med-fri-tale/"><span class="mp-navn">Fri tale</span><span class="mp-under">Ubegrænsede opkald og sms</span></a><a href="/mobilabonnement-uden-data/"><span class="mp-navn">Uden data</span><span class="mp-under">Kun tale og sms</span></a><a href="/mobilabonnement-med-streaming/"><span class="mp-navn">Med streaming</span><span class="mp-under">Netflix og co. i abonnementet</span></a><a href="/mobilabonnement-med-esim/"><span class="mp-navn">Med eSIM</span><span class="mp-under">Digitalt simkort, klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><span class="mp-navn">Til børn</span><span class="mp-under">Trygt, billigt og uden overraskelser</span></a><a href="/mobilabonnement-til-unge/"><span class="mp-navn">Til unge og studerende</span><span class="mp-under">Meget data, ingen binding</span></a><a href="/mobilabonnement-uden-binding/"><span class="mp-navn">Uden binding</span><span class="mp-under">Opsig når du vil</span></a><a href="/mobilabonnement-med-streaming/tjenester/"><span class="mp-navn">Streaming: vælg tjeneste</span><span class="mp-under">Netflix, HBO Max, Disney+, Viaplay …</span></a><a href="/netvaerk/"><span class="mp-navn">Mobilnetværk</span><span class="mp-under">TDC NET, Telenor og 3</span></a></div>
+  <div class="nav-menu nav-menu-liste" id="menu-sammenlign"><a href="/billigste-mobilabonnement/"><span class="mp-navn">Billigste mobilabonnement</span><span class="mp-under">Hele markedet sorteret efter pris</span></a><a href="/bedste-mobilabonnement/"><span class="mp-navn">Bedste mobilabonnement</span><span class="mp-under">Bedst samlet værdi, ikke bare lavest pris</span></a><a href="/mobilabonnement-med-fri-data/"><span class="mp-navn">Fri data</span><span class="mp-under">Ubegrænset data i Danmark</span></a><a href="/mobilabonnement-med-fri-tale/"><span class="mp-navn">Fri tale</span><span class="mp-under">Ubegrænsede opkald og sms</span></a><a href="/mobilabonnement-uden-data/"><span class="mp-navn">Uden data</span><span class="mp-under">Kun tale og sms</span></a><a href="/mobilabonnement-med-streaming/"><span class="mp-navn">Med streaming</span><span class="mp-under">Netflix og co. i abonnementet</span></a><a href="/mobilabonnement-med-esim/"><span class="mp-navn">Med eSIM</span><span class="mp-under">Digitalt simkort, klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><span class="mp-navn">Til børn</span><span class="mp-under">Trygt, billigt og uden overraskelser</span></a><a href="/mobilabonnement-til-unge/"><span class="mp-navn">Til unge og studerende</span><span class="mp-under">Meget data, ingen binding</span></a><a href="/mobilabonnement-uden-binding/"><span class="mp-navn">Uden binding</span><span class="mp-under">Opsig når du vil</span></a><a href="/mobilabonnement-med-streaming/tjenester/"><span class="mp-navn">Streaming: vælg tjeneste</span><span class="mp-under">Netflix, HBO Max, Disney+, Viaplay …</span></a><a href="/netvaerk/"><span class="mp-navn">Mobilnetværk</span><span class="mp-under">TDC NET, Telenor og 3</span></a><a href="/landekoder/"><span class="mp-navn">Landekoder</span><span class="mp-under">Alle telefonkoder med søgning</span></a><a href="/hvem-ringer-til-mig/"><span class="mp-navn">Hvem ringer til mig?</span><span class="mp-under">Slå ukendt nummer op</span></a></div>
 </div>
 <div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-udbydere">
@@ -100,7 +104,7 @@
 <section class="sektion baand" id="sammenlign">
   <div class="sektion-hoved afslør">
     <span class="etiket">Sammenligning</span>
-    <h2>Telmores abonnementer og priser</h2>
+    <h2 id="telmores-abonnementer-og-priser">Telmores abonnementer og priser</h2>
     <p class="led">Alle Telmore-abonnementer vi følger, sorteret efter pris.</p>
   </div>
   
@@ -226,14 +230,17 @@
   <p class="afsloering"><strong>Sådan tjener vi penge:</strong> Telemobil modtager provision, når du bestiller via vores links. Det påvirker ikke rækkefølgen i tabellerne, som altid sorteres efter pris. <a href="/saadan-tjener-vi-penge/">Læs mere</a>.</p>
 </section>
 
-<section class="sektion baand-smal artikel">
+<section class="sektion baand-smal"><nav class="toc" aria-label="Indhold">
+  <div class="toc-titel">Indhold på siden</div>
+  <ol><li><a href="#telmores-abonnementer-og-priser">Telmores abonnementer og priser</a></li><li><a href="#telmore-vurderet-et-abonnement-du-skal-regne-paa">Telmore vurderet: et abonnement du skal regne på</a></li><li><a href="#regnestykket-der-afgoer-om-telmore-er-billigt-eller-dyrt">Regnestykket der afgør, om Telmore er billigt eller dyrt</a></li><li><a href="#pakkens-indhold-kan-aendre-sig-saet-en-paamindelse">Pakkens indhold kan ændre sig — sæt en påmindelse</a></li><li><a href="#telmore-koerer-paa-tdc-net">Telmore kører på TDC NET</a></li><li><a href="#hvem-faar-noget-ud-af-telmore-play">Hvem får noget ud af Telmore Play?</a></li><li><a href="#telmore-mod-et-billigt-abonnement-plus-egne-streamingtjenest">Telmore mod et billigt abonnement plus egne streamingtjenester</a></li><li><a href="#saadan-skifter-du-til-telmore">Sådan skifter du til Telmore</a></li><li><a href="#spoergsmaal-om-telmore">Spørgsmål om Telmore</a></li></ol>
+</nav></section><section class="sektion baand-smal artikel">
   <div class="gennemgang">
   <span>Skrevet af <b>Emil Rostgaard</b></span>
   <span>Opdateret <b>13. august 2026</b></span>
   <span>Vilkår gennemgået på Telmores egen hjemmeside</span>
 </div>
 
-  <h2>Telmore vurderet: et abonnement du skal regne på</h2>
+  <h2 id="telmore-vurderet-et-abonnement-du-skal-regne-paa">Telmore vurderet: et abonnement du skal regne på</h2>
   <p>Telmore er det mest interessante abonnement på det danske marked at regne på, fordi prisen sjældent kan sammenlignes direkte med andres. Selskabet er som YouSee en del af Nuuday og kører på TDC NET, så dækningen er i topklasse. Men den egentlige forskel ligger i Telmore Play-konceptet, hvor streamingtjenester indgår i abonnementsprisen.</p><p>Regnestykket er enkelt og bør laves før bestilling, ikke efter. Læg sammen, hvad du i dag betaler for de tjenester, der indgår. Betaler du allerede for tre af dem, og indgår de i pakken, kan et Telmore-abonnement til en tilsyneladende høj månedspris reelt være billigere end et discountabonnement plus separate abonnementer. Betaler du derimod for streamingtjenester, du ikke bruger, eller deler du familieabonnementer med andre, forsvinder fordelen, og så betaler du mest for dækning.</p><p>Det er værd at være opmærksom på, at pakker og indhold ændrer sig. En streamingtjeneste kan ryge ud af pakken ved en aftaleudløb, og så står du med et abonnement, du valgte af én grund, som ikke længere gælder. Sæt en påmindelse i kalenderen en gang om året og genberegn.</p><p>Telmore er som resten af Nuuday-familien ikke billigst på rå data. Vil du have 50 GB og intet andet, findes der abonnementer til under det halve. Det er ikke en kritik af Telmore — det er bare to forskellige produkter, der tilfældigvis begge hedder mobilabonnement.</p>
 
   <div class="plusminus">
@@ -241,22 +248,22 @@
     <div class="pm pm-minus"><h3>Det taler imod</h3><ul><li>Svært at prissammenligne direkte med rene mobilabonnementer</li><li>Indholdet i pakkerne kan ændre sig over tid</li><li>Dyrt hvis du ikke bruger de inkluderede tjenester</li></ul></div>
   </div>
 
-  <h2>Regnestykket der afgør, om Telmore er billigt eller dyrt</h2><p>Telmore kan ikke prissammenlignes direkte med andre mobilabonnementer, og det er både selskabets styrke og den mest almindelige kilde til fejlkøb. Et abonnement til 199 kr. lyder dyrt ved siden af et discountabonnement til 89 kr. — men det er ikke den relevante sammenligning.</p><p>Den relevante sammenligning er: hvad betaler du i dag for et billigt mobilabonnement <em>plus</em> de streamingtjenester, du faktisk bruger? Betaler du 89 kr. for mobilen og 130 kr. for to tjenester, er din reelle udgift 219 kr. Og så er Telmore til 199 kr. pludselig en besparelse.</p><p>Vender du regnestykket om og kun bruger én af de inkluderede tjenester, betaler du markant over. Det er derfor, vi anbefaler at lave udregningen på papir før bestilling — ikke efter. Tag kun de tjenester med, du reelt ser, og husk at trække fra, hvis du deler et abonnement med din husstand i forvejen.</p><h2>Pakkens indhold kan ændre sig — sæt en påmindelse</h2><p>Streamingpakker bygger på aftaler mellem udbyderen og indholdsleverandørerne, og de aftaler udløber. En tjeneste, der var hele grunden til, at du valgte abonnementet, kan forsvinde ud af pakken, og prisen falder ikke nødvendigvis tilsvarende.</p><p>Det er ikke unikt for Telmore — det gælder alle streamingbundles på markedet — men det er en reel risiko, som sjældent nævnes i markedsføringen. Læs vilkårene for, hvad der sker med prisen, hvis en tjeneste fjernes, og hvilket varsel du har krav på.</p><p>Praktisk råd: sæt en kalenderpåmindelse en gang om året, hvor du tjekker hvad der stadig indgår, og laver regnestykket forfra. Et abonnement, der var det rigtige valg for to år siden, er ikke nødvendigvis det i dag.</p>
+  <h2 id="regnestykket-der-afgoer-om-telmore-er-billigt-eller-dyrt">Regnestykket der afgør, om Telmore er billigt eller dyrt</h2><p>Telmore kan ikke prissammenlignes direkte med andre mobilabonnementer, og det er både selskabets styrke og den mest almindelige kilde til fejlkøb. Et abonnement til 199 kr. lyder dyrt ved siden af et discountabonnement til 89 kr. — men det er ikke den relevante sammenligning.</p><p>Den relevante sammenligning er: hvad betaler du i dag for et billigt mobilabonnement <em>plus</em> de streamingtjenester, du faktisk bruger? Betaler du 89 kr. for mobilen og 130 kr. for to tjenester, er din reelle udgift 219 kr. Og så er Telmore til 199 kr. pludselig en besparelse.</p><p>Vender du regnestykket om og kun bruger én af de inkluderede tjenester, betaler du markant over. Det er derfor, vi anbefaler at lave udregningen på papir før bestilling — ikke efter. Tag kun de tjenester med, du reelt ser, og husk at trække fra, hvis du deler et abonnement med din husstand i forvejen.</p><h2 id="pakkens-indhold-kan-aendre-sig-saet-en-paamindelse">Pakkens indhold kan ændre sig — sæt en påmindelse</h2><p>Streamingpakker bygger på aftaler mellem udbyderen og indholdsleverandørerne, og de aftaler udløber. En tjeneste, der var hele grunden til, at du valgte abonnementet, kan forsvinde ud af pakken, og prisen falder ikke nødvendigvis tilsvarende.</p><p>Det er ikke unikt for Telmore — det gælder alle streamingbundles på markedet — men det er en reel risiko, som sjældent nævnes i markedsføringen. Læs vilkårene for, hvad der sker med prisen, hvis en tjeneste fjernes, og hvilket varsel du har krav på.</p><p>Praktisk råd: sæt en kalenderpåmindelse en gang om året, hvor du tjekker hvad der stadig indgår, og laver regnestykket forfra. Et abonnement, der var det rigtige valg for to år siden, er ikke nødvendigvis det i dag.</p>
 
-  <h2>Telmore kører på TDC NET</h2>
+  <h2 id="telmore-koerer-paa-tdc-net">Telmore kører på TDC NET</h2>
   <p>Telmore er som YouSee en del af Nuuday og kører på TDC NET. Dækningen er derfor identisk med YouSees — det er præcis det samme net og de samme master. Vælger du mellem Telmore og YouSee, vælger du altså ikke mellem to netværk, men mellem to produktpakker og to kundeserviceoplevelser.</p>
   <p>Bor du i en større by, er forskellen mellem de tre danske net lille i praksis. Bor du
   på landet, i et sommerhusområde eller pendler du gennem tyndt befolkede områder, kan
   forskellen være mærkbar. <a href="/guides/daekning-og-netvaerk/">Læs vores gennemgang af
   de tre netværk</a>.</p>
 
-  <h2>Hvem får noget ud af Telmore Play?</h2>
+  <h2 id="hvem-faar-noget-ud-af-telmore-play">Hvem får noget ud af Telmore Play?</h2>
   <div class="kortgitter kg-2" style="margin:1.6rem 0">
     <div class="kort"><h3>Vælg Telmore hvis…</h3><p>Dig der allerede betaler for flere streamingtjenester og gerne vil samle det hele ét sted.</p></div>
     <div class="kort"><h3>Vælg noget andet hvis…</h3><p>Dig der kun vil have data og tale til laveste pris, eller deler streaming med familien i forvejen.</p></div>
   </div>
 
-  <h2>Telmore mod et billigt abonnement plus egne streamingtjenester</h2>
+  <h2 id="telmore-mod-et-billigt-abonnement-plus-egne-streamingtjenest">Telmore mod et billigt abonnement plus egne streamingtjenester</h2>
   <p>Her er de abonnementer fra andre udbydere, der ligger tættest på
   Telmores prisniveau. Bemærk især netværkskolonnen — det er der, den reelle forskel
   ofte ligger.</p>
@@ -267,7 +274,7 @@
   <p>Se hele markedet i vores <a href="/billigste-mobilabonnement/">sammenligning af
   billigste mobilabonnement</a>.</p>
 
-  <h2>Sådan skifter du til Telmore</h2>
+  <h2 id="saadan-skifter-du-til-telmore">Sådan skifter du til Telmore</h2>
   <p>Har du streamingtjenester, du beholder ved siden af, så opsig dem først når Telmore-abonnementet er aktivt og du har bekræftet, at tjenesten faktisk indgår. Ellers risikerer du at stå uden midt i en serie.</p>
   <ol class="trin">
     <li><strong>Tjek din nuværende aftale</strong>
@@ -312,7 +319,7 @@
   <p class="afsloering"><strong>Annoncørinformation:</strong> Telemobil er gratis at bruge. Vi modtager provision fra udvalgte udbydere, når du klikker videre og bestiller. Det koster dig ikke ekstra, og det ændrer ikke sorteringen i vores tabeller, som altid er efter pris. Udbydere kan ikke betale sig til en bedre placering eller en bedre omtale. <a href="/saadan-tjener-vi-penge/">Se hele forretningsmodellen</a>.</p>
 </section>
 <section class="sektion baand-smal">
-  <h2>Spørgsmål om Telmore</h2>
+  <h2 id="spoergsmaal-om-telmore">Spørgsmål om Telmore</h2>
   <div class="faq"><details><summary>Kan det betale sig med streaming i mobilabonnementet?</summary><p>Det afhænger af, hvad du betaler i dag. Læg dine nuværende streamingudgifter sammen med prisen på et billigt mobilabonnement, og sammenlign med Telmores samlede pris. Bruger du to eller flere af de inkluderede tjenester, falder regnestykket ofte ud til Telmores fordel.</p></details><details><summary>Hvilket net bruger Telmore?</summary><p>Telmore kører på TDC NET, samme netværk som YouSee. Dækningen er dermed blandt de bedste i Danmark.</p></details><details><summary>Er Telmore og YouSee det samme?</summary><p>De er søsterselskaber under Nuuday og deler netværk, men de er separate brands med forskellige abonnementer, priser og kundeservice.</p></details></div>
 </section>
 </main>
@@ -356,6 +363,8 @@
           <li><a href="/guides/daekning-og-netvaerk/">Dækning og netværk</a></li>
           <li><a href="/guides/esim/">eSIM forklaret</a></li>
           <li><a href="/guides/">Alle guides</a></li>
+          <li><a href="/landekoder/">Landekoder</a></li>
+          <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
         </ul>
       </div>
       <div>
@@ -366,7 +375,9 @@
           <li><a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></li>
           <li><a href="/metode/">Vores metode</a></li>
           <li><a href="/kontakt/">Kontakt</a></li>
-          <li><a href="/privatlivspolitik/">Privatliv og cookies</a></li>
+          <li><a href="/presse/">Presse</a></li>
+          <li><a href="/privatlivspolitik/">Privatlivspolitik</a></li>
+          <li><a href="/cookiepolitik/">Cookiepolitik</a></li>
         </ul>
       </div>
     </div>

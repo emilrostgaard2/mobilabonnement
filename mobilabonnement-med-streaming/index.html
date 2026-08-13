@@ -8,6 +8,10 @@
 <link rel="canonical" href="https://telemobil.dk/mobilabonnement-med-streaming/">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
 <meta name="author" content="Emil Rostgaard">
+<meta name="twitter:label1" content="Estimeret læsetid">
+<meta name="twitter:data1" content="15 minutter">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="geo.region" content="DK">
 <meta name="geo.placename" content="Danmark">
 <meta property="og:type" content="website">
@@ -57,7 +61,7 @@
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-sammenlign">
     Sammenlign <span class="pil-ned" aria-hidden="true"></span>
   </button>
-  <div class="nav-menu nav-menu-liste" id="menu-sammenlign"><a href="/billigste-mobilabonnement/"><span class="mp-navn">Billigste mobilabonnement</span><span class="mp-under">Hele markedet sorteret efter pris</span></a><a href="/bedste-mobilabonnement/"><span class="mp-navn">Bedste mobilabonnement</span><span class="mp-under">Bedst samlet værdi, ikke bare lavest pris</span></a><a href="/mobilabonnement-med-fri-data/"><span class="mp-navn">Fri data</span><span class="mp-under">Ubegrænset data i Danmark</span></a><a href="/mobilabonnement-med-fri-tale/"><span class="mp-navn">Fri tale</span><span class="mp-under">Ubegrænsede opkald og sms</span></a><a href="/mobilabonnement-uden-data/"><span class="mp-navn">Uden data</span><span class="mp-under">Kun tale og sms</span></a><a href="/mobilabonnement-med-streaming/" aria-current="page"><span class="mp-navn">Med streaming</span><span class="mp-under">Netflix og co. i abonnementet</span></a><a href="/mobilabonnement-med-esim/"><span class="mp-navn">Med eSIM</span><span class="mp-under">Digitalt simkort, klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><span class="mp-navn">Til børn</span><span class="mp-under">Trygt, billigt og uden overraskelser</span></a><a href="/mobilabonnement-til-unge/"><span class="mp-navn">Til unge og studerende</span><span class="mp-under">Meget data, ingen binding</span></a><a href="/mobilabonnement-uden-binding/"><span class="mp-navn">Uden binding</span><span class="mp-under">Opsig når du vil</span></a><a href="/mobilabonnement-med-streaming/tjenester/"><span class="mp-navn">Streaming: vælg tjeneste</span><span class="mp-under">Netflix, HBO Max, Disney+, Viaplay …</span></a><a href="/netvaerk/"><span class="mp-navn">Mobilnetværk</span><span class="mp-under">TDC NET, Telenor og 3</span></a></div>
+  <div class="nav-menu nav-menu-liste" id="menu-sammenlign"><a href="/billigste-mobilabonnement/"><span class="mp-navn">Billigste mobilabonnement</span><span class="mp-under">Hele markedet sorteret efter pris</span></a><a href="/bedste-mobilabonnement/"><span class="mp-navn">Bedste mobilabonnement</span><span class="mp-under">Bedst samlet værdi, ikke bare lavest pris</span></a><a href="/mobilabonnement-med-fri-data/"><span class="mp-navn">Fri data</span><span class="mp-under">Ubegrænset data i Danmark</span></a><a href="/mobilabonnement-med-fri-tale/"><span class="mp-navn">Fri tale</span><span class="mp-under">Ubegrænsede opkald og sms</span></a><a href="/mobilabonnement-uden-data/"><span class="mp-navn">Uden data</span><span class="mp-under">Kun tale og sms</span></a><a href="/mobilabonnement-med-streaming/" aria-current="page"><span class="mp-navn">Med streaming</span><span class="mp-under">Netflix og co. i abonnementet</span></a><a href="/mobilabonnement-med-esim/"><span class="mp-navn">Med eSIM</span><span class="mp-under">Digitalt simkort, klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><span class="mp-navn">Til børn</span><span class="mp-under">Trygt, billigt og uden overraskelser</span></a><a href="/mobilabonnement-til-unge/"><span class="mp-navn">Til unge og studerende</span><span class="mp-under">Meget data, ingen binding</span></a><a href="/mobilabonnement-uden-binding/"><span class="mp-navn">Uden binding</span><span class="mp-under">Opsig når du vil</span></a><a href="/mobilabonnement-med-streaming/tjenester/"><span class="mp-navn">Streaming: vælg tjeneste</span><span class="mp-under">Netflix, HBO Max, Disney+, Viaplay …</span></a><a href="/netvaerk/"><span class="mp-navn">Mobilnetværk</span><span class="mp-under">TDC NET, Telenor og 3</span></a><a href="/landekoder/"><span class="mp-navn">Landekoder</span><span class="mp-under">Alle telefonkoder med søgning</span></a><a href="/hvem-ringer-til-mig/"><span class="mp-navn">Hvem ringer til mig?</span><span class="mp-under">Slå ukendt nummer op</span></a></div>
 </div>
 <div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-udbydere">
@@ -100,7 +104,7 @@
 <section class="sektion baand" id="sammenlign">
   <div class="sektion-hoved afslør">
     <span class="etiket">Sammenligning</span>
-    <h2>Abonnementer med streaming inkluderet</h2>
+    <h2 id="abonnementer-med-streaming-inkluderet">Abonnementer med streaming inkluderet</h2>
     <p class="led">Abonnementer hvor streamingtjenester indgår i prisen. Regn efter, hvad du betaler for de samme tjenester i dag.</p>
   </div>
   <div class="filtre">
@@ -110,6 +114,14 @@
   <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
   <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
   <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
+</div>
+<div class="filtre">
+  <span class="maerkat">Pris pr. md.</span>
+  <button class="chip" data-pris="alle" aria-pressed="true">Alle</button>
+  <button class="chip" data-pris="u50" aria-pressed="false">Under 50 kr.</button>
+  <button class="chip" data-pris="50-99" aria-pressed="false">50–99 kr.</button>
+  <button class="chip" data-pris="100-199" aria-pressed="false">100–199 kr.</button>
+  <button class="chip" data-pris="o200" aria-pressed="false">Over 200 kr.</button>
 </div>
   <div class="listeramme afslør">
     <div class="liste-top">
@@ -353,7 +365,10 @@
   <p class="afsloering"><strong>Sådan tjener vi penge:</strong> Telemobil modtager provision, når du bestiller via vores links. Det påvirker ikke rækkefølgen i tabellerne, som altid sorteres efter pris. <a href="/saadan-tjener-vi-penge/">Læs mere</a>.</p>
 </section>
 
-<section class="sektion baand-smal artikel">
+<section class="sektion baand-smal"><nav class="toc" aria-label="Indhold">
+  <div class="toc-titel">Indhold på siden</div>
+  <ol><li><a href="#abonnementer-med-streaming-inkluderet">Abonnementer med streaming inkluderet</a></li><li><a href="#saadan-regner-du-paa-det-foer-du-bestiller">Sådan regner du på det — før du bestiller</a></li><li><a href="#de-tre-ting-folk-regner-forkert">De tre ting folk regner forkert</a></li><li><a href="#hvad-der-typisk-indgaar">Hvad der typisk indgår</a></li><li><a href="#fordele-og-ulemper-ved-at-samle-det">Fordele og ulemper ved at samle det</a></li><li><a href="#hvem-passer-det-til">Hvem passer det til?</a></li><li><a href="#data-og-streaming-haenger-sammen">Data og streaming hænger sammen</a></li><li><a href="#saadan-opsiger-du-hvis-regnestykket-aendrer-sig">Sådan opsiger du, hvis regnestykket ændrer sig</a></li><li><a href="#de-fem-fejl-der-koster-danskerne-flest-penge">De fem fejl der koster danskerne flest penge</a></li><li><a href="#begreber-du-moeder-naar-du-sammenligner">Begreber du møder, når du sammenligner</a></li><li><a href="#vaelg-din-vej-videre">Vælg din vej videre</a></li><li><a href="#ofte-stillede-spoergsmaal">Ofte stillede spørgsmål</a></li></ol>
+</nav></section><section class="sektion baand-smal artikel">
 <div class="gennemgang">
   <span>Skrevet af <b>Emil Rostgaard</b></span>
   <span>Opdateret <b>13. august 2026</b></span>
@@ -368,7 +383,7 @@ to eller flere af dem, er det som regel en klar besparelse. Bruger du ingen af d
 betaler du et stort tillæg for noget, du ikke får glæde af.</p>
 </div>
 
-<h2>Sådan regner du på det — før du bestiller</h2>
+<h2 id="saadan-regner-du-paa-det-foer-du-bestiller">Sådan regner du på det — før du bestiller</h2>
 
 <p>Det her er den eneste udregning, der betyder noget, og den tager to minutter. Alt andet
 på siden er baggrund.</p>
@@ -394,7 +409,7 @@ data 199 kr., sparer du 19 kr. om måneden — 228 kr. om året. Bruger du kun d
 tjeneste, vender regnestykket, og du betaler over.</p>
 </div>
 
-<h2>De tre ting folk regner forkert</h2>
+<h2 id="de-tre-ting-folk-regner-forkert">De tre ting folk regner forkert</h2>
 
 <h3>De tæller tjenester, de ikke bruger</h3>
 <p>Den mest almindelige fejl. En pakke med fem tjenester lyder af mere værdi end en med to,
@@ -411,7 +426,7 @@ bare to abonnementer på samme tjeneste. Tal sammen, før I bestiller.</p>
 streamingabonnementer — ikke mod et dyrt mobilabonnement. Ellers ser streamingpakken bedre
 ud, end den er.</p>
 
-<h2>Hvad der typisk indgår</h2>
+<h2 id="hvad-der-typisk-indgaar">Hvad der typisk indgår</h2>
 
 <p>Indholdet varierer mellem udbydere og ændrer sig løbende, men der er tre kategorier, du
 typisk møder på det danske marked:</p>
@@ -433,7 +448,7 @@ kalenderen én gang om året og genberegn. Tjek også vilkårene for, hvad der s
 prisen, hvis en tjeneste fjernes.</p>
 </div>
 
-<h2>Fordele og ulemper ved at samle det</h2>
+<h2 id="fordele-og-ulemper-ved-at-samle-det">Fordele og ulemper ved at samle det</h2>
 
 <div class="plusminus">
   <div class="pm pm-plus"><h3>Det taler for</h3><ul>
@@ -452,7 +467,7 @@ prisen, hvis en tjeneste fjernes.</p>
   </ul></div>
 </div>
 
-<h2>Hvem passer det til?</h2>
+<h2 id="hvem-passer-det-til">Hvem passer det til?</h2>
 
 <div class="kortgitter kg-2" style="margin:1.8rem 0">
   <div class="kort">
@@ -469,7 +484,7 @@ prisen, hvis en tjeneste fjernes.</p>
   </div>
 </div>
 
-<h2>Data og streaming hænger sammen</h2>
+<h2 id="data-og-streaming-haenger-sammen">Data og streaming hænger sammen</h2>
 
 <p>Der er en detalje, som let overses: streaming bruger data, og hvis abonnementet har en
 lille datapakke, kan du reelt ikke bruge de tjenester, du betaler for, når du er ude af
@@ -491,7 +506,7 @@ dataforbruget og kan flytte dig ned i en billigere abonnementskategori — hvilk
 sparer mere, end streamingpakken gør.</p>
 </div>
 
-<h2>Sådan opsiger du, hvis regnestykket ændrer sig</h2>
+<h2 id="saadan-opsiger-du-hvis-regnestykket-aendrer-sig">Sådan opsiger du, hvis regnestykket ændrer sig</h2>
 
 <p>De fleste danske abonnementer med streaming er uden binding, så du kan opsige med
 løbende måned plus varsel. Husk dog, at streamingen forsvinder samtidig med
@@ -515,7 +530,7 @@ ligger — lav månedspris og god værdi er ikke det samme.</p>
 <p>Månedsprisen skjuler oprettelsesgebyrer. Her er den samlede førsteårsudgift for de
 billigste abonnementer, og hvad du sparer i forhold til markedets dyreste.</p>
 <table><thead><tr><th>Abonnement</th><th>Pr. md.</th><th>Oprettelse</th>
-<th>Første år</th><th>Sparet mod dyreste</th></tr></thead><tbody><tr><td><a href="/udbydere/oister/">Oister</a> Oister 5 GB</td><td>44 kr.</td><td>0 kr.</td><td><strong>528 kr.</strong></td><td class="ja">2.820 kr.</td></tr><tr><td><a href="/udbydere/cbb-mobil/">CBB Mobil</a> CBB 5 GB</td><td>49 kr.</td><td>0 kr.</td><td><strong>588 kr.</strong></td><td class="ja">2.760 kr.</td></tr><tr><td><a href="/udbydere/duka/">Duka</a> Duka 6 GB</td><td>50 kr.</td><td>0 kr.</td><td><strong>600 kr.</strong></td><td class="ja">2.748 kr.</td></tr><tr><td><a href="/udbydere/lyca-mobile/">Lyca Mobile</a> Lyca 10 GB</td><td>55 kr.</td><td>0 kr.</td><td><strong>660 kr.</strong></td><td class="ja">2.688 kr.</td></tr><tr><td><a href="/udbydere/lebara/">Lebara</a> Lebara 10 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/eesy/">eesy</a> eesy 8 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/greentel/">Greentel</a> Greentel 8 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/cbb-mobil/">CBB Mobil</a> CBB 15 GB</td><td>69 kr.</td><td>0 kr.</td><td><strong>828 kr.</strong></td><td class="ja">2.520 kr.</td></tr><tr><td><a href="/udbydere/flexii/">Flexii</a> Flexii 20 GB</td><td>69 kr.</td><td>0 kr.</td><td><strong>828 kr.</strong></td><td class="ja">2.520 kr.</td></tr><tr><td><a href="/udbydere/oister/">Oister</a> Oister 20 GB</td><td>74 kr.</td><td>0 kr.</td><td><strong>888 kr.</strong></td><td class="ja">2.460 kr.</td></tr></tbody></table><h2>De fem fejl der koster danskerne flest penge</h2>
+<th>Første år</th><th>Sparet mod dyreste</th></tr></thead><tbody><tr><td><a href="/udbydere/oister/">Oister</a> Oister 5 GB</td><td>44 kr.</td><td>0 kr.</td><td><strong>528 kr.</strong></td><td class="ja">2.820 kr.</td></tr><tr><td><a href="/udbydere/cbb-mobil/">CBB Mobil</a> CBB 5 GB</td><td>49 kr.</td><td>0 kr.</td><td><strong>588 kr.</strong></td><td class="ja">2.760 kr.</td></tr><tr><td><a href="/udbydere/duka/">Duka</a> Duka 6 GB</td><td>50 kr.</td><td>0 kr.</td><td><strong>600 kr.</strong></td><td class="ja">2.748 kr.</td></tr><tr><td><a href="/udbydere/lyca-mobile/">Lyca Mobile</a> Lyca 10 GB</td><td>55 kr.</td><td>0 kr.</td><td><strong>660 kr.</strong></td><td class="ja">2.688 kr.</td></tr><tr><td><a href="/udbydere/lebara/">Lebara</a> Lebara 10 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/eesy/">eesy</a> eesy 8 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/greentel/">Greentel</a> Greentel 8 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/cbb-mobil/">CBB Mobil</a> CBB 15 GB</td><td>69 kr.</td><td>0 kr.</td><td><strong>828 kr.</strong></td><td class="ja">2.520 kr.</td></tr><tr><td><a href="/udbydere/flexii/">Flexii</a> Flexii 20 GB</td><td>69 kr.</td><td>0 kr.</td><td><strong>828 kr.</strong></td><td class="ja">2.520 kr.</td></tr><tr><td><a href="/udbydere/oister/">Oister</a> Oister 20 GB</td><td>74 kr.</td><td>0 kr.</td><td><strong>888 kr.</strong></td><td class="ja">2.460 kr.</td></tr></tbody></table><h2 id="de-fem-fejl-der-koster-danskerne-flest-penge">De fem fejl der koster danskerne flest penge</h2>
 <p>Vi har samlet de mønstre, vi ser igen og igen, når folk gennemgår deres mobilregning.
 De er alle sammen nemme at rette, og de fleste tager under ti minutter.</p>
 <table>
@@ -530,7 +545,7 @@ De er alle sammen nemme at rette, og de fleste tager under ti minutter.</p>
 </table>
 <p>Lægger man de tre første sammen, taler vi om en besparelse i omegnen af 2.000 kr. om
 året for en helt almindelig husstand med to voksne. Det er ikke et teoretisk tal — det er
-forskellen mellem markedets normalpris og det, mange faktisk betaler.</p><h2>Begreber du møder, når du sammenligner</h2>
+forskellen mellem markedets normalpris og det, mange faktisk betaler.</p><h2 id="begreber-du-moeder-naar-du-sammenligner">Begreber du møder, når du sammenligner</h2>
 <p>Udbydernes produktsider bruger en række ord, der ikke betyder helt det, man tror. Her er
 de vigtigste oversat til almindeligt dansk.</p>
 <table>
@@ -549,7 +564,7 @@ de vigtigste oversat til almindeligt dansk.</p>
 </tbody>
 </table>
 <p>Er du i tvivl om et begreb, du ikke finder her, så skriv til os via
-<a href="/kontakt/">kontaktsiden</a>, så tilføjer vi det.</p><h2>Vælg din vej videre</h2>
+<a href="/kontakt/">kontaktsiden</a>, så tilføjer vi det.</p><h2 id="vaelg-din-vej-videre">Vælg din vej videre</h2>
 <p>Vi har en dedikeret oversigt til hvert af de mest almindelige behov. Tallene er antal
 abonnementer i kategorien.</p>
 <div class="vejviser"><a href="/billigste-mobilabonnement/"><b>Billigste</b><span>fra 19 kr./md.</span></a><a href="/bedste-mobilabonnement/"><b>Bedste</b><span>vores kriterier</span></a><a href="/mobilabonnement-med-fri-data/"><b>Fri data</b><span>7 planer</span></a><a href="/mobilabonnement-med-fri-tale/"><b>Fri tale</b><span>42 planer</span></a><a href="/mobilabonnement-uden-data/"><b>Uden data</b><span>5 planer</span></a><a href="/mobilabonnement-med-streaming/"><b>Med streaming</b><span>11 planer</span></a><a href="/mobilabonnement-med-netflix/"><b>Med Netflix</b><span>5 planer</span></a><a href="/mobilabonnement-med-esim/"><b>Med eSIM</b><span>klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><b>Til børn</b><span>tryghed og lav pris</span></a><a href="/mobilabonnement-til-unge/"><b>Til unge</b><span>meget data</span></a><a href="/mobilabonnement-uden-binding/"><b>Uden binding</b><span>45 planer</span></a><a href="/netvaerk/"><b>Mobilnetværk</b><span>de tre danske net</span></a></div></section>
@@ -575,7 +590,7 @@ abonnementer i kategorien.</p>
   <p class="afsloering"><strong>Annoncørinformation:</strong> Telemobil er gratis at bruge. Vi modtager provision fra udvalgte udbydere, når du klikker videre og bestiller. Det koster dig ikke ekstra, og det ændrer ikke sorteringen i vores tabeller, som altid er efter pris. Udbydere kan ikke betale sig til en bedre placering eller en bedre omtale. <a href="/saadan-tjener-vi-penge/">Se hele forretningsmodellen</a>.</p>
 </section>
 <section class="sektion baand-smal">
-  <h2>Ofte stillede spørgsmål</h2>
+  <h2 id="ofte-stillede-spoergsmaal">Ofte stillede spørgsmål</h2>
   <div class="faq"><details><summary>Kan det betale sig med streaming i mobilabonnementet?</summary><p>Kun hvis du allerede betaler for to eller flere af de tjenester, der indgår, og ikke deler dem med andre. Bruger du én tjeneste eller ingen, betaler du typisk over.</p></details><details><summary>Hvad koster mobilabonnement med streaming?</summary><p>Fra 139 kr. om måneden i vores sammenligning. Prisen afhænger af antallet af tjenester og af datamængden.</p></details><details><summary>Kan indholdet i pakken ændre sig?</summary><p>Ja. Tjenester kan ryge ud, når aftaler mellem udbyder og indholdsleverandør udløber. Tjek vilkårene for, hvad der sker med prisen, og genberegn en gang om året.</p></details><details><summary>Hvor meget data kræver streaming?</summary><p>Video koster cirka 0,7-1 GB i timen i standardkvalitet og 2-3 GB i HD. Vælger du streaming, bør du vælge mindst 50 GB, ellers kan du kun bruge tjenesterne på wi-fi.</p></details><details><summary>Hvad sker der med streamingen, hvis jeg skifter selskab?</summary><p>Den forsvinder sammen med abonnementet. Tegn de tjenester, du vil beholde, separat inden du skifter.</p></details></div>
 </section>
 </main>
@@ -619,6 +634,8 @@ abonnementer i kategorien.</p>
           <li><a href="/guides/daekning-og-netvaerk/">Dækning og netværk</a></li>
           <li><a href="/guides/esim/">eSIM forklaret</a></li>
           <li><a href="/guides/">Alle guides</a></li>
+          <li><a href="/landekoder/">Landekoder</a></li>
+          <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
         </ul>
       </div>
       <div>
@@ -629,7 +646,9 @@ abonnementer i kategorien.</p>
           <li><a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></li>
           <li><a href="/metode/">Vores metode</a></li>
           <li><a href="/kontakt/">Kontakt</a></li>
-          <li><a href="/privatlivspolitik/">Privatliv og cookies</a></li>
+          <li><a href="/presse/">Presse</a></li>
+          <li><a href="/privatlivspolitik/">Privatlivspolitik</a></li>
+          <li><a href="/cookiepolitik/">Cookiepolitik</a></li>
         </ul>
       </div>
     </div>

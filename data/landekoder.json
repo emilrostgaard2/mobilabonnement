@@ -1,0 +1,1103 @@
+{
+ "_kilde": "ITU-T E.164 og ISO 3166-1. Kontrollér før lancering.",
+ "landekoder": [
+  {
+   "navn": "Afghanistan",
+   "kode": "93",
+   "iso": "AF",
+   "region": "Asien",
+   "flag": "🇦🇫",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Albanien",
+   "kode": "355",
+   "iso": "AL",
+   "region": "Europa",
+   "flag": "🇦🇱",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Algeriet",
+   "kode": "213",
+   "iso": "DZ",
+   "region": "Afrika",
+   "flag": "🇩🇿",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Andorra",
+   "kode": "376",
+   "iso": "AD",
+   "region": "Europa",
+   "flag": "🇦🇩",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Argentina",
+   "kode": "54",
+   "iso": "AR",
+   "region": "Sydamerika",
+   "flag": "🇦🇷",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Armenien",
+   "kode": "374",
+   "iso": "AM",
+   "region": "Asien",
+   "flag": "🇦🇲",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Aserbajdsjan",
+   "kode": "994",
+   "iso": "AZ",
+   "region": "Asien",
+   "flag": "🇦🇿",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Australien",
+   "kode": "61",
+   "iso": "AU",
+   "region": "Oceanien",
+   "flag": "🇦🇺",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Bangladesh",
+   "kode": "880",
+   "iso": "BD",
+   "region": "Asien",
+   "flag": "🇧🇩",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Belarus",
+   "kode": "375",
+   "iso": "BY",
+   "region": "Europa",
+   "flag": "🇧🇾",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Belgien",
+   "kode": "32",
+   "iso": "BE",
+   "region": "Europa",
+   "flag": "🇧🇪",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Bolivia",
+   "kode": "591",
+   "iso": "BO",
+   "region": "Sydamerika",
+   "flag": "🇧🇴",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Bosnien-Hercegovina",
+   "kode": "387",
+   "iso": "BA",
+   "region": "Europa",
+   "flag": "🇧🇦",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Brasilien",
+   "kode": "55",
+   "iso": "BR",
+   "region": "Sydamerika",
+   "flag": "🇧🇷",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Bulgarien",
+   "kode": "359",
+   "iso": "BG",
+   "region": "Europa",
+   "flag": "🇧🇬",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Cameroun",
+   "kode": "237",
+   "iso": "CM",
+   "region": "Afrika",
+   "flag": "🇨🇲",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Canada",
+   "kode": "1",
+   "iso": "CA",
+   "region": "Nordamerika",
+   "flag": "🇨🇦",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Chile",
+   "kode": "56",
+   "iso": "CL",
+   "region": "Sydamerika",
+   "flag": "🇨🇱",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Colombia",
+   "kode": "57",
+   "iso": "CO",
+   "region": "Sydamerika",
+   "flag": "🇨🇴",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Costa Rica",
+   "kode": "506",
+   "iso": "CR",
+   "region": "Nordamerika",
+   "flag": "🇨🇷",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Cuba",
+   "kode": "53",
+   "iso": "CU",
+   "region": "Nordamerika",
+   "flag": "🇨🇺",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Cypern",
+   "kode": "357",
+   "iso": "CY",
+   "region": "Europa",
+   "flag": "🇨🇾",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Danmark",
+   "kode": "45",
+   "iso": "DK",
+   "region": "Europa",
+   "flag": "🇩🇰",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "De Forenede Arabiske Emirater",
+   "kode": "971",
+   "iso": "AE",
+   "region": "Asien",
+   "flag": "🇦🇪",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Den Dominikanske Republik",
+   "kode": "1809",
+   "iso": "DO",
+   "region": "Nordamerika",
+   "flag": "🇩🇴",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Ecuador",
+   "kode": "593",
+   "iso": "EC",
+   "region": "Sydamerika",
+   "flag": "🇪🇨",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Egypten",
+   "kode": "20",
+   "iso": "EG",
+   "region": "Afrika",
+   "flag": "🇪🇬",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Elfenbenskysten",
+   "kode": "225",
+   "iso": "CI",
+   "region": "Afrika",
+   "flag": "🇨🇮",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Eritrea",
+   "kode": "291",
+   "iso": "ER",
+   "region": "Afrika",
+   "flag": "🇪🇷",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Estland",
+   "kode": "372",
+   "iso": "EE",
+   "region": "Europa",
+   "flag": "🇪🇪",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Etiopien",
+   "kode": "251",
+   "iso": "ET",
+   "region": "Afrika",
+   "flag": "🇪🇹",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Fiji",
+   "kode": "679",
+   "iso": "FJ",
+   "region": "Oceanien",
+   "flag": "🇫🇯",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Filippinerne",
+   "kode": "63",
+   "iso": "PH",
+   "region": "Asien",
+   "flag": "🇵🇭",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Finland",
+   "kode": "358",
+   "iso": "FI",
+   "region": "Europa",
+   "flag": "🇫🇮",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Frankrig",
+   "kode": "33",
+   "iso": "FR",
+   "region": "Europa",
+   "flag": "🇫🇷",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Færøerne",
+   "kode": "298",
+   "iso": "FO",
+   "region": "Europa",
+   "flag": "🇫🇴",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Georgien",
+   "kode": "995",
+   "iso": "GE",
+   "region": "Asien",
+   "flag": "🇬🇪",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Ghana",
+   "kode": "233",
+   "iso": "GH",
+   "region": "Afrika",
+   "flag": "🇬🇭",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Gibraltar",
+   "kode": "350",
+   "iso": "GI",
+   "region": "Europa",
+   "flag": "🇬🇮",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Grækenland",
+   "kode": "30",
+   "iso": "GR",
+   "region": "Europa",
+   "flag": "🇬🇷",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Grønland",
+   "kode": "299",
+   "iso": "GL",
+   "region": "Europa",
+   "flag": "🇬🇱",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Guatemala",
+   "kode": "502",
+   "iso": "GT",
+   "region": "Nordamerika",
+   "flag": "🇬🇹",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Holland",
+   "kode": "31",
+   "iso": "NL",
+   "region": "Europa",
+   "flag": "🇳🇱",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Hongkong",
+   "kode": "852",
+   "iso": "HK",
+   "region": "Asien",
+   "flag": "🇭🇰",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Indien",
+   "kode": "91",
+   "iso": "IN",
+   "region": "Asien",
+   "flag": "🇮🇳",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Indonesien",
+   "kode": "62",
+   "iso": "ID",
+   "region": "Asien",
+   "flag": "🇮🇩",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Irak",
+   "kode": "964",
+   "iso": "IQ",
+   "region": "Asien",
+   "flag": "🇮🇶",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Iran",
+   "kode": "98",
+   "iso": "IR",
+   "region": "Asien",
+   "flag": "🇮🇷",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Irland",
+   "kode": "353",
+   "iso": "IE",
+   "region": "Europa",
+   "flag": "🇮🇪",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Island",
+   "kode": "354",
+   "iso": "IS",
+   "region": "Europa",
+   "flag": "🇮🇸",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Israel",
+   "kode": "972",
+   "iso": "IL",
+   "region": "Asien",
+   "flag": "🇮🇱",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Italien",
+   "kode": "39",
+   "iso": "IT",
+   "region": "Europa",
+   "flag": "🇮🇹",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Jamaica",
+   "kode": "1876",
+   "iso": "JM",
+   "region": "Nordamerika",
+   "flag": "🇯🇲",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Japan",
+   "kode": "81",
+   "iso": "JP",
+   "region": "Asien",
+   "flag": "🇯🇵",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Jordan",
+   "kode": "962",
+   "iso": "JO",
+   "region": "Asien",
+   "flag": "🇯🇴",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Kasakhstan",
+   "kode": "7",
+   "iso": "KZ",
+   "region": "Asien",
+   "flag": "🇰🇿",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Kenya",
+   "kode": "254",
+   "iso": "KE",
+   "region": "Afrika",
+   "flag": "🇰🇪",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Kina",
+   "kode": "86",
+   "iso": "CN",
+   "region": "Asien",
+   "flag": "🇨🇳",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Kosovo",
+   "kode": "383",
+   "iso": "XK",
+   "region": "Europa",
+   "flag": "🇽🇰",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Kroatien",
+   "kode": "385",
+   "iso": "HR",
+   "region": "Europa",
+   "flag": "🇭🇷",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Kuwait",
+   "kode": "965",
+   "iso": "KW",
+   "region": "Asien",
+   "flag": "🇰🇼",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Letland",
+   "kode": "371",
+   "iso": "LV",
+   "region": "Europa",
+   "flag": "🇱🇻",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Libanon",
+   "kode": "961",
+   "iso": "LB",
+   "region": "Asien",
+   "flag": "🇱🇧",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Libyen",
+   "kode": "218",
+   "iso": "LY",
+   "region": "Afrika",
+   "flag": "🇱🇾",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Liechtenstein",
+   "kode": "423",
+   "iso": "LI",
+   "region": "Europa",
+   "flag": "🇱🇮",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Litauen",
+   "kode": "370",
+   "iso": "LT",
+   "region": "Europa",
+   "flag": "🇱🇹",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Luxembourg",
+   "kode": "352",
+   "iso": "LU",
+   "region": "Europa",
+   "flag": "🇱🇺",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Malaysia",
+   "kode": "60",
+   "iso": "MY",
+   "region": "Asien",
+   "flag": "🇲🇾",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Malta",
+   "kode": "356",
+   "iso": "MT",
+   "region": "Europa",
+   "flag": "🇲🇹",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Marokko",
+   "kode": "212",
+   "iso": "MA",
+   "region": "Afrika",
+   "flag": "🇲🇦",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Mexico",
+   "kode": "52",
+   "iso": "MX",
+   "region": "Nordamerika",
+   "flag": "🇲🇽",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Moldova",
+   "kode": "373",
+   "iso": "MD",
+   "region": "Europa",
+   "flag": "🇲🇩",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Monaco",
+   "kode": "377",
+   "iso": "MC",
+   "region": "Europa",
+   "flag": "🇲🇨",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Montenegro",
+   "kode": "382",
+   "iso": "ME",
+   "region": "Europa",
+   "flag": "🇲🇪",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Nepal",
+   "kode": "977",
+   "iso": "NP",
+   "region": "Asien",
+   "flag": "🇳🇵",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "New Zealand",
+   "kode": "64",
+   "iso": "NZ",
+   "region": "Oceanien",
+   "flag": "🇳🇿",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Nigeria",
+   "kode": "234",
+   "iso": "NG",
+   "region": "Afrika",
+   "flag": "🇳🇬",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Nordmakedonien",
+   "kode": "389",
+   "iso": "MK",
+   "region": "Europa",
+   "flag": "🇲🇰",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Norge",
+   "kode": "47",
+   "iso": "NO",
+   "region": "Europa",
+   "flag": "🇳🇴",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Pakistan",
+   "kode": "92",
+   "iso": "PK",
+   "region": "Asien",
+   "flag": "🇵🇰",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Panama",
+   "kode": "507",
+   "iso": "PA",
+   "region": "Nordamerika",
+   "flag": "🇵🇦",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Papua Ny Guinea",
+   "kode": "675",
+   "iso": "PG",
+   "region": "Oceanien",
+   "flag": "🇵🇬",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Paraguay",
+   "kode": "595",
+   "iso": "PY",
+   "region": "Sydamerika",
+   "flag": "🇵🇾",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Peru",
+   "kode": "51",
+   "iso": "PE",
+   "region": "Sydamerika",
+   "flag": "🇵🇪",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Polen",
+   "kode": "48",
+   "iso": "PL",
+   "region": "Europa",
+   "flag": "🇵🇱",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Portugal",
+   "kode": "351",
+   "iso": "PT",
+   "region": "Europa",
+   "flag": "🇵🇹",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Qatar",
+   "kode": "974",
+   "iso": "QA",
+   "region": "Asien",
+   "flag": "🇶🇦",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Rumænien",
+   "kode": "40",
+   "iso": "RO",
+   "region": "Europa",
+   "flag": "🇷🇴",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Rusland",
+   "kode": "7",
+   "iso": "RU",
+   "region": "Europa",
+   "flag": "🇷🇺",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "San Marino",
+   "kode": "378",
+   "iso": "SM",
+   "region": "Europa",
+   "flag": "🇸🇲",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Saudi-Arabien",
+   "kode": "966",
+   "iso": "SA",
+   "region": "Asien",
+   "flag": "🇸🇦",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Schweiz",
+   "kode": "41",
+   "iso": "CH",
+   "region": "Europa",
+   "flag": "🇨🇭",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Senegal",
+   "kode": "221",
+   "iso": "SN",
+   "region": "Afrika",
+   "flag": "🇸🇳",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Serbien",
+   "kode": "381",
+   "iso": "RS",
+   "region": "Europa",
+   "flag": "🇷🇸",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Singapore",
+   "kode": "65",
+   "iso": "SG",
+   "region": "Asien",
+   "flag": "🇸🇬",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Slovakiet",
+   "kode": "421",
+   "iso": "SK",
+   "region": "Europa",
+   "flag": "🇸🇰",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Slovenien",
+   "kode": "386",
+   "iso": "SI",
+   "region": "Europa",
+   "flag": "🇸🇮",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Somalia",
+   "kode": "252",
+   "iso": "SO",
+   "region": "Afrika",
+   "flag": "🇸🇴",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Spanien",
+   "kode": "34",
+   "iso": "ES",
+   "region": "Europa",
+   "flag": "🇪🇸",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Sri Lanka",
+   "kode": "94",
+   "iso": "LK",
+   "region": "Asien",
+   "flag": "🇱🇰",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Storbritannien",
+   "kode": "44",
+   "iso": "GB",
+   "region": "Europa",
+   "flag": "🇬🇧",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Sudan",
+   "kode": "249",
+   "iso": "SD",
+   "region": "Afrika",
+   "flag": "🇸🇩",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Sverige",
+   "kode": "46",
+   "iso": "SE",
+   "region": "Europa",
+   "flag": "🇸🇪",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Sydafrika",
+   "kode": "27",
+   "iso": "ZA",
+   "region": "Afrika",
+   "flag": "🇿🇦",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Sydkorea",
+   "kode": "82",
+   "iso": "KR",
+   "region": "Asien",
+   "flag": "🇰🇷",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Syrien",
+   "kode": "963",
+   "iso": "SY",
+   "region": "Asien",
+   "flag": "🇸🇾",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Taiwan",
+   "kode": "886",
+   "iso": "TW",
+   "region": "Asien",
+   "flag": "🇹🇼",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Tanzania",
+   "kode": "255",
+   "iso": "TZ",
+   "region": "Afrika",
+   "flag": "🇹🇿",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Thailand",
+   "kode": "66",
+   "iso": "TH",
+   "region": "Asien",
+   "flag": "🇹🇭",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Tjekkiet",
+   "kode": "420",
+   "iso": "CZ",
+   "region": "Europa",
+   "flag": "🇨🇿",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Tunesien",
+   "kode": "216",
+   "iso": "TN",
+   "region": "Afrika",
+   "flag": "🇹🇳",
+   "eu": false,
+   "risiko": true
+  },
+  {
+   "navn": "Tyrkiet",
+   "kode": "90",
+   "iso": "TR",
+   "region": "Europa",
+   "flag": "🇹🇷",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Tyskland",
+   "kode": "49",
+   "iso": "DE",
+   "region": "Europa",
+   "flag": "🇩🇪",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "USA",
+   "kode": "1",
+   "iso": "US",
+   "region": "Nordamerika",
+   "flag": "🇺🇸",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Uganda",
+   "kode": "256",
+   "iso": "UG",
+   "region": "Afrika",
+   "flag": "🇺🇬",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Ukraine",
+   "kode": "380",
+   "iso": "UA",
+   "region": "Europa",
+   "flag": "🇺🇦",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Ungarn",
+   "kode": "36",
+   "iso": "HU",
+   "region": "Europa",
+   "flag": "🇭🇺",
+   "eu": true,
+   "risiko": false
+  },
+  {
+   "navn": "Uruguay",
+   "kode": "598",
+   "iso": "UY",
+   "region": "Sydamerika",
+   "flag": "🇺🇾",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Usbekistan",
+   "kode": "998",
+   "iso": "UZ",
+   "region": "Asien",
+   "flag": "🇺🇿",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Venezuela",
+   "kode": "58",
+   "iso": "VE",
+   "region": "Sydamerika",
+   "flag": "🇻🇪",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Vietnam",
+   "kode": "84",
+   "iso": "VN",
+   "region": "Asien",
+   "flag": "🇻🇳",
+   "eu": false,
+   "risiko": false
+  },
+  {
+   "navn": "Østrig",
+   "kode": "43",
+   "iso": "AT",
+   "region": "Europa",
+   "flag": "🇦🇹",
+   "eu": true,
+   "risiko": false
+  }
+ ]
+}

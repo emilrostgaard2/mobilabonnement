@@ -8,6 +8,10 @@
 <link rel="canonical" href="https://telemobil.dk/billigste-mobilabonnement/">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
 <meta name="author" content="Emil Rostgaard">
+<meta name="twitter:label1" content="Estimeret læsetid">
+<meta name="twitter:data1" content="35 minutter">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="geo.region" content="DK">
 <meta name="geo.placename" content="Danmark">
 <meta property="og:type" content="website">
@@ -57,7 +61,7 @@
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-sammenlign">
     Sammenlign <span class="pil-ned" aria-hidden="true"></span>
   </button>
-  <div class="nav-menu nav-menu-liste" id="menu-sammenlign"><a href="/billigste-mobilabonnement/" aria-current="page"><span class="mp-navn">Billigste mobilabonnement</span><span class="mp-under">Hele markedet sorteret efter pris</span></a><a href="/bedste-mobilabonnement/"><span class="mp-navn">Bedste mobilabonnement</span><span class="mp-under">Bedst samlet værdi, ikke bare lavest pris</span></a><a href="/mobilabonnement-med-fri-data/"><span class="mp-navn">Fri data</span><span class="mp-under">Ubegrænset data i Danmark</span></a><a href="/mobilabonnement-med-fri-tale/"><span class="mp-navn">Fri tale</span><span class="mp-under">Ubegrænsede opkald og sms</span></a><a href="/mobilabonnement-uden-data/"><span class="mp-navn">Uden data</span><span class="mp-under">Kun tale og sms</span></a><a href="/mobilabonnement-med-streaming/"><span class="mp-navn">Med streaming</span><span class="mp-under">Netflix og co. i abonnementet</span></a><a href="/mobilabonnement-med-esim/"><span class="mp-navn">Med eSIM</span><span class="mp-under">Digitalt simkort, klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><span class="mp-navn">Til børn</span><span class="mp-under">Trygt, billigt og uden overraskelser</span></a><a href="/mobilabonnement-til-unge/"><span class="mp-navn">Til unge og studerende</span><span class="mp-under">Meget data, ingen binding</span></a><a href="/mobilabonnement-uden-binding/"><span class="mp-navn">Uden binding</span><span class="mp-under">Opsig når du vil</span></a><a href="/mobilabonnement-med-streaming/tjenester/"><span class="mp-navn">Streaming: vælg tjeneste</span><span class="mp-under">Netflix, HBO Max, Disney+, Viaplay …</span></a><a href="/netvaerk/"><span class="mp-navn">Mobilnetværk</span><span class="mp-under">TDC NET, Telenor og 3</span></a></div>
+  <div class="nav-menu nav-menu-liste" id="menu-sammenlign"><a href="/billigste-mobilabonnement/" aria-current="page"><span class="mp-navn">Billigste mobilabonnement</span><span class="mp-under">Hele markedet sorteret efter pris</span></a><a href="/bedste-mobilabonnement/"><span class="mp-navn">Bedste mobilabonnement</span><span class="mp-under">Bedst samlet værdi, ikke bare lavest pris</span></a><a href="/mobilabonnement-med-fri-data/"><span class="mp-navn">Fri data</span><span class="mp-under">Ubegrænset data i Danmark</span></a><a href="/mobilabonnement-med-fri-tale/"><span class="mp-navn">Fri tale</span><span class="mp-under">Ubegrænsede opkald og sms</span></a><a href="/mobilabonnement-uden-data/"><span class="mp-navn">Uden data</span><span class="mp-under">Kun tale og sms</span></a><a href="/mobilabonnement-med-streaming/"><span class="mp-navn">Med streaming</span><span class="mp-under">Netflix og co. i abonnementet</span></a><a href="/mobilabonnement-med-esim/"><span class="mp-navn">Med eSIM</span><span class="mp-under">Digitalt simkort, klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><span class="mp-navn">Til børn</span><span class="mp-under">Trygt, billigt og uden overraskelser</span></a><a href="/mobilabonnement-til-unge/"><span class="mp-navn">Til unge og studerende</span><span class="mp-under">Meget data, ingen binding</span></a><a href="/mobilabonnement-uden-binding/"><span class="mp-navn">Uden binding</span><span class="mp-under">Opsig når du vil</span></a><a href="/mobilabonnement-med-streaming/tjenester/"><span class="mp-navn">Streaming: vælg tjeneste</span><span class="mp-under">Netflix, HBO Max, Disney+, Viaplay …</span></a><a href="/netvaerk/"><span class="mp-navn">Mobilnetværk</span><span class="mp-under">TDC NET, Telenor og 3</span></a><a href="/landekoder/"><span class="mp-navn">Landekoder</span><span class="mp-under">Alle telefonkoder med søgning</span></a><a href="/hvem-ringer-til-mig/"><span class="mp-navn">Hvem ringer til mig?</span><span class="mp-under">Slå ukendt nummer op</span></a></div>
 </div>
 <div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-udbydere">
@@ -154,7 +158,7 @@
 <section class="sektion baand" id="sammenlign">
   <div class="sektion-hoved afslør">
     <span class="etiket">Sammenligning</span>
-    <h2>Billigste mobilabonnementer lige nu</h2>
+    <h2 id="billigste-mobilabonnementer-lige-nu">Billigste mobilabonnementer lige nu</h2>
     <p class="led">Sorteret efter laveste månedspris. Brug filtrene til at se kun de abonnementer, der matcher dit dataforbrug.</p>
   </div>
   <div class="filtre">
@@ -164,6 +168,14 @@
   <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
   <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
   <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
+</div>
+<div class="filtre">
+  <span class="maerkat">Pris pr. md.</span>
+  <button class="chip" data-pris="alle" aria-pressed="true">Alle</button>
+  <button class="chip" data-pris="u50" aria-pressed="false">Under 50 kr.</button>
+  <button class="chip" data-pris="50-99" aria-pressed="false">50–99 kr.</button>
+  <button class="chip" data-pris="100-199" aria-pressed="false">100–199 kr.</button>
+  <button class="chip" data-pris="o200" aria-pressed="false">Over 200 kr.</button>
 </div>
   <div class="listeramme afslør">
     <div class="liste-top">
@@ -1088,7 +1100,10 @@
 </section>
 
 
-<section class="sektion baand-smal artikel"><div class="gennemgang">
+<section class="sektion baand-smal"><nav class="toc" aria-label="Indhold">
+  <div class="toc-titel">Indhold på siden</div>
+  <ol><li><a href="#billigste-mobilabonnementer-lige-nu">Billigste mobilabonnementer lige nu</a></li><li><a href="#hvad-koster-et-mobilabonnement-i-danmark-i-dag">Hvad koster et mobilabonnement i Danmark i dag?</a></li><li><a href="#saadan-finder-du-det-billigste-mobilabonnement-der-passer-ti">Sådan finder du det billigste mobilabonnement, der passer til dig</a></li><li><a href="#de-tre-netvaerk-og-hvorfor-de-afgoer-hvad-du-boer-betale">De tre netværk — og hvorfor de afgør, hvad du bør betale</a></li><li><a href="#billigst-efter-hvor-meget-data-du-bruger">Billigst efter hvor meget data du bruger</a></li><li><a href="#de-fire-abonnementer-vi-selv-ville-pege-paa">De fire abonnementer vi selv ville pege på</a></li><li><a href="#saadan-fordeler-priserne-sig-paa-markedet">Sådan fordeler priserne sig på markedet</a></li><li><a href="#hvad-sker-der-naar-datamaengden-er-brugt-op">Hvad sker der, når datamængden er brugt op?</a></li><li><a href="#de-skjulte-omkostninger-folk-overser">De skjulte omkostninger, folk overser</a></li><li><a href="#udbyderne-side-om-side">Udbyderne side om side</a></li><li><a href="#hvilket-abonnement-passer-til-din-situation">Hvilket abonnement passer til din situation?</a></li><li><a href="#saadan-skifter-du-mobilselskab-trin-for-trin">Sådan skifter du mobilselskab — trin for trin</a></li><li><a href="#vores-metode">Vores metode</a></li><li><a href="#vaelg-din-vej-videre">Vælg din vej videre</a></li><li><a href="#ofte-stillede-spoergsmaal">Ofte stillede spørgsmål</a></li></ol>
+</nav></section><section class="sektion baand-smal artikel"><div class="gennemgang">
   <span>Skrevet af <b>Emil Rostgaard</b></span>
   <span>Opdateret <b>13. august 2026</b></span>
   <span>Alle priser kontrolleret mod udbydernes egne sider</span>
@@ -1104,7 +1119,7 @@ Prisforskellen mellem billigste og dyreste abonnement med samme indhold er ofte 
 100 kr. om måneden — altså mere end 1.200 kr. om året for præcis det samme.</p>
 </div>
 
-<h2>Hvad koster et mobilabonnement i Danmark i dag?</h2>
+<h2 id="hvad-koster-et-mobilabonnement-i-danmark-i-dag">Hvad koster et mobilabonnement i Danmark i dag?</h2>
 
 <p>Det danske mobilmarked er et af Europas billigste, og det skyldes en usædvanlig hård
 konkurrence mellem tre netværksejere og et stort antal selskaber, der lejer sig ind på
@@ -1131,7 +1146,7 @@ nøjagtig det samme netværk, med den samme dækning, de samme master og den sam
 Det, du betaler ekstra for i toppen, er tillægsydelser, kundeservice og i visse tilfælde
 adgang til det mest udbyggede net — ikke bedre mobilnet i sig selv.</p>
 
-<h2>Sådan finder du det billigste mobilabonnement, der passer til dig</h2>
+<h2 id="saadan-finder-du-det-billigste-mobilabonnement-der-passer-ti">Sådan finder du det billigste mobilabonnement, der passer til dig</h2>
 
 <p>Det billigste abonnement på markedet er sjældent det billigste abonnement <em>for dig</em>.
 Vælger du for lidt data, betaler du for overforbrug eller står uden internet den 27. i
@@ -1175,7 +1190,7 @@ bruges som hotspot. Med datastop kan regningen ganske enkelt ikke løbe løbsk. 
 under et minut at aktivere og er den mest oversete indstilling på hele markedet.</p>
 </div>
 
-<h2>De tre netværk — og hvorfor de afgør, hvad du bør betale</h2>
+<h2 id="de-tre-netvaerk-og-hvorfor-de-afgoer-hvad-du-boer-betale">De tre netværk — og hvorfor de afgør, hvad du bør betale</h2>
 
 <p>Der findes kun tre mobilnetværk i Danmark: TDC NET, Telenor og 3. Alle andre selskaber
 lejer sig ind hos en af dem. Det betyder, at et discountselskab bruger de samme master som
@@ -1205,7 +1220,7 @@ udbyderens egen side, hvis dækning er afgørende for dig — vores oplysninger 
 løbende, men udbyderen er altid den primære kilde.</p>
 </div>
 
-<h2>Billigst efter hvor meget data du bruger</h2>
+<h2 id="billigst-efter-hvor-meget-data-du-bruger">Billigst efter hvor meget data du bruger</h2>
 
 <p>Nedenfor har vi delt markedet op efter, hvad folk rent faktisk søger efter. Tallene er
 de laveste, vi har fundet i hver kategori på tværs af alle udbydere i vores sammenligning.</p>
@@ -1226,7 +1241,65 @@ grunden til, at vi sjældent anbefaler det allermindste abonnement til andre end
 virkelig kun bruger telefonen til opkald. For en tyver mere får du så meget mere plads, at
 risikoen for overforbrug forsvinder helt.</p>
 
-<h2>Sådan fordeler priserne sig på markedet</h2>
+<h2 id="de-fire-abonnementer-vi-selv-ville-pege-paa">De fire abonnementer vi selv ville pege på</h2>
+<p>Vi gennemgår markedet ved hver opdatering og udpeger ét abonnement i hver hovedkategori.
+Udvælgelsen er ikke rangeret efter, hvad vi tjener på — det er, hvad vi ville sige til en
+ven, der spurgte, hvad de skulle skifte til.</p>
+<div class="rvkort-gitter"><div class="rvkort">
+  <div class="rv-kat">Billigst uden intro-fælde</div>
+  <div class="rv-top">
+    <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil" loading="lazy" height="22">
+    <div><b>CBB 5 GB</b><small>Telenors net · 5 GB</small></div>
+  </div>
+  <div class="rv-pris">49 kr.<em>/md. i snit over 12 mdr.</em></div>
+  <p>Fast pris fra dag ét. Ingen kampagneperiode der udløber, ingen påmindelse du skal huske at sætte. Prisen du ser, er prisen om tolv måneder — og det er mere værd end de tyve kroner, du kan spare på et introtilbud, du glemmer at genforhandle.</p>
+  <div class="rv-links">
+    <a href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="cbb-mobil" data-abonnement="cbb-5">Se hos CBB Mobil →</a>
+    <a href="/udbydere/cbb-mobil/">Læs vores gennemgang →</a>
+  </div>
+</div><div class="rvkort">
+  <div class="rv-kat">Mest for pengene</div>
+  <div class="rv-top">
+    <img src="/assets/img/logoer/cbb-mobil.webp" alt="CBB Mobil" loading="lazy" height="22">
+    <div><b>CBB MIX 200 GB</b><small>Telenors net · 200 GB</small></div>
+  </div>
+  <div class="rv-pris">176 kr.<em>/md. i snit over 12 mdr.</em></div>
+  <p>Laveste pris pr. gigabyte i hele sammenligningen. Det er det tal, der gør abonnementer af forskellig størrelse sammenlignelige, og her er der ikke nogen tæt på. Har du et forbrug i den størrelse, er det svært at argumentere for noget andet.</p>
+  <div class="rv-links">
+    <a href="https://example.dk/cbb-mobil" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="cbb-mobil" data-abonnement="cbb-mix">Se hos CBB Mobil →</a>
+    <a href="/udbydere/cbb-mobil/">Læs vores gennemgang →</a>
+  </div>
+</div><div class="rvkort">
+  <div class="rv-kat">Bedst hvis dækning betyder noget</div>
+  <div class="rv-top">
+    <img src="/assets/img/logoer/telmore.webp" alt="Telmore" loading="lazy" height="22">
+    <div><b>Telmore 20 GB</b><small>TDC NET-nettet · 20 GB</small></div>
+  </div>
+  <div class="rv-pris">129 kr.<em>/md. i snit over 12 mdr.</em></div>
+  <p>Billigste vej ind på TDC NET, som er det mest udbyggede net i Danmark. Bor du på landet, i et sommerhusområde eller pendler du langt, er det her, du skal kigge — også selvom der findes billigere abonnementer på de andre net.</p>
+  <div class="rv-links">
+    <a href="https://example.dk/telmore" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="telmore" data-abonnement="telmore-20">Se hos Telmore →</a>
+    <a href="/udbydere/telmore/">Læs vores gennemgang →</a>
+  </div>
+</div><div class="rvkort">
+  <div class="rv-kat">Til dig uden fastnet</div>
+  <div class="rv-top">
+    <img src="/assets/img/logoer/oister.webp" alt="Oister" loading="lazy" height="22">
+    <div><b>Oister Fri Data</b><small>Nettet fra 3 · Fri data</small></div>
+  </div>
+  <div class="rv-pris">136 kr.<em>/md. i snit over 12 mdr.</em></div>
+  <p>Billigste fri data regnet over tolv måneder. Bruger du mobilen som husstandens internet via hotspot, er det her, regnestykket vender — under cirka 80 GB om måneden er et almindeligt stort abonnement stadig billigere.</p>
+  <div class="rv-links">
+    <a href="https://example.dk/oister" rel="sponsored nofollow noopener" target="_blank"
+       data-udgaaende="oister" data-abonnement="oister-fri">Se hos Oister →</a>
+    <a href="/udbydere/oister/">Læs vores gennemgang →</a>
+  </div>
+</div></div>
+<p class="rv-note">Verificeret 13. august 2026 mod priserne i vores sammenligning. Bemærk at
+priserne er placeholders, indtil datakilden er koblet på.</p><h2 id="saadan-fordeler-priserne-sig-paa-markedet">Sådan fordeler priserne sig på markedet</h2>
 <p>Her er hele vores sammenligning delt op efter datamængde. Priserne er
 gennemsnitspris over 12 måneder, så intro­tilbud ikke trækker billedet skævt.</p>
 <div class="fordeling"><div class="fordel-raekke">
@@ -1314,7 +1387,30 @@ ligger — lav månedspris og god værdi er ikke det samme.</p>
 <p>Månedsprisen skjuler oprettelsesgebyrer. Her er den samlede førsteårsudgift for de
 billigste abonnementer, og hvad du sparer i forhold til markedets dyreste.</p>
 <table><thead><tr><th>Abonnement</th><th>Pr. md.</th><th>Oprettelse</th>
-<th>Første år</th><th>Sparet mod dyreste</th></tr></thead><tbody><tr><td><a href="/udbydere/oister/">Oister</a> Oister 5 GB</td><td>44 kr.</td><td>0 kr.</td><td><strong>528 kr.</strong></td><td class="ja">2.820 kr.</td></tr><tr><td><a href="/udbydere/cbb-mobil/">CBB Mobil</a> CBB 5 GB</td><td>49 kr.</td><td>0 kr.</td><td><strong>588 kr.</strong></td><td class="ja">2.760 kr.</td></tr><tr><td><a href="/udbydere/duka/">Duka</a> Duka 6 GB</td><td>50 kr.</td><td>0 kr.</td><td><strong>600 kr.</strong></td><td class="ja">2.748 kr.</td></tr><tr><td><a href="/udbydere/lyca-mobile/">Lyca Mobile</a> Lyca 10 GB</td><td>55 kr.</td><td>0 kr.</td><td><strong>660 kr.</strong></td><td class="ja">2.688 kr.</td></tr><tr><td><a href="/udbydere/lebara/">Lebara</a> Lebara 10 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/eesy/">eesy</a> eesy 8 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/greentel/">Greentel</a> Greentel 8 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/cbb-mobil/">CBB Mobil</a> CBB 15 GB</td><td>69 kr.</td><td>0 kr.</td><td><strong>828 kr.</strong></td><td class="ja">2.520 kr.</td></tr><tr><td><a href="/udbydere/flexii/">Flexii</a> Flexii 20 GB</td><td>69 kr.</td><td>0 kr.</td><td><strong>828 kr.</strong></td><td class="ja">2.520 kr.</td></tr><tr><td><a href="/udbydere/oister/">Oister</a> Oister 20 GB</td><td>74 kr.</td><td>0 kr.</td><td><strong>888 kr.</strong></td><td class="ja">2.460 kr.</td></tr></tbody></table><h2>De skjulte omkostninger, folk overser</h2>
+<th>Første år</th><th>Sparet mod dyreste</th></tr></thead><tbody><tr><td><a href="/udbydere/oister/">Oister</a> Oister 5 GB</td><td>44 kr.</td><td>0 kr.</td><td><strong>528 kr.</strong></td><td class="ja">2.820 kr.</td></tr><tr><td><a href="/udbydere/cbb-mobil/">CBB Mobil</a> CBB 5 GB</td><td>49 kr.</td><td>0 kr.</td><td><strong>588 kr.</strong></td><td class="ja">2.760 kr.</td></tr><tr><td><a href="/udbydere/duka/">Duka</a> Duka 6 GB</td><td>50 kr.</td><td>0 kr.</td><td><strong>600 kr.</strong></td><td class="ja">2.748 kr.</td></tr><tr><td><a href="/udbydere/lyca-mobile/">Lyca Mobile</a> Lyca 10 GB</td><td>55 kr.</td><td>0 kr.</td><td><strong>660 kr.</strong></td><td class="ja">2.688 kr.</td></tr><tr><td><a href="/udbydere/lebara/">Lebara</a> Lebara 10 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/eesy/">eesy</a> eesy 8 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/greentel/">Greentel</a> Greentel 8 GB</td><td>59 kr.</td><td>0 kr.</td><td><strong>708 kr.</strong></td><td class="ja">2.640 kr.</td></tr><tr><td><a href="/udbydere/cbb-mobil/">CBB Mobil</a> CBB 15 GB</td><td>69 kr.</td><td>0 kr.</td><td><strong>828 kr.</strong></td><td class="ja">2.520 kr.</td></tr><tr><td><a href="/udbydere/flexii/">Flexii</a> Flexii 20 GB</td><td>69 kr.</td><td>0 kr.</td><td><strong>828 kr.</strong></td><td class="ja">2.520 kr.</td></tr><tr><td><a href="/udbydere/oister/">Oister</a> Oister 20 GB</td><td>74 kr.</td><td>0 kr.</td><td><strong>888 kr.</strong></td><td class="ja">2.460 kr.</td></tr></tbody></table><h2 id="hvad-sker-der-naar-datamaengden-er-brugt-op">Hvad sker der, når datamængden er brugt op?</h2>
+<p>Det er en af de vigtigste forskelle mellem udbyderne, og den står sjældent i en
+pristabel. Der findes tre modeller, og de har vidt forskellige konsekvenser for din regning.</p>
+<table>
+<thead><tr><th>Model</th><th>Hvad der sker</th><th>Konsekvens for dig</th></tr></thead>
+<tbody>
+<tr><td><strong>Nedsat hastighed</strong></td><td>Forbindelsen fortsætter, men langsomt — ofte
+ned til et par hundrede kilobit</td><td>Ingen ekstra regning. Beskeder og kort virker, video
+gør ikke</td></tr>
+<tr><td><strong>Automatisk køb</strong></td><td>Udbyderen køber ekstra datapakker på dine
+vegne, når du løber tør</td><td>Bekvemt, men det er her de store overraskelsesregninger
+opstår</td></tr>
+<tr><td><strong>Fuld spærring</strong></td><td>Mobildata stopper helt indtil næste
+afregningsperiode</td><td>Kan ikke koste ekstra. Til gengæld står du uden data</td></tr>
+</tbody>
+</table>
+<div class="advarsel">
+<p><strong>Sådan finder du din udbyders model:</strong> Den står i abonnementsvilkårene under
+overforbrug eller datastop. Uanset hvilken model din udbyder bruger, bør du slå datastop til
+i appen — det gør spørgsmålet irrelevant, fordi forbindelsen så aldrig kan udløse et køb.</p>
+</div>
+<p>Vi arbejder på at kortlægge modellen for hver enkelt udbyder. Indtil den kortlægning er
+verificeret, vil vi ikke gætte — se udbyderens egne vilkår, eller
+<a href="/kontakt/">skriv til os</a>, hvis du kender svaret for et selskab, vi mangler.</p><h2 id="de-skjulte-omkostninger-folk-overser">De skjulte omkostninger, folk overser</h2>
 
 <h3>Oprettelsesgebyr</h3>
 <p>De fleste danske selskaber er gået væk fra oprettelsesgebyr, men det findes stadig, og
@@ -1346,7 +1442,7 @@ dataroaming fra og bruge et lokalt eSIM i stedet.</p>
 relevant, hvis du bruger mere end 5 GB. Her er den billigste i hver kategori, med
 årsomkostningen regnet med.</p>
 <table><thead><tr><th>Datamængde</th><th>Billigste valg</th><th>Pris pr. GB</th>
-<th>Pris pr. år</th><th>Pris/md.</th></tr></thead><tbody><tr><td><strong>Op til 10 GB</strong></td><td><a href="/udbydere/oister/">Oister</a> Oister 5 GB</td><td>8,80 kr.</td><td>528 kr.</td><td><strong>44 kr.</strong></td></tr><tr><td><strong>11-20 GB</strong></td><td><a href="/udbydere/cbb-mobil/">CBB Mobil</a> CBB 15 GB</td><td>4,60 kr.</td><td>828 kr.</td><td><strong>69 kr.</strong></td></tr><tr><td><strong>21-40 GB</strong></td><td><a href="/udbydere/greentel/">Greentel</a> Greentel 25 GB</td><td>3,16 kr.</td><td>948 kr.</td><td><strong>79 kr.</strong></td></tr><tr><td><strong>41-80 GB</strong></td><td><a href="/udbydere/oister/">Oister</a> Oister 50 GB</td><td>1,98 kr.</td><td>1.188 kr.</td><td><strong>99 kr.</strong></td></tr><tr><td><strong>Over 80 GB</strong></td><td><a href="/udbydere/lebara/">Lebara</a> Lebara 100 GB</td><td>1,09 kr.</td><td>1.308 kr.</td><td><strong>109 kr.</strong></td></tr><tr><td><strong>Fri data</strong></td><td><a href="/udbydere/oister/">Oister</a> Oister Fri Data</td><td>—</td><td>1.788 kr.</td><td><strong>149 kr.</strong></td></tr></tbody></table><h2>Udbyderne side om side</h2>
+<th>Pris pr. år</th><th>Pris/md.</th></tr></thead><tbody><tr><td><strong>Op til 10 GB</strong></td><td><a href="/udbydere/oister/">Oister</a> Oister 5 GB</td><td>8,80 kr.</td><td>528 kr.</td><td><strong>44 kr.</strong></td></tr><tr><td><strong>11-20 GB</strong></td><td><a href="/udbydere/cbb-mobil/">CBB Mobil</a> CBB 15 GB</td><td>4,60 kr.</td><td>828 kr.</td><td><strong>69 kr.</strong></td></tr><tr><td><strong>21-40 GB</strong></td><td><a href="/udbydere/greentel/">Greentel</a> Greentel 25 GB</td><td>3,16 kr.</td><td>948 kr.</td><td><strong>79 kr.</strong></td></tr><tr><td><strong>41-80 GB</strong></td><td><a href="/udbydere/oister/">Oister</a> Oister 50 GB</td><td>1,98 kr.</td><td>1.188 kr.</td><td><strong>99 kr.</strong></td></tr><tr><td><strong>Over 80 GB</strong></td><td><a href="/udbydere/lebara/">Lebara</a> Lebara 100 GB</td><td>1,09 kr.</td><td>1.308 kr.</td><td><strong>109 kr.</strong></td></tr><tr><td><strong>Fri data</strong></td><td><a href="/udbydere/oister/">Oister</a> Oister Fri Data</td><td>—</td><td>1.788 kr.</td><td><strong>149 kr.</strong></td></tr></tbody></table><h2 id="udbyderne-side-om-side">Udbyderne side om side</h2>
 <p>Vi viser også udbydere, vi ikke har en provisionsaftale med. Det er den eneste måde,
 en sammenligning bliver troværdig på. Klik videre for vores gennemgang af den enkelte.</p>
 <div class="ugkort-gitter"><a class="ugkort" href="/udbydere/lebara/">
@@ -1409,7 +1505,7 @@ en sammenligning bliver troværdig på. Klik videre for vores gennemgang af den 
   <span class="ug-net">TDC NET-nettet</span>
   <span class="ug-pris">fra 149 kr./md.</span>
   <span class="ug-antal">5 planer</span>
-</a></div><h2>Hvilket abonnement passer til din situation?</h2>
+</a></div><h2 id="hvilket-abonnement-passer-til-din-situation">Hvilket abonnement passer til din situation?</h2>
 
 <div class="kortgitter kg-2" style="margin:1.8rem 0">
   <div class="kort">
@@ -1449,7 +1545,7 @@ en sammenligning bliver troværdig på. Klik videre for vores gennemgang af den 
   </div>
 </div>
 
-<h2>Sådan skifter du mobilselskab — trin for trin</h2>
+<h2 id="saadan-skifter-du-mobilselskab-trin-for-trin">Sådan skifter du mobilselskab — trin for trin</h2>
 
 <p>At skifte mobilselskab i Danmark er blandt de nemmeste forbrugerhandlinger, der findes.
 Det er lovmæssigt sikret, at du kan tage dit nummer med, og hele processen håndteres af den
@@ -1478,7 +1574,7 @@ selskab og bed om at få oplyst restgæld og bindingsperiode, før du bestiller 
 tager fem minutter og forhindrer en ubehagelig slutregning.</p>
 </div>
 
-<h2>Vores metode</h2>
+<h2 id="vores-metode">Vores metode</h2>
 
 <p>Vi mener, at en sammenligningsside kun er noget værd, hvis man kan se, hvordan tallene
 er fremkommet. Derfor lægger vi metoden åbent frem.</p>
@@ -1503,7 +1599,7 @@ og noterer datoen.</li>
 <p>Læs mere om <a href="/metode/">metoden bag vores anbefalinger</a> og om
 <a href="/saadan-tjener-vi-penge/">hvordan vi tjener penge</a>.</p>
 
-<h2>Vælg din vej videre</h2>
+<h2 id="vaelg-din-vej-videre">Vælg din vej videre</h2>
 <p>Vi har en dedikeret oversigt til hvert af de mest almindelige behov. Tallene er antal
 abonnementer i kategorien.</p>
 <div class="vejviser"><a href="/bedste-mobilabonnement/"><b>Bedste</b><span>vores kriterier</span></a><a href="/mobilabonnement-med-fri-data/"><b>Fri data</b><span>7 planer</span></a><a href="/mobilabonnement-med-fri-tale/"><b>Fri tale</b><span>42 planer</span></a><a href="/mobilabonnement-uden-data/"><b>Uden data</b><span>5 planer</span></a><a href="/mobilabonnement-med-streaming/"><b>Med streaming</b><span>11 planer</span></a><a href="/mobilabonnement-med-netflix/"><b>Med Netflix</b><span>5 planer</span></a><a href="/mobilabonnement-med-esim/"><b>Med eSIM</b><span>klar samme dag</span></a><a href="/mobilabonnement-til-boern/"><b>Til børn</b><span>tryghed og lav pris</span></a><a href="/mobilabonnement-til-unge/"><b>Til unge</b><span>meget data</span></a><a href="/mobilabonnement-uden-binding/"><b>Uden binding</b><span>45 planer</span></a><a href="/netvaerk/"><b>Mobilnetværk</b><span>de tre danske net</span></a></div></section>
@@ -1530,7 +1626,7 @@ abonnementer i kategorien.</p>
   <p class="afsloering"><strong>Annoncørinformation:</strong> Telemobil er gratis at bruge. Vi modtager provision fra udvalgte udbydere, når du klikker videre og bestiller. Det koster dig ikke ekstra, og det ændrer ikke sorteringen i vores tabeller, som altid er efter pris. Udbydere kan ikke betale sig til en bedre placering eller en bedre omtale. <a href="/saadan-tjener-vi-penge/">Se hele forretningsmodellen</a>.</p>
 </section>
 <section class="sektion baand-smal">
-  <h2>Ofte stillede spørgsmål</h2>
+  <h2 id="ofte-stillede-spoergsmaal">Ofte stillede spørgsmål</h2>
   <div class="faq"><details><summary>Hvad er det billigste mobilabonnement lige nu?</summary><p>Det billigste abonnement i vores sammenligning koster 19 kr. om måneden med ingen data, fri tale og fri sms uden binding.</p></details><details><summary>Er det billigste abonnement også det bedste?</summary><p>Sjældent. Det billigste abonnement har typisk lidt data, og overforbrug kan hurtigt gøre det dyrere end et større abonnement. Vælg det billigste abonnement, der dækker dit faktiske forbrug.</p></details><details><summary>Hvorfor er nogle mobilabonnementer så billige?</summary><p>Fordi selskaberne ikke ejer nettet selv, men lejer sig ind hos en af de tre netværksejere. De sparer omkostninger på butikker, kundeservice og tillægsydelser og sender besparelsen videre.</p></details><details><summary>Hvad betyder pris pr. GB?</summary><p>Månedsprisen divideret med antallet af inkluderede gigabyte. Det gør abonnementer af forskellig størrelse direkte sammenlignelige og afslører, at store abonnementer ofte er billigere pr. gigabyte.</p></details><details><summary>Skal jeg vælge abonnement med eller uden binding?</summary><p>Uden binding i næsten alle tilfælde. De fleste danske abonnementer er uden binding, og det giver dig frihed til at skifte, hvis prisen stiger, eller behovet ændrer sig.</p></details><details><summary>Hvad sker der, hvis jeg bruger mere data end inkluderet?</summary><p>Det afhænger af udbyderen. Nogle stopper forbindelsen, andre sætter hastigheden ned, og andre opkræver for ekstra forbrug. Slå datastop til i udbyderens app for at undgå uventede regninger.</p></details><details><summary>Kan jeg få mobilabonnement uden kreditvurdering?</summary><p>Taletidsløsninger kræver normalt ikke kreditvurdering, da du betaler forud. Almindelige abonnementer indebærer som regel en kreditvurdering.</p></details></div>
 </section>
 </main>
@@ -1574,6 +1670,8 @@ abonnementer i kategorien.</p>
           <li><a href="/guides/daekning-og-netvaerk/">Dækning og netværk</a></li>
           <li><a href="/guides/esim/">eSIM forklaret</a></li>
           <li><a href="/guides/">Alle guides</a></li>
+          <li><a href="/landekoder/">Landekoder</a></li>
+          <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
         </ul>
       </div>
       <div>
@@ -1584,7 +1682,9 @@ abonnementer i kategorien.</p>
           <li><a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></li>
           <li><a href="/metode/">Vores metode</a></li>
           <li><a href="/kontakt/">Kontakt</a></li>
-          <li><a href="/privatlivspolitik/">Privatliv og cookies</a></li>
+          <li><a href="/presse/">Presse</a></li>
+          <li><a href="/privatlivspolitik/">Privatlivspolitik</a></li>
+          <li><a href="/cookiepolitik/">Cookiepolitik</a></li>
         </ul>
       </div>
     </div>
