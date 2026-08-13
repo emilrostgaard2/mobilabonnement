@@ -232,7 +232,7 @@ def hero_forside():
     <div class="hero-gitter">
       <div>
         <span class="etiket">Opdateret {e(OPDATERET)}</span>
-        <h1>Find det <em>billigste mobilabonnement</em> i Danmark</h1>
+        <h1>Sammenlign <em>mobilabonnementer</em> fra alle danske udbydere</h1>
         <p class="led">Vi har regnet {D['antal']} abonnementer fra {D['antal_udbydere']}
         udbydere igennem og sorteret dem efter pris. Ingen formular, ingen login —
         bare tallene.</p>
@@ -253,15 +253,29 @@ def hero_forside():
 </section>"""
 
 
-def hero_side(etiket, h1, tekst, knapper=""):
-    return f"""<section class="hero" style="padding:2.6rem 0 2.2rem">
+def radar(chips=None):
+    """Animeret signalradar til undersidernes hero."""
+    c = chips or [("Fra", f"{D['min_pris']} kr."), ("Uden", "binding"), ("Udbydere", str(D['antal_udbydere']))]
+    flyv = "".join(f'<span class="chip-fly">{e(a)} <b>{e(v)}</b></span>' for a, v in c)
+    return f"""<div class="radar" aria-hidden="true">
+  <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+  {flyv}
+  <span class="kerne"><i></i><i></i><i></i></span>
+</div>"""
+
+
+def hero_side(etiket, h1, tekst, knapper="", chips=None):
+    return f"""<section class="hero" style="padding:2.6rem 0 2.6rem">
   <div class="hero-net" aria-hidden="true"></div>
   <div class="baand">
-    <div style="max-width:760px">
-      <span class="etiket">{e(etiket)}</span>
-      <h1>{h1}</h1>
-      <p class="led">{tekst}</p>
-      {f'<div class="hero-knapper" style="margin-top:1.3rem">{knapper}</div>' if knapper else ''}
+    <div class="hero-todelt">
+      <div>
+        <span class="etiket">{e(etiket)}</span>
+        <h1>{h1}</h1>
+        <p class="led">{tekst}</p>
+        {f'<div class="hero-knapper" style="margin-top:1.3rem">{knapper}</div>' if knapper else ''}
+      </div>
+      {radar(chips)}
     </div>
   </div>
 </section>"""
@@ -295,13 +309,93 @@ def hurtigvalg():
     return f'<div class="baand"><div class="hurtigvalg">{kort}</div></div>'
 
 
+# --------------------------------------------------------------- ekstra tabeller
+
+def tabel_billigst_pr_udbyder():
+    bedst = {}
+    for a in ABON:
+        if a["udbyder"] not in bedst or a["pris"] < bedst[a["udbyder"]]["pris"]:
+            bedst[a["udbyder"]] = a
+    raekker = ""
+    for a in sorted(bedst.values(), key=lambda x: x["pris"]):
+        u = UMAP[a["udbyder"]]
+        prgb = f'{a["pris"] / a["data_gb"]:.2f}'.replace(".", ",") + " kr." if a["data_gb"] < 900 else "—"
+        raekker += (f'<tr><td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a></td>'
+                    f'<td>{e(a["navn"])}</td><td>{gb_tekst(a["data_gb"])}</td>'
+                    f'<td>{netlabel(u)}</td><td>{prgb}</td>'
+                    f'<td><strong>{kr(a["pris"])} kr.</strong></td></tr>')
+    return f"""<h3>Billigste abonnement hos hver udbyder</h3>
+<p>Vil du vide, hvor lavt hver enkelt udbyder går, er det denne tabel. Den viser det
+billigste abonnement, vi har registreret hos hvert selskab, og hvad det koster pr.
+gigabyte.</p>
+<table><thead><tr><th>Udbyder</th><th>Abonnement</th><th>Data</th><th>Netværk</th>
+<th>Pris pr. GB</th><th>Pris/md.</th></tr></thead><tbody>{raekker}</tbody></table>"""
+
+
+def tabel_pr_datamaengde():
+    grupper = [("Op til 10 GB", 0, 10), ("11-20 GB", 11, 20), ("21-40 GB", 21, 40),
+               ("41-80 GB", 41, 80), ("Over 80 GB", 81, 899), ("Fri data", 900, 9999)]
+    raekker = ""
+    for navn, lav, hoej in grupper:
+        kandidater = [a for a in ABON if lav <= a["data_gb"] <= hoej]
+        if not kandidater:
+            continue
+        bedst = min(kandidater, key=lambda a: a["pris"])
+        u = UMAP[bedst["udbyder"]]
+        prgb = f'{bedst["pris"] / bedst["data_gb"]:.2f}'.replace(".", ",") + " kr." if bedst["data_gb"] < 900 else "—"
+        raekker += (f'<tr><td><strong>{e(navn)}</strong></td>'
+                    f'<td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> {e(bedst["navn"])}</td>'
+                    f'<td>{prgb}</td><td>{kr(bedst["pris"] * 12)} kr.</td>'
+                    f'<td><strong>{kr(bedst["pris"])} kr.</strong></td></tr>')
+    return f"""<h3>Billigste abonnement i hver datakategori</h3>
+<p>De fleste sammenligningssider viser kun den absolut laveste pris. Den er sjældent
+relevant, hvis du bruger mere end 5 GB. Her er den billigste i hver kategori, med
+årsomkostningen regnet med.</p>
+<table><thead><tr><th>Datamængde</th><th>Billigste valg</th><th>Pris pr. GB</th>
+<th>Pris pr. år</th><th>Pris/md.</th></tr></thead><tbody>{raekker}</tbody></table>"""
+
+
+def tabel_prgb_rangliste(antal=12):
+    med = [a for a in ABON if a["data_gb"] < 900]
+    raekker = ""
+    for i, a in enumerate(sorted(med, key=lambda x: x["pris"] / x["data_gb"])[:antal], 1):
+        u = UMAP[a["udbyder"]]
+        prgb = f'{a["pris"] / a["data_gb"]:.2f}'.replace(".", ",")
+        raekker += (f'<tr><td>{i}</td><td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> '
+                    f'{e(a["navn"])}</td><td>{gb_tekst(a["data_gb"])}</td>'
+                    f'<td>{kr(a["pris"])} kr.</td><td><strong>{prgb} kr.</strong></td></tr>')
+    return f"""<h3>Rangliste: flest gigabyte for pengene</h3>
+<p>Pris pr. gigabyte er det eneste tal, der gør abonnementer af forskellig størrelse
+direkte sammenlignelige. Bemærk hvor langt nede på listen de billigste månedspriser
+ligger — lav månedspris og god værdi er ikke det samme.</p>
+<table><thead><tr><th>#</th><th>Abonnement</th><th>Data</th><th>Pris/md.</th>
+<th>Pris pr. GB</th></tr></thead><tbody>{raekker}</tbody></table>"""
+
+
+def tabel_aarsomkostning(antal=10):
+    raekker = ""
+    for a in ABON[:antal]:
+        u = UMAP[a["udbyder"]]
+        aar = a["pris"] * 12 + a.get("oprettelse", 0)
+        besparelse = (max(x["pris"] for x in ABON) * 12) - aar
+        raekker += (f'<tr><td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> {e(a["navn"])}</td>'
+                    f'<td>{kr(a["pris"])} kr.</td><td>{kr(a.get("oprettelse", 0))} kr.</td>'
+                    f'<td><strong>{kr(aar)} kr.</strong></td>'
+                    f'<td class="ja">{kr(besparelse)} kr.</td></tr>')
+    return f"""<h3>Hvad koster abonnementet på et helt år?</h3>
+<p>Månedsprisen skjuler oprettelsesgebyrer. Her er den samlede førsteårsudgift for de
+billigste abonnementer, og hvad du sparer i forhold til markedets dyreste.</p>
+<table><thead><tr><th>Abonnement</th><th>Pr. md.</th><th>Oprettelse</th>
+<th>Første år</th><th>Sparet mod dyreste</th></tr></thead><tbody>{raekker}</tbody></table>"""
+
+
 # --------------------------------------------------------------- FORSIDE
 
 def byg_forside():
     sti = "/"
-    titel = f"Billigste mobilabonnement {IDAG.year} — sammenlign priser | Telemobil"
-    besk = (f"Sammenlign mobilabonnementer fra {D['antal_udbydere']} danske udbydere. "
-            f"Priser fra {D['min_pris']} kr./md. Opdateret {OPDATERET}. Uafhængig og gratis.")
+    titel = f"Sammenlign mobilabonnementer — priser fra {D['min_pris']} kr./md."
+    besk = (f"Sammenlign {D['antal']} mobilabonnementer fra {D['antal_udbydere']} udbydere på ét sted. "
+            f"Priser fra {D['min_pris']} kr./md., fri tale og ingen binding. Opdateret {OPDATERET}.")
 
     faq = [
         {"sp": "Hvad er det billigste mobilabonnement i Danmark?",
@@ -385,8 +479,6 @@ def byg_forside():
   </div>
 </section>
 
-{logobaand()}
-
 <section class="sektion baand">
   <div class="sektion-hoved afslør">
     <span class="etiket">Udbydere</span>
@@ -399,8 +491,6 @@ def byg_forside():
   </div>
 </section>
 
-{ctabaand("Klar til at spare på mobilregningen?",
-          f"Den største forskel mellem det billigste og det dyreste abonnement i vores sammenligning er {kr(D['maks_besparelse'])} kr. om måneden. Det er {kr(D['maks_besparelse'] * 12)} kr. om året for et produkt, der kører på de samme master.")}
 
 <section class="sektion baand-smal">
   {forfatterboks()}
@@ -410,7 +500,7 @@ def byg_forside():
 
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
-        hero=hero_forside(), krumme=krumme,
+        hero=hero_forside(), efter_hero=logobaand(), krumme=krumme,
         indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      listeld(ABON, "Mobilabonnementer i Danmark"))],
@@ -432,7 +522,7 @@ def udbyderkort(u):
 
 def byg_billigste():
     sti = "/billigste-mobilabonnement/"
-    titel = f"Billigste mobilabonnement — fra {D['min_pris']} kr./md. {IDAG.year} | Telemobil"
+    titel = f"Billigste mobilabonnement — priser fra {D['min_pris']} kr./md."
     besk = (f"Se det billigste mobilabonnement i Danmark lige nu. {D['antal']} abonnementer "
             f"sammenlignet på pris, data og pris pr. GB. Opdateret {OPDATERET}.")
     krumme = [("/", "Forside"), (None, "Billigste mobilabonnement")]
@@ -470,9 +560,17 @@ def byg_billigste():
                       "abonnementer, der matcher dit dataforbrug.",
            billigst_id=bedste_pr_gb['id'])}
 
-<section class="sektion baand-smal">{gennemgangslinje(OPDATERET)}</section>
-
-{indhold.billigste_brodtekst(D)}
+{indhold.billigste_brodtekst(D).replace(
+    '<section class="sektion baand-smal artikel">',
+    '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1
+).replace(
+    '<h2>De skjulte omkostninger, folk overser</h2>',
+    tabel_billigst_pr_udbyder() + tabel_prgb_rangliste() + tabel_aarsomkostning()
+    + '<h2>De skjulte omkostninger, folk overser</h2>', 1
+).replace(
+    '<h2>Hvilket abonnement passer til din situation?</h2>',
+    tabel_pr_datamaengde() + '<h2>Hvilket abonnement passer til din situation?</h2>', 1
+)}
 
 <section class="sektion baand-smal">
   {laesvidere([
@@ -495,7 +593,7 @@ def byg_billigste():
                        "pr. gigabyte. Under tabellen forklarer vi, hvad du skal se efter, "
                        "og hvilke omkostninger der ikke står i prisen.",
                        '<a href="#sammenlign" class="knap knap-primaer">Gå til tabellen</a>'),
-        krumme=krumme, indhold=krop + faqblok(faq),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk),
                      listeld(ABON, "Billigste mobilabonnementer"))],
@@ -506,7 +604,7 @@ def byg_billigste():
 
 def byg_fridata():
     sti = "/mobilabonnement-med-fri-data/"
-    titel = f"Mobilabonnement med fri data — fra {D['pris_fri']} kr./md. | Telemobil"
+    titel = f"Mobilabonnement med fri data — priser fra {D['pris_fri']} kr./md."
     besk = (f"Sammenlign mobilabonnementer med fri data. Priser fra {D['pris_fri']} kr./md. "
             "Se hvad fri data reelt dækker, og om du overhovedet har brug for det.")
     krumme = [("/", "Forside"), (None, "Fri data")]
@@ -538,9 +636,13 @@ def byg_fridata():
                       "hvad forskellen reelt koster dig om måneden.",
            billigst_id=min(fri, key=lambda a: a['pris'])['id'] if fri else None)}
 
-<section class="sektion baand-smal">{gennemgangslinje(OPDATERET)}</section>
-
-{indhold.fridata_brodtekst(D)}
+{indhold.fridata_brodtekst(D).replace(
+    '<section class="sektion baand-smal artikel">',
+    '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1
+).replace(
+    '<h2>Hvad bruger man egentlig data på?</h2>',
+    tabel_pr_datamaengde() + '<h2>Hvad bruger man egentlig data på?</h2>', 1
+)}
 
 <section class="sektion baand-smal">
   {laesvidere([
@@ -560,7 +662,7 @@ def byg_fridata():
                        f"Fri data koster fra {D['pris_fri']} kr. om måneden. Her er hvad det dækker, "
                        "hvad det ikke dækker, og hvordan du regner ud, om du overhovedet har brug for det.",
                        '<a href="#sammenlign" class="knap knap-primaer">Se priserne</a>'),
-        krumme=krumme, indhold=krop + faqblok(faq),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk), listeld(udvalg, "Abonnementer med fri data"))],
     ), prioritet="0.9")
@@ -573,8 +675,8 @@ def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links
     krop = f"""
 {pristabel(udvalg, UMAP, titel=f"Bedste valg — {etiket.lower()}", undertitel=intro,
            billigst_id=udvalg[0]['id'] if udvalg else None)}
-<section class="sektion baand-smal">{gennemgangslinje(OPDATERET)}</section>
-<section class="sektion baand-smal artikel">{brodtekst}</section>
+<section class="sektion baand-smal artikel">{gennemgangslinje(OPDATERET)}{brodtekst}
+{tabel_billigst_pr_udbyder()}</section>
 <section class="sektion baand-smal">
   {laesvidere(links)}
   {forfatterboks()}
@@ -585,7 +687,7 @@ def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links
         sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
         hero=hero_side(etiket, h1, intro,
                        '<a href="#sammenlign" class="knap knap-primaer">Se priserne</a>'),
-        krumme=krumme, indhold=krop + faqblok(faq),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk), listeld(udvalg, etiket))],
     ), prioritet="0.8")
@@ -595,7 +697,7 @@ def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links
 
 def byg_udbyderoversigt():
     sti = "/udbydere/"
-    titel = f"Mobilselskaber i Danmark — alle udbydere | Telemobil"
+    titel = f"Mobilselskaber i Danmark — sammenlign alle {D['antal_udbydere']} udbydere"
     besk = ("Uafhængig gennemgang af de danske mobilselskaber. Se netværk, priser, fordele "
             "og ulemper for hver udbyder.")
     krumme = [("/", "Forside"), (None, "Udbydere")]
@@ -647,7 +749,7 @@ def byg_udbyderoversigt():
         hero=hero_side("Udbydere", "Alle danske mobilselskaber",
                        "Vi gennemgår hver udbyder for sig — netværk, priser, fordele og "
                        "de ulemper, de selv undlader at nævne."),
-        krumme=krumme, indhold=krop,
+        efter_hero=logobaand(), krumme=krumme, indhold=krop,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme))],
     ), prioritet="0.8")
 
@@ -663,7 +765,8 @@ def byg_udbyder(u):
     sti = f"/udbydere/{u['slug']}/"
     egne = [a for a in ABON if a["udbyder"] == u["slug"]]
     fra = min(a["pris"] for a in egne) if egne else None
-    titel = f"{u['navn']} anmeldelse {IDAG.year} — priser og netværk | Telemobil"
+    titel = (f"{u['navn']} priser {IDAG.year} — abonnementer fra {fra} kr./md." if fra
+             else f"{u['navn']} — priser, netværk og anmeldelse")
     netbesk = (f"{u['navn']} lejer sig ind på et af de danske netværk. "
                if u["netvaerk"] == "MVNO"
                else f"{u['navn']} kører på {u['netvaerk']}s netværk. ")
@@ -788,7 +891,7 @@ def byg_udbyder(u):
                        e(u["kort"]),
                        '<a href="#sammenlign" class="knap knap-primaer">Se priser</a>'
                        if egne else ""),
-        krumme=krumme, indhold=krop + faqblok(u["faq"], f"Spørgsmål om {u['navn']}"),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(u["faq"], f"Spørgsmål om {u['navn']}"),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(u["faq"]),
                      artikelld(sti, titel, besk),
                      {"@type": "Organization", "name": u["navn"], "url": u["hjemmeside"],
@@ -801,8 +904,8 @@ def byg_udbyder(u):
 def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links):
     krumme = [("/", "Forside"), ("/guides/", "Guides"), (None, etiket)]
     krop = f"""
-<section class="sektion baand-smal">{gennemgangslinje(OPDATERET)}</section>
-{brodtekst}
+{brodtekst.replace('<section class="sektion baand-smal artikel">',
+                    '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1)}
 <section class="sektion baand-smal">
   {laesvidere(links)}
   {forfatterboks()}
@@ -812,7 +915,7 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links):
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
         hero=hero_side(etiket, h1, besk),
-        krumme=krumme, indhold=krop + faqblok(faq),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk))],
     ), prioritet="0.7")
@@ -875,12 +978,12 @@ def byg_guideoversigt():
 
 <section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>"""
     return skriv(sti, shell(
-        sti=sti, titel="Guides til mobilabonnement — Telemobil",
+        sti=sti, titel="Guides til mobilabonnement — data, dækning, eSIM og skifte",
         beskrivelse="Praktiske guides om dataforbrug, netværk, eSIM og hvordan du skifter mobilselskab.",
         opdateret=OPDATERET,
         hero=hero_side("Guides", "Guides til mobilabonnement",
                        "Det du skal vide, før du vælger — skrevet i almindeligt dansk."),
-        krumme=krumme, indhold=krop,
+        efter_hero=logobaand(), krumme=krumme, indhold=krop,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme))],
     ), prioritet="0.7")
 
@@ -895,7 +998,7 @@ def byg_statisk(sti, titel, besk, etiket, h1, brodtekst, prioritet="0.5", jsonld
     krop = brodtekst + f'<section class="sektion baand-smal">{afsloering()}</section>'
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
-        hero=hero_side(etiket, h1, besk), krumme=krumme, indhold=krop,
+        hero=hero_side(etiket, h1, besk), efter_hero=logobaand(), krumme=krumme, indhold=krop,
         jsonld=[graf(*noder)],
     ), prioritet=prioritet, hyppighed="monthly")
 
@@ -1001,7 +1104,7 @@ def byg_404():
     <a href="/udbydere/" class="knap knap-linje" style="margin-left:.6rem">Alle udbydere</a>
   </p>
 </section>"""
-    html = shell(sti="/404.html", titel="Siden blev ikke fundet | Telemobil",
+    html = shell(sti="/404.html", titel="Siden blev ikke fundet",
                  beskrivelse="Siden blev ikke fundet. Find i stedet det billigste mobilabonnement i vores sammenligning af danske udbydere og priser.", opdateret=OPDATERET,
                  hero=hero_side("404", "Vi kunne ikke finde siden", "Men vi kan finde et billigt abonnement til dig."),
                  indhold=krop)
@@ -1021,7 +1124,7 @@ def main():
     byg_niche(
         "/mobilabonnement-til-unge/", "Unge og studerende",
         "Mobilabonnement til unge og studerende",
-        f"Mobilabonnement til unge — fra {min(a['pris'] for a in unge)} kr. | Telemobil",
+        f"Mobilabonnement til unge og studerende — fra {min(a['pris'] for a in unge)} kr./md.",
         "Billige mobilabonnementer med meget data til unge og studerende. Ingen binding, "
         "så du kan skifte, når du flytter eller behovet ændrer sig.",
         "Meget data til lav pris og ingen binding — de tre ting der betyder mest, når man "
@@ -1073,7 +1176,7 @@ kategori. <a href="/guides/hvor-meget-data/">Se hele guiden til dataforbrug</a>.
     byg_niche(
         "/mobilabonnement-uden-binding/", "Uden binding",
         "Mobilabonnement uden binding",
-        f"Mobilabonnement uden binding — fra {min(a['pris'] for a in ubinding)} kr. | Telemobil",
+        f"Mobilabonnement uden binding — priser fra {min(a['pris'] for a in ubinding)} kr./md.",
         "Sammenlign mobilabonnementer uden binding. Skift når du vil, uden opsigelsesgebyr "
         "eller bindingsperiode.",
         "Alle abonnementer her kan opsiges med kort varsel. Sorteret efter laveste pris.",
@@ -1123,7 +1226,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_guideoversigt()
     byg_guide("/guides/skift-mobilselskab/", "Skift mobilselskab",
               "Sådan skifter du mobilselskab",
-              f"Skift mobilselskab — behold dit nummer | Telemobil",
+              f"Skift mobilselskab — behold dit nummer, trin for trin",
               "Sådan skifter du mobilselskab og beholder dit nummer. Trin for trin, og de "
               "fem ting der oftest går galt.",
               indhold.GUIDE_SKIFT,
@@ -1147,7 +1250,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
 
     byg_guide("/guides/hvor-meget-data/", "Hvor meget data",
               "Hvor meget data har jeg brug for?",
-              f"Hvor meget data har jeg brug for? Guide | Telemobil",
+              f"Hvor meget data har jeg brug for? Sådan finder du dit forbrug",
               "Find dit faktiske dataforbrug på to minutter, og se præcis hvilket "
               "abonnement der matcher. Med forbrugstal for streaming, sociale medier og video.",
               indhold.GUIDE_DATA,
@@ -1171,7 +1274,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
 
     byg_guide("/guides/daekning-og-netvaerk/", "Dækning og netværk",
               "Dækning og netværk i Danmark",
-              f"Mobildækning i Danmark — TDC NET, Telenor og 3 | Telemobil",
+              f"Mobildækning i Danmark — TDC NET, Telenor og 3 sammenlignet",
               "Der findes kun tre mobilnetværk i Danmark. Her er forskellen på dem, og "
               "hvornår den betyder noget for dit valg af abonnement.",
               """<section class="sektion baand-smal artikel">
@@ -1241,7 +1344,7 @@ kælderen — mens du stadig kan fortryde.</p></div>
                ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab")])
 
     byg_guide("/guides/esim/", "eSIM", "eSIM forklaret",
-              f"eSIM i Danmark — sådan virker det | Telemobil",
+              f"eSIM i Danmark — sådan virker det, og hvornår det betaler sig",
               "Hvad et eSIM er, hvilke telefoner der understøtter det, og hvordan du "
               "kommer i gang på få minutter.",
               """<section class="sektion baand-smal artikel">
@@ -1353,7 +1456,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
 </section>"""
 
     byg_statisk("/om/emil-rostgaard/",
-                f"{FORFATTER['navn']} — stifter og redaktør | Telemobil",
+                f"{FORFATTER['navn']} — stifter og redaktør af Telemobil",
                 f"{FORFATTER['navn']} står bag Telemobil og har arbejdet med digitale "
                 "sammenligningstjenester siden 2018.",
                 "Forfatter", FORFATTER["navn"], emil_krop, prioritet="0.6",
@@ -1374,7 +1477,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
   <p>Henvendelser fra presse kan sendes til samme adresse eller via
   <a href="https://www.linkedin.com/in/emil-rostgaard-702809195/" rel="noopener nofollow" target="_blank">LinkedIn</a>.</p>
 </section>"""
-    byg_statisk("/kontakt/", "Kontakt Telemobil",
+    byg_statisk("/kontakt/", "Kontakt Telemobil — rettelser, spørgsmål og presse",
                 "Kontakt Telemobil om faktuelle rettelser i priser, spørgsmål til vores sammenligninger eller henvendelser fra presse og udbydere.",
                 "Kontakt", "Kontakt os", kontakt_krop, prioritet="0.4")
 
@@ -1399,7 +1502,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
   kontrollerer oplysningerne løbende, men udbyderens egen hjemmeside er altid den gældende
   kilde. Telemobil er ikke part i den aftale, du indgår med en udbyder.</p>
 </section>"""
-    byg_statisk("/privatlivspolitik/", "Privatliv og cookies | Telemobil",
+    byg_statisk("/privatlivspolitik/", "Privatliv og cookies — sådan behandler vi data",
                 "Sådan behandler Telemobil cookies, affiliatesporing og personoplysninger.",
                 "Privatliv", "Privatliv og cookies", privat_krop, prioritet="0.3")
 

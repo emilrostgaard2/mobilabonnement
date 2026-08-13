@@ -71,12 +71,36 @@
     taellere.forEach(function (el) { tObs.observe(el); });
   }
 
+  /* ---- Tabel: vis flere ad gangen ---- */
+  document.querySelectorAll(".tabelramme").forEach(function (ramme) {
+    var knap = ramme.querySelector("[data-vis-flere]");
+    if (!knap) return;
+    var tael = ramme.querySelector("[data-resterende]");
+    var krop = ramme.querySelector("tbody");
+    var PORTION = 10;
+
+    knap.addEventListener("click", function () {
+      var skjulte = Array.prototype.filter.call(
+        krop.querySelectorAll("tr"),
+        function (r) { return r.hidden && r.getAttribute("data-filtreret") !== "ja"; }
+      );
+      skjulte.slice(0, PORTION).forEach(function (r) { r.hidden = false; });
+      var tilbage = skjulte.length - Math.min(PORTION, skjulte.length);
+      if (tilbage > 0) {
+        tael.textContent = tilbage + " abonnementer tilbage";
+      } else {
+        knap.closest(".vis-flere").remove();
+      }
+    });
+  });
+
   /* ---- Tabel: filtrering ---- */
   var chips = document.querySelectorAll(".chip[data-filter]");
   var tabel = document.querySelector("table.pris");
   if (chips.length && tabel) {
     var raekker = Array.prototype.slice.call(tabel.querySelectorAll("tbody tr"));
     var visTaeller = document.querySelector("[data-antal-vist]");
+    var visFlereBoks = document.querySelector(".vis-flere");
 
     function anvend(filter) {
       var vist = 0;
@@ -87,10 +111,13 @@
         else if (filter === "mellem") ok = gb > 15 && gb <= 50;
         else if (filter === "stor") ok = gb > 50 && gb < 900;
         else if (filter === "fri") ok = gb >= 900;
-        r.style.display = ok ? "" : "none";
+        r.setAttribute("data-filtreret", ok ? "nej" : "ja");
+        r.hidden = !ok;
         if (ok) vist++;
       });
       if (visTaeller) visTaeller.textContent = vist;
+      // Ved aktivt filter vises alle match; knappen giver ikke mening
+      if (visFlereBoks) visFlereBoks.hidden = (filter !== "alle");
     }
 
     chips.forEach(function (c) {

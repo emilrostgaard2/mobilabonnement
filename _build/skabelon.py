@@ -44,13 +44,17 @@ def gb_tekst(gb):
 def netlabel(u):
     """Kort netværksetiket til tabeller. MVNO = udbyder uden eget net."""
     n = u.get("netvaerk", "")
-    return "MVNO" if n in ("", "MVNO", "Se udbyder") else f"{e(n)}s net"
+    if n in ("", "MVNO", "Se udbyder"):
+        return "MVNO"
+    if n == "3":
+        return "Nettet fra 3"
+    return f"{e(n)}s net"
 
 
 # ---------------------------------------------------------------- HTML-shell
 
 def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
-          hero=None, opdateret="", ekstra_hoved=""):
+          hero=None, efter_hero="", opdateret="", ekstra_hoved=""):
     """Bygger en komplet HTML-side."""
     kanonisk = DOMAENE + sti
     blokke = ""
@@ -122,7 +126,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
   <div class="baand">
     <a href="/" class="logo" aria-label="Telemobil forside">
       <span class="logo-maerke" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      Tele<em>mobil</em>
+      <span class="logo-tekst">Tele<em>mobil</em></span>
     </a>
     <button class="burger" aria-label="Åbn menu" aria-expanded="false" aria-controls="hovedmenu">
       <span></span><span></span><span></span>
@@ -132,6 +136,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 </header>
 
 {hero or ''}
+{efter_hero}
 {krummehtml}
 
 <main id="indhold">
@@ -152,7 +157,7 @@ def fod(opdateret):
       <div>
         <a href="/" class="logo">
           <span class="logo-maerke" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-          Tele<em>mobil</em>
+          <span class="logo-tekst">Tele<em>mobil</em></span>
         </a>
         <p>Uafhængig dansk sammenligning af mobilabonnementer. Vi gennemgår udbydernes
         vilkår, regner priserne igennem og skriver, hvad vi finder — også når det ikke
@@ -307,11 +312,22 @@ def prisrække(a, u, billigst_pr_gb=False):
 
 
 def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
-              billigst_id=None, id_attr="sammenlign"):
+              billigst_id=None, id_attr="sammenlign", vis=10):
     raekker = ""
-    for a in abonnementer:
+    for i, a in enumerate(abonnementer):
         u = udbydere_map[a["udbyder"]]
-        raekker += prisrække(a, u, billigst_pr_gb=(a["id"] == billigst_id))
+        r = prisrække(a, u, billigst_pr_gb=(a["id"] == billigst_id))
+        if vis and i >= vis:
+            r = r.replace("<tr", "<tr hidden", 1)
+        raekker += r
+
+    resten = max(0, len(abonnementer) - vis) if vis else 0
+    visflere = ""
+    if resten:
+        visflere = (f'<div class="vis-flere">'
+                    f'<button type="button" class="knap knap-linje" data-vis-flere>'
+                    f'Vis flere abonnementer</button>'
+                    f'<small data-resterende>{resten} abonnementer tilbage</small></div>')
 
     filterhtml = ""
     if filtre:
@@ -349,6 +365,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
         <tbody>{raekker}</tbody>
       </table>
     </div>
+    {visflere}
     <div class="tabelfod">
       <span>Sorteret efter laveste månedspris. Priser er vejledende og kan ændre sig uden varsel.</span>
       <span>Kilde: udbydernes egne prislister</span>
