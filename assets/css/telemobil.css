@@ -729,3 +729,62 @@ table.pris tbody tr[hidden]{display:none}
   min-height:3.2em;margin-bottom:1rem}
 .valg-knap{margin-top:auto;justify-content:center;padding:.62rem 1rem;font-size:.88rem}
 .valgkort:hover .valg-knap{border-color:var(--puls);color:var(--puls-dyb)}
+
+/* ==========================================================================
+   Prisfordeling, segmenter, udbydergitter og vejviser
+   ========================================================================== */
+.fordeling{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);
+  padding:1.4rem 1.5rem;margin:1.6rem 0;box-shadow:var(--skygge-blod)}
+.fordel-raekke{display:grid;grid-template-columns:110px 1fr 130px 90px;gap:1rem;
+  align-items:center;padding:.6rem 0;border-bottom:1px solid #EEF1FA}
+.fordel-raekke:last-child{border-bottom:none}
+.fordel-navn{font-weight:650;font-size:.92rem}
+.fordel-bar{background:#EEF1FA;border-radius:999px;height:11px;overflow:hidden}
+.fordel-bar span{display:block;height:100%;border-radius:999px;background:var(--grad-signal)}
+.fordel-pris{font-family:var(--font-tal);font-size:.88rem;text-align:right}
+.fordel-antal{font-size:.8rem;color:var(--graa);text-align:right}
+.fordel-note{font-size:.92rem;color:var(--graa)}
+@media(max-width:720px){
+  .fordel-raekke{grid-template-columns:1fr 1fr;gap:.4rem}
+  .fordel-bar{grid-column:1/-1;order:3}
+  .fordel-antal,.fordel-pris{text-align:left}
+}
+
+.segkort-gitter{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:1.4rem 0}
+@media(max-width:900px){.segkort-gitter{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.segkort-gitter{grid-template-columns:1fr}}
+.segkort{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-m);
+  padding:1.15rem 1.2rem;transition:.2s}
+.segkort:hover{transform:translateY(-3px);box-shadow:var(--skygge-loft)}
+.seg-navn{font-family:var(--font-tal);font-size:1.05rem;font-weight:600}
+.seg-profil{font-size:.76rem;color:var(--signal-dyb);font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;margin:.2rem 0 .5rem}
+.segkort p{font-size:.88rem;color:var(--graa);margin-bottom:.7rem}
+.seg-pris{font-family:var(--font-tal);font-weight:600;font-size:1.05rem}
+.seg-antal{font-size:.76rem;color:var(--graa);margin-top:.15rem}
+
+.ugkort-gitter{display:grid;grid-template-columns:repeat(5,1fr);gap:.8rem;margin:1.4rem 0}
+@media(max-width:1000px){.ugkort-gitter{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.ugkort-gitter{grid-template-columns:repeat(2,1fr)}}
+.ugkort{display:flex;flex-direction:column;gap:.2rem;background:#fff;border:1px solid var(--graa-lys);
+  border-radius:var(--r-m);padding:1rem;text-decoration:none;color:inherit;transition:.2s}
+.ugkort:hover{transform:translateY(-3px);box-shadow:var(--skygge-loft);color:inherit}
+.ugkort img{height:24px;width:auto;max-width:86px;object-fit:contain;object-position:left;margin-bottom:.5rem}
+.ugkort b{font-size:.95rem}
+.ug-net{font-size:.75rem;color:var(--graa)}
+.ug-pris{font-family:var(--font-tal);font-size:.88rem;font-weight:600;margin-top:.35rem}
+.ug-antal{font-size:.73rem;color:var(--graa)}
+
+.vejviser{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin:1.4rem 0}
+@media(max-width:900px){.vejviser{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.vejviser{grid-template-columns:1fr}}
+.vejviser a{display:flex;flex-direction:column;background:#fff;border:1px solid var(--graa-lys);
+  border-radius:var(--r-m);padding:.85rem 1rem;text-decoration:none;transition:.18s}
+.vejviser a:hover{border-color:var(--signal);background:#F7F9FF}
+.vejviser b{font-size:.93rem;color:var(--blaek)}
+.vejviser span{font-size:.76rem;color:var(--graa);margin-top:.1rem}
+
+/* Læs mere og annoncemærkning i rækkekort */
+.p-laes{font-size:.78rem;font-weight:600;margin-top:.5rem;text-decoration:none}
+.p-laes:hover{text-decoration:underline}
+.p-hos{font-size:.66rem;color:var(--graa);margin-top:.35rem;opacity:.85}

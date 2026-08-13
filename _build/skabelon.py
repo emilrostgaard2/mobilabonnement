@@ -347,7 +347,40 @@ def ctabaand(titel, tekst, knaptekst="Sammenlign alle abonnementer", href="/bill
 
 # ---------------------------------------------------------------- Tabel
 
-def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None):
+def beregn_maerker(abonnementer):
+    """Udpeger hvad hvert abonnement er bedst til — relativt til de viste."""
+    m = {}
+    def saet(a, tekst, klasse):
+        if a:
+            m.setdefault(a["id"], [])
+            if len(m[a["id"]]) < 2:
+                m[a["id"]].append((tekst, klasse))
+
+    betalte = [a for a in abonnementer if a["pris"] > 0 and not a.get("forbrugsafregnet")]
+    med_data = [a for a in betalte if a["data_gb"] > 0]
+    endelig = [a for a in med_data if a["data_gb"] < 900]
+    frie = [a for a in betalte if a["data_gb"] >= 900]
+
+    if betalte:
+        saet(min(betalte, key=lambda a: a["pris"]), "Billigst i alt", "puls")
+    if endelig:
+        saet(min(endelig, key=lambda a: a["pris"] / a["data_gb"]), "Bedste pris pr. GB", "puls")
+        saet(max(endelig, key=lambda a: a["data_gb"]), "Mest data", "signal")
+    if frie:
+        saet(min(frie, key=lambda a: a["pris"]), "Billigste fri data", "signal")
+    if med_data:
+        saet(max(med_data, key=lambda a: a.get("eu_gb", 0)), "Flest EU-data", "berry")
+        saet(min(med_data, key=lambda a: gns12(a) or 9e9), "Lavest over 12 mdr.", "puls")
+    intro = [a for a in betalte if a.get("intro_pris") is not None and a.get("intro_mdr")]
+    if intro:
+        saet(max(intro, key=lambda a: a["intro_mdr"]), "Længst introperiode", "sol")
+    stream = [a for a in betalte if a.get("streaming")]
+    if stream:
+        saet(max(stream, key=lambda a: len(a["streaming"])), "Flest tjenester", "sol")
+    return m
+
+
+def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     """Ét abonnement som rækkekort."""
     logo = f"/assets/img/logoer/{u['logo']}"
     forbrug = a.get("forbrugsafregnet")
@@ -356,14 +389,12 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None):
     g = gns12(a)
     aar = (g * 12) if g is not None else 0
 
-    # Mærkater
+    # Mærkater — dynamiske først, så det mest øjenfangende står forrest
     maerker = ""
-    if billigst_pr_gb:
-        maerker += '<span class="mrk mrk-puls">Bedste værdi</span>'
-    if a.get("badge"):
-        maerker += f'<span class="mrk mrk-sol">{e(a["badge"])}</span>'
+    for tekst, klasse in (dyn or {}).get(a["id"], []):
+        maerker += f'<span class="mrk mrk-{klasse}">{e(tekst)}</span>'
     if a.get("intro_pris") is not None and a.get("intro_mdr"):
-        maerker += '<span class="mrk mrk-signal">Introtilbud</span>'
+        maerker += f'<span class="mrk mrk-sol">Tilbud i {a["intro_mdr"]} mdr.</span>'
     if a.get("streaming"):
         n = len(a["streaming"])
         maerker += f'<span class="mrk mrk-berry">{n} streamingtjeneste{"r" if n > 1 else ""}</span>'
@@ -392,8 +423,9 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None):
 
     # Prisblok
     if forbrug:
-        prisblok = ('<div class="p-tal"><b>Pr. forbrug</b></div>'
-                    '<div class="p-gns">Ingen fast månedspris</div>')
+        prisblok = ('<div class="p-tal"><b>0</b><span>kr./md.</span></div>'
+                    '<div class="p-normal">+ takst pr. minut og sms</div>'
+                    '<div class="p-gns">Du betaler kun for det, du bruger</div>')
     elif a.get("intro_pris") is not None and a.get("intro_mdr"):
         prisblok = (f'<div class="p-intro">Tilbud i {a["intro_mdr"]} mdr.</div>'
                     f'<div class="p-tal"><b>{kr(a["intro_pris"])}</b><span>kr./md.</span></div>'
@@ -426,7 +458,8 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None):
     <a class="knap knap-primaer" href="{a['link']}" rel="sponsored nofollow noopener" target="_blank"
        data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
        aria-label="Se tilbud på {e(a['navn'])} hos {e(u['navn'])}">Se tilbud <span aria-hidden="true">→</span></a>
-    <small class="p-hos">hos {e(u['navn'])}</small>
+    <a class="p-laes" href="/udbydere/{u['slug']}/">Læs mere om {e(u['navn'])} →</a>
+    <small class="p-hos">Annoncelink · vi kan modtage provision</small>
   </div>
 </article>"""
 
@@ -437,10 +470,12 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     betalte = [x for x in betalte if x]
     gnsnit_aar = (sum(betalte) / len(betalte) * 12) if betalte else None
 
+    dyn = beregn_maerker(abonnementer)
     kort = ""
     for i, a in enumerate(abonnementer):
         u = udbydere_map[a["udbyder"]]
-        r = prisrække(a, u, billigst_pr_gb=(a["id"] == billigst_id), gnsnit_aar=gnsnit_aar)
+        r = prisrække(a, u, billigst_pr_gb=(a["id"] == billigst_id),
+                      gnsnit_aar=gnsnit_aar, dyn=dyn)
         if vis and i >= vis:
             r = r.replace('<article class="plan', '<article hidden class="plan', 1)
         kort += r
