@@ -93,6 +93,20 @@ def netlabel(u):
 
 # ---------------------------------------------------------------- HTML-shell
 
+MAANEDER_ISO = {"januar": "01", "februar": "02", "marts": "03", "april": "04", "maj": "05",
+                "juni": "06", "juli": "07", "august": "08", "september": "09",
+                "oktober": "10", "november": "11", "december": "12"}
+
+
+def opdateret_til_iso(tekst):
+    """Konverterer '13. august 2026' til ISO-format til meta-tags."""
+    m = re.match(r"(\d{1,2})\. (\w+) (\d{4})", tekst or "")
+    if not m:
+        return ""
+    dag, maaned, aar = m.groups()
+    return f"{aar}-{MAANEDER_ISO.get(maaned, '01')}-{int(dag):02d}"
+
+
 def indholdsfortegnelse(html, minimum=4):
     """Bygger ToC af H2'er og giver dem id, så de kan linkes til."""
     fundne = re.findall(r"<h2>(.*?)</h2>", html, re.S)
@@ -138,6 +152,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
                                   f'<section class="sektion baand-smal">{toc}</section>'
                                   '<section class="sektion baand-smal artikel">', 1)
     minutter = laesetid(indhold)
+    opdateret_iso = opdateret_til_iso(opdateret)
     """Bygger en komplet HTML-side."""
     kanonisk = DOMAENE + sti
     blokke = ""
@@ -203,6 +218,8 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <title>{e(titel)}</title>
 <meta name="description" content="{e(beskrivelse)}">
 <link rel="canonical" href="{kanonisk}">
+<link rel="alternate" hreflang="da-DK" href="{kanonisk}">
+<link rel="alternate" hreflang="x-default" href="{kanonisk}">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
 <meta name="author" content="{e(FORFATTER['navn'])}">
 <meta name="twitter:label1" content="Estimeret læsetid">
@@ -210,6 +227,11 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="geo.region" content="DK">
+<meta name="language" content="Danish">
+<meta name="publisher" content="Telemobil">
+<meta property="article:publisher" content="{DOMAENE}/">
+<meta property="article:modified_time" content="{opdateret_iso}">
+<meta name="rating" content="general">
 <meta name="geo.placename" content="Danmark">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="da_DK">
@@ -373,7 +395,7 @@ def forfatterboks(gennemgået=None):
     <p>{e(f['bio'])}</p>
     <div class="links">
       <a href="/om/emil-rostgaard/">Om forfatteren</a>
-      <a href="{f['linkedin']}" rel="noopener nofollow" target="_blank">LinkedIn</a>
+      <a href="{f['linkedin']}" rel="me noopener nofollow" target="_blank">LinkedIn</a>
       <a href="/metode/">Sådan tester vi</a>
     </div>
   </div>

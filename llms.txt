@@ -1,0 +1,33 @@
+# Telemobil
+
+> Uafhængig dansk prissammenligning af mobilabonnementer. Vi beregner den reelle
+> månedspris over 12 måneder inklusive intropris, normalpris og oprettelse — ikke kun
+> den intropris, udbyderne markedsfører.
+
+Udgiver: Telemobil, Danmark. Redaktør: Emil Rostgaard.
+Sidst opdateret: 2026-08-13. Sprog: dansk.
+
+## Vigtige sider
+
+- [Billigste mobilabonnement](https://telemobil.dk/billigste-mobilabonnement/): Hele markedet sorteret efter reel pris
+- [Bedste mobilabonnement](https://telemobil.dk/bedste-mobilabonnement/): Vurderingskriterier og anbefalinger
+- [Fri data](https://telemobil.dk/mobilabonnement-med-fri-data/): Ubegrænset data i Danmark
+- [Med streaming](https://telemobil.dk/mobilabonnement-med-streaming/): Abonnementer med streamingtjenester
+- [Udbydere](https://telemobil.dk/udbydere/): Gennemgang af de 10 danske mobilselskaber
+- [Mobilnetværk](https://telemobil.dk/netvaerk/): TDC NET, Telenor og 3
+- [Udbyder mod udbyder](https://telemobil.dk/sammenlign/): Direkte sammenligninger
+- [Landekoder](https://telemobil.dk/landekoder/): Telefonkoder til alle lande
+- [Metode](https://telemobil.dk/metode/): Sådan beregner og vurderer vi
+- [Forretningsmodel](https://telemobil.dk/saadan-tjener-vi-penge/): Affiliateprovision og uafhængighed
+
+## Om vores data
+
+Priser og vilkår stammer fra udbydernes egne offentlige prislister. Nøgletallet
+"gennemsnit over 12 måneder" beregnes som intropris ganget med introperioden plus
+normalpris for de resterende måneder, divideret med tolv, plus eventuelt
+oprettelsesgebyr. Tabeller sorteres efter pris, aldrig efter provision.
+
+## Forbehold
+
+Telemobil modtager provision fra udvalgte udbydere ved henvisning. Det påvirker ikke
+sortering eller vurderinger. Se https://telemobil.dk/saadan-tjener-vi-penge/

@@ -131,11 +131,41 @@ ORG = {
     "@type": "Organization",
     "@id": DOMAENE + "/#organisation",
     "name": SITENAVN,
+    "alternateName": "telemobil.dk",
     "url": DOMAENE + "/",
-    "description": "Uafhængig dansk sammenligning af mobilabonnementer.",
+    "description": ("Uafhængig dansk prissammenligning af mobilabonnementer. Vi gennemgår "
+                    "udbydernes vilkår, beregner den reelle pris over 12 måneder og skriver "
+                    "både fordele og ulemper."),
+    "logo": {"@type": "ImageObject", "url": DOMAENE + "/assets/img/telemobil-social.png",
+             "width": 1200, "height": 630},
+    "image": DOMAENE + "/assets/img/telemobil-social.png",
+    "email": "kontakt@telemobil.dk",
+    "foundingDate": site.get("udgivet", ISO)[:4],
     "areaServed": {"@type": "Country", "name": "Danmark"},
+    "address": {"@type": "PostalAddress", "addressCountry": "DK"},
+    "knowsLanguage": "da-DK",
+    "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "kontakt@telemobil.dk",
+        "availableLanguage": ["Danish", "English"],
+        "areaServed": "DK",
+    },
     "founder": {"@id": DOMAENE + "/om/emil-rostgaard/#person"},
+    "publishingPrinciples": DOMAENE + "/metode/",
     "sameAs": [FORFATTER["linkedin"]],
+}
+
+TJENESTE = {
+    "@type": "Service",
+    "@id": DOMAENE + "/#tjeneste",
+    "name": "Sammenligning af mobilabonnementer",
+    "serviceType": "Prissammenligning",
+    "provider": {"@id": DOMAENE + "/#organisation"},
+    "areaServed": {"@type": "Country", "name": "Danmark"},
+    "audience": {"@type": "Audience", "audienceType": "Forbrugere i Danmark"},
+    "offers": {"@type": "Offer", "price": 0, "priceCurrency": "DKK",
+               "description": "Gratis at bruge for forbrugere"},
 }
 
 PERSON = {
@@ -146,8 +176,18 @@ PERSON = {
     "jobTitle": FORFATTER["rolle"],
     "image": DOMAENE + FORFATTER["billede"],
     "sameAs": [FORFATTER["linkedin"]],
-    "knowsAbout": ["Mobilabonnementer", "Telemarkedet i Danmark",
-                   "Forbrugerøkonomi", "Prissammenligning"],
+    "description": FORFATTER["bio"],
+    "knowsAbout": ["Mobilabonnementer", "Telemarkedet i Danmark", "Forbrugerøkonomi",
+                   "Prissammenligning", "Mobilnetværk", "eSIM", "Nummerportering"],
+    "knowsLanguage": ["da-DK", "en"],
+    "nationality": {"@type": "Country", "name": "Danmark"},
+    "hasOccupation": {
+        "@type": "Occupation",
+        "name": "Redaktør og stifter",
+        "occupationLocation": {"@type": "Country", "name": "Danmark"},
+        "responsibilities": ("Gennemgang af udbyderes produktvilkår, fastlæggelse af metode "
+                             "og redaktionelle vurderinger af mobilabonnementer."),
+    },
     "worksFor": {"@id": DOMAENE + "/#organisation"},
 }
 
@@ -157,12 +197,66 @@ WEBSITE = {
     "url": DOMAENE + "/",
     "name": SITENAVN,
     "inLanguage": "da-DK",
+    "description": ("Sammenlign mobilabonnementer fra alle danske udbydere på pris, data, "
+                    "netværk og reelle omkostninger over 12 måneder."),
+    "copyrightHolder": {"@id": DOMAENE + "/#organisation"},
     "publisher": {"@id": DOMAENE + "/#organisation"},
 }
 
 
+def howtold(sti, navn, beskrivelse, html):
+    """Udleder HowTo-schema af den første trinliste på siden."""
+    m = re.search(r'<ol class="trin">(.*?)</ol>', html, re.S)
+    if not m:
+        return None
+    trin = re.findall(r"<li>(.*?)</li>", m.group(1), re.S)
+    if len(trin) < 2:
+        return None
+    skridt = []
+    for i, t in enumerate(trin, 1):
+        titel = re.search(r"<strong>(.*?)</strong>", t, re.S)
+        tekst = re.sub(r"<[^>]+>", " ", t)
+        tekst = re.sub(r"\s+", " ", tekst).strip()
+        skridt.append({
+            "@type": "HowToStep",
+            "position": i,
+            "name": re.sub(r"<[^>]+>", "", titel.group(1)).strip() if titel else f"Trin {i}",
+            "text": tekst[:400],
+            "url": DOMAENE + sti,
+        })
+    return {
+        "@type": "HowTo",
+        "@id": DOMAENE + sti + "#howto",
+        "name": navn,
+        "description": beskrivelse,
+        "inLanguage": "da-DK",
+        "totalTime": "PT10M",
+        "estimatedCost": {"@type": "MonetaryAmount", "currency": "DKK", "value": 0},
+        "step": skridt,
+    }
+
+
+def vaerktoejld(sti, navn, beskrivelse):
+    return {
+        "@type": "WebApplication",
+        "@id": DOMAENE + sti + "#app",
+        "name": navn,
+        "url": DOMAENE + sti,
+        "description": beskrivelse,
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Alle browsere",
+        "inLanguage": "da-DK",
+        "isAccessibleForFree": True,
+        "offers": {"@type": "Offer", "price": 0, "priceCurrency": "DKK"},
+        "provider": {"@id": DOMAENE + "/#organisation"},
+    }
+
+
+import re  # noqa: E402
+
+
 def graf(*noder):
-    return {"@context": "https://schema.org", "@graph": list(noder)}
+    return {"@context": "https://schema.org", "@graph": [n for n in noder if n]}
 
 
 def krummeld(punkter):
@@ -187,8 +281,8 @@ def faqld(sp):
     }
 
 
-def artikelld(sti, titel, beskrivelse):
-    return {
+def artikelld(sti, titel, beskrivelse, ordtal=None, emne="Mobilabonnement"):
+    node = {
         "@type": "Article",
         "@id": DOMAENE + sti + "#artikel",
         "headline": titel,
@@ -200,7 +294,18 @@ def artikelld(sti, titel, beskrivelse):
         "publisher": {"@id": DOMAENE + "/#organisation"},
         "isPartOf": {"@id": DOMAENE + "/#website"},
         "mainEntityOfPage": DOMAENE + sti,
+        "image": {"@type": "ImageObject",
+                  "url": DOMAENE + "/assets/img/telemobil-social.png",
+                  "width": 1200, "height": 630},
+        "isAccessibleForFree": True,
+        "articleSection": "Mobilabonnement",
+        "inLanguage": "da-DK",
+        "about": {"@type": "Thing", "name": emne},
+        "creativeWorkStatus": "Published",
     }
+    if ordtal:
+        node["wordCount"] = ordtal
+    return node
 
 
 def listeld(abonnementer, navn):
@@ -212,6 +317,16 @@ def listeld(abonnementer, navn):
             "item": {
                 "@type": "Product",
                 "name": f"{u['navn']} — {a['navn']}",
+                "description": (
+                    ("Uden mobildata" if a["data_gb"] == 0
+                     else ("Fri data i Danmark" if a["data_gb"] >= 900
+                           else f"{a['data_gb']} GB data i Danmark"))
+                    + ", " + ("fri tale" if a["tale"] == "fri" else f"{a['tale']} taletid")
+                    + (f", {a['eu_gb']} GB EU-data" if a.get("eu_gb") else "")
+                    + ". " + ("Ingen binding." if a["binding"] == 0
+                              else f"{a['binding']} mdr. binding.")),
+                "sku": a["id"],
+                "image": DOMAENE + f"/assets/img/logoer/{u['logo']}",
                 "brand": {"@type": "Brand", "name": u["navn"]},
                 "category": "Mobilabonnement",
                 "offers": {
@@ -219,6 +334,8 @@ def listeld(abonnementer, navn):
                     "price": a["pris"],
                     "priceCurrency": "DKK",
                     "availability": "https://schema.org/InStock",
+                    "priceValidUntil": (IDAG.replace(year=IDAG.year + 1)).isoformat(),
+                    "seller": {"@type": "Organization", "name": u["navn"], "url": u["hjemmeside"]},
                     "url": DOMAENE + f"/udbydere/{u['slug']}/",
                 },
             },
@@ -811,7 +928,7 @@ def byg_forside():
         sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
         hero=hero_forside(), efter_hero=logobaand(), krumme=krumme,
         indhold=krop + faqblok(faq),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+        jsonld=[graf(ORG, TJENESTE, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      listeld(ABON, "Mobilabonnementer i Danmark"))],
     ), prioritet="1.0", hyppighed="daily")
 
@@ -1841,7 +1958,9 @@ def byg_landekoder():
                        [("Landekoder", str(len(LANDE))), ("Danmark", "+45"), ("Kilde", "ITU-T")]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
-                     artikelld(sti, "Landekoder", ""))],
+                     artikelld(sti, "Landekoder", ""),
+                     vaerktoejld(sti, "Landekodeopslag",
+                                 "Søg blandt landekoder til telefon med filtrering på region."))],
     ), prioritet="0.8")
 
 
@@ -1982,7 +2101,9 @@ def byg_hvem_ringer():
                         ("Vi gemmer", "intet")]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
-                     artikelld(sti, "Hvem ringer til mig?", ""))],
+                     artikelld(sti, "Hvem ringer til mig?", ""),
+                     vaerktoejld(sti, "Nummeropslag",
+                                 "Slå et ukendt telefonnummer op og se hvilket land det kommer fra."))],
     ), prioritet="0.8")
 
 
@@ -2105,7 +2226,9 @@ def byg_daekningstjek():
                        "rigtige dækningskort — og hvad du skal kigge efter.",
                        "", [("Net i Danmark", "3"), ("Tjek", "3 steder"), ("Wi-fi-opkald", "gratis")]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     howtold(sti, "Tjek mobildækningen på din adresse",
+                             "Sådan tjekker du dækningen rigtigt", krop))],
     ), prioritet="0.7")
 
 
@@ -2227,7 +2350,9 @@ def byg_speedtest():
                        "for det, du faktisk bruger telefonen til.",
                        "", [("Test", "0,9 MB"), ("HD-video", "5–10 Mbit"), ("Browsing", "2 Mbit")]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     vaerktoejld(sti, "Hastighedstest",
+                                 "Mål downloadhastigheden på din mobilforbindelse."))],
     ), prioritet="0.7")
 
 
@@ -2463,7 +2588,8 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links):
         hero=hero_side(etiket, h1, besk),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
-                     artikelld(sti, titel, besk))],
+                     artikelld(sti, titel, besk),
+                     howtold(sti, h1, besk, brodtekst))],
     ), prioritet="0.7")
 
 
@@ -2563,10 +2689,80 @@ def byg_sitemap():
         f.write(xml)
 
 
+def byg_ekstrafiler():
+    """security.txt, humans.txt og llms.txt — små tillidssignaler."""
+    os.makedirs(os.path.join(ROD, ".well-known"), exist_ok=True)
+    with open(os.path.join(ROD, ".well-known", "security.txt"), "w", encoding="utf-8") as f:
+        f.write(f"""Contact: mailto:kontakt@telemobil.dk
+Expires: {IDAG.replace(year=IDAG.year + 1).isoformat()}T00:00:00.000Z
+Preferred-Languages: da, en
+Canonical: {DOMAENE}/.well-known/security.txt
+""")
+
+    with open(os.path.join(ROD, "humans.txt"), "w", encoding="utf-8") as f:
+        f.write(f"""/* TEAM */
+Stifter og redaktør: {FORFATTER['navn']}
+Kontakt: kontakt@telemobil.dk
+LinkedIn: {FORFATTER['linkedin']}
+Land: Danmark
+
+/* SITE */
+Sidst opdateret: {ISO}
+Sprog: Dansk
+Byggesystem: Statisk generering med Python
+Doktrin: Priser sorteres efter pris, ikke efter provision
+""")
+
+    # llms.txt: struktureret oversigt til AI-crawlere, der læser sitet
+    veje = "\n".join(f"- [{t}]({DOMAENE}{h}): {u}" for h, t, u in [
+        ("/billigste-mobilabonnement/", "Billigste mobilabonnement", "Hele markedet sorteret efter reel pris"),
+        ("/bedste-mobilabonnement/", "Bedste mobilabonnement", "Vurderingskriterier og anbefalinger"),
+        ("/mobilabonnement-med-fri-data/", "Fri data", "Ubegrænset data i Danmark"),
+        ("/mobilabonnement-med-streaming/", "Med streaming", "Abonnementer med streamingtjenester"),
+        ("/udbydere/", "Udbydere", "Gennemgang af de 10 danske mobilselskaber"),
+        ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor og 3"),
+        ("/sammenlign/", "Udbyder mod udbyder", "Direkte sammenligninger"),
+        ("/landekoder/", "Landekoder", "Telefonkoder til alle lande"),
+        ("/metode/", "Metode", "Sådan beregner og vurderer vi"),
+        ("/saadan-tjener-vi-penge/", "Forretningsmodel", "Affiliateprovision og uafhængighed"),
+    ])
+    with open(os.path.join(ROD, "llms.txt"), "w", encoding="utf-8") as f:
+        f.write(f"""# Telemobil
+
+> Uafhængig dansk prissammenligning af mobilabonnementer. Vi beregner den reelle
+> månedspris over 12 måneder inklusive intropris, normalpris og oprettelse — ikke kun
+> den intropris, udbyderne markedsfører.
+
+Udgiver: Telemobil, Danmark. Redaktør: {FORFATTER['navn']}.
+Sidst opdateret: {ISO}. Sprog: dansk.
+
+## Vigtige sider
+
+{veje}
+
+## Om vores data
+
+Priser og vilkår stammer fra udbydernes egne offentlige prislister. Nøgletallet
+"gennemsnit over 12 måneder" beregnes som intropris ganget med introperioden plus
+normalpris for de resterende måneder, divideret med tolv, plus eventuelt
+oprettelsesgebyr. Tabeller sorteres efter pris, aldrig efter provision.
+
+## Forbehold
+
+Telemobil modtager provision fra udvalgte udbydere ved henvisning. Det påvirker ikke
+sortering eller vurderinger. Se {DOMAENE}/saadan-tjener-vi-penge/
+""")
+
+
 def byg_robots():
     txt = f"""User-agent: *
 Allow: /
 Disallow: /_build/
+Disallow: /data/
+
+# Sitet er statisk og let at crawle — ingen grund til at bremse
+User-agent: Googlebot
+Allow: /
 
 Sitemap: {DOMAENE}/sitemap.xml
 """
@@ -3511,6 +3707,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     byg_404()
     byg_sitemap()
     byg_robots()
+    byg_ekstrafiler()
     byg_favicon()
     byg_htaccess()
 

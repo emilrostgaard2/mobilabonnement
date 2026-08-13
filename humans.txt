@@ -1,0 +1,11 @@
+/* TEAM */
+Stifter og redaktør: Emil Rostgaard
+Kontakt: kontakt@telemobil.dk
+LinkedIn: https://www.linkedin.com/in/emil-rostgaard-702809195/
+Land: Danmark
+
+/* SITE */
+Sidst opdateret: 2026-08-13
+Sprog: Dansk
+Byggesystem: Statisk generering med Python
+Doktrin: Priser sorteres efter pris, ikke efter provision

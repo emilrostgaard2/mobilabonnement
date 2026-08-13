@@ -1,5 +1,10 @@
 User-agent: *
 Allow: /
 Disallow: /_build/
+Disallow: /data/
+
+# Sitet er statisk og let at crawle — ingen grund til at bremse
+User-agent: Googlebot
+Allow: /
 
 Sitemap: https://telemobil.dk/sitemap.xml
