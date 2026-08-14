@@ -21,27 +21,29 @@ FORFATTER = {
 
 SAMMENLIGN = [
     ("/billigste-mobilabonnement/", "Billigste mobilabonnement", "Hele markedet sorteret efter pris"),
-    ("/bedste-mobilabonnement/", "Bedste mobilabonnement", "Bedst samlet værdi, ikke bare lavest pris"),
+    ("/bedste-mobilabonnement/", "Bedste mobilabonnement", "Bedst samlet værdi"),
     ("/mobilabonnement-med-fri-data/", "Fri data", "Ubegrænset data i Danmark"),
     ("/mobilabonnement-med-fri-tale/", "Fri tale", "Ubegrænsede opkald og sms"),
     ("/mobilabonnement-uden-data/", "Uden data", "Kun tale og sms"),
-    ("/mobilabonnement-med-streaming/", "Med streaming", "Netflix og co. i abonnementet"),
-    ("/mobilabonnement-med-esim/", "Med eSIM", "Digitalt simkort, klar samme dag"),
-    ("/mobilabonnement-til-boern/", "Til børn", "Trygt, billigt og uden overraskelser"),
-    ("/mobilabonnement-til-unge/", "Til unge og studerende", "Meget data, ingen binding"),
     ("/mobilabonnement-uden-binding/", "Uden binding", "Opsig når du vil"),
-    ("/mobilabonnement-med-streaming/tjenester/", "Streaming: vælg tjeneste",
-     "Netflix, HBO Max, Disney+, Viaplay …"),
-    ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor og 3"),
-    ("/landekoder/", "Landekoder", "Alle telefonkoder med søgning"),
-    ("/hvem-ringer-til-mig/", "Hvem ringer til mig?", "Slå ukendt nummer op"),
+    ("/mobilabonnement-med-streaming/", "Med streaming", "Netflix og co. i abonnementet"),
     ("/mobilabonnement-med-musik/", "Med musik", "Musik, podcast og lydbøger"),
-    ("/mobilabonnement-til-aeldre/", "Til ældre", "Tryghed frem for laveste pris"),
+    ("/mobilabonnement-med-esim/", "Med eSIM", "Klar samme dag"),
     ("/mobilabonnement-med-telefon/", "Med telefon", "Regn efter før du binder dig"),
-    ("/taletidskort/", "Taletidskort", "Forudbetalt uden overraskelser"),
+    ("/mobilabonnement-til-boern/", "Til børn", "Trygt og uden overraskelser"),
+    ("/mobilabonnement-til-unge/", "Til unge", "Meget data, ingen binding"),
+    ("/mobilabonnement-til-aeldre/", "Til ældre", "Tryghed frem for laveste pris"),
+    ("/taletidskort/", "Taletidskort", "Forudbetalt uden regning"),
+]
+
+VAERKTOEJER = [
     ("/sammenlign/", "Udbyder mod udbyder", "To selskaber side om side"),
+    ("/mobilabonnement-med-streaming/tjenester/", "Streaming pr. tjeneste", "Netflix, HBO Max, Disney+ …"),
+    ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor og 3"),
     ("/daekningskort/", "Dækningstjek", "Se hvilket net der dækker"),
     ("/speedtest/", "Hastighedstest", "Mål din forbindelse"),
+    ("/landekoder/", "Landekoder", "Alle telefonkoder med søgning"),
+    ("/hvem-ringer-til-mig/", "Hvem ringer til mig?", "Slå ukendt nummer op"),
 ]
 
 MENU = [
@@ -169,6 +171,11 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
         f'<span class="mp-under">{e(b)}</span></a>'
         for h, t, b in SAMMENLIGN
     )
+    vaerktoej_punkter = "".join(
+        f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span>'
+        f'<span class="mp-under">{e(b)}</span></a>'
+        for h, t, b in VAERKTOEJER
+    )
     udbyder_punkter = "".join(
         f'<a href="/udbydere/{u["slug"]}/"{aktiv("/udbydere/" + u["slug"] + "/")}>'
         f'<img src="/assets/img/logoer/{u["logo"]}" alt="" loading="lazy"'
@@ -183,6 +190,12 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
     Sammenlign <span class="pil-ned" aria-hidden="true"></span>
   </button>
   <div class="nav-menu nav-menu-liste" id="menu-sammenlign">{sammenlign_punkter}</div>
+</div>
+<div class="nav-gruppe">
+  <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-vaerktoej">
+    Værktøjer <span class="pil-ned" aria-hidden="true"></span>
+  </button>
+  <div class="nav-menu nav-menu-liste nav-menu-smal" id="menu-vaerktoej">{vaerktoej_punkter}</div>
 </div>
 <div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-udbydere">

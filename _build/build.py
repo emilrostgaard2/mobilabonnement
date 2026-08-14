@@ -1872,6 +1872,8 @@ def byg_landekoder():
       </table>
     </div>
     <p class="vt-tom" data-landetom hidden>Ingen lande matcher din søgning.</p>
+    <p class="mobilnote">⚠ markerer landekoder, der ofte optræder i svindelopkald.
+    <a href="/hvem-ringer-til-mig/">Se hvordan du genkender dem</a>.</p>
   </div>
 </section>
 
