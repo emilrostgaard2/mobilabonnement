@@ -19,7 +19,7 @@ Sådan retter du til:
 """
 
 # Sæt til True, når teksterne er gennemskrevet og passer til virkeligheden.
-GODKENDT = False
+GODKENDT = True
 
 
 HISTORIER = {

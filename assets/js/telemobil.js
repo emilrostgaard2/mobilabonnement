@@ -90,6 +90,8 @@
     if (roligt || !("IntersectionObserver" in window)) {
       maal.forEach(function (el) { el.classList.add("vist"); });
     } else {
+      // threshold skal være 0: elementer højere end skærmen kan aldrig nå en
+      // procentdel, og ville så aldrig blive vist. rootMargin styrer timingen.
       var obs = new IntersectionObserver(function (poster) {
         poster.forEach(function (post) {
           if (post.isIntersecting) {
@@ -97,8 +99,13 @@
             obs.unobserve(post.target);
           }
         });
-      }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+      }, { threshold: 0, rootMargin: "0px 0px -60px 0px" });
       maal.forEach(function (el) { obs.observe(el); });
+
+      // Sikkerhedsnet: uanset hvad må intet indhold stå usynligt
+      setTimeout(function () {
+        maal.forEach(function (el) { el.classList.add("vist"); });
+      }, 2500);
     }
   }
 
