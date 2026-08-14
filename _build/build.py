@@ -317,7 +317,9 @@ def listeld(abonnementer, navn):
         poster.append({
             "@type": "ListItem", "position": i,
             "item": {
-                "@type": "Product",
+                "@type": "Service",
+                "serviceType": "Mobilabonnement",
+                "provider": {"@type": "Organization", "name": u["navn"], "url": u["hjemmeside"]},
                 "name": f"{u['navn']} — {a['navn']}",
                 "description": (
                     ("Uden mobildata" if a["data_gb"] == 0
@@ -331,12 +333,23 @@ def listeld(abonnementer, navn):
                 "image": DOMAENE + f"/assets/img/logoer/{u['logo']}",
                 "brand": {"@type": "Brand", "name": u["navn"]},
                 "category": "Mobilabonnement",
+                "areaServed": {"@type": "Country", "name": "Danmark"},
                 "offers": {
                     "@type": "Offer",
                     "price": a["pris"],
                     "priceCurrency": "DKK",
                     "availability": "https://schema.org/InStock",
+                    "validFrom": ISO,
                     "priceValidUntil": (IDAG.replace(year=IDAG.year + 1)).isoformat(),
+                    "priceSpecification": {
+                        "@type": "UnitPriceSpecification",
+                        "price": a["pris"],
+                        "priceCurrency": "DKK",
+                        "billingIncrement": 1,
+                        "unitCode": "MON",
+                        "referenceQuantity": {"@type": "QuantitativeValue",
+                                              "value": 1, "unitCode": "MON"},
+                    },
                     "seller": {"@type": "Organization", "name": u["navn"], "url": u["hjemmeside"]},
                     "url": DOMAENE + f"/udbydere/{u['slug']}/",
                 },
@@ -682,6 +695,7 @@ def vejviser(aktuel=""):
         ("/mobilabonnement-uden-binding/", "Uden binding",
          f"{len([a for a in ABON if a['binding'] == 0])} planer"),
         ("/netvaerk/", "Mobilnetværk", "de tre danske net"),
+        ("/mobilabonnementer-black-friday/", "Black Friday", "er tilbuddene ægte?"),
     ]
     punkter = "".join(
         f'<a href="{h}"><b>{e(t)}</b><span>{e(u)}</span></a>'
