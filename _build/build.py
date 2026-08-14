@@ -83,7 +83,30 @@ except Exception:
     for _u in UDBYDERE:
         _u["logo_w"], _u["logo_h"] = 240, 96
 
-skabelon.NAV_UDBYDERE = UDBYDERE
+# Kun udbydere vi har prisdata for kan få en prisside
+UDBYDERE_MED_DATA = [u for u in UDBYDERE
+                     if any(a["udbyder"] == u["slug"] for a in ABON)]
+skabelon.NAV_UDBYDERE = UDBYDERE_MED_DATA or UDBYDERE
+
+# Streamingtjenester findes kun, hvis feedet indeholder dem
+TJENESTER_I_DATA = {t for a in ABON for t in a.get("streaming", [])}
+
+def _har(f):
+    return any(f(a) for a in ABON)
+
+_MULIGE = {
+    "/mobilabonnement-med-fri-data/": _har(lambda a: a["data_gb"] >= 900),
+    "/mobilabonnement-med-fri-tale/": _har(lambda a: a["tale"] == "fri"),
+    "/mobilabonnement-uden-data/": _har(lambda a: a["data_gb"] == 0),
+    "/mobilabonnement-med-streaming/": _har(lambda a: a.get("streaming")),
+    "/mobilabonnement-med-streaming/tjenester/": _har(lambda a: a.get("streaming")),
+    "/mobilabonnement-med-musik/": _har(lambda a: a.get("streaming")),
+    "/mobilabonnement-med-esim/": _har(lambda a: a.get("esim")),
+    "/mobilabonnement-uden-binding/": _har(lambda a: a["binding"] == 0),
+    "/mobilabonnement-under-100-kr/": _har(lambda a: 0 < a["pris"] < 100),
+}
+skabelon.SAMMENLIGN = [x for x in skabelon.SAMMENLIGN if _MULIGE.get(x[0], True)]
+skabelon.VAERKTOEJER = [x for x in skabelon.VAERKTOEJER if _MULIGE.get(x[0], True)]
 
 IDAG = date.today()
 OPDATERET = dansk_dato(IDAG)
@@ -786,7 +809,8 @@ def vejviser(aktuel=""):
         ("/mobilabonnement-med-streaming/", "Med streaming",
          f"{len([a for a in ABON if a.get('streaming')])} planer"),
         ("/mobilabonnement-med-netflix/", "Med Netflix",
-         f"{len([a for a in ABON if 'Netflix' in a.get('streaming', [])])} planer"),
+         f"{len([a for a in ABON if 'Netflix' in a.get('streaming', [])])} planer")
+        if "Netflix" in TJENESTER_I_DATA else None,
         ("/mobilabonnement-med-esim/", "Med eSIM", "klar samme dag"),
         ("/mobilabonnement-til-boern/", "Til børn", "tryghed og lav pris"),
         ("/mobilabonnement-til-unge/", "Til unge", "meget data"),
@@ -797,7 +821,8 @@ def vejviser(aktuel=""):
     ]
     punkter = "".join(
         f'<a href="{h}"><b>{e(t)}</b><span>{e(u)}</span></a>'
-        for h, t, u in veje if h != aktuel)
+        for h, t, u in [v for v in veje if v]
+        if h != aktuel and _MULIGE.get(h, True))
     return f"""<h2>Vælg din vej videre</h2>
 <p>Vi har en dedikeret oversigt til hvert af de mest almindelige behov. Tallene er antal
 abonnementer i kategorien.</p>
@@ -2159,6 +2184,9 @@ VS_PAR = [
 ]
 
 
+VS_PAR_AKTIVE = []
+
+
 def byg_vs(slug_a, slug_b):
     ua, ub = UMAP[slug_a], UMAP[slug_b]
     sti = f"/sammenlign/{slug_a}-vs-{slug_b}/"
@@ -2292,10 +2320,8 @@ def byg_vs_oversigt():
     sti = "/sammenlign/"
     krumme = [("/", "Forside"), (None, "Sammenlign udbydere")]
     kort = ""
-    for sa, sb in VS_PAR:
+    for sa, sb in VS_PAR_AKTIVE:
         ua, ub = UMAP[sa], UMAP[sb]
-        if not [a for a in ABON if a["udbyder"] == sa] or not [a for a in ABON if a["udbyder"] == sb]:
-            continue
         kort += f"""<a class="vskort" href="/sammenlign/{sa}-vs-{sb}/">
   <span class="vs-side"><img src="/assets/img/logoer/{ua['logo']}" alt="{e(ua['navn'])}"
     loading="lazy" width="{round(ua['logo_w'] * 24 / ua['logo_h'])}" height="24"></span>
@@ -3460,6 +3486,40 @@ def byg_statisk(sti, titel, besk, etiket, h1, brodtekst, prioritet="0.5", jsonld
 
 # --------------------------------------------------------------- FILER
 
+def ryd_forældede():
+    """Sletter sider fra tidligere builds, som ikke længere genereres.
+    Uden det ville gamle sider blive liggende og linke til data, der ikke findes."""
+    manifest = os.path.join(STI, ".genereret.json")
+    nu = {s for s, _, _ in SIDER}
+
+    # Scan filsystemet frem for at stole på manifestet alene — så fanges også
+    # sider fra builds før manifestet fandtes.
+    spring = {".git", ".github", "_build", "data", "assets", ".well-known"}
+    foer = set()
+    for rod, mapper, filer in os.walk(ROD):
+        mapper[:] = [m for m in mapper if m not in spring and not m.startswith(".")]
+        if "index.html" in filer:
+            rel = os.path.relpath(rod, ROD)
+            foer.add("/" if rel == "." else "/" + rel.replace(os.sep, "/") + "/")
+
+    fjernet = []
+    for sti in sorted(foer - nu):
+        if sti == "/":
+            continue
+        mappe = os.path.join(ROD, sti.strip("/"))
+        f = os.path.join(mappe, "index.html")
+        if os.path.exists(f):
+            os.remove(f)
+            fjernet.append(sti)
+            # Fjern tomme mapper op ad hierarkiet
+            d = mappe
+            while d != ROD and os.path.isdir(d) and not os.listdir(d):
+                os.rmdir(d)
+                d = os.path.dirname(d)
+    json.dump(sorted(nu), open(manifest, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    return fjernet
+
+
 def byg_sitemap():
     poster = ""
     for sti, pri, hyp in SIDER:
@@ -3862,39 +3922,40 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?")])
 
     stream = sorted([a for a in ABON if a.get("streaming")], key=lambda a: a["pris"])
-    byg_kategori(
-        sti="/mobilabonnement-med-streaming/", etiket="Med streaming",
-        h1="Mobilabonnement med streaming inkluderet",
-        titel=f"Mobilabonnement med streaming — fra {D['pris_streaming']} kr./md.",
-        besk=(f"Sammenlign mobilabonnementer med streaming inkluderet. Fra {D['pris_streaming']} "
-              "kr./md. Se regnestykket, der afgør om det kan betale sig for dig."),
-        intro=("Abonnementer hvor streamingtjenester indgår i prisen. Regn efter, hvad du "
-               "betaler for de samme tjenester i dag."),
-        udvalg=stream, tekstfunktion=sider2.streaming,
-        chips=[("Fra", f"{D['pris_streaming']} kr."), ("Tjenester", "inkluderet"), ("Én", "regning")],
-        tabeltitel="Abonnementer med streaming inkluderet",
-        ekstra_tabeller=[tabel_pr_datamaengde(), tabel_prgb_rangliste(), tabel_aarsomkostning(), fejltabel(), begrebstabel(), vejviser()],
-        faq=[
-            {"sp": "Kan det betale sig med streaming i mobilabonnementet?",
-             "sv": "Kun hvis du allerede betaler for to eller flere af de tjenester, der indgår, og ikke deler dem "
-                   "med andre. Bruger du én tjeneste eller ingen, betaler du typisk over."},
-            {"sp": "Hvad koster mobilabonnement med streaming?",
-             "sv": f"Fra {D['pris_streaming']} kr. om måneden i vores sammenligning. Prisen afhænger af antallet af "
-                   "tjenester og af datamængden."},
-            {"sp": "Kan indholdet i pakken ændre sig?",
-             "sv": "Ja. Tjenester kan ryge ud, når aftaler mellem udbyder og indholdsleverandør udløber. Tjek "
-                   "vilkårene for, hvad der sker med prisen, og genberegn en gang om året."},
-            {"sp": "Hvor meget data kræver streaming?",
-             "sv": "Video koster cirka 0,7-1 GB i timen i standardkvalitet og 2-3 GB i HD. Vælger du streaming, bør "
-                   "du vælge mindst 50 GB, ellers kan du kun bruge tjenesterne på wi-fi."},
-            {"sp": "Hvad sker der med streamingen, hvis jeg skifter selskab?",
-             "sv": "Den forsvinder sammen med abonnementet. Tegn de tjenester, du vil beholde, separat inden du "
-                   "skifter."},
-        ],
-        links=[("/mobilabonnement-med-fri-data/", "Fri data — nødvendigt til streaming?"),
-               ("/udbydere/telmore/", "Telmore — streaming samlet i regningen"),
-               ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
-               ("/bedste-mobilabonnement/", "Bedste mobilabonnement")])
+    if stream:
+      byg_kategori(
+          sti="/mobilabonnement-med-streaming/", etiket="Med streaming",
+          h1="Mobilabonnement med streaming inkluderet",
+          titel=f"Mobilabonnement med streaming — fra {D['pris_streaming']} kr./md.",
+          besk=(f"Sammenlign mobilabonnementer med streaming inkluderet. Fra {D['pris_streaming']} "
+                "kr./md. Se regnestykket, der afgør om det kan betale sig for dig."),
+          intro=("Abonnementer hvor streamingtjenester indgår i prisen. Regn efter, hvad du "
+                 "betaler for de samme tjenester i dag."),
+          udvalg=stream, tekstfunktion=sider2.streaming,
+          chips=[("Fra", f"{D['pris_streaming']} kr."), ("Tjenester", "inkluderet"), ("Én", "regning")],
+          tabeltitel="Abonnementer med streaming inkluderet",
+          ekstra_tabeller=[tabel_pr_datamaengde(), tabel_prgb_rangliste(), tabel_aarsomkostning(), fejltabel(), begrebstabel(), vejviser()],
+          faq=[
+              {"sp": "Kan det betale sig med streaming i mobilabonnementet?",
+               "sv": "Kun hvis du allerede betaler for to eller flere af de tjenester, der indgår, og ikke deler dem "
+                     "med andre. Bruger du én tjeneste eller ingen, betaler du typisk over."},
+              {"sp": "Hvad koster mobilabonnement med streaming?",
+               "sv": f"Fra {D['pris_streaming']} kr. om måneden i vores sammenligning. Prisen afhænger af antallet af "
+                     "tjenester og af datamængden."},
+              {"sp": "Kan indholdet i pakken ændre sig?",
+               "sv": "Ja. Tjenester kan ryge ud, når aftaler mellem udbyder og indholdsleverandør udløber. Tjek "
+                     "vilkårene for, hvad der sker med prisen, og genberegn en gang om året."},
+              {"sp": "Hvor meget data kræver streaming?",
+               "sv": "Video koster cirka 0,7-1 GB i timen i standardkvalitet og 2-3 GB i HD. Vælger du streaming, bør "
+                     "du vælge mindst 50 GB, ellers kan du kun bruge tjenesterne på wi-fi."},
+              {"sp": "Hvad sker der med streamingen, hvis jeg skifter selskab?",
+               "sv": "Den forsvinder sammen med abonnementet. Tegn de tjenester, du vil beholde, separat inden du "
+                     "skifter."},
+          ],
+          links=[("/mobilabonnement-med-fri-data/", "Fri data — nødvendigt til streaming?"),
+                 ("/udbydere/telmore/", "Telmore — streaming samlet i regningen"),
+                 ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
+                 ("/bedste-mobilabonnement/", "Bedste mobilabonnement")])
 
     boernudvalg = sorted([a for a in ABON if a["data_gb"] <= 15], key=lambda a: a["pris"])
     byg_kategori(
@@ -4181,40 +4242,41 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     # ---------------- Musik, ældre, telefon og taletid ----------------
     musikudvalg = sorted([a for a in ABON if MUSIKTJENESTER & set(a.get("streaming", []))],
                          key=lambda a: gns12(a) or 9e9)
-    byg_kategori(
-        sti="/mobilabonnement-med-musik/", etiket="Med musik",
-        h1="Mobilabonnement med musik inkluderet",
-        titel=f"Mobilabonnement med musik — fra {D['pris_musik']} kr./md.",
-        besk=("Sammenlign mobilabonnementer med musik, podcast og lydbøger inkluderet. "
-              f"Fra {D['pris_musik']} kr./md. Musik fylder næsten ingen data."),
-        intro=("Abonnementer med musik-, podcast- eller lydbogstjeneste. Lyd fylder langt "
-               "mindre data end video, så du behøver ikke et stort abonnement."),
-        udvalg=musikudvalg, tekstfunktion=sider3.musik,
-        chips=[("Fra", f"{D['pris_musik']} kr."), ("Musik", "ca. 100 MB/t"), ("Planer", str(len(musikudvalg)))],
-        tabeltitel="Abonnementer med musik og lyd inkluderet",
-        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), fejltabel(),
-                         begrebstabel(), vejviser("/mobilabonnement-med-musik/")],
-        faq=[
-            {"sp": "Hvad koster mobilabonnement med musik?",
-             "sv": f"Fra {D['pris_musik']} kr. om måneden i vores sammenligning. Musiktjenester er "
-                   "billigere at få med end video, fordi de koster mindre separat."},
-            {"sp": "Hvor meget data bruger musikstreaming?",
-             "sv": "Cirka 70-150 MB i timen afhængigt af kvalitet. Det er op mod tyve gange mindre end "
-                   "video. Podcasts fylder endnu mindre, typisk 30-60 MB i timen."},
-            {"sp": "Kan jeg undgå at bruge data på musik?",
-             "sv": "Ja. Alle større musiktjenester kan gemme musik offline. Sæt automatisk download til "
-                   "over wi-fi, så bruger du reelt ingen mobildata på musik."},
-            {"sp": "Er operatørens egen musiktjeneste noget værd?",
-             "sv": "Det afhænger af, om du vil bruge den. Har du playlister og lyttehistorik hos en anden "
-                   "tjeneste, er værdien af at skifte tæt på nul, uanset prisskiltet."},
-            {"sp": "Hvad med lydbøger?",
-             "sv": "Lydbøger er dyrere at købe separat end musik, så det er ofte den tjeneste, hvor et "
-                   "bundle bedst kan betale sig — hvis du rent faktisk lytter."},
-        ],
-        links=[("/mobilabonnement-med-streaming/tjenester/", "Alle streamingtjenester"),
-               ("/mobilabonnement-med-podimo/", "Abonnementer med Podimo"),
-               ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
-               ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?")])
+    if musikudvalg:
+      byg_kategori(
+          sti="/mobilabonnement-med-musik/", etiket="Med musik",
+          h1="Mobilabonnement med musik inkluderet",
+          titel=f"Mobilabonnement med musik — fra {D['pris_musik']} kr./md.",
+          besk=("Sammenlign mobilabonnementer med musik, podcast og lydbøger inkluderet. "
+                f"Fra {D['pris_musik']} kr./md. Musik fylder næsten ingen data."),
+          intro=("Abonnementer med musik-, podcast- eller lydbogstjeneste. Lyd fylder langt "
+                 "mindre data end video, så du behøver ikke et stort abonnement."),
+          udvalg=musikudvalg, tekstfunktion=sider3.musik,
+          chips=[("Fra", f"{D['pris_musik']} kr."), ("Musik", "ca. 100 MB/t"), ("Planer", str(len(musikudvalg)))],
+          tabeltitel="Abonnementer med musik og lyd inkluderet",
+          ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), fejltabel(),
+                           begrebstabel(), vejviser("/mobilabonnement-med-musik/")],
+          faq=[
+              {"sp": "Hvad koster mobilabonnement med musik?",
+               "sv": f"Fra {D['pris_musik']} kr. om måneden i vores sammenligning. Musiktjenester er "
+                     "billigere at få med end video, fordi de koster mindre separat."},
+              {"sp": "Hvor meget data bruger musikstreaming?",
+               "sv": "Cirka 70-150 MB i timen afhængigt af kvalitet. Det er op mod tyve gange mindre end "
+                     "video. Podcasts fylder endnu mindre, typisk 30-60 MB i timen."},
+              {"sp": "Kan jeg undgå at bruge data på musik?",
+               "sv": "Ja. Alle større musiktjenester kan gemme musik offline. Sæt automatisk download til "
+                     "over wi-fi, så bruger du reelt ingen mobildata på musik."},
+              {"sp": "Er operatørens egen musiktjeneste noget værd?",
+               "sv": "Det afhænger af, om du vil bruge den. Har du playlister og lyttehistorik hos en anden "
+                     "tjeneste, er værdien af at skifte tæt på nul, uanset prisskiltet."},
+              {"sp": "Hvad med lydbøger?",
+               "sv": "Lydbøger er dyrere at købe separat end musik, så det er ofte den tjeneste, hvor et "
+                     "bundle bedst kan betale sig — hvis du rent faktisk lytter."},
+          ],
+          links=[("/mobilabonnement-med-streaming/", "Alle abonnementer med streaming"),
+                 ("/bedste-mobilabonnement/", "Bedste mobilabonnement"),
+                 ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
+                 ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?")])
 
     aeldreudvalg = sorted([a for a in ABON if a["data_gb"] <= 15], key=lambda a: gns12(a) or 9e9)
     byg_kategori(
@@ -4324,9 +4386,10 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement")])
 
     # ---------------- Long-tail: én side pr. streamingtjeneste ----------------
-    byg_streamingoversigt()
-    for tj in TJENESTER:
-        byg_tjenesteside(tj)
+    if TJENESTER:
+        byg_streamingoversigt()
+        for tj in TJENESTER:
+            byg_tjenesteside(tj)
 
     # ---------------- Netværkssider ----------------
     byg_netvaerksoversigt()
@@ -4339,7 +4402,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
 
     # Sammenligninger mellem to udbydere
     byg_vs_oversigt()
-    for _sa, _sb in VS_PAR:
+    for _sa, _sb in VS_PAR_AKTIVE:
         byg_vs(_sa, _sb)
 
     # Værktøjer
@@ -4908,6 +4971,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
                 "Privatliv", "Privatliv og cookies", privat_krop, prioritet="0.3")
 
     # Filer
+    fjernet = ryd_forældede()
     byg_404()
     byg_sitemap()
     byg_robots()
@@ -4916,6 +4980,12 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     byg_htaccess()
 
     print(f"Byggede {len(SIDER)} sider.")
+    if fjernet:
+        print(f"  Fjernede {len(fjernet)} forældede sider (manglende prisdata):")
+        for f in fjernet[:8]:
+            print(f"    - {f}")
+        if len(fjernet) > 8:
+            print(f"    … og {len(fjernet) - 8} mere")
     print(f"  {D['antal']} abonnementer fra {D['antal_udbydere']} udbydere")
     print(f"  Billigste: {D['min_pris']} kr. — bedste pris pr. GB: {bedste_pr_gb['navn']}")
     if not site.get("data_verificeret"):

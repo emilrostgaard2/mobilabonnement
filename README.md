@@ -51,3 +51,41 @@ Felter pr. abonnement:
 ```
 
 `data_gb: 999` betyder fri data. Kør derefter `build.py` og commit.
+
+---
+
+## Adtraction-integration
+
+Priserne hentes automatisk fra Adtractions data feed ved hvert build.
+
+### Første gang
+
+1. Sæt `ADTRACTION_CHANNEL_ID` som GitHub Secret (samme sted som FTP-oplysningerne).
+2. Kør `python3 _build/adtraction.py --inspect` lokalt og send outputtet videre,
+   hvis feltnavnene i feedet ikke matcher. Importøren gætter på almindelige
+   navne, men Adtraction varierer mellem annoncører.
+3. Erstat `.github/workflows/deploy.yml` med `deploy-workflow.yml` fra roden.
+
+### Sådan virker det
+
+```
+_build/adtraction.py   henter feedet -> skriver data/abonnementer.json
+_build/build.py        bygger 88 sider ud fra den fil
+_build/validate.py     stopper deploy hvis noget er galt
+```
+
+Workflowet kører ved hvert push og desuden to gange dagligt via cron, så
+priserne holdes friske uden at du rører noget. Ændrede priser committes
+tilbage til repoet, så du kan se prishistorikken i git-loggen.
+
+### Kortlægning af udbydere
+
+`UDBYDER_KORT` i adtraction.py oversætter Adtractions annoncørnavne til vores
+slugs. Får du en ny annoncør godkendt, tilføj den der — ellers springes den over
+med en besked i byggeloggen.
+
+### Hvis noget går galt
+
+Importøren skriver aldrig en tom fil. Kan ingen abonnementer oversættes, stopper
+den med en fejl, og det gamle datasæt bliver stående. Byggeloggen viser, hvad der
+blev sprunget over og hvorfor.

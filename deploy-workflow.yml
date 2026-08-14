@@ -1,0 +1,59 @@
+name: Upload telemobil.dk til Simply
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Hent friske priser hver dag kl. 05:12 og 17:12 dansk tid
+    - cron: '12 4,16 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-telemobil
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  byg-og-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Hent priser fra Adtraction
+        env:
+          ADTRACTION_CHANNEL_ID: ${{ secrets.ADTRACTION_CHANNEL_ID }}
+        run: python3 _build/adtraction.py
+
+      - name: Byg sitet
+        run: python3 _build/build.py
+
+      - name: Validér
+        run: python3 _build/validate.py
+
+      - name: Gem opdaterede priser i repoet
+        run: |
+          git config user.name "telemobil-bot"
+          git config user.email "bot@telemobil.dk"
+          git add -A
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "Priser opdateret $(date -u +%Y-%m-%d\ %H:%M)"
+          git push
+
+      - name: Upload til Simply
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y lftp
+          lftp -c "
+            set ftp:ssl-allow no;
+            set net:max-retries 3;
+            open -u '${{ secrets.FTP_USERNAME }}','${{ secrets.FTP_PASSWORD }}' ${{ secrets.FTP_SERVER }};
+            mirror --reverse --only-newer --verbose=1 \
+              --exclude .git/ --exclude .github/ --exclude _build/ \
+              --exclude .gitignore --exclude '*.md' \
+              ./ public_html/;
+          "
