@@ -1131,3 +1131,14 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .kildeliste li::before{content:"§";position:absolute;left:0;color:var(--signal);font-weight:700;
   font-family:var(--font-tal)}
 .kildenote{font-size:.88rem;color:var(--graa);font-style:italic}
+
+/* Kildeliste med eksterne links */
+.kildeliste li{padding-left:0;margin-bottom:.9rem;color:var(--blaek)}
+.kildeliste li::before{content:none}
+.kildeliste a{font-weight:600;text-decoration:none;border-bottom:1.5px solid rgba(61,90,254,.3)}
+.kildeliste a:hover{border-bottom-color:var(--signal)}
+.kildeliste a::after{content:"↗";font-size:.72em;margin-left:.25rem;opacity:.6}
+.kilde-hvad{display:block;font-size:.85rem;color:var(--graa);margin-top:.15rem}
+.kilde-egen{display:inline-block;font-size:.66rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;background:#F1F4FC;color:var(--graa);border-radius:5px;
+  padding:.14rem .45rem;margin-right:.45rem;vertical-align:1px}

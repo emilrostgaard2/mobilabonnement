@@ -488,7 +488,9 @@ aftalen i forbindelse med ændringen, også hvis du ellers ville have et varsel.
 <li><strong>Binding gælder stadig for hardware.</strong> Har du telefon på afbetaling, skal
 restgælden typisk indfries, selvom du opsiger abonnementet.</li>
 <li><strong>Du kan klage.</strong> Er du uenig med udbyderen, kan sagen indbringes for
-Teleankenævnet, når du har klaget til selskabet først.</li>
+Teleankenævnet, når du først har klaget skriftligt til selskabet og fået svar — eller ikke
+har fået svar inden for rimelig tid, typisk op til tre måneder. Klagegebyret er 175 kr., og
+du får det retur, hvis du får helt eller delvist medhold eller indgår forlig.</li>
 </ul>
 
 <div class="tip">

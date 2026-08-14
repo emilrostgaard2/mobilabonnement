@@ -783,12 +783,47 @@ verificeret, vil vi ikke gætte — se udbyderens egne vilkår, eller
 <a href="/kontakt/">skriv til os</a>, hvis du kender svaret for et selskab, vi mangler.</p>"""
 
 
-def kilder(punkter):
-    """Kildeangivelser. Vi linker ikke ud til påstande, vi ikke kan stå inde for."""
-    li = "".join(f"<li>{p}</li>" for p in punkter)
+# Kun URL'er vi har verificeret. Vi linker aldrig til noget, vi ikke har tjekket.
+KILDER = {
+    "teleankenaevnet": ("Teleankenævnet", "https://teleanke.dk/",
+                        "Privat godkendt ankenævn for klager på teleområdet"),
+    "teleanke_klag": ("Teleankenævnet — klag online", "https://teleanke.dk/klag-online-nu/",
+                      "Klageskema og krav til dokumentation"),
+    "forbrugerombudsmanden": ("Forbrugerombudsmanden", "https://forbrugerombudsmanden.dk/",
+                              "Tilsyn med markedsføringsloven, herunder skjult reklame"),
+    "reklameidentifikation": ("Forbrugerombudsmandens vejledning om reklameidentifikation",
+                              "https://forbrugerombudsmanden.dk/media/49158/vejledning-reklameidentifikation.pdf",
+                              "Regler om tydelig markering af kommerciel hensigt"),
+    "datatilsynet": ("Datatilsynet", "https://www.datatilsynet.dk/",
+                     "Tilsyn med kreditoplysningsbureauer og databeskyttelse"),
+    "borger_kredit": ("Borger.dk om registrering af forbrugeroplysninger",
+                      "https://www.borger.dk/samfund-og-rettigheder/Folkeregister-og-CPR/Registrering-af-forbrugeroplysninger",
+                      "Dine rettigheder ved registrering som dårlig betaler"),
+    "experian": ("Experian om RKI-registret",
+                 "https://www.experian.dk/erhverv/forbrugerinformation/kreditvurdering/registreret-i-rki",
+                 "Registrets egen beskrivelse af indberetning og sletning"),
+    "digst_klage": ("Digitaliseringsstyrelsen om klager på teleområdet",
+                    "https://digst.dk/tele/telefoni-og-internet/abonnement-paa-telefoni-og-internet/hvordan-klager-man/",
+                    "Officiel vejledning i klageveje"),
+    "teleklagenaevnet": ("Teleklagenævnet", "https://naevneneshus.dk/naevnsoversigt/teleklagenaevnet/",
+                         "Klager over afgørelser fra Erhvervsstyrelsen og Energistyrelsen"),
+    "teleindustrien": ("Teleindustrien", "https://www.teleindu.dk/",
+                       "Teleselskabernes brancheorganisation"),
+}
+
+
+def kilder(noegler=None, egne=None):
+    """Kildeblok med klikbare, verificerede kilder plus vores eget grundlag."""
+    li = ""
+    for n in (noegler or []):
+        navn, url, hvad = KILDER[n]
+        li += (f'<li><a href="{url}" rel="noopener nofollow" target="_blank">{e(navn)}</a>'
+               f' <span class="kilde-hvad">{e(hvad)}</span></li>')
+    for tekst in (egne or []):
+        li += f'<li><span class="kilde-egen">Eget grundlag</span> {tekst}</li>'
     return f"""<h2>Kilder og grundlag</h2>
-<p>Vi mener, at en sammenligningsside skal kunne vise, hvor tallene kommer fra. Her er
-grundlaget for denne side.</p>
+<p>Vi mener, at en sammenligningsside skal kunne vise, hvor tallene og påstandene kommer
+fra. Eksterne kilder åbner i et nyt vindue.</p>
 <ul class="kildeliste">{li}</ul>
 <p class="kildenote">Finder du en oplysning, der ikke stemmer, så
 <a href="/kontakt/">skriv til os</a>. Vi retter og noterer datoen for rettelsen. Se også
@@ -2658,16 +2693,16 @@ GUIDER = [
      "esim", "Rejsende aktiverer eSIM i en lufthavn", "Guide", 6),
     ("/guides/mobilabonnement-i-udlandet/", "Mobilabonnement i udlandet",
      "Roaming, EU-regler og hvordan du undgår de dyre overraskelser uden for EU.",
-     "esim", "Rejsende bruger mobilen i en lufthavn", "Guide", 7),
+     "i-udlandet", "Kvinde bruger mobilen på en gade i Italien", "Guide", 7),
     ("/guides/prisstigning-mobilabonnement/", "Prisstigning på mobilabonnement",
      "Hvorfor prisen stiger, hvornår du kan opsige, og hvordan du får markedsprisen igen.",
-     "daekning-og-netvaerk", "Kvinde tjekker sin mobilregning", "Rettigheder", 7),
+     "prisstigning", "Kvinde gennemgår sin mobilregning", "Rettigheder", 7),
     ("/guides/mobilabonnement-eller-bredbaand/", "Mobilabonnement eller bredbånd?",
      "Kan et stort mobilabonnement erstatte dit bredbånd? Se forskellen og regnestykket.",
-     "hvor-meget-data", "Kvinde arbejder på laptop med mobilforbindelse", "Sammenligning", 7),
+     "mobil-eller-bredbaand", "Mobilabonnement og bredbånd sammenlignet", "Sammenligning", 7),
     ("/guides/mobilabonnement-trods-rki/", "Mobilabonnement trods RKI",
      "Taletid kræver ingen kreditvurdering. Se alle veje til et abonnement og dine rettigheder.",
-     "skift-mobilselskab", "Person gennemgår sine muligheder på laptop", "Rettigheder", 8),
+     "trods-rki", "Mand undersøger mobilabonnementer på et bibliotek", "Rettigheder", 8),
 ]
 
 
@@ -3310,14 +3345,13 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         tabeltitel="Alle abonnementer under 100 kr. om måneden",
         ekstra_tabeller=[prisfordeling(), tabel_billigst_pr_udbyder(), tabel_prgb_rangliste(),
                          tabel_aarsomkostning(), fejltabel(), begrebstabel(),
-                         kilder([
-                             "Priser og vilkår: udbydernes egne offentlige prislister, kontrolleret manuelt.",
-                             "Gennemsnitspris over 12 mdr.: egen beregning — intropris ganget med "
-                             "introperioden plus normalpris for resten, divideret med tolv, plus oprettelse.",
-                             "Datamængder og EU-loft: udbydernes abonnementsvilkår.",
-                             "Netværksangivelser: udbydernes egne oplysninger. Hvor de ikke kan "
-                             "verificeres, angiver vi MVNO i stedet for at gætte.",
-                         ]),
+                         kilder(
+                             ["forbrugerombudsmanden", "reklameidentifikation", "teleankenaevnet"],
+                             ["Priser og vilkår: udbydernes egne offentlige prislister, kontrolleret manuelt.",
+                              "Gennemsnitspris over 12 mdr.: egen beregning — intropris ganget med "
+                              "introperioden plus normalpris for resten, divideret med tolv, plus oprettelse.",
+                              "Netværksangivelser: udbydernes egne oplysninger. Hvor de ikke kan "
+                              "verificeres, angiver vi MVNO i stedet for at gætte."]),
                          vejviser("/mobilabonnement-under-100-kr/")],
         faq=[
             {"sp": "Hvor mange mobilabonnementer koster under 100 kr.?",
@@ -3349,13 +3383,11 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               "Registreret i RKI? Taletid kræver ingen kreditvurdering, og der findes flere "
               "veje til et abonnement. Se dine muligheder og dine rettigheder.",
               sider4.rki(D, {"gennemgang": gennemgangslinje(OPDATERET, "Regler og fremgangsmåde gennemgået")})
-              + f'<section class="sektion baand-smal artikel">{kilder([
-                  "Kreditoplysningsregistre: RKI drives af Experian, Debitor Registret af Dun &amp; Bradstreet.",
-                  "Retten til indsigt og berigtigelse følger af databeskyttelsesreglerne.",
-                  "Krav til kreditvurdering ved abonnementsaftaler: udbydernes egne vilkår.",
-                  "Vi navngiver bevidst ikke udbydere som RKI-venlige. Ingen dansk udbyder "
-                  "offentliggør sine kreditkriterier, og de ændrer sig løbende.",
-              ])}</section>',
+              + f'<section class="sektion baand-smal artikel">{kilder(
+                  ["experian", "borger_kredit", "datatilsynet", "teleankenaevnet"],
+                  ["Krav til kreditvurdering ved abonnementsaftaler: udbydernes egne vilkår.",
+                   "Vi navngiver bevidst ikke udbydere som RKI-venlige. Ingen dansk udbyder "
+                   "offentliggør sine kreditkriterier, og de ændrer sig løbende."])}</section>',
               [
                   {"sp": "Kan jeg få mobilabonnement, når jeg står i RKI?",
                    "sv": "Et almindeligt abonnement kræver som regel kreditvurdering, og en aktiv "
@@ -3382,8 +3414,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/mobilabonnement-med-telefon/", "Telefon på afbetaling — regn efter"),
                ("/mobilabonnement-under-100-kr/", "Abonnementer under 100 kr."),
                ("/mobilabonnement-uden-data/", "Abonnement uden data")],
-              billede="skift-mobilselskab",
-              altbillede="Person gennemgår sine muligheder for mobilabonnement på laptop",
+              billede="trods-rki",
+              altbillede="Mand undersøger mobilabonnementer på laptop på et bibliotek",
               ekstra=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(),
                       vejviser("/guides/mobilabonnement-trods-rki/")])
 
@@ -3393,13 +3425,13 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               "Kan et stort mobilabonnement erstatte dit bredbånd? Se forskellen på mobil, "
               "mobilt bredbånd og fast bredbånd — og hvornår hvad giver mening.",
               sider4.bredbaand(D, {"gennemgang": gennemgangslinje(OPDATERET, "Datatal baseret på typisk forbrug")})
-              + f'<section class="sektion baand-smal artikel">{kilder([
-                  "Dataforbrug pr. aktivitet: typiske intervaller baseret på streamingtjenesternes "
-                  "egne oplysninger om båndbredde ved forskellige opløsninger.",
-                  "Mobilpriser: vores egen sammenligning, opdateret " + OPDATERET + ".",
-                  "Vi sammenligner ikke bredbåndspriser og henviser til dedikerede "
-                  "bredbåndssammenligninger for den del.",
-              ])}</section>',
+              + f'<section class="sektion baand-smal artikel">{kilder(
+                  ["teleankenaevnet", "digst_klage"],
+                  ["Dataforbrug pr. aktivitet: typiske intervaller baseret på streamingtjenesternes "
+                   "egne oplysninger om båndbredde ved forskellige opløsninger.",
+                   "Mobilpriser: vores egen sammenligning, opdateret " + OPDATERET + ".",
+                   "Vi sammenligner ikke bredbåndspriser og henviser til dedikerede "
+                   "bredbåndssammenligninger for den del."])}</section>',
               [
                   {"sp": "Kan et mobilabonnement erstatte bredbånd?",
                    "sv": "For en enkelt person med god mobildækning og fri data, ja. For en husstand med "
@@ -3423,8 +3455,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/daekningskort/", "Tjek dækningen på din adresse"),
                ("/speedtest/", "Test din mobilhastighed"),
                ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?")],
-              billede="hvor-meget-data",
-              altbillede="Kvinde arbejder på laptop med mobilforbindelse",
+              billede="mobil-eller-bredbaand",
+              altbillede="Kvinde sammenligner mobilabonnement og bredbånd derhjemme med router",
               ekstra=[prisfordeling(), tabel_pr_datamaengde(),
                       vejviser("/guides/mobilabonnement-eller-bredbaand/")])
 
@@ -3434,13 +3466,13 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               "Sådan bruger du dit danske abonnement i udlandet uden dyre overraskelser. "
               "Forskellen på roaming og udlandsopkald, og hvad du gør uden for EU.",
               sider4.udlandet(D, {"gennemgang": gennemgangslinje(OPDATERET, "Roamingregler og takstforhold gennemgået")})
-              + f'<section class="sektion baand-smal artikel">{kilder([
-                  "EU-roaming: reglerne om roaming inden for EU og EØS, som de fremgår af "
-                  "udbydernes abonnementsvilkår.",
-                  "EU-datalofter: de enkelte udbyderes vilkår — se EU-kolonnen i vores tabeller.",
-                  "Landekoder: ITU-T E.164 og ISO 3166-1.",
-                  "Dataforbrug på rejse: typiske intervaller, ikke målte værdier.",
-              ])}</section>',
+              + f'<section class="sektion baand-smal artikel">{kilder(
+                  ["digst_klage", "teleankenaevnet"],
+                  ["EU-roaming: reglerne om roaming inden for EU og EØS, som de fremgår af "
+                   "udbydernes abonnementsvilkår.",
+                   "EU-datalofter: de enkelte udbyderes vilkår — se EU-kolonnen i vores tabeller.",
+                   "Landekoder: ITU-T E.164 og ISO 3166-1.",
+                   "Dataforbrug på rejse: typiske intervaller, ikke målte værdier."])}</section>',
               [
                   {"sp": "Virker mit danske abonnement i EU?",
                    "sv": "Ja. Inden for EU og EØS bruger du abonnementet på stort set samme vilkår som "
@@ -3462,8 +3494,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/landekoder/", "Alle landekoder"),
                ("/mobilabonnement-med-fri-tale/", "Abonnementer med fri tale"),
                ("/hvem-ringer-til-mig/", "Ukendt opkald fra udlandet?")],
-              billede="esim",
-              altbillede="Rejsende bruger mobilen i en lufthavn",
+              billede="i-udlandet",
+              altbillede="Kvinde bruger mobilen med roaming på en gade i Italien",
               ekstra=[tabel_billigst_pr_udbyder(), begrebstabel(),
                       vejviser("/guides/mobilabonnement-i-udlandet/")])
 
@@ -3473,13 +3505,13 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               "Er dit mobilabonnement steget i pris? Se hvorfor det sker, hvornår du kan "
               "opsige, og hvordan du får markedsprisen igen.",
               sider4.prisstigning(D, {"gennemgang": gennemgangslinje(OPDATERET, "Rettigheder og fremgangsmåde gennemgået")})
-              + f'<section class="sektion baand-smal artikel">{kilder([
-                  "Varslingsregler ved ændringer til ugunst: udbydernes abonnementsvilkår.",
-                  "Klagemulighed: Teleankenævnet behandler klager, når du først har klaget til selskabet.",
-                  "Prisberegninger: egne beregninger ud fra de viste beløb.",
-                  "Vi giver ikke juridisk rådgivning — ved tvivl om din konkrete aftale bør du "
-                  "kontakte udbyderen eller Teleankenævnet.",
-              ])}</section>',
+              + f'<section class="sektion baand-smal artikel">{kilder(
+                  ["teleankenaevnet", "teleanke_klag", "digst_klage", "forbrugerombudsmanden",
+                   "teleklagenaevnet"],
+                  ["Varslingsregler ved ændringer til ugunst: udbydernes abonnementsvilkår.",
+                   "Prisberegninger: egne beregninger ud fra de viste beløb.",
+                   "Vi giver ikke juridisk rådgivning — ved tvivl om din konkrete aftale bør du "
+                   "kontakte udbyderen eller Teleankenævnet."])}</section>',
               [
                   {"sp": "Må mit mobilselskab hæve prisen?",
                    "sv": "Ja, men væsentlige ændringer til ugunst for dig skal varsles inden ikrafttræden, "
@@ -3494,15 +3526,16 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                    "sv": "Ofte ja. Ring og sig, at du overvejer at skifte. De fleste selskaber har en "
                          "fastholdelsesafdeling, der kan matche prisen til nye kunder."},
                   {"sp": "Hvor klager jeg?",
-                   "sv": "Klag først til selskabet skriftligt. Er du fortsat uenig, kan sagen indbringes "
-                         "for Teleankenævnet."},
+                   "sv": "Klag først skriftligt til selskabet. Får du ikke medhold — eller intet svar inden "
+                         "for rimelig tid — kan sagen indbringes for Teleankenævnet. Klagegebyret er 175 kr. "
+                         "og refunderes, hvis du får medhold."},
               ],
               [("/billigste-mobilabonnement/", "Sammenlign priser nu"),
                ("/mobilabonnement-uden-binding/", "Abonnementer uden binding"),
                ("/mobilabonnement-under-100-kr/", "Abonnementer under 100 kr."),
                ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab")],
-              billede="daekning-og-netvaerk",
-              altbillede="Kvinde tjekker sin mobilregning udendørs",
+              billede="prisstigning",
+              altbillede="Kvinde gennemgår sin mobilregning efter en prisstigning",
               ekstra=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), fejltabel(),
                       vejviser("/guides/prisstigning-mobilabonnement/")])
 
@@ -3714,12 +3747,11 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               altbillede="Kvinde skifter mobilselskab på laptop og telefon på en café",
               ekstra=[tabel_billigst_pr_udbyder(), tabel_aarsomkostning(), fejltabel(),
                       vejviser("/guides/skift-mobilselskab/"),
-                      kilder([
-                          "Nummerportering: en rettighed i Danmark — den nye udbyder håndterer flytningen.",
-                          "Priser og vilkår: udbydernes egne prislister, kontrolleret manuelt.",
-                          "Restgæld ved telefon på afbetaling: udbydernes abonnementsvilkår.",
-                          "Tidsangivelser for portering er typiske intervaller, ikke garantier.",
-                      ])])
+                      kilder(
+                          ["digst_klage", "teleankenaevnet", "teleindustrien"],
+                          ["Nummerportering: en rettighed i Danmark — den nye udbyder håndterer flytningen.",
+                           "Priser og vilkår: udbydernes egne prislister, kontrolleret manuelt.",
+                           "Tidsangivelser for portering er typiske intervaller, ikke garantier."])])
 
     byg_guide("/guides/hvor-meget-data/", "Hvor meget data",
               "Hvor meget data har jeg brug for?",
@@ -3748,13 +3780,13 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               altbillede="Kvinde tjekker sit dataforbrug på telefonen på en café",
               ekstra=[prisfordeling(), tabel_pr_datamaengde(), tabel_prgb_rangliste(),
                       vejviser("/guides/hvor-meget-data/"),
-                      kilder([
-                          "Dataforbrug pr. aktivitet: typiske intervaller ud fra streamingtjenesternes "
-                          "egne oplysninger om båndbredde ved forskellige opløsninger.",
-                          "Priser og datamængder: vores egen sammenligning, opdateret " + OPDATERET + ".",
-                          "Tallene er vejledende — dit eget forbrug findes i telefonens indstillinger "
-                          "og er den eneste præcise kilde.",
-                      ])])
+                      kilder(
+                          ["teleankenaevnet"],
+                          ["Dataforbrug pr. aktivitet: typiske intervaller ud fra streamingtjenesternes "
+                           "egne oplysninger om båndbredde ved forskellige opløsninger.",
+                           "Priser og datamængder: vores egen sammenligning, opdateret " + OPDATERET + ".",
+                           "Tallene er vejledende — dit eget forbrug findes i telefonens indstillinger "
+                           "og er den eneste præcise kilde."])])
 
     byg_guide("/guides/daekning-og-netvaerk/", "Dækning og netværk",
               "Dækning og netværk i Danmark",
@@ -3830,13 +3862,13 @@ kælderen — mens du stadig kan fortryde.</p></div>
               altbillede="Kvinde med 5G-dækning på telefonen ved dansk kystby med mobilmast",
               ekstra=[udbydergitter(), tabel_billigst_pr_udbyder(),
                       vejviser("/guides/daekning-og-netvaerk/"),
-                      kilder([
-                          "Netværksejere i Danmark: TDC NET, Telenor og 3.",
-                          "Dækningskort: netværksejernes egne offentlige kort, som bygger på deres måledata.",
-                          "Netværksangivelser pr. udbyder: udbydernes egne oplysninger. Hvor de ikke kan "
-                          "verificeres, angiver vi MVNO frem for at gætte.",
-                          "Vi laver ikke egne hastigheds- eller dækningsmålinger og foregiver ikke andet.",
-                      ])])
+                      kilder(
+                          ["digst_klage", "teleindustrien", "teleklagenaevnet"],
+                          ["Netværksejere i Danmark: TDC NET, Telenor og 3.",
+                           "Dækningskort: netværksejernes egne offentlige kort, som bygger på deres måledata.",
+                           "Netværksangivelser pr. udbyder: udbydernes egne oplysninger. Hvor de ikke kan "
+                           "verificeres, angiver vi MVNO frem for at gætte.",
+                           "Vi laver ikke egne hastigheds- eller dækningsmålinger og foregiver ikke andet."])])
 
     byg_guide("/guides/esim/", "eSIM", "eSIM forklaret",
               f"eSIM i Danmark — sådan virker det, og hvornår det betaler sig",
@@ -3899,11 +3931,11 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
               altbillede="Rejsende aktiverer eSIM på telefonen i en lufthavn",
               ekstra=[tabel_billigst_pr_udbyder(), begrebstabel(),
                       vejviser("/guides/esim/"),
-                      kilder([
-                          "eSIM-understøttelse: telefonproducenternes egne specifikationer.",
-                          "Gebyrer for nye eSIM-profiler: udbydernes prislister.",
-                          "Priser: vores egen sammenligning, opdateret " + OPDATERET + ".",
-                      ])])
+                      kilder(
+                          ["teleindustrien", "teleankenaevnet"],
+                          ["eSIM-understøttelse: telefonproducenternes egne specifikationer.",
+                           "Gebyrer for nye eSIM-profiler: udbydernes prislister.",
+                           "Priser: vores egen sammenligning, opdateret " + OPDATERET + "."])])
 
     # Om-sider
     byg_statisk("/om-os/", "Om Telemobil — uafhængig sammenligning af mobilabonnementer",
