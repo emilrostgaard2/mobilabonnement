@@ -24,6 +24,7 @@ import sider  # noqa: E402
 import sider2  # noqa: E402
 import sider3  # noqa: E402
 import sider4  # noqa: E402
+import historier  # noqa: E402
 from udbyder_unik import UNIK  # noqa: E402
 import skabelon  # noqa: E402
 
@@ -144,7 +145,14 @@ ORG = {
     "email": "kontakt@telemobil.dk",
     "foundingDate": site.get("udgivet", ISO)[:4],
     "areaServed": {"@type": "Country", "name": "Danmark"},
-    "address": {"@type": "PostalAddress", "addressCountry": "DK"},
+    "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Lundbyesgade 13",
+        "postalCode": "8000",
+        "addressLocality": "Aarhus C",
+        "addressRegion": "Midtjylland",
+        "addressCountry": "DK",
+    },
     "knowsLanguage": "da-DK",
     "contactPoint": {
         "@type": "ContactPoint",
@@ -826,6 +834,11 @@ KILDER = {
 }
 
 
+def erfaring(noegle):
+    return historier.historie(noegle, FORFATTER["billede"], FORFATTER["navn"],
+                              "/om/emil-rostgaard/")
+
+
 def kilder(noegler=None, egne=None):
     """Kildeblok med klikbare, verificerede kilder plus vores eget grundlag."""
     li = ""
@@ -949,6 +962,8 @@ def byg_forside():
     </div>
   </div>
 </section>
+
+<section class="sektion baand-smal">{erfaring("forside")}</section>
 
 <section class="sektion baand-smal artikel">
   {gennemgangslinje(OPDATERET)}
@@ -1083,7 +1098,7 @@ def byg_billigste():
     '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1
 ).replace(
     '<h2>De skjulte omkostninger, folk overser</h2>',
-    redaktionens_valg() + prisfordeling() + tabel_billigst_pr_udbyder()
+    erfaring('billigste') + redaktionens_valg() + prisfordeling() + tabel_billigst_pr_udbyder()
     + tabel_prgb_rangliste() + tabel_aarsomkostning() + overforbrug() + '<h2>De skjulte omkostninger, folk overser</h2>', 1
 ).replace(
     '<h2>Hvilket abonnement passer til din situation?</h2>',
@@ -1159,7 +1174,7 @@ def byg_fridata():
     '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1
 ).replace(
     '<h2>Hvad bruger man egentlig data på?</h2>',
-    tabel_pr_datamaengde() + '<h2>Hvad bruger man egentlig data på?</h2>', 1
+    erfaring('fri_data') + tabel_pr_datamaengde() + '<h2>Hvad bruger man egentlig data på?</h2>', 1
 ).replace('</section>', tabel_prgb_rangliste() + fejltabel() + begrebstabel() + '</section>', 1)}
 
 <section class="sektion baand-smal">
@@ -1698,6 +1713,125 @@ def byg_netvaerksside(n):
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      listeld(planer, f"Abonnementer på {n['navn']}"))],
     ), prioritet="0.75")
+
+
+GB_INTERVALLER = [
+    ("1-10-gb", "1–10 GB", 1, 10, "Let bruger",
+     "Til dig der er på wi-fi det meste af dagen og bruger mobilen til beskeder, "
+     "musik og lidt navigation."),
+    ("10-30-gb", "10–30 GB", 10, 30, "Almindelig bruger",
+     "Danmarks mest almindelige forbrug. Rækker til sociale medier, podcasts, "
+     "kort og lidt video på farten."),
+    ("30-50-gb", "30–50 GB", 30, 50, "Aktiv bruger",
+     "Til dig der pendler dagligt og streamer video uden for wi-fi flere gange "
+     "om ugen."),
+    ("50-gb", "50 GB og op", 50, 99, "Storforbruger",
+     "Til dig der streamer dagligt på farten eller bruger telefonen som hotspot "
+     "til en laptop."),
+    ("100-gb", "100 GB og op", 100, 899, "Meget stort forbrug",
+     "Til dig hvor mobilen er den primære internetforbindelse, eller hvor flere "
+     "enheder deler den."),
+]
+
+
+def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
+    sti = f"/mobilabonnement-{slug}/"
+    udvalg = sorted([a for a in ABON if lav <= a["data_gb"] <= hoej and a["pris"] > 0],
+                    key=lambda a: gns12(a) or 9e9)
+    if not udvalg:
+        return
+    billigst_g = udvalg[0]
+    u = UMAP[billigst_g["udbyder"]]
+    krumme = [("/", "Forside"), (None, f"Mobilabonnement {navn}")]
+
+    # Naboer til intern navigation mellem intervallerne
+    naboer = "".join(
+        f'<a href="/mobilabonnement-{s}/"{" class=\"aktiv\"" if s == slug else ""}>{e(n)}</a>'
+        for s, n, _, _, _, _ in GB_INTERVALLER)
+
+    faq = [
+        {"sp": f"Hvad koster et mobilabonnement med {navn}?",
+         "sv": f"Det billigste med {navn} koster {kr(gns12(billigst_g))} kr. om måneden regnet "
+               f"som gennemsnit over 12 måneder. Det er {u['navn']} {billigst_g['navn']}."},
+        {"sp": f"Er {navn} nok til mig?",
+         "sv": beskrivelse + " Tjek dit faktiske forbrug i telefonens indstillinger — de fleste "
+               "danskere bruger mindre, end de tror."},
+        {"sp": "Hvad sker der, hvis jeg løber tør?",
+         "sv": "Det afhænger af udbyderen: nogle sætter hastigheden ned, andre spærrer, og andre "
+               "køber automatisk ekstra data. Slå datastop til for at undgå det sidste."},
+        {"sp": "Kan jeg skifte datamængde senere?",
+         "sv": "Ja, hos de fleste udbydere kan du flytte op og ned fra måned til måned i deres app. "
+               "Det kræver ikke, at du skifter selskab."},
+    ]
+
+    krop = f"""
+<section class="sektion baand">
+  <nav class="gb-navigation" aria-label="Vælg datamængde">
+    <span class="gb-titel">Datamængde</span>{naboer}
+  </nav>
+</section>
+
+{pristabel(udvalg, UMAP, titel=f"Mobilabonnement med {navn}",
+           undertitel=f"{len(udvalg)} abonnementer i intervallet, sorteret efter reel pris "
+                      "over 12 måneder.",
+           billigst_id=billigst_g["id"])}
+
+<section class="sektion baand-smal artikel">
+  {gennemgangslinje(OPDATERET)}
+
+  <div class="udtag">
+  <p><strong>Kort svar:</strong> Der er {len(udvalg)} abonnementer med {navn} i vores
+  sammenligning. Det billigste er {e(u['navn'])} {e(billigst_g['navn'])} til
+  {kr(gns12(billigst_g))} kr. om måneden i gennemsnit over 12 måneder.
+  {e(navn)} passer til: {e(profil.lower())}.</p>
+  </div>
+
+  <h2>Hvem passer {e(navn)} til?</h2>
+  <p>{e(beskrivelse)}</p>
+  <p>Er du i tvivl, så find dit faktiske forbrug i telefonens indstillinger frem for at
+  gætte. Kig på de seneste tre måneder og tag den højeste.
+  <a href="/guides/hvor-meget-data/">Se hvordan du finder tallet</a>.</p>
+
+  {tabel_pr_datamaengde()}
+
+  <h2>Skal du op eller ned?</h2>
+  <p>Vi anbefaler næsten altid ét trin over dit målte forbrug. Grunden er
+  prisstrukturen på det danske marked: springet mellem kategorierne er ofte
+  20-40 kr. om måneden, mens datamængden fordobles eller tredobles. Den ekstra tyver
+  køber dig, at du aldrig skal tænke over det igen — og det er billigere end at købe
+  ekstra data en enkelt måned.</p>
+
+  {tabel_billigst_pr_udbyder()}
+  {vejviser(sti)}
+</section>
+
+<section class="sektion baand-smal">
+  {laesvidere([
+      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+      ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?"),
+      ("/12-maaneders-prisen/", "Sådan beregner vi 12-måneders-prisen"),
+      ("/bedste-mobilabonnement/", "Bedste mobilabonnement"),
+  ])}
+  {forfatterboks()}{afsloering()}
+</section>
+"""
+    return skriv(sti, shell(
+        sti=sti,
+        titel=f"Mobilabonnement {navn} — fra {kr(gns12(billigst_g))} kr./md.",
+        beskrivelse=(f"Sammenlign {len(udvalg)} mobilabonnementer med {navn}. "
+                     f"Fra {kr(gns12(billigst_g))} kr./md. regnet over 12 måneder, "
+                     "så introtilbud ikke skjuler normalprisen."),
+        opdateret=OPDATERET,
+        hero=hero_side(f"{navn}", f"Mobilabonnement med {e(navn)}",
+                       e(beskrivelse),
+                       '<a href="#sammenlign" class="knap knap-primaer">Se abonnementerne</a>',
+                       [("Planer", str(len(udvalg))), ("Fra", f"{kr(gns12(billigst_g))} kr."),
+                        ("Profil", profil)]),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, f"Mobilabonnement {navn}", ""),
+                     listeld(udvalg, f"Mobilabonnement med {navn}"))],
+    ), prioritet="0.8")
 
 
 # --------------------------------------------------------------- VS-SIDER
@@ -2863,7 +2997,7 @@ Canonical: {DOMAENE}/.well-known/security.txt
 Stifter og redaktør: {FORFATTER['navn']}
 Kontakt: kontakt@telemobil.dk
 LinkedIn: {FORFATTER['linkedin']}
-Land: Danmark
+Adresse: Lundbyesgade 13, 8000 Aarhus C, Danmark
 
 /* SITE */
 Sidst opdateret: {ISO}
@@ -3284,7 +3418,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=boernudvalg, tekstfunktion=sider2.boern,
         chips=[("Fra", f"{D['pris_boern']} kr."), ("Datastop", "anbefales"), ("Uden", "binding")],
         tabeltitel="Små abonnementer der passer til børn",
-        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), tabel_aarsomkostning(), fejltabel(), begrebstabel(), vejviser()],
+        ekstra_tabeller=[erfaring('boern'), tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), tabel_aarsomkostning(), fejltabel(), begrebstabel(), vejviser()],
         faq=[
             {"sp": "Hvilket mobilabonnement er bedst til børn?",
              "sv": "Til de yngste er taletid tryggest, fordi udgiften er låst. Fra cirka 11-12 år er et lille "
@@ -3510,7 +3644,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/hvem-ringer-til-mig/", "Ukendt opkald fra udlandet?")],
               billede="i-udlandet",
               altbillede="Kvinde bruger mobilen med roaming på en gade i Italien",
-              ekstra=[tabel_billigst_pr_udbyder(), begrebstabel(),
+              ekstra=[erfaring("udlandet"), tabel_billigst_pr_udbyder(), begrebstabel(),
                       vejviser("/guides/mobilabonnement-i-udlandet/")])
 
     byg_guide("/guides/prisstigning-mobilabonnement/", "Prisstigning",
@@ -3550,7 +3684,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab")],
               billede="prisstigning",
               altbillede="Kvinde gennemgår sin mobilregning efter en prisstigning",
-              ekstra=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), fejltabel(),
+              ekstra=[erfaring("prisstigning"), tabel_aarsomkostning(),
+                      tabel_billigst_pr_udbyder(), fejltabel(),
                       vejviser("/guides/prisstigning-mobilabonnement/")])
 
     # ---------------- Musik, ældre, telefon og taletid ----------------
@@ -3707,6 +3842,10 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_netvaerksoversigt()
     for n in NETVAERK:
         byg_netvaerksside(n)
+
+    # GB-intervaller
+    for _s, _n, _l, _h, _p, _b in GB_INTERVALLER:
+        byg_gb_side(_s, _n, _l, _h, _p, _b)
 
     # Sammenligninger mellem to udbydere
     byg_vs_oversigt()
@@ -3951,6 +4090,161 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
                            "Gebyrer for nye eSIM-profiler: udbydernes prislister.",
                            "Priser: vores egen sammenligning, opdateret " + OPDATERET + "."])])
 
+    # Navngiven metode — vores signaturtal
+    tolv_krop = f"""<section class="sektion baand-smal artikel">
+  <div class="udtag">
+  <p><strong>Kort fortalt:</strong> 12-måneders-prisen er den reelle månedspris, når
+  intropris, normalpris og oprettelsesgebyr regnes sammen over et år. Det er tallet, vi
+  sorterer efter — ikke den intropris, udbyderne markedsfører.</p>
+  </div>
+
+  <h2>Formlen</h2>
+  <p>Vi bruger den samme udregning på hvert eneste abonnement på sitet:</p>
+  <div class="formelboks">
+    <code>(intropris × introperiode) + (normalpris × resterende måneder) + oprettelse</code>
+    <span class="formel-div">÷ 12</span>
+  </div>
+  <p>Regnestykket står under prisen på hvert abonnement i vores tabeller, så du selv kan
+  efterprøve det. Ser du <code>59×2 + 200×10 ÷ 12</code>, betyder det 59 kr. i to måneder,
+  derefter 200 kr. i ti — altså 176 kr. i gennemsnit.</p>
+
+  <h2>Hvorfor ikke bare vise månedsprisen?</h2>
+  <p>Fordi den næsten aldrig er den pris, du betaler. To ud af fem abonnementer på det
+  danske marked sælges på en intropris, der gælder to til seks måneder. Et abonnement til
+  49 kr., der stiger til 149 kr. i måned tre, koster i virkeligheden 129 kr. i gennemsnit
+  over året.</p>
+  <p>Sorterer man efter månedsprisen, ligger de aggressive introtilbud øverst — også når de
+  er dyrere end alternativerne over et helt år. Det er ikke en fejl i tabellen. Det er en
+  fejl i, hvad tabellen måler.</p>
+
+  <h2>Hvad tallet ikke dækker</h2>
+  <ul>
+    <li><strong>Prisstigninger vi ikke kender.</strong> Regner udbyderen prisen op midt i
+    perioden, kan den reelle pris blive højere. Vi bruger de priser, der er oplyst i dag.</li>
+    <li><strong>Overforbrug.</strong> Køber du ekstra data, kommer det oveni. Det er
+    endnu en grund til at vælge ét trin over dit målte forbrug.</li>
+    <li><strong>Telefon på afbetaling.</strong> Vi regner kun på abonnementet. Hardware er
+    en separat aftale — se <a href="/mobilabonnement-med-telefon/">vores gennemgang</a>.</li>
+    <li><strong>Værdien af streaming.</strong> Indgår der tjenester, kan den reelle værdi
+    være højere end prisen antyder. Det vurderer vi i teksten, ikke i tallet.</li>
+  </ul>
+
+  <h2>Hvorfor 12 måneder og ikke 6 eller 24?</h2>
+  <p>Tolv måneder er den periode, hvor stort set alle introtilbud er udløbet, og hvor de
+  fleste mennesker tænker i budget. Seks måneder favoriserer lange introperioder
+  kunstigt. Fireogtyve måneder forudsætter, at du bliver — og det bør du netop ikke uden
+  at genoverveje.</p>
+
+  <h2>Sådan bruger du tallet</h2>
+  <ol class="trin">
+    <li><strong>Sammenlign kun 12-måneders-priser med hinanden</strong>
+    Ikke en 12-måneders-pris mod en andens intropris. Det er den hyppigste fejl.</li>
+    <li><strong>Sortér efter det i tabellen</strong>
+    Knappen hedder "Gns. 12 mdr." i filterpanelet.</li>
+    <li><strong>Tjek regnestykket</strong>
+    Det står under prisen. Ser du et abonnement uden intropris, står der bare
+    <code>×12</code>.</li>
+  </ol>
+
+  {kilder(["forbrugerombudsmanden", "reklameidentifikation"],
+          ["Formlen er vores egen. Vi har ikke set andre danske sammenligningssider "
+           "beregne og sortere efter den, men de fleste viser normalprisen ved siden af "
+           "introprisen.",
+           "Priser hentes fra udbydernes offentlige prislister og kontrolleres manuelt."])}
+</section>"""
+    byg_statisk("/12-maaneders-prisen/",
+                "12-måneders-prisen — sådan beregner vi den reelle pris",
+                "Vores signaturtal: den reelle månedspris når intropris, normalpris og "
+                "oprettelse regnes sammen. Se formlen og hvorfor den findes.",
+                "Metode", "12-måneders-prisen", tolv_krop, prioritet="0.6")
+
+    ordbog_krop = f"""<section class="sektion baand-smal artikel">
+  <p class="led">Telemarkedet bruger en række ord, der ikke betyder helt det, man tror.
+  Her er de vigtigste oversat til almindeligt dansk.</p>
+  {begrebstabel()}
+
+  <h2>Enheder og forkortelser</h2>
+  <table>
+  <thead><tr><th>Forkortelse</th><th>Står for</th><th>Hvad det betyder</th></tr></thead>
+  <tbody>
+  <tr><td><strong>GB</strong></td><td>Gigabyte</td><td>Datamængde. 1 GB ≈ en times video i standardkvalitet</td></tr>
+  <tr><td><strong>MB</strong></td><td>Megabyte</td><td>1.000 MB = 1 GB. En times musik fylder ca. 100 MB</td></tr>
+  <tr><td><strong>Mbit/s</strong></td><td>Megabit pr. sekund</td><td>Hastighed. 10 Mbit rækker til video i HD</td></tr>
+  <tr><td><strong>eSIM</strong></td><td>Embedded SIM</td><td>Digitalt simkort indbygget i telefonen</td></tr>
+  <tr><td><strong>MVNO</strong></td><td>Mobile Virtual Network Operator</td><td>Selskab uden eget net, der lejer kapacitet</td></tr>
+  <tr><td><strong>PUK</strong></td><td>Personal Unblocking Key</td><td>Kode der låser simkortet op efter tre forkerte PIN-forsøg</td></tr>
+  <tr><td><strong>APN</strong></td><td>Access Point Name</td><td>Indstilling der forbinder telefonen til udbyderens datanet</td></tr>
+  <tr><td><strong>VoLTE</strong></td><td>Voice over LTE</td><td>Opkald over 4G-nettet — bedre lyd og hurtigere opkobling</td></tr>
+  <tr><td><strong>VoWiFi</strong></td><td>Voice over Wi-Fi</td><td>Wi-fi-opkald. Løser dårlig indendørsdækning</td></tr>
+  <tr><td><strong>Roaming</strong></td><td>—</td><td>At bruge dit abonnement, mens du er i udlandet</td></tr>
+  </tbody>
+  </table>
+  <p>Mangler der et ord? <a href="/kontakt/">Skriv til os</a>, så tilføjer vi det.</p>
+</section>"""
+    byg_statisk("/ordbog/", "Teleordbog — mobilbegreber forklaret på dansk",
+                "Alle de begreber du møder, når du vælger mobilabonnement — fra MVNO og "
+                "eSIM til PUK og VoWiFi, forklaret i almindeligt dansk.",
+                "Ordbog", "Teleordbog", ordbog_krop, prioritet="0.5")
+
+    pin_krop = """<section class="sektion baand-smal artikel">
+  <div class="udtag">
+  <p><strong>Kort svar:</strong> PIN-koden beskytter dit simkort og indtastes, når du
+  tænder telefonen. Taster du forkert tre gange, låses kortet, og du skal bruge PUK-koden.
+  Taster du PUK forkert ti gange, ødelægges simkortet permanent, og du skal have et nyt
+  fra din udbyder.</p>
+  </div>
+
+  <h2>Forskellen på PIN og PUK</h2>
+  <table>
+  <thead><tr><th></th><th>PIN</th><th>PUK</th></tr></thead>
+  <tbody>
+  <tr><td><strong>Cifre</strong></td><td>4 (kan ofte ændres til 8)</td><td>8</td></tr>
+  <tr><td><strong>Bruges til</strong></td><td>At låse simkortet op ved opstart</td><td>At låse op efter tre forkerte PIN</td></tr>
+  <tr><td><strong>Kan du ændre den?</strong></td><td>Ja</td><td>Nej — den er fast</td></tr>
+  <tr><td><strong>Forsøg før spærring</strong></td><td>3</td><td>10</td></tr>
+  <tr><td><strong>Hvor finder du den?</strong></td><td>Fulgte med simkortet</td><td>Udbyderens selvbetjening</td></tr>
+  </tbody>
+  </table>
+
+  <h2>Jeg har glemt min PIN-kode</h2>
+  <ol class="trin">
+    <li><strong>Prøv ikke at gætte</strong>
+    Du har tre forsøg i alt, og de tæller på tværs af genstarter. Stop hellere med det samme.</li>
+    <li><strong>Find din PUK-kode</strong>
+    Den ligger i din udbyders app eller selvbetjening, typisk under simkort eller
+    abonnement. Den stod også på det plastikkort, simkortet sad i.</li>
+    <li><strong>Indtast PUK og vælg en ny PIN</strong>
+    Telefonen beder om det automatisk, når kortet er låst.</li>
+    <li><strong>Kan du ikke finde PUK?</strong>
+    Ring til udbyderen. De kan oplyse den efter identifikation — de kan ikke se din PIN,
+    men de kan altid finde PUK.</li>
+  </ol>
+
+  <div class="advarsel">
+  <p><strong>Ti forkerte PUK-forsøg ødelægger simkortet permanent.</strong> Der findes ingen
+  vej tilbage — du skal have et nyt simkort. Er du usikker, så ring frem for at gætte. Et
+  nyt simkort er gratis hos de fleste udbydere, men det tager dage med posten, hvis du ikke
+  kan bruge eSIM.</p>
+  </div>
+
+  <h2>Standardkoder — og hvorfor du bør ændre dem</h2>
+  <p>Mange udbydere udleverer simkort med en standard-PIN. Beholder du den, kan enhver, der
+  får fat i dit kort, sætte det i en anden telefon og modtage dine sms'er — herunder koder
+  fra bank og MitID.</p>
+  <p>Ændr PIN-koden på iPhone under Indstillinger → Mobil → SIM-PIN, og på Android under
+  Indstillinger → Sikkerhed → SIM-kortlås. Vælg noget, du husker, men som ikke er din
+  fødselsdato.</p>
+
+  <h2>Slipper du for det med eSIM?</h2>
+  <p>Delvist. Et eSIM har også en PIN, men det kan ikke tages fysisk ud af telefonen, så
+  risikoen ved tyveri er lavere. Til gengæld kan et eSIM ikke bare flyttes til en lånt
+  telefon, hvis din går i stykker. Se <a href="/guides/esim/">vores guide til eSIM</a>.</p>
+</section>"""
+    byg_statisk("/pin-og-puk-kode/", "PIN- og PUK-kode — sådan låser du simkortet op",
+                "Glemt PIN-kode? Se hvordan du finder din PUK, hvor mange forsøg du har, "
+                "og hvad du gør, hvis simkortet er spærret.",
+                "Hjælp", "PIN- og PUK-kode", pin_krop, prioritet="0.5")
+
     # Om-sider
     byg_statisk("/om-os/", "Om Telemobil — uafhængig sammenligning af mobilabonnementer",
                 "Telemobil sammenligner danske mobilabonnementer uafhængigt. Læs om vores "
@@ -4025,7 +4319,17 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
   eller omtale. Se <a href="/saadan-tjener-vi-penge/">vores forretningsmodel</a>.</p>
   <h2>Presse</h2>
   <p>Henvendelser fra presse kan sendes til samme adresse eller via
-  <a href="https://www.linkedin.com/in/emil-rostgaard-702809195/" rel="noopener nofollow" target="_blank">LinkedIn</a>.</p>
+  <a href="https://www.linkedin.com/in/emil-rostgaard-702809195/" rel="noopener nofollow" target="_blank">LinkedIn</a>.
+  Se også vores <a href="/presse/">pressesid med faktaark</a>.</p>
+
+  <h2>Postadresse</h2>
+  <p>
+    Telemobil<br>
+    Lundbyesgade 13<br>
+    8000 Aarhus C<br>
+    Danmark
+  </p>
+  <p>Vi har ikke fysisk kundebetjening — henvendelser besvares på mail.</p>
 </section>"""
     byg_statisk("/kontakt/", "Kontakt Telemobil — rettelser, spørgsmål og presse",
                 "Kontakt Telemobil om faktuelle rettelser i priser, spørgsmål til vores sammenligninger eller henvendelser fra presse og udbydere.",
@@ -4078,6 +4382,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
   <ul>
     <li><strong>Navn:</strong> Telemobil</li>
     <li><strong>Stiftet af:</strong> Emil Rostgaard</li>
+    <li><strong>Adresse:</strong> Lundbyesgade 13, 8000 Aarhus C</li>
     <li><strong>Dækker:</strong> Danske mobilabonnementer og mobilselskaber</li>
     <li><strong>Forretningsmodel:</strong> Affiliateprovision — <a href="/saadan-tjener-vi-penge/">se hvordan</a></li>
     <li><strong>Metode:</strong> <a href="/metode/">Sådan sammenligner vi</a></li>

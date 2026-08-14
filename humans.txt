@@ -2,7 +2,7 @@
 Stifter og redaktør: Emil Rostgaard
 Kontakt: kontakt@telemobil.dk
 LinkedIn: https://www.linkedin.com/in/emil-rostgaard-702809195/
-Land: Danmark
+Adresse: Lundbyesgade 13, 8000 Aarhus C, Danmark
 
 /* SITE */
 Sidst opdateret: 2026-08-14

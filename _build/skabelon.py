@@ -35,6 +35,11 @@ SAMMENLIGN = [
     ("/mobilabonnement-til-aeldre/", "Til ældre", "Tryghed frem for laveste pris"),
     ("/taletidskort/", "Taletidskort", "Forudbetalt uden regning"),
     ("/mobilabonnement-under-100-kr/", "Under 100 kr.", "Alle billige abonnementer"),
+    ("/mobilabonnement-1-10-gb/", "1–10 GB", "Til let brug"),
+    ("/mobilabonnement-10-30-gb/", "10–30 GB", "Danmarks mest almindelige"),
+    ("/mobilabonnement-30-50-gb/", "30–50 GB", "Til pendleren"),
+    ("/mobilabonnement-50-gb/", "50 GB og op", "Til storforbrugeren"),
+    ("/mobilabonnement-100-gb/", "100 GB og op", "Mobilen som internet"),
 ]
 
 VAERKTOEJER = [
@@ -45,6 +50,9 @@ VAERKTOEJER = [
     ("/speedtest/", "Hastighedstest", "Mål din forbindelse"),
     ("/landekoder/", "Landekoder", "Alle telefonkoder med søgning"),
     ("/hvem-ringer-til-mig/", "Hvem ringer til mig?", "Slå ukendt nummer op"),
+    ("/12-maaneders-prisen/", "12-måneders-prisen", "Vores beregningsmetode"),
+    ("/ordbog/", "Teleordbog", "Alle begreber forklaret"),
+    ("/pin-og-puk-kode/", "PIN- og PUK-kode", "Simkortet er spærret?"),
 ]
 
 MENU = [
@@ -246,7 +254,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <meta property="article:publisher" content="{DOMAENE}/">
 <meta property="article:modified_time" content="{opdateret_iso}">
 <meta name="rating" content="general">
-<meta name="geo.placename" content="Danmark">
+<meta name="geo.placename" content="Aarhus, Danmark">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="da_DK">
 <meta property="og:site_name" content="{SITENAVN}">
@@ -311,80 +319,74 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 
 
 def fod(opdateret):
+    """Kompakt footer. Kategorierne ligger i menuen — her er kun det nødvendige."""
     return f"""<footer class="fod">
   <div class="baand">
     <div class="fod-gitter">
-      <div>
+      <div class="fod-om">
         <a href="/" class="logo">
           <span class="logo-maerke" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <span class="logo-tekst">Tele<em>mobil</em></span>
         </a>
-        <p>Uafhængig dansk sammenligning af mobilabonnementer. Vi gennemgår udbydernes
-        vilkår, regner priserne igennem og skriver, hvad vi finder — også når det ikke
-        passer udbyderne.</p>
-        <p style="font-size:.84rem">Senest opdateret {e(opdateret)}</p>
+        <p>Uafhængig dansk sammenligning af mobilabonnementer. Vi beregner
+        <a href="/12-maaneders-prisen/">12-måneders-prisen</a> — den reelle pris, når
+        intropris, normalpris og oprettelse regnes sammen.</p>
+        <p class="fod-adresse">
+          Telemobil<br>
+          Lundbyesgade 13<br>
+          8000 Aarhus C<br>
+          <a href="mailto:kontakt@telemobil.dk">kontakt@telemobil.dk</a>
+        </p>
       </div>
+
       <div>
-        <div class="fodtitel">Sammenlign</div>
+        <div class="fodtitel">Populært</div>
         <ul>
           <li><a href="/billigste-mobilabonnement/">Billigste mobilabonnement</a></li>
           <li><a href="/bedste-mobilabonnement/">Bedste mobilabonnement</a></li>
           <li><a href="/mobilabonnement-med-fri-data/">Fri data</a></li>
-          <li><a href="/mobilabonnement-med-fri-tale/">Fri tale</a></li>
-          <li><a href="/mobilabonnement-uden-data/">Uden data</a></li>
-          <li><a href="/mobilabonnement-med-streaming/">Med streaming</a></li>
-          <li><a href="/mobilabonnement-med-esim/">Med eSIM</a></li>
-          <li><a href="/mobilabonnement-til-boern/">Til børn</a></li>
-          <li><a href="/mobilabonnement-til-unge/">Til unge og studerende</a></li>
-          <li><a href="/mobilabonnement-uden-binding/">Uden binding</a></li>
-          <li><a href="/mobilabonnement-med-streaming/tjenester/">Streaming pr. tjeneste</a></li>
-          <li><a href="/netvaerk/">Mobilnetværk</a></li>
-          <li><a href="/mobilabonnement-med-musik/">Med musik</a></li>
-          <li><a href="/mobilabonnement-til-aeldre/">Til ældre</a></li>
-          <li><a href="/mobilabonnement-med-telefon/">Med telefon</a></li>
-          <li><a href="/taletidskort/">Taletidskort</a></li>
           <li><a href="/mobilabonnement-under-100-kr/">Under 100 kr.</a></li>
-          <li><a href="/mobilabonnementer-black-friday/">Black Friday</a></li>
-          <li><a href="/sammenlign/">Udbyder mod udbyder</a></li>
           <li><a href="/udbydere/">Alle udbydere</a></li>
+          <li><a href="/sammenlign/">Udbyder mod udbyder</a></li>
         </ul>
       </div>
+
       <div>
-        <div class="fodtitel">Guides</div>
+        <div class="fodtitel">Værktøjer og guides</div>
         <ul>
-          <li><a href="/guides/skift-mobilselskab/">Skift mobilselskab</a></li>
-          <li><a href="/guides/hvor-meget-data/">Hvor meget data?</a></li>
-          <li><a href="/guides/daekning-og-netvaerk/">Dækning og netværk</a></li>
-          <li><a href="/guides/esim/">eSIM forklaret</a></li>
-          <li><a href="/guides/mobilabonnement-i-udlandet/">Mobil i udlandet</a></li>
-          <li><a href="/guides/prisstigning-mobilabonnement/">Prisstigning</a></li>
-          <li><a href="/guides/mobilabonnement-eller-bredbaand/">Mobil eller bredbånd</a></li>
-          <li><a href="/guides/mobilabonnement-trods-rki/">Mobilabonnement og RKI</a></li>
           <li><a href="/guides/">Alle guides</a></li>
-          <li><a href="/landekoder/">Landekoder</a></li>
-          <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
           <li><a href="/daekningskort/">Dækningstjek</a></li>
           <li><a href="/speedtest/">Hastighedstest</a></li>
+          <li><a href="/landekoder/">Landekoder</a></li>
+          <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
+          <li><a href="/ordbog/">Teleordbog</a></li>
         </ul>
       </div>
+
       <div>
         <div class="fodtitel">Om Telemobil</div>
         <ul>
           <li><a href="/om-os/">Om os</a></li>
-          <li><a href="/om/emil-rostgaard/">Emil Rostgaard</a></li>
-          <li><a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></li>
+          <li><a href="/om/emil-rostgaard/">{e(FORFATTER['navn'])}</a></li>
           <li><a href="/metode/">Vores metode</a></li>
+          <li><a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></li>
           <li><a href="/kontakt/">Kontakt</a></li>
           <li><a href="/presse/">Presse</a></li>
-          <li><a href="/privatlivspolitik/">Privatlivspolitik</a></li>
-          <li><a href="/cookiepolitik/">Cookiepolitik</a></li>
         </ul>
       </div>
     </div>
+
     <div class="fod-bund">
-      <span>© {opdateret[-4:] or '2026'} Telemobil. Priser er vejledende og kan ændre sig.</span>
-      <span>Telemobil modtager provision fra udvalgte udbydere. <a href="/saadan-tjener-vi-penge/">Læs hvordan</a>.</span>
+      <span>© {opdateret[-4:] or '2026'} Telemobil · Priser er vejledende og kan ændre sig.</span>
+      <span class="fod-jura">
+        <a href="/privatlivspolitik/">Privatliv</a>
+        <a href="/cookiepolitik/">Cookies</a>
+        <a href="/saadan-tjener-vi-penge/">Annonceoplysning</a>
+      </span>
     </div>
+    <p class="fod-provision">Telemobil modtager provision fra udvalgte udbydere, når du
+    bestiller via vores links. Det påvirker ikke sorteringen i vores tabeller, som altid
+    er efter pris.</p>
   </div>
 </footer>"""
 
@@ -502,6 +504,15 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     pr_gb_tekst = (f"{pr_gb:.2f}".replace(".", ",") + " kr.") if pr_gb else "—"
     g = gns12(a)
     aar = (g * 12) if g is not None else 0
+    # Vis regnestykket, så tallet kan efterprøves
+    if a.get("intro_pris") is not None and a.get("intro_mdr"):
+        m = min(a["intro_mdr"], 12)
+        formel = f'{a["intro_pris"]}×{m} + {a["pris"]}×{12 - m}'
+    else:
+        formel = f'{a["pris"]}×12'
+    if a.get("oprettelse"):
+        formel += f' + {a["oprettelse"]}'
+    formel += " ÷ 12"
 
     # Mærkater — dynamiske først, så det mest øjenfangende står forrest
     maerker = ""
@@ -545,10 +556,12 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
         prisblok = (f'<div class="p-intro">Tilbud i {a["intro_mdr"]} mdr.</div>'
                     f'<div class="p-tal"><b>{kr(a["intro_pris"])}</b><span>kr./md.</span></div>'
                     f'<div class="p-normal">Normalpris {kr(a["pris"])} kr./md.</div>'
-                    f'<div class="p-gns">Gns. <strong>{kr(g)} kr./md.</strong> over 12 mdr.</div>')
+                    f'<div class="p-gns">Gns. <strong>{kr(g)} kr./md.</strong> over 12 mdr.</div>'
+                    f'<div class="p-formel" title="Sådan er tallet beregnet">{formel}</div>')
     else:
         prisblok = (f'<div class="p-tal"><b>{kr(a["pris"])}</b><span>kr./md.</span></div>'
-                    f'<div class="p-gns">{kr(aar)} kr. samlet på 12 mdr.</div>')
+                    f'<div class="p-gns">{kr(aar)} kr. samlet på 12 mdr.</div>'
+                    f'<div class="p-formel" title="Sådan er tallet beregnet">{formel}</div>')
 
     spar = ""
     if gnsnit_aar and not forbrug and aar < gnsnit_aar:

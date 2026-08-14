@@ -38,6 +38,11 @@
   <url><loc>https://telemobil.dk/netvaerk/tdc-net/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://telemobil.dk/netvaerk/telenor/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://telemobil.dk/netvaerk/3/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://telemobil.dk/mobilabonnement-1-10-gb/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://telemobil.dk/mobilabonnement-10-30-gb/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://telemobil.dk/mobilabonnement-30-50-gb/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://telemobil.dk/mobilabonnement-50-gb/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://telemobil.dk/mobilabonnement-100-gb/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://telemobil.dk/sammenlign/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://telemobil.dk/sammenlign/cbb-mobil-vs-oister/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://telemobil.dk/sammenlign/telmore-vs-yousee/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -72,6 +77,9 @@
   <url><loc>https://telemobil.dk/guides/hvor-meget-data/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://telemobil.dk/guides/daekning-og-netvaerk/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://telemobil.dk/guides/esim/</loc><lastmod>2026-08-14</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://telemobil.dk/12-maaneders-prisen/</loc><lastmod>2026-08-14</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://telemobil.dk/ordbog/</loc><lastmod>2026-08-14</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://telemobil.dk/pin-og-puk-kode/</loc><lastmod>2026-08-14</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://telemobil.dk/om-os/</loc><lastmod>2026-08-14</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://telemobil.dk/saadan-tjener-vi-penge/</loc><lastmod>2026-08-14</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://telemobil.dk/metode/</loc><lastmod>2026-08-14</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
