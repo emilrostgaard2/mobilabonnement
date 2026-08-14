@@ -568,7 +568,8 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
         spar = f'<div class="p-spar">{kr((gnsnit_aar - aar) / 12)} kr./md. under snittet</div>'
 
     klasse = " fremhaev" if billigst_pr_gb else ""
-    return f"""<article class="plan{klasse}" data-gb="{a['data_gb']}" data-pris="{a['pris']}"
+    return f"""<article class="plan{klasse}" data-gb="{a['data_gb']}" data-pris="{a["intro_pris"] if a.get("intro_pris") and a.get("intro_mdr") else a["pris"]}"
+  data-normalpris="{a['pris']}"
   data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}" data-udbyder="{e(u['navn'])}">
   <div class="plan-ident">
     <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy"

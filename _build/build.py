@@ -68,7 +68,14 @@ LANDE = indlaes("landekoder.json")["landekoder"]
 
 UDBYDERE = ud_data["udbydere"]
 UMAP = {u["slug"]: u for u in UDBYDERE}
-ABON = sorted(ab_data["abonnementer"], key=lambda a: a["pris"])
+def visningspris(a):
+    """Det tal der står stort på kortet — intropris hvis der er et tilbud."""
+    if a.get("intro_pris") and a.get("intro_mdr"):
+        return a["intro_pris"]
+    return a["pris"]
+
+
+ABON = sorted(ab_data["abonnementer"], key=visningspris)
 for a in ABON:
     if a["udbyder"] not in UMAP:
         raise SystemExit(f"Ukendt udbyder i abonnementer.json: {a['udbyder']}")

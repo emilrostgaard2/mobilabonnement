@@ -133,116 +133,105 @@
     taellere.forEach(function (el) { tObs.observe(el); });
   }
 
-  /* ---- Tabel: vis flere ad gangen ---- */
-  document.querySelectorAll(".listeramme").forEach(function (ramme) {
-    var knap = ramme.querySelector("[data-vis-flere]");
-    if (!knap) return;
-    var tael = ramme.querySelector("[data-resterende]");
-    var krop = ramme.querySelector(".planliste");
+  /* ---- Abonnementsliste: filter, sortering og visning ---- */
+  (function () {
+    var krop = document.querySelector(".planliste");
+    if (!krop) return;
+
+    var planer = Array.prototype.slice.call(krop.querySelectorAll(".plan"));
+    var visFlereBoks = document.querySelector(".vis-flere");
+    var visFlereKnap = document.querySelector("[data-vis-flere]");
+    var resterendeTekst = document.querySelector("[data-resterende]");
+    var antalVist = document.querySelector("[data-antal-vist]");
     var PORTION = 10;
 
-    knap.addEventListener("click", function () {
-      var skjulte = Array.prototype.filter.call(
-        krop.querySelectorAll(".plan"),
-        function (r) { return r.hidden && r.getAttribute("data-filtreret") !== "ja"; }
-      );
-      skjulte.slice(0, PORTION).forEach(function (r) { r.hidden = false; });
-      var tilbage = skjulte.length - Math.min(PORTION, skjulte.length);
-      if (tilbage > 0) {
-        tael.textContent = tilbage + " abonnementer tilbage";
-      } else {
-        knap.closest(".vis-flere").remove();
-      }
-    });
-  });
+    var dataFilter = "alle";
+    var prisFilter = "alle";
+    var grænse = PORTION;
 
-  /* ---- Tabel: filtrering ---- */
-  var chips = document.querySelectorAll(".chip[data-filter]");
-  var tabel = document.querySelector(".planliste");
-  if (chips.length && tabel) {
-    var raekker = Array.prototype.slice.call(tabel.querySelectorAll(".plan"));
-    var visTaeller = document.querySelector("[data-antal-vist]");
-    var visFlereBoks = document.querySelector(".vis-flere");
-
-    var prisfilter = "alle";
-
-    function anvend(filter) {
-      var vist = 0;
-      raekker.forEach(function (r) {
-        var gb = parseInt(r.getAttribute("data-gb"), 10);
-        var pris = parseFloat(r.getAttribute("data-pris"));
-        var ok = true;
-        if (filter === "lille") ok = gb <= 15;
-        else if (filter === "mellem") ok = gb > 15 && gb <= 50;
-        else if (filter === "stor") ok = gb > 50 && gb < 900;
-        else if (filter === "fri") ok = gb >= 900;
-
-        if (ok && prisfilter !== "alle") {
-          if (prisfilter === "u50") ok = pris > 0 && pris < 50;
-          else if (prisfilter === "50-99") ok = pris >= 50 && pris <= 99;
-          else if (prisfilter === "100-199") ok = pris >= 100 && pris <= 199;
-          else if (prisfilter === "o200") ok = pris >= 200;
-        }
-        r.setAttribute("data-filtreret", ok ? "nej" : "ja");
-        r.hidden = !ok;
-        if (ok) vist++;
-      });
-      if (visTaeller) visTaeller.textContent = vist;
-      // Ved aktivt filter vises alle match; knappen giver ikke mening
-      if (visFlereBoks) visFlereBoks.hidden = (filter !== "alle");
+    function passer(p) {
+      var gb = parseInt(p.getAttribute("data-gb"), 10);
+      var pris = parseFloat(p.getAttribute("data-pris"));
+      if (dataFilter === "lille" && gb > 15) return false;
+      if (dataFilter === "mellem" && !(gb > 15 && gb <= 50)) return false;
+      if (dataFilter === "stor" && !(gb > 50 && gb < 900)) return false;
+      if (dataFilter === "fri" && gb < 900) return false;
+      if (prisFilter === "u50" && !(pris > 0 && pris < 50)) return false;
+      if (prisFilter === "50-99" && !(pris >= 50 && pris <= 99)) return false;
+      if (prisFilter === "100-199" && !(pris >= 100 && pris <= 199)) return false;
+      if (prisFilter === "o200" && pris < 200) return false;
+      return true;
     }
 
-    var aktivtData = "alle";
-    chips.forEach(function (c) {
-      c.addEventListener("click", function () {
-        chips.forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
-        c.setAttribute("aria-pressed", "true");
-        aktivtData = c.getAttribute("data-filter");
-        anvend(aktivtData);
+    // Én funktion styrer synlighed — så sortering altid viser de øverste
+    function opdater() {
+      var matchende = 0;
+      planer.forEach(function (p) {
+        if (!passer(p)) {
+          p.hidden = true;
+          return;
+        }
+        matchende++;
+        p.hidden = matchende > grænse;
       });
-    });
+      if (antalVist) antalVist.textContent = matchende;
+      var tilbage = Math.max(0, matchende - grænse);
+      if (visFlereBoks) {
+        visFlereBoks.hidden = tilbage === 0;
+        if (resterendeTekst) {
+          resterendeTekst.textContent = tilbage + " abonnement" +
+            (tilbage === 1 ? "" : "er") + " tilbage";
+        }
+      }
+    }
 
-    var prischips = document.querySelectorAll(".chip[data-pris]");
-    prischips.forEach(function (c) {
-      c.addEventListener("click", function () {
-        prischips.forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
-        c.setAttribute("aria-pressed", "true");
-        prisfilter = c.getAttribute("data-pris");
-        anvend(aktivtData);
+    if (visFlereKnap) {
+      visFlereKnap.addEventListener("click", function () {
+        grænse += PORTION;
+        opdater();
       });
-    });
-  }
+    }
 
-  /* ---- Liste: sortering ---- */
-  document.querySelectorAll(".listeramme").forEach(function (ramme) {
-    var knapper = Array.prototype.slice.call(ramme.querySelectorAll("[data-sorter]"));
-    var krop = ramme.querySelector(".planliste");
-    if (!knapper.length || !krop) return;
-
-    knapper.forEach(function (k) {
-      k.addEventListener("click", function () {
-        var noegle = k.getAttribute("data-sorter");
-        var faldende = noegle === "gb";
-        knapper.forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
-        k.setAttribute("aria-pressed", "true");
-
-        var planer = Array.prototype.slice.call(krop.querySelectorAll(".plan"));
-        planer.sort(function (a, b) {
-          var va = parseFloat(a.getAttribute("data-" + noegle));
-          var vb = parseFloat(b.getAttribute("data-" + noegle));
-          if (isNaN(va)) va = faldende ? -Infinity : Infinity;
-          if (isNaN(vb)) vb = faldende ? -Infinity : Infinity;
-          // Abonnementer uden data hører nederst ved pris pr. GB
-          if (noegle === "prgb") {
-            if (va === 0) va = Infinity;
-            if (vb === 0) vb = Infinity;
-          }
-          return faldende ? vb - va : va - vb;
+    function knapgruppe(vaelger, saet) {
+      var knapper = Array.prototype.slice.call(document.querySelectorAll(vaelger));
+      knapper.forEach(function (k) {
+        k.addEventListener("click", function () {
+          knapper.forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+          k.setAttribute("aria-pressed", "true");
+          saet(k);
+          grænse = PORTION;
+          opdater();
         });
-        planer.forEach(function (p) { krop.appendChild(p); });
       });
+    }
+
+    knapgruppe(".chip[data-filter]", function (k) {
+      dataFilter = k.getAttribute("data-filter");
     });
-  });
+    knapgruppe(".chip[data-pris]", function (k) {
+      prisFilter = k.getAttribute("data-pris");
+    });
+
+    knapgruppe("[data-sorter]", function (k) {
+      var noegle = k.getAttribute("data-sorter");
+      var faldende = noegle === "gb";
+      planer.sort(function (a, b) {
+        var va = parseFloat(a.getAttribute("data-" + noegle));
+        var vb = parseFloat(b.getAttribute("data-" + noegle));
+        if (isNaN(va)) va = faldende ? -Infinity : Infinity;
+        if (isNaN(vb)) vb = faldende ? -Infinity : Infinity;
+        // Abonnementer uden data hører nederst ved pris pr. GB
+        if (noegle === "prgb") {
+          if (va === 0) va = Infinity;
+          if (vb === 0) vb = Infinity;
+        }
+        return faldende ? vb - va : va - vb;
+      });
+      planer.forEach(function (p) { krop.appendChild(p); });
+    });
+
+    opdater();
+  })();
 
   /* ---- Sporing af udgående affiliate-klik (klar til GA4) ---- */
   document.addEventListener("click", function (e) {

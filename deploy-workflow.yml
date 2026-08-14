@@ -51,9 +51,15 @@ jobs:
           lftp -c "
             set ftp:ssl-allow no;
             set net:max-retries 3;
+            set net:timeout 20;
             open -u '${{ secrets.FTP_USERNAME }}','${{ secrets.FTP_PASSWORD }}' ${{ secrets.FTP_SERVER }};
-            mirror --reverse --only-newer --verbose=1 \
-              --exclude .git/ --exclude .github/ --exclude _build/ \
-              --exclude .gitignore --exclude '*.md' \
+            mirror --reverse --only-newer --delete --verbose=1 \
+              --exclude-glob '.git/' \
+              --exclude-glob '.github/' \
+              --exclude-glob '_build/' \
+              --exclude-glob 'data/' \
+              --exclude-glob '*.md' \
+              --exclude-glob '.gitignore' \
+              --exclude-glob 'deploy-workflow.yml' \
               ./ public_html/;
           "
