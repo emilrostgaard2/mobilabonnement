@@ -65,6 +65,23 @@ MENU = [
 
 NAV_UDBYDERE = []
 
+# Uden en versionsnøgle ville browsere holde fast i den gamle CSS og JS i et år,
+# fordi .htaccess sætter Cache-Control: immutable. Nøglen skifter, når filen gør.
+def _filversion(relativ_sti):
+    import hashlib
+    import os as _os
+    rod = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+    f = _os.path.join(rod, relativ_sti.lstrip("/"))
+    try:
+        with open(f, "rb") as fh:
+            return hashlib.sha1(fh.read()).hexdigest()[:8]
+    except OSError:
+        return "0"
+
+
+CSS_V = _filversion("assets/css/telemobil.css")
+JS_V = _filversion("assets/js/telemobil.js")
+
 
 def e(t):
     """Escaper tekst til HTML."""
@@ -276,7 +293,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <script>document.documentElement.className+=" js";</script>
-<link rel="stylesheet" href="/assets/css/telemobil.css">
+<link rel="stylesheet" href="/assets/css/telemobil.css?v={CSS_V}">
 {ekstra_hoved}
 {blokke}</head>
 <body>
@@ -312,7 +329,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 </main>
 
 {fod(opdateret)}
-<script src="/assets/js/telemobil.js" defer></script>
+<script src="/assets/js/telemobil.js?v={JS_V}" defer></script>
 </body>
 </html>
 """
