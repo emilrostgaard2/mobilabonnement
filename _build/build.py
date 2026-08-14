@@ -23,6 +23,7 @@ import indhold  # noqa: E402
 import sider  # noqa: E402
 import sider2  # noqa: E402
 import sider3  # noqa: E402
+import sider4  # noqa: E402
 from udbyder_unik import UNIK  # noqa: E402
 import skabelon  # noqa: E402
 
@@ -123,6 +124,7 @@ D["pris_bedste"] = D["pris_mellem"]
 MUSIKTJENESTER = {"Deezer", "Telmore Musik", "YouSee Musik", "Mofibo", "Podimo"}
 D["pris_musik"] = _min(lambda a: MUSIKTJENESTER & set(a.get("streaming", [])))
 D["pris_aeldre"] = _min(lambda a: a["data_gb"] <= 10)
+D["antal_u100"] = len([a for a in ABON if 0 < a["pris"] < 100])
 
 
 # --------------------------------------------------------------- JSON-LD
@@ -779,6 +781,18 @@ i appen — det gør spørgsmålet irrelevant, fordi forbindelsen så aldrig kan
 <p>Vi arbejder på at kortlægge modellen for hver enkelt udbyder. Indtil den kortlægning er
 verificeret, vil vi ikke gætte — se udbyderens egne vilkår, eller
 <a href="/kontakt/">skriv til os</a>, hvis du kender svaret for et selskab, vi mangler.</p>"""
+
+
+def kilder(punkter):
+    """Kildeangivelser. Vi linker ikke ud til påstande, vi ikke kan stå inde for."""
+    li = "".join(f"<li>{p}</li>" for p in punkter)
+    return f"""<h2>Kilder og grundlag</h2>
+<p>Vi mener, at en sammenligningsside skal kunne vise, hvor tallene kommer fra. Her er
+grundlaget for denne side.</p>
+<ul class="kildeliste">{li}</ul>
+<p class="kildenote">Finder du en oplysning, der ikke stemmer, så
+<a href="/kontakt/">skriv til os</a>. Vi retter og noterer datoen for rettelsen. Se også
+<a href="/metode/">vores metode</a>.</p>"""
 
 
 def begrebstabel():
@@ -2603,10 +2617,14 @@ def byg_udbyder(u):
 
 # --------------------------------------------------------------- GUIDES
 
-def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None, altbillede=""):
+def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
+              altbillede="", ekstra=None):
     krumme = [("/", "Forside"), ("/guides/", "Guides"), (None, etiket)]
     krop = f"""
 {brodtekst.replace('<section class="sektion baand-smal artikel">',
+                    '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1)
+             .replace('</section>', "".join(ekstra or []) + '</section>', 1) if ekstra else
+   brodtekst.replace('<section class="sektion baand-smal artikel">',
                     '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1)}
 <section class="sektion baand-smal">
   {laesvidere(links)}
@@ -2638,6 +2656,18 @@ GUIDER = [
     ("/guides/esim/", "eSIM forklaret",
      "Hvad et eSIM er, hvornår det er en fordel, og hvordan du kommer i gang.",
      "esim", "Rejsende aktiverer eSIM i en lufthavn", "Guide", 6),
+    ("/guides/mobilabonnement-i-udlandet/", "Mobilabonnement i udlandet",
+     "Roaming, EU-regler og hvordan du undgår de dyre overraskelser uden for EU.",
+     "esim", "Rejsende bruger mobilen i en lufthavn", "Guide", 7),
+    ("/guides/prisstigning-mobilabonnement/", "Prisstigning på mobilabonnement",
+     "Hvorfor prisen stiger, hvornår du kan opsige, og hvordan du får markedsprisen igen.",
+     "daekning-og-netvaerk", "Kvinde tjekker sin mobilregning", "Rettigheder", 7),
+    ("/guides/mobilabonnement-eller-bredbaand/", "Mobilabonnement eller bredbånd?",
+     "Kan et stort mobilabonnement erstatte dit bredbånd? Se forskellen og regnestykket.",
+     "hvor-meget-data", "Kvinde arbejder på laptop med mobilforbindelse", "Sammenligning", 7),
+    ("/guides/mobilabonnement-trods-rki/", "Mobilabonnement trods RKI",
+     "Taletid kræver ingen kreditvurdering. Se alle veje til et abonnement og dine rettigheder.",
+     "skift-mobilselskab", "Person gennemgår sine muligheder på laptop", "Rettigheder", 8),
 ]
 
 
@@ -2662,14 +2692,29 @@ def byg_guideoversigt():
   <div class="sektion-hoved afslør">
     <span class="etiket">Guides</span>
     <h2>Start her</h2>
-    <p class="led">Fire guides, der dækker de spørgsmål vi oftest får. De tager hver et par
-    minutter at læse og sparer typisk flere hundrede kroner om året.</p>
+    <p class="led">{len(GUIDER)} guides, der dækker de spørgsmål vi oftest får. De tager
+    hver et par minutter at læse og sparer typisk flere hundrede kroner om året.</p>
   </div>
   <div class="artikelkort-gitter">{kort}</div>
   <p class="ak-antal">Viser alle {len(GUIDER)} guides</p>
 </section>
 
 <section class="sektion baand-smal artikel">
+  <h2>Guides efter emne</h2>
+  <table>
+  <thead><tr><th>Skal du…</th><th>Så læs</th></tr></thead>
+  <tbody>
+  <tr><td>Finde ud af hvor meget data du bruger</td><td><a href="/guides/hvor-meget-data/">Hvor meget data har jeg brug for?</a></td></tr>
+  <tr><td>Vælge mellem de tre danske net</td><td><a href="/guides/daekning-og-netvaerk/">Dækning og netværk</a></td></tr>
+  <tr><td>Skifte selskab og beholde dit nummer</td><td><a href="/guides/skift-mobilselskab/">Sådan skifter du</a></td></tr>
+  <tr><td>Være i gang samme dag</td><td><a href="/guides/esim/">eSIM forklaret</a></td></tr>
+  <tr><td>Rejse uden dyre regninger</td><td><a href="/guides/mobilabonnement-i-udlandet/">Mobilabonnement i udlandet</a></td></tr>
+  <tr><td>Reagere på at prisen er steget</td><td><a href="/guides/prisstigning-mobilabonnement/">Prisstigning — dine rettigheder</a></td></tr>
+  <tr><td>Vide om mobilen kan erstatte bredbånd</td><td><a href="/guides/mobilabonnement-eller-bredbaand/">Mobil eller bredbånd?</a></td></tr>
+  <tr><td>Have abonnement på trods af RKI</td><td><a href="/guides/mobilabonnement-trods-rki/">Mobilabonnement trods RKI</a></td></tr>
+  </tbody>
+  </table>
+
   <h2>Rækkefølgen vi anbefaler</h2>
   <p>Skal du vælge nyt mobilabonnement, er der en rækkefølge, der gør beslutningen markant
   nemmere. De fleste starter med at kigge på priser, og det er præcis omvendt af, hvad der
@@ -3249,6 +3294,218 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
                ("/bedste-mobilabonnement/", "Bedste mobilabonnement")])
 
+    # ---------------- Fem nye artikler ----------------
+    u100 = sorted([a for a in ABON if 0 < a["pris"] < 100], key=lambda a: gns12(a) or 9e9)
+    byg_kategori(
+        sti="/mobilabonnement-under-100-kr/", etiket="Under 100 kr.",
+        h1="Mobilabonnement under 100 kr. om måneden",
+        titel=f"Mobilabonnement under 100 kr. — {len(u100)} valg fra {D['min_pris']} kr.",
+        besk=(f"Se alle {len(u100)} mobilabonnementer under 100 kr./md. Sorteret efter den "
+              "reelle pris over 12 måneder, så introtilbud ikke skjuler normalprisen."),
+        intro=(f"{len(u100)} abonnementer under hundrede kroner. Sorteret efter gennemsnitspris "
+               "over 12 måneder, ikke efter intropris."),
+        udvalg=u100, tekstfunktion=sider4.under100,
+        chips=[("Under 100 kr.", f"{len(u100)} valg"), ("Fra", f"{D['min_pris']} kr."),
+               ("Binding", "0 mdr.")],
+        tabeltitel="Alle abonnementer under 100 kr. om måneden",
+        ekstra_tabeller=[prisfordeling(), tabel_billigst_pr_udbyder(), tabel_prgb_rangliste(),
+                         tabel_aarsomkostning(), fejltabel(), begrebstabel(),
+                         kilder([
+                             "Priser og vilkår: udbydernes egne offentlige prislister, kontrolleret manuelt.",
+                             "Gennemsnitspris over 12 mdr.: egen beregning — intropris ganget med "
+                             "introperioden plus normalpris for resten, divideret med tolv, plus oprettelse.",
+                             "Datamængder og EU-loft: udbydernes abonnementsvilkår.",
+                             "Netværksangivelser: udbydernes egne oplysninger. Hvor de ikke kan "
+                             "verificeres, angiver vi MVNO i stedet for at gætte.",
+                         ]),
+                         vejviser("/mobilabonnement-under-100-kr/")],
+        faq=[
+            {"sp": "Hvor mange mobilabonnementer koster under 100 kr.?",
+             "sv": f"Vi følger {len(u100)} abonnementer under 100 kr. om måneden. De starter ved "
+                   f"{D['min_pris']} kr. for et taleabonnement og {D['min_pris_data']} kr. for det "
+                   "billigste med mobildata."},
+            {"sp": "Hvad får man for under 100 kr.?",
+             "sv": "Typisk fri tale, fri sms, 5G og mellem 5 og 60 GB data uden binding. Det dækker "
+                   "langt mere end gennemsnitsdanskerens forbrug."},
+            {"sp": "Er billige abonnementer dårligere?",
+             "sv": "Ikke på selve forbindelsen. Der findes kun tre mobilnet i Danmark, og de billige "
+                   "selskaber lejer sig ind på de samme master. Forskellen ligger i kundeservice og "
+                   "tillægsydelser."},
+            {"sp": "Er priserne under 100 kr. intropriser?",
+             "sv": "Mange af dem er. Derfor viser vi gennemsnitsprisen over 12 måneder, så du kan se, "
+                   "hvilke der reelt er under hundrede kroner hele vejen."},
+            {"sp": "Hvor meget sparer jeg ved at skifte?",
+             "sv": "Skifter du fra 199 til 79 kr. om måneden, sparer du 1.440 kr. om året. For en "
+                   "husstand med to abonnementer er det knap 2.900 kr."},
+        ],
+        links=[("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+               ("/bedste-mobilabonnement/", "Bedste mobilabonnement"),
+               ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?"),
+               ("/guides/prisstigning-mobilabonnement/", "Når prisen stiger — dine rettigheder")])
+
+    byg_guide("/guides/mobilabonnement-trods-rki/", "Mobilabonnement og RKI",
+              "Mobilabonnement trods RKI",
+              "Mobilabonnement trods RKI — sådan får du et alligevel",
+              "Registreret i RKI? Taletid kræver ingen kreditvurdering, og der findes flere "
+              "veje til et abonnement. Se dine muligheder og dine rettigheder.",
+              sider4.rki(D, {"gennemgang": gennemgangslinje(OPDATERET, "Regler og fremgangsmåde gennemgået")})
+              + f'<section class="sektion baand-smal artikel">{kilder([
+                  "Kreditoplysningsregistre: RKI drives af Experian, Debitor Registret af Dun &amp; Bradstreet.",
+                  "Retten til indsigt og berigtigelse følger af databeskyttelsesreglerne.",
+                  "Krav til kreditvurdering ved abonnementsaftaler: udbydernes egne vilkår.",
+                  "Vi navngiver bevidst ikke udbydere som RKI-venlige. Ingen dansk udbyder "
+                  "offentliggør sine kreditkriterier, og de ændrer sig løbende.",
+              ])}</section>',
+              [
+                  {"sp": "Kan jeg få mobilabonnement, når jeg står i RKI?",
+                   "sv": "Et almindeligt abonnement kræver som regel kreditvurdering, og en aktiv "
+                         "registrering fører oftest til afslag. Et taletidskort kan du derimod altid få, "
+                         "fordi du betaler forud og udbyderen ikke løber nogen risiko."},
+                  {"sp": "Kræver taletidskort kreditvurdering?",
+                   "sv": "Nej. Du betaler forud, så der er ingen kreditrisiko for udbyderen. Det er den "
+                         "eneste løsning, der i praksis altid er tilgængelig."},
+                  {"sp": "Kan jeg få telefon på afbetaling med RKI?",
+                   "sv": "Meget sjældent. Afbetaling er en kreditaftale og vurderes strengere end selve "
+                         "abonnementet. Køb telefonen kontant eller brugt i stedet."},
+                  {"sp": "Hvad gør jeg, hvis jeg bliver afvist?",
+                   "sv": "Ring til kundeservice og bed om en manuel kreditvurdering. Sagsbehandleren kan "
+                         "se på et bredere billede end det automatiske opslag, og et depositum kan nogle "
+                         "gange gøre forskellen."},
+                  {"sp": "Skal jeg søge hos mange udbydere?",
+                   "sv": "Nej. Hvert afslag udløser et opslag, og mange opslag kan i sig selv trække ned. "
+                         "Søg målrettet på den løsning, der har højest sandsynlighed — typisk taletid."},
+                  {"sp": "Beholder jeg mit nummer, hvis jeg går over på taletid?",
+                   "sv": "Ja. Nummerportering er en rettighed i Danmark og gælder begge veje mellem "
+                         "abonnement og taletid."},
+              ],
+              [("/taletidskort/", "Taletidskort — den sikre vej"),
+               ("/mobilabonnement-med-telefon/", "Telefon på afbetaling — regn efter"),
+               ("/mobilabonnement-under-100-kr/", "Abonnementer under 100 kr."),
+               ("/mobilabonnement-uden-data/", "Abonnement uden data")],
+              billede="skift-mobilselskab",
+              altbillede="Person gennemgår sine muligheder for mobilabonnement på laptop",
+              ekstra=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(),
+                      vejviser("/guides/mobilabonnement-trods-rki/")])
+
+    byg_guide("/guides/mobilabonnement-eller-bredbaand/", "Mobil eller bredbånd",
+              "Mobilabonnement eller bredbånd — hvad skal du vælge?",
+              "Mobilabonnement eller bredbånd — forskellen forklaret",
+              "Kan et stort mobilabonnement erstatte dit bredbånd? Se forskellen på mobil, "
+              "mobilt bredbånd og fast bredbånd — og hvornår hvad giver mening.",
+              sider4.bredbaand(D, {"gennemgang": gennemgangslinje(OPDATERET, "Datatal baseret på typisk forbrug")})
+              + f'<section class="sektion baand-smal artikel">{kilder([
+                  "Dataforbrug pr. aktivitet: typiske intervaller baseret på streamingtjenesternes "
+                  "egne oplysninger om båndbredde ved forskellige opløsninger.",
+                  "Mobilpriser: vores egen sammenligning, opdateret " + OPDATERET + ".",
+                  "Vi sammenligner ikke bredbåndspriser og henviser til dedikerede "
+                  "bredbåndssammenligninger for den del.",
+              ])}</section>',
+              [
+                  {"sp": "Kan et mobilabonnement erstatte bredbånd?",
+                   "sv": "For en enkelt person med god mobildækning og fri data, ja. For en husstand med "
+                         "flere personer, streaming og hjemmearbejde er fast bredbånd som regel nødvendigt."},
+                  {"sp": "Hvad er forskellen på mobilt bredbånd og et mobilabonnement?",
+                   "sv": "Begge bruger mobilnettet. Et mobilabonnement er til telefonen, mens mobilt "
+                         "bredbånd leveres med en router til hjemmet og typisk har større datamængde."},
+                  {"sp": "Hvor meget data bruger en husstand?",
+                   "sv": "En enkelt person med laptop bruger typisk 80-150 GB om måneden. En familie med "
+                         "børn ligger ofte over 500 GB. Det er derfor fri data er et minimum, hvis mobilen "
+                         "skal være husstandens internet."},
+                  {"sp": "Må jeg bruge hotspot?",
+                   "sv": "Hos de fleste danske udbydere ja, men tjek vilkårene. Enkelte begrænser deling "
+                         "til andre enheder."},
+                  {"sp": "Hvad er billigst?",
+                   "sv": "Det afhænger af forbruget. Fri data koster fra " + str(D['pris_fri']) + " kr. om "
+                         "måneden. Er det billigere end dit bredbånd, og har du god dækning, kan du spare "
+                         "hele bredbåndsregningen."},
+              ],
+              [("/mobilabonnement-med-fri-data/", "Abonnementer med fri data"),
+               ("/daekningskort/", "Tjek dækningen på din adresse"),
+               ("/speedtest/", "Test din mobilhastighed"),
+               ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?")],
+              billede="hvor-meget-data",
+              altbillede="Kvinde arbejder på laptop med mobilforbindelse",
+              ekstra=[prisfordeling(), tabel_pr_datamaengde(),
+                      vejviser("/guides/mobilabonnement-eller-bredbaand/")])
+
+    byg_guide("/guides/mobilabonnement-i-udlandet/", "Mobil i udlandet",
+              "Mobilabonnement i udlandet — roaming og EU-regler",
+              "Mobil i udlandet — roaming, EU-regler og hvad det koster",
+              "Sådan bruger du dit danske abonnement i udlandet uden dyre overraskelser. "
+              "Forskellen på roaming og udlandsopkald, og hvad du gør uden for EU.",
+              sider4.udlandet(D, {"gennemgang": gennemgangslinje(OPDATERET, "Roamingregler og takstforhold gennemgået")})
+              + f'<section class="sektion baand-smal artikel">{kilder([
+                  "EU-roaming: reglerne om roaming inden for EU og EØS, som de fremgår af "
+                  "udbydernes abonnementsvilkår.",
+                  "EU-datalofter: de enkelte udbyderes vilkår — se EU-kolonnen i vores tabeller.",
+                  "Landekoder: ITU-T E.164 og ISO 3166-1.",
+                  "Dataforbrug på rejse: typiske intervaller, ikke målte værdier.",
+              ])}</section>',
+              [
+                  {"sp": "Virker mit danske abonnement i EU?",
+                   "sv": "Ja. Inden for EU og EØS bruger du abonnementet på stort set samme vilkår som "
+                         "herhjemme. Datamængden er dog ofte lavere end i Danmark."},
+                  {"sp": "Hvad koster det at bruge mobilen uden for EU?",
+                   "sv": "Det afhænger helt af landet og udbyderen — reglerne gælder ikke der. Slå "
+                         "dataroaming fra, tjek taksten for landet, og overvej et lokalt data-eSIM."},
+                  {"sp": "Er opkald til udlandet inkluderet i fri tale?",
+                   "sv": "Nej, hos de fleste udbydere. Fri tale dækker opkald til danske numre. At ringe "
+                         "fra Danmark til et udenlandsk nummer afregnes særskilt."},
+                  {"sp": "Hvor meget EU-data har jeg?",
+                   "sv": "Det står i abonnementsvilkårene og er ofte lavere end din danske datamængde. Vi "
+                         "viser tallet i EU-kolonnen i alle vores tabeller."},
+                  {"sp": "Er eSIM en god løsning på rejsen?",
+                   "sv": "Uden for EU er det ofte den billigste. Du køber en lokal datapakke og beholder "
+                         "dit danske nummer aktivt til opkald og sms."},
+              ],
+              [("/guides/esim/", "eSIM forklaret — også til rejsen"),
+               ("/landekoder/", "Alle landekoder"),
+               ("/mobilabonnement-med-fri-tale/", "Abonnementer med fri tale"),
+               ("/hvem-ringer-til-mig/", "Ukendt opkald fra udlandet?")],
+              billede="esim",
+              altbillede="Rejsende bruger mobilen i en lufthavn",
+              ekstra=[tabel_billigst_pr_udbyder(), begrebstabel(),
+                      vejviser("/guides/mobilabonnement-i-udlandet/")])
+
+    byg_guide("/guides/prisstigning-mobilabonnement/", "Prisstigning",
+              "Prisstigning på mobilabonnement — hvad gør du?",
+              "Prisstigning på mobilabonnement — dine rettigheder",
+              "Er dit mobilabonnement steget i pris? Se hvorfor det sker, hvornår du kan "
+              "opsige, og hvordan du får markedsprisen igen.",
+              sider4.prisstigning(D, {"gennemgang": gennemgangslinje(OPDATERET, "Rettigheder og fremgangsmåde gennemgået")})
+              + f'<section class="sektion baand-smal artikel">{kilder([
+                  "Varslingsregler ved ændringer til ugunst: udbydernes abonnementsvilkår.",
+                  "Klagemulighed: Teleankenævnet behandler klager, når du først har klaget til selskabet.",
+                  "Prisberegninger: egne beregninger ud fra de viste beløb.",
+                  "Vi giver ikke juridisk rådgivning — ved tvivl om din konkrete aftale bør du "
+                  "kontakte udbyderen eller Teleankenævnet.",
+              ])}</section>',
+              [
+                  {"sp": "Må mit mobilselskab hæve prisen?",
+                   "sv": "Ja, men væsentlige ændringer til ugunst for dig skal varsles inden ikrafttræden, "
+                         "og du kan som udgangspunkt opsige aftalen i forbindelse med ændringen."},
+                  {"sp": "Hvorfor steg min pris pludselig?",
+                   "sv": "Oftest fordi en intropris er udløbet som aftalt ved bestillingen. Det sker typisk "
+                         "to til seks måneder efter oprettelse."},
+                  {"sp": "Kan jeg opsige på grund af en prisstigning?",
+                   "sv": "Er ændringen til ugunst for dig, kan du som udgangspunkt opsige i forbindelse med "
+                         "den. Har du telefon på afbetaling, skal restgælden dog typisk indfries."},
+                  {"sp": "Kan jeg forhandle prisen ned?",
+                   "sv": "Ofte ja. Ring og sig, at du overvejer at skifte. De fleste selskaber har en "
+                         "fastholdelsesafdeling, der kan matche prisen til nye kunder."},
+                  {"sp": "Hvor klager jeg?",
+                   "sv": "Klag først til selskabet skriftligt. Er du fortsat uenig, kan sagen indbringes "
+                         "for Teleankenævnet."},
+              ],
+              [("/billigste-mobilabonnement/", "Sammenlign priser nu"),
+               ("/mobilabonnement-uden-binding/", "Abonnementer uden binding"),
+               ("/mobilabonnement-under-100-kr/", "Abonnementer under 100 kr."),
+               ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab")],
+              billede="daekning-og-netvaerk",
+              altbillede="Kvinde tjekker sin mobilregning udendørs",
+              ekstra=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), fejltabel(),
+                      vejviser("/guides/prisstigning-mobilabonnement/")])
+
     # ---------------- Musik, ældre, telefon og taletid ----------------
     musikudvalg = sorted([a for a in ABON if MUSIKTJENESTER & set(a.get("streaming", []))],
                          key=lambda a: gns12(a) or 9e9)
@@ -3454,7 +3711,15 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/guides/esim/", "eSIM forklaret"),
                ("/mobilabonnement-uden-binding/", "Abonnementer uden binding")],
               billede="skift-mobilselskab",
-              altbillede="Kvinde skifter mobilselskab på laptop og telefon på en café")
+              altbillede="Kvinde skifter mobilselskab på laptop og telefon på en café",
+              ekstra=[tabel_billigst_pr_udbyder(), tabel_aarsomkostning(), fejltabel(),
+                      vejviser("/guides/skift-mobilselskab/"),
+                      kilder([
+                          "Nummerportering: en rettighed i Danmark — den nye udbyder håndterer flytningen.",
+                          "Priser og vilkår: udbydernes egne prislister, kontrolleret manuelt.",
+                          "Restgæld ved telefon på afbetaling: udbydernes abonnementsvilkår.",
+                          "Tidsangivelser for portering er typiske intervaller, ikke garantier.",
+                      ])])
 
     byg_guide("/guides/hvor-meget-data/", "Hvor meget data",
               "Hvor meget data har jeg brug for?",
@@ -3480,7 +3745,16 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
                ("/guides/daekning-og-netvaerk/", "Dækning og netværk")],
               billede="hvor-meget-data",
-              altbillede="Kvinde tjekker sit dataforbrug på telefonen på en café")
+              altbillede="Kvinde tjekker sit dataforbrug på telefonen på en café",
+              ekstra=[prisfordeling(), tabel_pr_datamaengde(), tabel_prgb_rangliste(),
+                      vejviser("/guides/hvor-meget-data/"),
+                      kilder([
+                          "Dataforbrug pr. aktivitet: typiske intervaller ud fra streamingtjenesternes "
+                          "egne oplysninger om båndbredde ved forskellige opløsninger.",
+                          "Priser og datamængder: vores egen sammenligning, opdateret " + OPDATERET + ".",
+                          "Tallene er vejledende — dit eget forbrug findes i telefonens indstillinger "
+                          "og er den eneste præcise kilde.",
+                      ])])
 
     byg_guide("/guides/daekning-og-netvaerk/", "Dækning og netværk",
               "Dækning og netværk i Danmark",
@@ -3553,7 +3827,16 @@ kælderen — mens du stadig kan fortryde.</p></div>
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
                ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab")],
               billede="daekning-og-netvaerk",
-              altbillede="Kvinde med 5G-dækning på telefonen ved dansk kystby med mobilmast")
+              altbillede="Kvinde med 5G-dækning på telefonen ved dansk kystby med mobilmast",
+              ekstra=[udbydergitter(), tabel_billigst_pr_udbyder(),
+                      vejviser("/guides/daekning-og-netvaerk/"),
+                      kilder([
+                          "Netværksejere i Danmark: TDC NET, Telenor og 3.",
+                          "Dækningskort: netværksejernes egne offentlige kort, som bygger på deres måledata.",
+                          "Netværksangivelser pr. udbyder: udbydernes egne oplysninger. Hvor de ikke kan "
+                          "verificeres, angiver vi MVNO frem for at gætte.",
+                          "Vi laver ikke egne hastigheds- eller dækningsmålinger og foregiver ikke andet.",
+                      ])])
 
     byg_guide("/guides/esim/", "eSIM", "eSIM forklaret",
               f"eSIM i Danmark — sådan virker det, og hvornår det betaler sig",
@@ -3613,7 +3896,14 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
                ("/udbydere/", "Alle udbydere")],
               billede="esim",
-              altbillede="Rejsende aktiverer eSIM på telefonen i en lufthavn")
+              altbillede="Rejsende aktiverer eSIM på telefonen i en lufthavn",
+              ekstra=[tabel_billigst_pr_udbyder(), begrebstabel(),
+                      vejviser("/guides/esim/"),
+                      kilder([
+                          "eSIM-understøttelse: telefonproducenternes egne specifikationer.",
+                          "Gebyrer for nye eSIM-profiler: udbydernes prislister.",
+                          "Priser: vores egen sammenligning, opdateret " + OPDATERET + ".",
+                      ])])
 
     # Om-sider
     byg_statisk("/om-os/", "Om Telemobil — uafhængig sammenligning af mobilabonnementer",

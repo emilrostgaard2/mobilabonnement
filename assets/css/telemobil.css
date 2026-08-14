@@ -1122,3 +1122,12 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .todelt-tekst h2{margin-bottom:.7rem}
 .todelt-tekst p{color:var(--graa);max-width:52ch}
 .todelt-knapper{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+
+/* Kildeliste */
+.kildeliste{list-style:none;padding:0;margin:1.2rem 0;border-left:3px solid var(--graa-lys);
+  padding-left:1.2rem}
+.kildeliste li{position:relative;padding-left:1.4rem;margin-bottom:.7rem;font-size:.92rem;
+  color:var(--graa)}
+.kildeliste li::before{content:"§";position:absolute;left:0;color:var(--signal);font-weight:700;
+  font-family:var(--font-tal)}
+.kildenote{font-size:.88rem;color:var(--graa);font-style:italic}

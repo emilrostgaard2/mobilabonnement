@@ -34,6 +34,7 @@ SAMMENLIGN = [
     ("/mobilabonnement-til-unge/", "Til unge", "Meget data, ingen binding"),
     ("/mobilabonnement-til-aeldre/", "Til ældre", "Tryghed frem for laveste pris"),
     ("/taletidskort/", "Taletidskort", "Forudbetalt uden regning"),
+    ("/mobilabonnement-under-100-kr/", "Under 100 kr.", "Alle billige abonnementer"),
 ]
 
 VAERKTOEJER = [
@@ -342,6 +343,7 @@ def fod(opdateret):
           <li><a href="/mobilabonnement-til-aeldre/">Til ældre</a></li>
           <li><a href="/mobilabonnement-med-telefon/">Med telefon</a></li>
           <li><a href="/taletidskort/">Taletidskort</a></li>
+          <li><a href="/mobilabonnement-under-100-kr/">Under 100 kr.</a></li>
           <li><a href="/sammenlign/">Udbyder mod udbyder</a></li>
           <li><a href="/udbydere/">Alle udbydere</a></li>
         </ul>
@@ -353,6 +355,10 @@ def fod(opdateret):
           <li><a href="/guides/hvor-meget-data/">Hvor meget data?</a></li>
           <li><a href="/guides/daekning-og-netvaerk/">Dækning og netværk</a></li>
           <li><a href="/guides/esim/">eSIM forklaret</a></li>
+          <li><a href="/guides/mobilabonnement-i-udlandet/">Mobil i udlandet</a></li>
+          <li><a href="/guides/prisstigning-mobilabonnement/">Prisstigning</a></li>
+          <li><a href="/guides/mobilabonnement-eller-bredbaand/">Mobil eller bredbånd</a></li>
+          <li><a href="/guides/mobilabonnement-trods-rki/">Mobilabonnement og RKI</a></li>
           <li><a href="/guides/">Alle guides</a></li>
           <li><a href="/landekoder/">Landekoder</a></li>
           <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
