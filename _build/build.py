@@ -409,6 +409,16 @@ def hero_forside():
 </section>"""
 
 
+def guidebillede(navn, alt, prioritet=False):
+    """Responsivt billede med srcset — 640 til mobil, 1280 til desktop."""
+    b = "/assets/img/guides"
+    return (f'<img src="{b}/{navn}-1280.webp"'
+            f' srcset="{b}/{navn}-640.webp 640w, {b}/{navn}-1280.webp 1280w"'
+            f' sizes="(max-width: 900px) 100vw, 46vw"'
+            f' alt="{e(alt)}" width="1280" height="698"'
+            f' {"fetchpriority=\'high\'" if prioritet else "loading=\'lazy\'"} decoding="async">')
+
+
 def radar(chips=None):
     """Animeret signalradar til undersidernes hero."""
     c = chips or [("Fra", f"{D['min_pris']} kr."), ("Uden", "binding"), ("Udbydere", str(D['antal_udbydere']))]
@@ -420,7 +430,7 @@ def radar(chips=None):
 </div>"""
 
 
-def hero_side(etiket, h1, tekst, knapper="", chips=None):
+def hero_side(etiket, h1, tekst, knapper="", chips=None, billede=None):
     return f"""<section class="hero" style="padding:2.6rem 0 2.6rem">
   <div class="hero-net" aria-hidden="true"></div>
   <div class="baand">
@@ -431,7 +441,7 @@ def hero_side(etiket, h1, tekst, knapper="", chips=None):
         <p class="led">{tekst}</p>
         {f'<div class="hero-knapper" style="margin-top:1.3rem">{knapper}</div>' if knapper else ''}
       </div>
-      {radar(chips)}
+      {f'<div class="hero-billede">{billede}</div>' if billede else radar(chips)}
     </div>
   </div>
 </section>"""
@@ -857,6 +867,25 @@ def byg_forside():
            billigst_id=bedste_pr_gb['id'])}
 
 {quiz()}
+
+<section class="sektion baand">
+  <div class="todelt afslør">
+    <div class="todelt-billede">{guidebillede("forside", "Par sammenligner mobilabonnementer på telefonen i Nyhavn i København")}</div>
+    <div class="todelt-tekst">
+      <span class="etiket">Uafhængig sammenligning</span>
+      <h2>Vi regner den pris ud, udbyderne ikke viser</h2>
+      <p>Næsten alle abonnementer sælges på en intropris, der gælder i to til seks måneder.
+      Bagefter stiger den. Vi lægger intropris, normalpris og oprettelse sammen og viser
+      gennemsnittet over 12 måneder — det tal, du reelt kommer til at betale.</p>
+      <p>Tabellerne sorteres altid efter pris, aldrig efter hvad vi tjener. Vi skriver også
+      ulemperne ved hver udbyder, og vi tager udbydere med, vi ikke har en aftale med.</p>
+      <div class="todelt-knapper">
+        <a href="/metode/" class="knap knap-linje">Sådan beregner vi</a>
+        <a href="/saadan-tjener-vi-penge/" class="knap knap-linje">Sådan tjener vi penge</a>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section class="sektion baand-smal artikel">
   {gennemgangslinje(OPDATERET)}
@@ -2574,7 +2603,7 @@ def byg_udbyder(u):
 
 # --------------------------------------------------------------- GUIDES
 
-def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links):
+def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None, altbillede=""):
     krumme = [("/", "Forside"), ("/guides/", "Guides"), (None, etiket)]
     krop = f"""
 {brodtekst.replace('<section class="sektion baand-smal artikel">',
@@ -2587,7 +2616,8 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links):
 """
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
-        hero=hero_side(etiket, h1, besk),
+        hero=hero_side(etiket, h1, besk,
+                       billede=guidebillede(billede, altbillede or h1, prioritet=True) if billede else None),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk),
@@ -2595,22 +2625,39 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links):
     ), prioritet="0.7")
 
 
+GUIDER = [
+    ("/guides/hvor-meget-data/", "Hvor meget data har jeg brug for?",
+     "Find dit faktiske forbrug på to minutter, og se hvilket abonnement der matcher.",
+     "hvor-meget-data", "Kvinde tjekker sit dataforbrug på telefonen", "Guide", 6),
+    ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab",
+     "Trin for trin — og de fem ting der oftest går galt undervejs.",
+     "skift-mobilselskab", "Kvinde skifter mobilselskab på laptop", "Guide", 5),
+    ("/guides/daekning-og-netvaerk/", "Dækning og netværk i Danmark",
+     "TDC NET, Telenor og 3 — hvem er stærkest hvor, og hvornår betyder det noget.",
+     "daekning-og-netvaerk", "Kvinde med 5G-dækning ved dansk kystby", "Guide", 7),
+    ("/guides/esim/", "eSIM forklaret",
+     "Hvad et eSIM er, hvornår det er en fordel, og hvordan du kommer i gang.",
+     "esim", "Rejsende aktiverer eSIM i en lufthavn", "Guide", 6),
+]
+
+
 def byg_guideoversigt():
     sti = "/guides/"
     krumme = [("/", "Forside"), (None, "Guides")]
-    guides = [
-        ("/guides/hvor-meget-data/", "Hvor meget data har jeg brug for?",
-         "Find dit faktiske forbrug på to minutter, og se hvilket abonnement der matcher."),
-        ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab",
-         "Trin for trin — og de fem ting der oftest går galt undervejs."),
-        ("/guides/daekning-og-netvaerk/", "Dækning og netværk i Danmark",
-         "TDC NET, Telenor og 3 — hvem er stærkest hvor, og hvornår betyder det noget."),
-        ("/guides/esim/", "eSIM forklaret",
-         "Hvad et eSIM er, hvornår det er en fordel, og hvordan du kommer i gang."),
-    ]
-    kort = "".join(
-        f'<a class="kort" href="{h}" style="text-decoration:none;color:inherit">'
-        f'<h3>{e(t)}</h3><p>{e(b)}</p></a>' for h, t, b in guides)
+
+    kort = ""
+    for h, t, besk, bil, alt, maerkat, min in GUIDER:
+        kort += f"""<a class="artikelkort" href="{h}">
+  <span class="ak-billede">{guidebillede(bil, alt)}</span>
+  <span class="ak-krop">
+    <span class="ak-maerkat">{e(maerkat)}</span>
+    <span class="ak-titel">{e(t)}</span>
+    <span class="ak-besk">{e(besk)}</span>
+    <span class="ak-fod"><span class="ak-tid">{min} min. læsning</span>
+    <span class="ak-laes">Læs <span aria-hidden="true">→</span></span></span>
+  </span>
+</a>"""
+
     krop = f"""<section class="sektion baand">
   <div class="sektion-hoved afslør">
     <span class="etiket">Guides</span>
@@ -2618,7 +2665,8 @@ def byg_guideoversigt():
     <p class="led">Fire guides, der dækker de spørgsmål vi oftest får. De tager hver et par
     minutter at læse og sparer typisk flere hundrede kroner om året.</p>
   </div>
-  <div class="kortgitter kg-2">{kort}</div>
+  <div class="artikelkort-gitter">{kort}</div>
+  <p class="ak-antal">Viser alle {len(GUIDER)} guides</p>
 </section>
 
 <section class="sektion baand-smal artikel">
@@ -2648,17 +2696,32 @@ def byg_guideoversigt():
     forhindrer uventede regninger ved overforbrug, og den tager under et minut at aktivere
     i udbyderens app.</p>
   </div>
+
+  <h2>Værktøjer der hører til</h2>
+  <p>Ud over guiderne har vi bygget en række gratis værktøjer, du kan bruge undervejs:
+  <a href="/daekningskort/">dækningstjek</a> til at finde det rigtige net,
+  <a href="/speedtest/">hastighedstest</a> til at måle din forbindelse,
+  <a href="/landekoder/">landekoder</a> til udlandsopkald og
+  <a href="/hvem-ringer-til-mig/">nummeropslag</a> til ukendte opkald.</p>
 </section>
 
 <section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>"""
+
     return skriv(sti, shell(
         sti=sti, titel="Guides til mobilabonnement — data, dækning, eSIM og skifte",
-        beskrivelse="Praktiske guides om dataforbrug, netværk, eSIM og hvordan du skifter mobilselskab.",
+        beskrivelse=("Praktiske guides om dataforbrug, netværk, eSIM og hvordan du skifter "
+                     "mobilselskab. Skrevet i almindeligt dansk og opdateret løbende."),
         opdateret=OPDATERET,
         hero=hero_side("Guides", "Guides til mobilabonnement",
-                       "Det du skal vide, før du vælger — skrevet i almindeligt dansk."),
+                       "Det du skal vide, før du vælger — skrevet i almindeligt dansk.",
+                       "", [("Guides", str(len(GUIDER))), ("Værktøjer", "4"), ("Pris", "gratis")]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop,
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme),
+                     {"@type": "ItemList", "name": "Guides til mobilabonnement",
+                      "numberOfItems": len(GUIDER),
+                      "itemListElement": [
+                          {"@type": "ListItem", "position": i + 1, "url": DOMAENE + g[0],
+                           "name": g[1]} for i, g in enumerate(GUIDER)]})],
     ), prioritet="0.7")
 
 
@@ -3389,7 +3452,9 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               ],
               [("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
                ("/guides/esim/", "eSIM forklaret"),
-               ("/mobilabonnement-uden-binding/", "Abonnementer uden binding")])
+               ("/mobilabonnement-uden-binding/", "Abonnementer uden binding")],
+              billede="skift-mobilselskab",
+              altbillede="Kvinde skifter mobilselskab på laptop og telefon på en café")
 
     byg_guide("/guides/hvor-meget-data/", "Hvor meget data",
               "Hvor meget data har jeg brug for?",
@@ -3413,7 +3478,9 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               ],
               [("/mobilabonnement-med-fri-data/", "Er fri data pengene værd?"),
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
-               ("/guides/daekning-og-netvaerk/", "Dækning og netværk")])
+               ("/guides/daekning-og-netvaerk/", "Dækning og netværk")],
+              billede="hvor-meget-data",
+              altbillede="Kvinde tjekker sit dataforbrug på telefonen på en café")
 
     byg_guide("/guides/daekning-og-netvaerk/", "Dækning og netværk",
               "Dækning og netværk i Danmark",
@@ -3484,7 +3551,9 @@ kælderen — mens du stadig kan fortryde.</p></div>
               ],
               [("/udbydere/", "Se hvilket net hver udbyder kører på"),
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
-               ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab")])
+               ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab")],
+              billede="daekning-og-netvaerk",
+              altbillede="Kvinde med 5G-dækning på telefonen ved dansk kystby med mobilmast")
 
     byg_guide("/guides/esim/", "eSIM", "eSIM forklaret",
               f"eSIM i Danmark — sådan virker det, og hvornår det betaler sig",
@@ -3542,7 +3611,9 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
               ],
               [("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
-               ("/udbydere/", "Alle udbydere")])
+               ("/udbydere/", "Alle udbydere")],
+              billede="esim",
+              altbillede="Rejsende aktiverer eSIM på telefonen i en lufthavn")
 
     # Om-sider
     byg_statisk("/om-os/", "Om Telemobil — uafhængig sammenligning af mobilabonnementer",
