@@ -618,6 +618,96 @@ SEGMENTER = [
 ]
 
 
+def udbyder_rangliste():
+    """Alle udbydere rangeret på laveste 12-måneders-pris."""
+    raekker = ""
+    data = []
+    for u in UDBYDERE:
+        planer = [a for a in ABON if a["udbyder"] == u["slug"] and a["pris"] > 0]
+        if not planer:
+            continue
+        billigst_u = min(planer, key=lambda a: gns12(a) or 9e9)
+        med_data = [a for a in planer if 0 < a["data_gb"] < 900]
+        bedst_prgb = min(med_data, key=lambda a: a["pris"] / a["data_gb"]) if med_data else None
+        data.append((u, planer, billigst_u, bedst_prgb))
+    data.sort(key=lambda x: gns12(x[2]) or 9e9)
+
+    for i, (u, planer, bu, bp) in enumerate(data, 1):
+        maks = max(a["data_gb"] for a in planer)
+        prgb = (f'{bp["pris"] / bp["data_gb"]:.2f}'.replace(".", ",") + " kr.") if bp else "—"
+        raekker += (f'<tr><td><strong>{i}</strong></td>'
+                    f'<td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a></td>'
+                    f'<td>{netlabel(u)}</td><td>{len(planer)}</td>'
+                    f'<td>{gb_tekst(maks)}</td><td>{prgb}</td>'
+                    f'<td><strong>{kr(gns12(bu))} kr.</strong></td></tr>')
+    return f"""<h2>Alle udbydere rangeret efter laveste pris</h2>
+<p>Rangeret efter 12-måneders-prisen på det billigste abonnement hos hver udbyder — altså
+den reelle pris, når intropris og normalpris regnes sammen. Bemærk kolonnen med pris pr.
+GB: den billigste udbyder er sjældent den, der giver mest for pengene.</p>
+<table>
+<thead><tr><th>#</th><th>Udbyder</th><th>Netværk</th><th>Planer</th><th>Største pakke</th>
+<th>Bedste pris pr. GB</th><th>Fra</th></tr></thead>
+<tbody>{raekker}</tbody></table>"""
+
+
+def netvaerksgruppering():
+    """Udbyderne grupperet efter hvilket net de kører på."""
+    ud = ""
+    for n in NETVAERK + [{"navn": "MVNO", "slug": None,
+                          "kort": "Selskaber hvor netværksaftalen ikke er verificeret"}]:
+        selskaber = [u for u in UDBYDERE if u["netvaerk"] == n["navn"]]
+        if not selskaber:
+            continue
+        planer = [a for a in ABON if UMAP[a["udbyder"]]["netvaerk"] == n["navn"] and a["pris"] > 0]
+        billigst_n = min(planer, key=lambda a: gns12(a) or 9e9) if planer else None
+        liste = "".join(
+            f'<a href="/udbydere/{u["slug"]}/" class="netgruppe-selskab">'
+            f'<img src="/assets/img/logoer/{u["logo"]}" alt="{e(u["navn"])}" loading="lazy"'
+            f' width="{round(u["logo_w"] * 22 / u["logo_h"])}" height="22">'
+            f'<span>{e(u["navn"])}</span></a>' for u in selskaber)
+        titel = (f'<a href="/netvaerk/{n["slug"]}/">{e(n["navn"])}</a>' if n.get("slug")
+                 else e(n["navn"]))
+        ud += f"""<div class="netgruppe">
+  <div class="netgruppe-hoved">
+    <h3>{titel}</h3>
+    <span class="netgruppe-tal">{len(selskaber)} selskab{"er" if len(selskaber) != 1 else ""} · {len(planer)} abonnementer
+    {f"· fra {kr(gns12(billigst_n))} kr./md." if billigst_n else ""}</span>
+  </div>
+  <p>{e(n["kort"])}</p>
+  <div class="netgruppe-liste">{liste}</div>
+</div>"""
+    return f"""<h2>Hvem kører på hvilket net?</h2>
+<p>Det er den vigtigste opdeling af det danske marked. Der findes kun tre mobilnet, og dit
+valg af selskab er reelt et valg af net. Selskaber markeret MVNO lejer sig ind, men vi har
+ikke kunnet verificere hos hvem — og så gætter vi ikke.</p>
+<div class="netgrupper">{ud}</div>"""
+
+
+def ejerforhold():
+    return """<h2>Hvem ejer hvem?</h2>
+<p>Flere af de selskaber, der ser ud som konkurrenter, har samme ejer. Det er værd at vide,
+fordi det forklarer, hvorfor to brands kan have identisk dækning og alligevel meget
+forskellig pris.</p>
+<table>
+<thead><tr><th>Selskab</th><th>Ejer</th><th>Hvad det betyder for dig</th></tr></thead>
+<tbody>
+<tr><td><strong>YouSee</strong></td><td>Nuuday</td><td>Premiumbrandet på TDC NET med butikker og fuld kundeservice</td></tr>
+<tr><td><strong>Telmore</strong></td><td>Nuuday</td><td>Søsterselskab til YouSee, samme net — men bygget om streaming</td></tr>
+<tr><td><strong>CBB Mobil</strong></td><td>Telenor Danmark</td><td>Telenors prisbrand. Samme net som moderselskabet, lavere pris</td></tr>
+<tr><td><strong>Oister</strong></td><td>Hi3G Denmark</td><td>3's prisbrand. Stærkt i byerne, svagere på landet</td></tr>
+<tr><td><strong>Lebara</strong></td><td>Lebara Group</td><td>International MVNO specialiseret i udlandsopkald</td></tr>
+<tr><td><strong>Lyca Mobile</strong></td><td>Lycamobile Group</td><td>International MVNO, stor i taletidssegmentet</td></tr>
+</tbody>
+</table>
+<div class="tip">
+<h3>Derfor er det relevant</h3>
+<p>Vælger du mellem YouSee og Telmore, vælger du ikke mellem to netværk — de kører på
+præcis samme master. Du vælger mellem to produktpakker. Vælger du mellem CBB og Telenor,
+får du samme dækning til forskellig pris. Det er den type indsigt, der sparer penge uden at
+koste noget i kvalitet.</p>
+</div>"""
+
+
 def prisfordeling():
     """Hele markedet fordelt på datasegmenter — deres stærkeste datawidget."""
     raekker = ""
@@ -1452,6 +1542,78 @@ def byg_streamingoversigt():
     ), prioritet="0.7")
 
 
+TJENESTE_DYBDE = {
+    "Netflix": ("Netflix har flere abonnementsniveauer, og de adskiller sig på antal samtidige "
+                "skærme og opløsning. Får du Netflix med i et mobilabonnement, er det ofte "
+                "standardniveauet — tjek om det er nok til din husstand, hvis I ser på flere "
+                "skærme samtidig.",
+                "Downloadfunktionen er værd at bruge aktivt. Henter du afsnit hjem på wi-fi, "
+                "bruger du nul mobildata på farten, og det kan flytte dig ned i en billigere "
+                "datakategori."),
+    "HBO Max": ("HBO Max har skiftet navn og pakkestruktur flere gange, og der findes både en "
+                "version med reklamer og en reklamefri. De koster ikke det samme separat, så "
+                "tjek hvilken der indgår, før du regner på besparelsen.",
+                "Katalogprofilen er stærkest på serier. Er det primært film, du ser, er værdien "
+                "typisk lavere end prisskiltet antyder."),
+    "Disney+": ("Disney+ er den mest oplagte tjeneste at få med, hvis der er børn i husstanden. "
+                "Bemærk at udbydere ofte inkluderer standardpakken med reklamer, mens den "
+                "reklamefri koster ekstra.",
+                "Børneprofiler og forældrekontrol er indbygget. Det er relevant, hvis abonnementet "
+                "deles med et barn — se også vores side om mobilabonnement til børn."),
+    "Viaplay": ("Viaplay er den dyreste af de store tjenester at købe separat, især hvis "
+                "sportspakken indgår. Det gør den til den tjeneste, hvor et bundle kan spare "
+                "flest kroner — men kun hvis du rent faktisk ser sport.",
+                "Sportsrettigheder skifter oftere end filmkataloger. Vælger du et abonnement på "
+                "grund af én bestemt sportsrettighed, så tjek hvor længe aftalen løber."),
+    "TV 2 Play": ("TV 2 Play har flere niveauer, fra basis til pakker med sport og flere kanaler. "
+                  "Det er sjældent tydeligt i mobilabonnementets markedsføring, hvilket niveau "
+                  "der indgår — spørg, hvis det er afgørende.",
+                  "Dansk indhold og nyheder er tjenestens styrke. Ser du primært internationale "
+                  "serier, dækker den ikke dit behov alene."),
+    "Nordisk Film+": ("Nordisk Film+ er en mindre tjeneste med nordisk indhold. Den er billig at "
+                      "købe separat, og derfor sjældent grunden til at vælge et bundle — men et "
+                      "fint tillæg, hvis den følger med.",
+                      "Fordi tjenesten er billig separat, bør du ikke lade den veje tungt i "
+                      "regnestykket. Fokusér på de dyre tjenester i pakken."),
+    "SkyShowtime": ("SkyShowtime samler indhold fra flere internationale studier og er relativt "
+                    "ny på det danske marked. Den optræder oftere i bundles end som selvstændigt "
+                    "abonnement i danske husstande.",
+                    "Fordi tjenesten er ny, er det værd at prøve indholdet, før du lader den veje "
+                    "tungt. Mange får den med og bruger den aldrig."),
+    "Prime Video": ("Prime Video indgår normalt i et Amazon Prime-medlemskab, som også dækker "
+                    "fragt og andre fordele. Får du det via mobilabonnementet, så tjek om det er "
+                    "hele medlemskabet eller kun videodelen — forskellen er reel, hvis du handler "
+                    "på Amazon.",
+                    "Kataloget varierer mere mellem lande end de øvrige tjenester. Det danske "
+                    "udbud er mindre end det amerikanske."),
+    "Deezer": ("Deezer er en musiktjeneste og et alternativ til de større navne. Musik fylder "
+               "under en tiendedel af, hvad video gør, så du behøver ikke et stort abonnement "
+               "for at kunne bruge den på farten.",
+               "Offline-download gør forbruget til nul. Sæt automatisk hentning til over wi-fi, "
+               "så bruger du reelt ingen mobildata på musik."),
+    "Podimo": ("Podimo dækker podcasts og lydbøger. For pendlere er det ofte det tillæg med "
+               "højest reel værdi pr. krone — og det bruger meget lidt data sammenlignet med "
+               "video.",
+               "Podcasts fylder omkring 30-60 MB i timen. Selv et lille abonnement rækker til "
+               "flere hundrede timers lytning."),
+    "Mofibo": ("Mofibo er en lydbogstjeneste og er dyr at købe separat sammenlignet med musik. "
+               "Lytter du regelmæssigt til lydbøger, er det den enkelttjeneste, hvor et bundle "
+               "oftest kan betale sig.",
+               "Lydbøger kan hentes offline. Gør du det hjemmefra, koster de ingenting i "
+               "mobildata."),
+    "Telmore Musik": ("Telmore Musik er udbyderens egen musiktjeneste. Den kan ikke købes "
+                      "separat på samme måde som de store internationale tjenester, hvilket gør "
+                      "den svær at værdisætte i et regnestykke.",
+                      "Har du playlister og lyttehistorik hos en anden tjeneste, er værdien af at "
+                      "skifte tæt på nul — uanset prisskiltet."),
+    "YouSee Musik": ("YouSee Musik er udbyderens egen musiktjeneste og følger med flere "
+                     "YouSee-abonnementer. Som ved andre operatørejede tjenester bør du vurdere, "
+                     "om den erstatter et abonnement, du har i forvejen.",
+                     "Skifter du mobilselskab, mister du adgangen. Det er værd at tænke ind, hvis "
+                     "du bygger din musiksamling op i tjenesten."),
+}
+
+
 def byg_tjenesteside(tjeneste):
     slug, kategori, intro_tekst = TJENESTER_META[tjeneste]
     sti = f"/mobilabonnement-med-{slug}/"
@@ -1546,6 +1708,22 @@ def byg_tjenesteside(tjeneste):
   altid tydeligt af mobilabonnementets markedsføring, og forskellen er reel, når du
   sammenligner med tjenestens egen pris.</p>
 
+  <h2>Det du særligt skal vide om {e(tjeneste)}</h2>
+  <p>{e(TJENESTE_DYBDE.get(tjeneste, ("", ""))[0])}</p>
+  <p>{e(TJENESTE_DYBDE.get(tjeneste, ("", ""))[1])}</p>
+
+  <h2>Hvis du hellere vil købe {e(tjeneste)} separat</h2>
+  <p>Det er ofte det rigtige valg. Køber du tjenesten selv, kan du opsige den, når du er
+  færdig med en serie, uden at røre dit mobilabonnement — og du kan skifte mobilselskab
+  uden at miste adgangen.</p>
+  <p>Modellen med alt samlet ét sted er bekvem, men den binder to beslutninger sammen, der
+  ikke har noget med hinanden at gøre. Vil du have laveste pris på mobil og fri hånd med
+  streaming, så vælg et discountabonnement og tegn tjenesterne selv. Se
+  <a href="/billigste-mobilabonnement/">billigste mobilabonnement</a> eller
+  <a href="/mobilabonnement-under-100-kr/">abonnementer under 100 kr.</a></p>
+
+  {tabel_billigst_pr_udbyder()}
+
   <h2>Andre tjenester</h2>
   <p class="tjenestelinks">{andre}</p>
   <p>Se også <a href="/mobilabonnement-med-streaming/">alle abonnementer med streaming</a>,
@@ -1583,42 +1761,178 @@ def byg_netvaerksoversigt():
     kort = ""
     for n in NETVAERK:
         paa = [a for a in ABON if UMAP[a["udbyder"]]["netvaerk"] == n["navn"] and a["pris"] > 0]
+        selskaber = [u for u in UDBYDERE if u["netvaerk"] == n["navn"]]
         billigst_n = min(paa, key=lambda a: gns12(a) or 9e9) if paa else None
-        pris = f"fra {kr(gns12(billigst_n))} kr./md." if billigst_n else "se udbyderne"
-        kort += (f'<a class="kort" href="/netvaerk/{n["slug"]}/" style="text-decoration:none;color:inherit">'
-                 f'<h3>{e(n["navn"])}</h3><p>{e(n["kort"])} · {pris}</p></a>')
-    krop = f"""<section class="sektion baand">
+        kort += f"""<a class="kort" href="/netvaerk/{n['slug']}/" style="text-decoration:none;color:inherit">
+  <h3>{e(n['navn'])}</h3><p>{e(n['kort'])}</p>
+  <p style="margin-top:.6rem"><strong>{len(selskaber)} selskab{"er" if len(selskaber) != 1 else ""}</strong> · {len(paa)} abonnementer
+  {f"· fra {kr(gns12(billigst_n))} kr./md." if billigst_n else ""}</p></a>"""
+
+    # Direkte sammenligning af de tre net
+    sml = ""
+    for felt, vaerdier in [
+        ("Udbredelse", ("Mest finmasket net i landet", "Bred dækning i hele landet",
+                        "Stærk i byer, mere varierende på landet")),
+        ("Stærkest i", ("Landdistrikter, sommerhuse, tog, indendørs",
+                        "Balance mellem dækning og pris",
+                        "Byer og tætbefolkede områder")),
+        ("Svagest i", ("Prisen på brands der kører på nettet",
+                       "Enkelte huller i tyndt befolkede områder",
+                       "Landdistrikter og visse kystområder")),
+        ("Vælg det hvis", ("Du bor uden for byerne eller pendler langt",
+                           "Du vil have solid dækning uden premiumpris",
+                           "Du bor i en større by og bruger meget data")),
+    ]:
+        sml += f'<tr><td><strong>{felt}</strong></td>' + "".join(f"<td>{e(v)}</td>" for v in vaerdier) + "</tr>"
+    for n in NETVAERK:
+        pass
+    priser = []
+    for n in NETVAERK:
+        paa = [a for a in ABON if UMAP[a["udbyder"]]["netvaerk"] == n["navn"] and a["pris"] > 0]
+        priser.append(f"{kr(gns12(min(paa, key=lambda a: gns12(a) or 9e9)))} kr./md." if paa else "—")
+    sml += "<tr><td><strong>Billigste abonnement</strong></td>" + "".join(f"<td>{p}</td>" for p in priser) + "</tr>"
+    antal = []
+    for n in NETVAERK:
+        antal.append(str(len([u for u in UDBYDERE if u["netvaerk"] == n["navn"]])))
+    sml += "<tr><td><strong>Selskaber i vores sammenligning</strong></td>" + "".join(f"<td>{a}</td>" for a in antal) + "</tr>"
+
+    faq = [
+        {"sp": "Hvor mange mobilnetværk er der i Danmark?",
+         "sv": "Tre: TDC NET, Telenor og 3. Alle andre mobilselskaber lejer sig ind på et af dem. "
+               "Det betyder, at antallet af selskaber er langt større end antallet af net."},
+        {"sp": "Hvilket mobilnet er bedst i Danmark?",
+         "sv": "TDC NET er det mest udbyggede og står typisk stærkest i landdistrikter, "
+               "sommerhusområder og indendørs. I byerne er forskellen mellem de tre lille i praksis."},
+        {"sp": "Kan jeg vælge netværk frit?",
+         "sv": "Indirekte. Du vælger et selskab, og selskabet bestemmer nettet. Vil du på et bestemt "
+               "net, skal du vælge blandt de selskaber, der kører på det."},
+        {"sp": "Hvad er forskellen på en netværksejer og en MVNO?",
+         "sv": "En netværksejer har egne master og eget udstyr. En MVNO lejer kapacitet hos en "
+               "netværksejer og sælger det videre under eget navn til egen pris."},
+        {"sp": "Får jeg dårligere hastighed hos en MVNO?",
+         "sv": "Ikke automatisk. Nogle MVNO-aftaler indeholder dog hastighedsloft eller lavere "
+               "prioritet i myldretiden. Det fremgår af abonnementsvilkårene."},
+        {"sp": "Hvordan finder jeg ud af, hvilket net der dækker bedst hos mig?",
+         "sv": "Slå din adresse op på alle tre netværksejeres dækningskort — og tjek både bopæl, "
+               "arbejdsplads og pendlerrute, ikke kun ét sted."},
+    ]
+
+    krop = f"""
+<section class="sektion baand">
   <div class="sektion-hoved afslør"><span class="etiket">Mobilnetværk</span>
   <h2>Der findes kun tre mobilnet i Danmark</h2>
   <p class="led">Alle andre selskaber lejer sig ind hos en af dem. Vælger du udbyder,
   vælger du reelt to ting: et net og et selskab.</p></div>
   <div class="kortgitter kg-3">{kort}</div>
 </section>
+
 <section class="sektion baand-smal artikel">
-  <h2>Nettet bestemmer dækningen — selskabet bestemmer prisen</h2>
-  <p>Det er den vigtigste enkeltindsigt om det danske mobilmarked. Et discountabonnement
-  til 44 kr. og et premiumabonnement til 299 kr. kan køre på præcis de samme master med
-  præcis samme hastighed, hvis de ligger på samme net.</p>
+  {gennemgangslinje(OPDATERET, "Netværksangivelser kontrolleret hos udbyderne")}
+
+  <div class="udtag">
+  <p><strong>Kort svar:</strong> Danmark har tre mobilnet: TDC NET, Telenor og 3. TDC NET er
+  mest udbygget og står stærkest uden for byerne. 3 er stærkest på hastighed og kapacitet i
+  byerne. Telenor ligger derimellem med en god balance mellem dækning og pris. Bor du
+  centralt i en større by, kan du i praksis vælge frit og gå efter pris.</p>
+  </div>
+
+  <h2>De tre net stillet direkte op mod hinanden</h2>
+  <table>
+    <thead><tr><th></th>{"".join(f"<th>{e(n['navn'])}</th>" for n in NETVAERK)}</tr></thead>
+    <tbody>{sml}</tbody>
+  </table>
+
+  <h2>Nettet bestemmer dækningen — ikke prisen</h2>
+  <p>Det er den vigtigste enkeltindsigt om det danske mobilmarked, og den bliver
+  konsekvent misforstået. Et discountabonnement til {kr(D['min_pris'])} kr. og et
+  premiumabonnement til flere hundrede kroner kan køre på præcis de samme master med
+  præcis den samme hastighed, hvis de ligger på samme net.</p>
   <p>Spørgsmålet er derfor aldrig, om et billigt selskab har "dårligere dækning". Det er,
   hvilket net selskabet lejer sig ind på — og under hvilke vilkår. Nogle MVNO-aftaler
-  indeholder hastighedsloft eller lavere prioritet i myldretiden. Det står i vilkårene, men
-  sjældent med store bogstaver.</p>
-  <p>Se hvilket net hver udbyder kører på i vores
-  <a href="/udbydere/">oversigt over mobilselskaber</a>, eller læs
-  <a href="/guides/daekning-og-netvaerk/">guiden til dækning og netværk</a>.</p>
+  indeholder et hastighedsloft eller lavere prioritet, når nettet er belastet. Det er ikke
+  svindel, og det mærkes sjældent ved almindelig brug, men det er forklaringen på, at to
+  abonnementer på "samme net" ikke altid opfører sig ens.</p>
+
+  {netvaerksgruppering()}
+
+  <h2>Hvornår betyder netværket noget?</h2>
+  <div class="kortgitter kg-2" style="margin:1.8rem 0">
+    <div class="kort"><h3>Her kan du vælge frit</h3>
+    <p>Bor og arbejder du centralt i en større by, leverer alle tre net fuld dækning og
+    høje hastigheder. Betaler du et tillæg for premiumdækning, køber du noget, du ikke får
+    glæde af. Vælg efter pris.</p></div>
+    <div class="kort"><h3>Her bør nettet vælges først</h3>
+    <p>Sommerhusområder, øer, kystnære egne, tyndt befolkede områder og lange pendlerruter
+    med tog eller bil. Her kan forskellen mellem nettene være mærkbar i hverdagen, og så er
+    tredive kroner i prisforskel underordnet.</p></div>
+  </div>
+
+  <h2>5G — hvornår gør det en forskel?</h2>
+  <p>5G giver højere hastigheder og lavere forsinkelse end 4G. For almindelig brug —
+  sociale medier, streaming, navigation — mærker de fleste ikke stor forskel fra et
+  velfungerende 4G-net.</p>
+  <p>5G er værd at prioritere i tre situationer: hvis du henter meget store filer, hvis du
+  bruger telefonen som hotspot til arbejde, eller hvis du bor et sted med overbelastet 4G.
+  Dækningen er stadig mest udbygget i byerne, og 5G er ikke automatisk inkluderet i alle
+  abonnementer — tjek det enkelte produkt.</p>
+
+  <h2>Sådan tjekker du dækningen på din adresse</h2>
+  <ol class="trin">
+    <li><strong>Slå adressen op på alle tre net</strong>
+    Ikke kun det, du overvejer. Du skal se forskellen for at kunne vurdere den.</li>
+    <li><strong>Tjek tre steder, ikke ét</strong>
+    Bopæl, arbejdsplads og ruten imellem — det er der, telefonen bruges.</li>
+    <li><strong>Kig efter indendørsdækning</strong>
+    Kortene skelner typisk mellem udendørs og indendørs. Bor du i en ældre bygning med
+    tykke mure, er det den indendørs værdi, der betyder noget.</li>
+    <li><strong>Brug fortrydelsesretten aktivt</strong>
+    Køber du online, har du som udgangspunkt fortrydelsesret. Test dækningen grundigt de
+    første dage, mens du stadig kan fortryde.</li>
+  </ol>
+
+  <div class="tip">
+  <h3>Wi-fi-opkald løser de fleste indendørsproblemer</h3>
+  <p>Er dækningen dårlig netop dér, hvor du bor, findes der en gratis løsning: wi-fi-opkald.
+  Telefonen fører opkaldet over dit hjemmenet i stedet for mobilnettet, og samtalen bliver
+  typisk bedre end på et svagt mobilsignal. Slås til i telefonens indstillinger og
+  understøttes af de fleste danske udbydere uden ekstra betaling.</p>
+  </div>
+
+  {udbyder_rangliste()}
+
+  {vejviser("/netvaerk/")}
+
+  {kilder(["digst_klage", "teleindustrien", "teleklagenaevnet"],
+          ["Netværksejere i Danmark: TDC NET, Telenor og 3.",
+           "Dækningsvurderinger: netværksejernes egne offentlige dækningskort.",
+           "Vi laver ikke egne hastigheds- eller dækningsmålinger og foregiver ikke andet."])}
 </section>
-<section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>"""
+
+<section class="sektion baand-smal">
+  {laesvidere([
+      ("/daekningskort/", "Tjek dækningen på din adresse"),
+      ("/udbydere/", "Se hvilket net hver udbyder kører på"),
+      ("/speedtest/", "Test din mobilhastighed"),
+      ("/guides/daekning-og-netvaerk/", "Guide til dækning og netværk"),
+  ])}
+  {forfatterboks()}{afsloering()}
+</section>
+"""
     return skriv(sti, shell(
         sti=sti, titel="Mobilnetværk i Danmark — TDC NET, Telenor og 3 sammenlignet",
         beskrivelse=("Der findes kun tre mobilnet i Danmark. Se forskellen på TDC NET, "
-                     "Telenor og 3 — og hvilke selskaber der kører på hvert net."),
+                     "Telenor og 3 — og hvornår netværket betyder mere end prisen."),
         opdateret=OPDATERET,
         hero=hero_side("Mobilnetværk", "De tre danske mobilnet",
                        "Dit valg af udbyder er i virkeligheden et valg af net. Her er "
-                       "forskellen, og hvornår den betyder noget."),
-        efter_hero=logobaand(), krumme=krumme, indhold=krop,
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme))],
-    ), prioritet="0.7")
+                       "forskellen, og hvornår den betyder noget.",
+                       '<a href="#indhold" class="knap knap-primaer">Se sammenligningen</a>',
+                       [("Net i Danmark", "3"), ("Selskaber", str(D['antal_udbydere'])),
+                        ("Fra", f"{D['min_pris']} kr.")]),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, "Mobilnetværk i Danmark", ""))],
+    ), prioritet="0.8")
 
 
 def byg_netvaerksside(n):
@@ -1980,9 +2294,7 @@ def byg_vs_oversigt():
     kort = ""
     for sa, sb in VS_PAR:
         ua, ub = UMAP[sa], UMAP[sb]
-        pa = [a for a in ABON if a["udbyder"] == sa]
-        pb = [a for a in ABON if a["udbyder"] == sb]
-        if not pa or not pb:
+        if not [a for a in ABON if a["udbyder"] == sa] or not [a for a in ABON if a["udbyder"] == sb]:
             continue
         kort += f"""<a class="vskort" href="/sammenlign/{sa}-vs-{sb}/">
   <span class="vs-side"><img src="/assets/img/logoer/{ua['logo']}" alt="{e(ua['navn'])}"
@@ -1992,36 +2304,129 @@ def byg_vs_oversigt():
     loading="lazy" width="{round(ub['logo_w'] * 24 / ub['logo_h'])}" height="24"></span>
   <span class="vs-tekst">{e(ua['navn'])} mod {e(ub['navn'])}</span>
 </a>"""
-    krop = f"""<section class="sektion baand">
+
+    # Matrix: alle udbydere på de parametre folk sammenligner på
+    matrix = ""
+    for u in sorted(UDBYDERE, key=lambda x: min(
+            [gns12(a) or 9e9 for a in ABON if a["udbyder"] == x["slug"]] or [9e9])):
+        planer = [a for a in ABON if a["udbyder"] == u["slug"] and a["pris"] > 0]
+        if not planer:
+            continue
+        bu = min(planer, key=lambda a: gns12(a) or 9e9)
+        har_fri = any(a["data_gb"] >= 900 for a in planer)
+        har_stream = any(a.get("streaming") for a in planer)
+        maks_eu = max(a.get("eu_gb", 0) for a in planer)
+        matrix += (f'<tr><td><a href="/udbydere/{u["slug"]}/"><strong>{e(u["navn"])}</strong></a></td>'
+                   f'<td>{netlabel(u)}</td>'
+                   f'<td>{kr(gns12(bu))} kr.</td>'
+                   f'<td>{gb_tekst(max(a["data_gb"] for a in planer))}</td>'
+                   f'<td>{maks_eu} GB</td>'
+                   f'<td class="{"ja" if har_fri else "nej"}">{"Ja" if har_fri else "Nej"}</td>'
+                   f'<td class="{"ja" if har_stream else "nej"}">{"Ja" if har_stream else "Nej"}</td></tr>')
+
+    faq = [
+        {"sp": "Hvordan sammenligner jeg to mobilselskaber?",
+         "sv": "Start med netværket, hvis du bor uden for en større by — det er den forskel, der "
+               "betyder mest. Sammenlign derefter på 12-måneders-prisen inden for den datamængde, du "
+               "faktisk bruger, og tjek EU-data hvis du rejser."},
+        {"sp": "Er det vigtigste at finde det billigste selskab?",
+         "sv": "Nej. Det vigtigste er at finde det billigste abonnement, der dækker dit behov. Et "
+               "selskab kan være billigst på små pakker og dyrest på store."},
+        {"sp": "Kan to selskaber have samme dækning?",
+         "sv": "Ja, og det er meget almindeligt. Kører de på samme net, er dækningen identisk — "
+               "også selvom priserne er vidt forskellige."},
+        {"sp": "Hvad skal jeg gøre, hvis to abonnementer koster det samme?",
+         "sv": "Så kig på EU-data, opsigelsesvilkår og kundeservice. Og vælg det net, der dækker "
+               "bedst netop hos dig."},
+    ]
+
+    krop = f"""
+<section class="sektion baand">
   <div class="sektion-hoved afslør"><span class="etiket">Sammenlign</span>
   <h2>Vælg to udbydere</h2>
   <p class="led">Vi stiller de to op mod hinanden på pris, netværk, EU-data og vilkår — og
   siger klart, hvem der passer til hvad.</p></div>
   <div class="vskort-gitter">{kort}</div>
 </section>
+
 <section class="sektion baand-smal artikel">
-  <h2>Hvorfor sammenligne to udbydere frem for hele markedet?</h2>
-  <p>Fordi de fleste allerede har en fornemmelse af to selskaber, de vælger imellem — typisk
-  det, de har nu, og det, en ven har anbefalet. En liste med 44 abonnementer besvarer ikke
-  det spørgsmål. En direkte sammenligning gør.</p>
-  <p>Vores sammenligninger bruger de samme tal som resten af siden: gennemsnitspris over 12
-  måneder, pris pr. gigabyte, EU-data og netværk. Vi rangerer ikke efter provision.</p>
-  <p>Vil du se hele markedet i stedet, så start på
-  <a href="/billigste-mobilabonnement/">billigste mobilabonnement</a> eller
-  <a href="/udbydere/">oversigten over alle udbydere</a>.</p>
+  {gennemgangslinje(OPDATERET)}
+
+  <div class="udtag">
+  <p><strong>Kort svar:</strong> De fleste står og vælger mellem to selskaber — typisk det,
+  de har nu, og et de har hørt om. En liste med {D['antal']} abonnementer besvarer ikke det
+  spørgsmål. Herunder finder du {len(VS_PAR)} direkte sammenligninger plus en matrix over
+  alle {D['antal_udbydere']} udbydere på de parametre, der faktisk adskiller dem.</p>
+  </div>
+
+  <h2>Alle udbydere på ét blik</h2>
+  <p>Sorteret efter laveste 12-måneders-pris. Brug den til hurtigt at se, hvilke to
+  selskaber det giver mening at sammenligne i dybden.</p>
+  <table>
+    <thead><tr><th>Udbyder</th><th>Netværk</th><th>Fra</th><th>Største pakke</th>
+    <th>Mest EU-data</th><th>Fri data</th><th>Streaming</th></tr></thead>
+    <tbody>{matrix}</tbody>
+  </table>
+
+  <h2>Hvad du skal sammenligne på — i rækkefølge</h2>
+  <ol class="trin">
+    <li><strong>Netværk</strong>
+    Den eneste parameter, der ikke kan kompenseres med penge. Kører de to selskaber på
+    samme net, er dækningen identisk, og du kan springe punktet over. Gør de ikke, er det
+    her, du skal begynde. <a href="/netvaerk/">Se de tre danske net</a>.</li>
+    <li><strong>12-måneders-prisen inden for din datamængde</strong>
+    Ikke laveste pris i absolutte tal — laveste pris for det, du skal bruge. Et selskab kan
+    være billigst på 5 GB og dyrest på 100 GB.
+    <a href="/12-maaneders-prisen/">Sådan beregner vi den</a>.</li>
+    <li><strong>EU-data</strong>
+    Den mest oversete forskel. To abonnementer til samme pris kan have 15 og 50 GB i EU.
+    Rejser du, er det en reel forskel.</li>
+    <li><strong>Vilkår</strong>
+    Binding, oprettelse, opsigelsesvarsel og hvad der sker ved overforbrug.</li>
+    <li><strong>Kundeservice</strong>
+    Vejer kun tungt, hvis du regner med at bruge den. Gør du det, er det tredive kroner om
+    måneden godt givet ud.</li>
+  </ol>
+
+  <h2>Den fejl folk oftest laver</h2>
+  <p>De sammenligner et selskabs intropris med et andets normalpris. Det er ikke en
+  sammenligning — det er to forskellige tal. Et abonnement til 39 kr. i tre måneder og
+  129 kr. derefter koster 106 kr. i gennemsnit over et år, og det er tallet, der skal op
+  mod konkurrentens.</p>
+  <p>Derfor viser vi 12-måneders-prisen i alle vores tabeller, og derfor står regnestykket
+  under hver pris, så du kan efterprøve det.</p>
+
+  {udbyder_rangliste()}
+
+  {ejerforhold()}
+
+  {vejviser("/sammenlign/")}
 </section>
-<section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>"""
+
+<section class="sektion baand-smal">
+  {laesvidere([
+      ("/udbydere/", "Alle udbydere gennemgået enkeltvis"),
+      ("/netvaerk/", "De tre danske mobilnet"),
+      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+      ("/12-maaneders-prisen/", "Sådan beregner vi den reelle pris"),
+  ])}
+  {forfatterboks()}{afsloering()}
+</section>"""
     return skriv(sti, shell(
-        sti=sti, titel="Sammenlign to mobilselskaber side om side",
+        sti=sti, titel="Sammenlign mobilselskaber — to udbydere side om side",
         beskrivelse=("Stil to danske mobilselskaber op mod hinanden på pris, netværk, "
-                     "EU-data og vilkår. Se hvem der passer til dit forbrug."),
+                     "EU-data og vilkår. Med matrix over alle udbydere."),
         opdateret=OPDATERET,
         hero=hero_side("Sammenlign", "Udbyder mod udbyder",
                        "De par folk oftest står og vælger imellem, stillet direkte op mod "
-                       "hinanden på tal."),
-        efter_hero=logobaand(), krumme=krumme, indhold=krop,
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme))],
-    ), prioritet="0.7")
+                       "hinanden på tal.",
+                       '<a href="#indhold" class="knap knap-primaer">Se sammenligningerne</a>',
+                       [("Sammenligninger", str(len(VS_PAR))), ("Udbydere", str(D['antal_udbydere'])),
+                        ("Parametre", "7")]),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, "Sammenlign mobilselskaber", ""))],
+    ), prioritet="0.75")
 
 
 # --------------------------------------------------------------- VÆRKTØJER
@@ -2588,61 +2993,146 @@ def byg_speedtest():
 
 def byg_udbyderoversigt():
     sti = "/udbydere/"
-    titel = f"Mobilselskaber i Danmark — sammenlign alle {D['antal_udbydere']} udbydere"
-    besk = ("Uafhængig gennemgang af de danske mobilselskaber. Se netværk, priser, fordele "
-            "og ulemper for hver udbyder.")
+    titel = f"Mobilselskaber i Danmark — alle {D['antal_udbydere']} udbydere sammenlignet"
+    besk = ("Uafhængig gennemgang af alle danske mobilselskaber. Se netværk, priser, "
+            "ejerforhold og hvem der passer til hvad — med fordele og ulemper.")
     krumme = [("/", "Forside"), (None, "Udbydere")]
+
+    med_data = [a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0]
+    billigste_u = min(ABON, key=lambda a: gns12(a) or 9e9)
+    dyreste_u = max(ABON, key=lambda a: gns12(a) or 0)
+
+    faq = [
+        {"sp": "Hvor mange mobilselskaber er der i Danmark?",
+         "sv": f"Vi følger {D['antal_udbydere']} selskaber med i alt {D['antal']} abonnementer. "
+               "Der findes flere på markedet, men de fleste er små eller retter sig mod erhverv."},
+        {"sp": "Hvilket mobilselskab er billigst?",
+         "sv": f"{UMAP[billigste_u['udbyder']]['navn']} har det billigste abonnement i vores "
+               f"sammenligning til {kr(gns12(billigste_u))} kr. om måneden regnet over 12 måneder. "
+               "Billigst i én kategori er dog ikke billigst i alle."},
+        {"sp": "Har billige mobilselskaber dårligere dækning?",
+         "sv": "Nej. Der findes kun tre mobilnet i Danmark, og alle selskaber lejer sig ind hos et "
+               "af dem. Et discountselskab på TDC NET har præcis samme dækning som et premiumselskab "
+               "på samme net."},
+        {"sp": "Hvad er en MVNO?",
+         "sv": "Et selskab uden eget mobilnet, der lejer kapacitet hos en netværksejer. De fleste "
+               "danske mobilselskaber er MVNO'er. Din dækning bestemmes af det net, de lejer sig "
+               "ind på — ikke af selskabets størrelse."},
+        {"sp": "Kan jeg skifte selskab og beholde mit nummer?",
+         "sv": "Ja. Nummerportering er en rettighed i Danmark. Du bestiller hos den nye udbyder, "
+               "oplyser dit nummer, og de håndterer flytningen. Du skal ikke opsige noget selv."},
+        {"sp": "Hvilket selskab har flest abonnementer at vælge mellem?",
+         "sv": f"Blandt dem vi følger, har flere selskaber 5-7 abonnementer. Et stort udvalg er "
+               "ikke i sig selv en fordel — en kort prisliste gør ofte beslutningen nemmere."},
+        {"sp": "Anbefaler I selskaber, I tjener penge på?",
+         "sv": "Vi medtager også udbydere, vi ikke har en provisionsaftale med, og alle tabeller "
+               "sorteres efter pris. Udbydere kan ikke købe sig til en placering eller en bedre omtale."},
+    ]
 
     krop = f"""
 <section class="sektion baand">
   <div class="sektion-hoved afslør">
     <span class="etiket">Oversigt</span>
-    <h2>Alle udbydere i vores sammenligning</h2>
-    <p class="led">Klik videre for priser, netværk, fordele og ulemper hos den enkelte udbyder.</p>
+    <h2>Alle {D['antal_udbydere']} udbydere i vores sammenligning</h2>
+    <p class="led">Klik videre for priser, netværk, fordele og de ulemper, selskaberne selv
+    undlader at nævne.</p>
   </div>
   <div class="kortgitter kg-3">{"".join(udbyderkort(u) for u in UDBYDERE)}</div>
 </section>
 
 <section class="sektion baand-smal artikel">
   {gennemgangslinje(OPDATERET)}
-  <h2>Sådan hænger det danske mobilmarked sammen</h2>
-  <p>Der findes kun tre mobilnetværk i Danmark: TDC NET, Telenor og 3. Alle andre selskaber
-  lejer sig ind hos en af de tre. Det betyder, at valget af udbyder i praksis er to
-  beslutninger på én gang: hvilket <em>net</em> du vil køre på, og hvilket <em>selskab</em>
-  du vil have som kunde hos.</p>
-  <p>Nettet bestemmer din dækning og hastighed. Selskabet bestemmer din pris, din
-  kundeservice og hvilke tillægsydelser du får. Et discountselskab på TDC NET giver dig
-  altså samme dækning som et premiumselskab på samme net — til en anden pris og med en
-  anden serviceoplevelse.</p>
-  <table>
-    <thead><tr><th>Udbyder</th><th>Netværk</th><th>Priser fra</th><th>Bedst til</th></tr></thead>
-    <tbody>{"".join(oversigtsraekke(u) for u in UDBYDERE)}</tbody>
-  </table>
-  <div class="tip">
-    <h3>Vores generelle råd</h3>
-    <p>Bor du i en større by, kan du i praksis vælge frit mellem de tre net og bør vælge
-    efter pris. Bor du på landet, i et sommerhusområde eller pendler gennem områder med
-    svingende dækning, bør du vælge net før pris — og der står TDC NET historisk stærkest.</p>
+
+  <div class="udtag">
+  <p><strong>Kort svar:</strong> Vi følger {D['antal_udbydere']} danske mobilselskaber med
+  {D['antal']} abonnementer mellem {kr(gns12(billigste_u))} og {kr(gns12(dyreste_u))} kr. om
+  måneden. Alle lejer sig ind på et af landets tre mobilnet — TDC NET, Telenor eller 3 — så
+  valget af selskab er reelt to beslutninger: hvilket net du vil køre på, og hvem du vil
+  være kunde hos.</p>
   </div>
+
+  {udbyder_rangliste()}
+
+  <h2>Nettet bestemmer dækningen, selskabet bestemmer prisen</h2>
+  <p>Det er den vigtigste indsigt om det danske marked, og den er værd at gentage: et
+  abonnement til {kr(gns12(billigste_u))} kr. og et til {kr(gns12(dyreste_u))} kr. kan køre
+  på præcis de samme master med præcis den samme hastighed. Din telefon kan ikke se forskel.</p>
+  <p>Det, du betaler ekstra for i den dyre ende, er fire ting: adgang til det mest udbyggede
+  net, bemandet kundeservice og butikker, tillægsydelser som streaming eller forsikring, og
+  i nogle tilfælde en højere prioritering af din trafik, når nettet er belastet.</p>
+  <p>Spørgsmålet er derfor aldrig, om et billigt selskab er "dårligt". Det er, om du får
+  glæde af det, du betaler ekstra for.</p>
+
+  {netvaerksgruppering()}
+
+  {ejerforhold()}
+
+  {prisfordeling()}
+
+  <h2>Sådan vælger du mellem selskaberne</h2>
+  <ol class="trin">
+    <li><strong>Afgør først om netværket betyder noget for dig</strong>
+    Bor du centralt i en større by, kan du vælge frit og gå efter pris. Bor du på landet, i
+    et sommerhusområde eller pendler du langt, bør nettet vælges før prisen.
+    <a href="/daekningskort/">Tjek dækningen på din adresse</a>.</li>
+    <li><strong>Find dit dataforbrug</strong>
+    Ikke hvad du tror — hvad du faktisk bruger. Det står i telefonens indstillinger.
+    <a href="/guides/hvor-meget-data/">Sådan finder du tallet</a>.</li>
+    <li><strong>Sammenlign på 12-måneders-prisen</strong>
+    Ikke på introprisen. Det er der, de fleste vælger forkert.
+    <a href="/12-maaneders-prisen/">Se hvordan vi beregner den</a>.</li>
+    <li><strong>Tjek kundeservice, hvis du har brug for den</strong>
+    Er du utryg ved selv at sætte et simkort op, eller vil du kunne ringe til nogen, så
+    vælg et selskab med bemandet support — også selvom det koster mere.</li>
+  </ol>
+
+  {tabel_billigst_pr_udbyder()}
+
+  <h2>Hvad vi ikke vurderer selskaberne på</h2>
+  <p>Vi bruger ikke anmeldelsesscorer som rangeringskriterium. De er ikke sammenlignelige
+  på tværs af selskaber med meget forskellige kundeantal, og folk skriver typisk kun, når
+  noget går galt eller går overraskende godt.</p>
+  <p>Vi laver heller ikke egne hastigheds- eller dækningsmålinger. Netværksejerne og de
+  uafhængige måleinstitutter har adgang til datamængder, vi ikke kan matche, og det ville
+  være uredeligt at foregive andet. Hvor dækning er relevant, henviser vi til dem.</p>
+
+  {vejviser("/udbydere/")}
+
+  {kilder(["teleindustrien", "digst_klage", "teleankenaevnet"],
+          ["Priser og vilkår: udbydernes egne offentlige prislister, kontrolleret manuelt.",
+           "Ejerforhold: selskabernes egne oplysninger.",
+           "Netværksangivelser: udbydernes egne oplysninger. Hvor de ikke kan verificeres, "
+           "angiver vi MVNO frem for at gætte."])}
 </section>
 
 <section class="sektion baand-smal">
   {laesvidere([
+      ("/netvaerk/", "De tre danske mobilnet sammenlignet"),
+      ("/sammenlign/", "Stil to udbydere direkte op mod hinanden"),
       ("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
-      ("/guides/daekning-og-netvaerk/", "Dækning og netværk forklaret"),
-      ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
+      ("/bedste-mobilabonnement/", "Bedste mobilabonnement — vores kriterier"),
   ])}
-  {afsloering()}
+  {forfatterboks()}{afsloering()}
 </section>
 """
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
-        hero=hero_side("Udbydere", "Alle danske mobilselskaber",
-                       "Vi gennemgår hver udbyder for sig — netværk, priser, fordele og "
-                       "de ulemper, de selv undlader at nævne."),
-        efter_hero=logobaand(), krumme=krumme, indhold=krop,
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme))],
-    ), prioritet="0.8")
+        hero=hero_side("Udbydere", f"Alle {D['antal_udbydere']} danske mobilselskaber",
+                       "Vi gennemgår hvert selskab for sig — netværk, priser, ejerforhold og "
+                       "de ulemper, de selv undlader at nævne.",
+                       '<a href="#indhold" class="knap knap-primaer">Se oversigten</a>',
+                       [("Selskaber", str(D['antal_udbydere'])), ("Abonnementer", str(D['antal'])),
+                        ("Net i DK", "3")]),
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, titel, besk),
+                     {"@type": "ItemList", "name": "Mobilselskaber i Danmark",
+                      "numberOfItems": len(UDBYDERE),
+                      "itemListElement": [
+                          {"@type": "ListItem", "position": i + 1,
+                           "url": DOMAENE + f"/udbydere/{u['slug']}/", "name": u["navn"]}
+                          for i, u in enumerate(UDBYDERE)]})],
+    ), prioritet="0.85")
 
 
 def oversigtsraekke(u):
