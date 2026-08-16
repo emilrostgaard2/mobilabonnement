@@ -500,3 +500,82 @@
       });
   });
 })();
+
+/* ---- Cookiesamtykke ---- */
+(function () {
+  "use strict";
+  var NOEGLE = "telemobil-samtykke";
+  var GYLDIG_DAGE = 180;
+
+  function laes() {
+    try {
+      var raa = document.cookie.split("; ").find(function (c) {
+        return c.indexOf(NOEGLE + "=") === 0;
+      });
+      return raa ? JSON.parse(decodeURIComponent(raa.split("=")[1])) : null;
+    } catch (e) { return null; }
+  }
+
+  function gem(valg) {
+    var udloeb = new Date(Date.now() + GYLDIG_DAGE * 864e5).toUTCString();
+    document.cookie = NOEGLE + "=" + encodeURIComponent(JSON.stringify(valg)) +
+      ";expires=" + udloeb + ";path=/;SameSite=Lax";
+    anvend(valg);
+  }
+
+  // Statistik aktiveres kun ved samtykke. Uden samtykke sættes intet.
+  function anvend(valg) {
+    if (valg && valg.statistik && typeof window.gtag === "function") {
+      window.gtag("consent", "update", { analytics_storage: "granted" });
+    }
+    window.telemobilSamtykke = valg;
+    document.dispatchEvent(new CustomEvent("samtykke", { detail: valg }));
+  }
+
+  function byg() {
+    var b = document.createElement("div");
+    b.className = "cookiebanner";
+    b.setAttribute("role", "dialog");
+    b.setAttribute("aria-label", "Samtykke til cookies");
+    b.innerHTML =
+      '<div class="cb-indhold">' +
+        '<div class="cb-tekst">' +
+          '<strong>Vi bruger cookies</strong>' +
+          '<p>Nødvendige cookies får siden til at fungere. Statistikcookies hjælper os med ' +
+          'at se, hvilke sider der bliver brugt — de sættes kun, hvis du siger ja. ' +
+          '<a href="/cookiepolitik/">Læs cookiepolitikken</a>.</p>' +
+        '</div>' +
+        '<div class="cb-knapper">' +
+          '<button type="button" class="knap knap-linje" data-cb="noedvendige">Kun nødvendige</button>' +
+          '<button type="button" class="knap knap-primaer" data-cb="alle">Tillad alle</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(b);
+    requestAnimationFrame(function () { b.classList.add("vist"); });
+
+    b.querySelectorAll("[data-cb]").forEach(function (k) {
+      k.addEventListener("click", function () {
+        gem({ noedvendige: true, statistik: k.getAttribute("data-cb") === "alle",
+              dato: new Date().toISOString() });
+        b.classList.remove("vist");
+        setTimeout(function () { b.remove(); }, 300);
+      });
+    });
+  }
+
+  var valg = laes();
+  if (valg) {
+    anvend(valg);
+  } else {
+    byg();
+  }
+
+  // Link i footeren så valget kan ændres bagefter
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("[data-cookievalg]");
+    if (!a) return;
+    e.preventDefault();
+    document.cookie = NOEGLE + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    byg();
+  });
+})();

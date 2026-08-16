@@ -50,6 +50,7 @@ VAERKTOEJER = [
     ("/speedtest/", "Hastighedstest", "Mål din forbindelse"),
     ("/landekoder/", "Landekoder", "Alle telefonkoder med søgning"),
     ("/hvem-ringer-til-mig/", "Hvem ringer til mig?", "Slå ukendt nummer op"),
+    ("/hvad-koster-et-mobilabonnement/", "Hvad koster det?", "Gennemsnit og statistik"),
     ("/12-maaneders-prisen/", "12-måneders-prisen", "Vores beregningsmetode"),
     ("/ordbog/", "Teleordbog", "Alle begreber forklaret"),
     ("/pin-og-puk-kode/", "PIN- og PUK-kode", "Simkortet er spærret?"),
@@ -398,6 +399,7 @@ def fod(opdateret):
       <span class="fod-jura">
         <a href="/privatlivspolitik/">Privatliv</a>
         <a href="/cookiepolitik/">Cookies</a>
+        <a href="#" data-cookievalg>Cookieindstillinger</a>
         <a href="/saadan-tjener-vi-penge/">Annonceoplysning</a>
       </span>
     </div>

@@ -1205,3 +1205,23 @@ body{overflow-x:clip;max-width:100%;position:relative}
   text-decoration:none;font-size:.85rem;font-weight:550;color:var(--blaek);transition:.18s}
 .netgruppe-selskab:hover{border-color:var(--signal);background:#fff;color:var(--signal-dyb)}
 .netgruppe-selskab img{height:20px;width:auto;max-width:56px;object-fit:contain}
+
+/* ==========================================================================
+   Cookiebanner
+   ========================================================================== */
+.cookiebanner{position:fixed;left:0;right:0;bottom:0;z-index:900;background:#fff;
+  border-top:1px solid var(--graa-lys);box-shadow:0 -8px 32px -12px rgba(11,16,38,.28);
+  transform:translateY(110%);transition:transform .32s cubic-bezier(.22,1,.36,1)}
+.cookiebanner.vist{transform:translateY(0)}
+.cb-indhold{width:min(100% - 2rem,var(--maks));margin:0 auto;padding:1.15rem 0;
+  display:flex;align-items:center;gap:2rem;flex-wrap:wrap;justify-content:space-between}
+.cb-tekst{flex:1;min-width:280px}
+.cb-tekst strong{display:block;font-family:var(--font-display);font-size:1rem;margin-bottom:.2rem}
+.cb-tekst p{font-size:.87rem;color:var(--graa);margin:0;line-height:1.55;max-width:78ch}
+.cb-knapper{display:flex;gap:.6rem;flex-wrap:wrap}
+.cb-knapper .knap{padding:.6rem 1.25rem;font-size:.9rem;white-space:nowrap}
+@media(max-width:700px){
+  .cb-indhold{gap:1rem;padding:1rem 0}
+  .cb-knapper{width:100%}
+  .cb-knapper .knap{flex:1;justify-content:center}
+}
