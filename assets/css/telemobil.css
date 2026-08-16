@@ -150,7 +150,7 @@ p{margin:0 0 1.15em}
 /* Signaturelement: signalmast med bjælker der puster */
 .mast{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:10px;height:250px;padding:3rem 1.2rem 1.4rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-xl);backdrop-filter:blur(6px)}
 .mast::before{
-  content:"Pris for 15-30 GB hos udbyderne";position:absolute;top:.85rem;left:1.2rem;
+  content:attr(data-etiket);position:absolute;top:.85rem;left:1.2rem;
   font-family:var(--font-tal);font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:#8B96C8;
 }
 .mast b{

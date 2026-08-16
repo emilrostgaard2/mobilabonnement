@@ -414,13 +414,23 @@ def logobaand(titel="Vi sammenligner priser fra"):
 
 
 def hero_forside():
-    # Samme datamængde hos forskellige udbydere — viser den reelle prisspredning.
-    # Billigste 15-30 GB-abonnement pr. udbyder, jævnt fordelt over hele spændet.
-    baand = [a for a in ABON if 15 <= a["data_gb"] <= 30]
-    pr_udbyder = {}
-    for a in baand:
-        if a["udbyder"] not in pr_udbyder or a["pris"] < pr_udbyder[a["udbyder"]]["pris"]:
-            pr_udbyder[a["udbyder"]] = a
+    # Prisspredningen mellem udbydere. Vi prøver først et snævert datainterval,
+    # men udvider automatisk, indtil mindst fire udbydere er repræsenteret —
+    # ellers forsvinder udbydere fra grafikken, når feedet ændrer sig.
+    def udvalg_i(lav, hoej):
+        pr = {}
+        for a in ABON:
+            if lav <= a["data_gb"] <= hoej and a["pris"] > 0:
+                if a["udbyder"] not in pr or a["pris"] < pr[a["udbyder"]]["pris"]:
+                    pr[a["udbyder"]] = a
+        return pr
+
+    for lav, hoej, mærkat in ((15, 30, "15-30 GB"), (10, 50, "10-50 GB"),
+                              (5, 100, "5-100 GB"), (1, 998, "med mobildata")):
+        pr_udbyder = udvalg_i(lav, hoej)
+        interval = mærkat
+        if len(pr_udbyder) >= 4:
+            break
     alle = sorted(pr_udbyder.values(), key=lambda a: a["pris"])
     if len(alle) > 6:
         trin = (len(alle) - 1) / 5
@@ -457,7 +467,7 @@ def hero_forside():
           <a href="/guides/hvor-meget-data/" class="knap knap-lys">Hvor meget data skal jeg have?</a>
         </div>
       </div>
-      <div class="mast" role="img" aria-label="Prisspredning: månedspris for et abonnement med 15 til 30 GB hos seks forskellige udbydere">{mast}</div>
+      <div class="mast" data-etiket="Pris for {interval} hos udbyderne" role="img" aria-label="Prisspredning: laveste månedspris for et abonnement {interval} hos {len(udvalg)} forskellige udbydere">{mast}</div>
     </div>
   </div>
 </section>"""
@@ -3528,28 +3538,28 @@ GUIDER = [
      "skift-mobilselskab", "Person opsiger sit mobilabonnement", "Rettigheder", 6),
     ("/hvad-koster-et-mobilabonnement/", "Hvad koster et mobilabonnement?",
      "Vi har regnet på alle abonnementer i markedet. Gennemsnit, median og hvad du bør betale.",
-     "hvor-meget-data", "Kvinde regner på sin mobilregning", "Analyse", 9),
+     "hvad-koster", "Kvinde regner på sin mobilregning", "Analyse", 9),
     ("/guides/mobilabonnement-uden-kreditvurdering/", "Mobilabonnement uden kreditvurdering",
      "Taletid kræver ingen kreditvurdering. Se alle veje uden om opslaget.",
-     "trods-rki", "Person undersøger muligheder uden kreditvurdering", "Rettigheder", 6),
+     "uden-kreditvurdering", "Mand undersøger muligheder uden kreditvurdering", "Rettigheder", 6),
     ("/mobilabonnement-til-familie/", "Mobilabonnement til familien",
      "Er familierabat pengene værd? Se regnestykket for separate abonnementer mod en pakke.",
-     "mobil-eller-bredbaand", "Familie sammenligner mobilabonnementer", "Guide", 6),
+     "til-familie", "Familie kigger sammen på mobilen", "Guide", 6),
     ("/mobilabonnement-til-erhverv/", "Mobilabonnement til erhverv",
      "Erhvervspriser er uden moms og ser billigere ud. Se hvornår det faktisk betaler sig.",
-     "i-udlandet", "Erhvervsbruger med mobil og laptop", "Guide", 6),
+     "til-erhverv", "Erhvervsbruger taler i mobil", "Guide", 6),
     ("/guides/simkort/", "Simkort — nano, micro og eSIM",
      "Hvilken størrelse passer til din telefon, og hvad gør du, hvis der ikke kommer signal?",
-     "esim", "Person skifter simkort i telefonen", "Guide", 5),
+     "simkort", "Tekniker arbejder med simkort", "Guide", 5),
     ("/guides/mobil-virker-ikke/", "Mobilen virker ikke — fejlfinding",
      "Ingen dækning eller langsom forbindelse? Tag de fem trin i rækkefølge.",
-     "daekning-og-netvaerk", "Person fejlsøger på mobilen", "Hjælp", 6),
+     "mobil-virker-ikke", "Kvinde fejlsøger på mobilen", "Hjælp", 6),
     ("/guides/undgaa-hoej-regning/", "Sådan undgår du en høj mobilregning",
      "Tre gratis spærringer, der forhindrer chokregninger. Datastop er den vigtigste.",
-     "prisstigning", "Person gennemgår sin mobilregning", "Guide", 6),
+     "undgaa-hoej-regning", "Mand tjekker sit dataforbrug", "Guide", 6),
     ("/guides/koeb-mobiltelefon/", "Køb mobiltelefon — ny, brugt eller renoveret?",
      "Køb telefonen kontant og abonnementet separat. Se hvad du skal tjekke ved brugt køb.",
-     "trods-rki", "Person undersøger mobiltelefoner", "Guide", 7),
+     "koeb-mobiltelefon", "Kvinde undersøger brugte telefoner", "Guide", 7),
 ]
 
 
@@ -4243,7 +4253,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/pin-og-puk-kode/", "PIN- og PUK-kode"),
                ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
                ("/guides/mobil-virker-ikke/", "Mobilen virker ikke — fejlfinding")],
-              billede="esim", altbillede="Person skifter simkort i telefonen",
+              billede="simkort", altbillede="Tekniker arbejder med simkort i forskellige størrelser",
               ekstra=[begrebstabel(), tabel_billigst_pr_udbyder(), udbydergitter(),
                       tabel_pr_datamaengde(), statistiktabel(), prisfordeling(),
                       tabel_prgb_rangliste(), tabel_aarsomkostning(),
@@ -4281,8 +4291,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/daekningskort/", "Tjek dækningen på din adresse"),
                ("/guides/simkort/", "Simkort og eSIM"),
                ("/pin-og-puk-kode/", "Simkortet er spærret?")],
-              billede="daekning-og-netvaerk",
-              altbillede="Person fejlsøger på mobilen udendørs",
+              billede="mobil-virker-ikke",
+              altbillede="Kvinde fejlsøger på mobilen ved køkkenbordet",
               ekstra=[udbydergitter(), begrebstabel(), tabel_billigst_pr_udbyder(),
                       statistiktabel(), tabel_pr_datamaengde(), prisfordeling(),
                       tabel_aarsomkostning(), vejviser("/guides/mobil-virker-ikke/"),
@@ -4319,8 +4329,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/mobilabonnement-til-boern/", "Mobilabonnement til børn"),
                ("/guides/mobilabonnement-i-udlandet/", "Mobil i udlandet"),
                ("/hvem-ringer-til-mig/", "Svindelopkald — sådan genkender du dem")],
-              billede="prisstigning",
-              altbillede="Person gennemgår sin mobilregning",
+              billede="undgaa-hoej-regning",
+              altbillede="Mand tjekker sit dataforbrug i mobilappen",
               ekstra=[prisfordeling(), tabel_pr_datamaengde(), tabel_aarsomkostning(),
                       fejltabel(), udbydergitter(), statistiktabel(), begrebstabel(),
                       tabel_billigst_pr_udbyder(), vejviser("/guides/undgaa-hoej-regning/"),
@@ -4357,8 +4367,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/mobilabonnement-uden-binding/", "Abonnementer uden binding"),
                ("/guides/esim/", "Understøtter telefonen eSIM?"),
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement")],
-              billede="trods-rki",
-              altbillede="Person undersøger mobiltelefoner på laptop",
+              billede="koeb-mobiltelefon",
+              altbillede="Kvinde undersøger brugte mobiltelefoner i en butik",
               ekstra=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), udbydergitter(),
                       prisfordeling(), begrebstabel(), statistiktabel(),
                       tabel_pr_datamaengde(), tabel_prgb_rangliste(),
@@ -4432,8 +4442,9 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                        f"Gennemsnittet er {S['gns']} kr. om måneden. Vi har regnet på "
                        f"{S['antal']} abonnementer — ikke skønnet.",
                        '<a href="#indhold" class="knap knap-primaer">Se tallene</a>',
-                       [("Gennemsnit", f"{S['gns']} kr."), ("Median", f"{S['median']} kr."),
-                        ("Spænd", f"{S['min']}–{S['maks']} kr.")]),
+                       billede=guidebillede("hvad-koster",
+                           "Kvinde regner på sin mobilregning ved køkkenbordet",
+                           prioritet=True)),
         efter_hero=logobaand(),
         krumme=[("/", "Forside"), (None, "Hvad koster et mobilabonnement?")],
         indhold=hk_krop + faqblok(hk_faq),
@@ -4482,8 +4493,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/guides/mobilabonnement-trods-rki/", "Mobilabonnement trods RKI"),
                ("/mobilabonnement-til-boern/", "Mobilabonnement til børn"),
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement")],
-              billede="trods-rki",
-              altbillede="Person undersøger mobilabonnementer uden kreditvurdering",
+              billede="uden-kreditvurdering",
+              altbillede="Mand undersøger mobilabonnementer uden kreditvurdering",
               ekstra=[prisfordeling(), tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(),
                       begrebstabel(), statistiktabel(), tabel_prgb_rangliste(), udbydergitter(),
                       vejviser("/guides/mobilabonnement-uden-kreditvurdering/"),
@@ -4521,8 +4532,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/mobilabonnement-til-unge/", "Mobilabonnement til unge"),
                ("/guides/hvor-meget-data/", "Hvor meget data har I brug for?"),
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement")],
-              billede="mobil-eller-bredbaand",
-              altbillede="Familie sammenligner mobilabonnementer derhjemme",
+              billede="til-familie",
+              altbillede="Familie i parken kigger sammen på mobilen",
               ekstra=[prisfordeling(), tabel_pr_datamaengde(), tabel_aarsomkostning(),
                       tabel_billigst_pr_udbyder(), fejltabel(), udbydergitter(), statistiktabel(), begrebstabel(),
                       vejviser("/mobilabonnement-til-familie/"),
@@ -4600,8 +4611,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/mobilabonnement-med-fri-data/", "Abonnementer med fri data"),
                ("/guides/mobilabonnement-i-udlandet/", "Mobil i udlandet"),
                ("/mobilabonnement-uden-binding/", "Abonnementer uden binding")],
-              billede="i-udlandet",
-              altbillede="Erhvervsbruger med mobil og laptop på farten",
+              billede="til-erhverv",
+              altbillede="Erhvervsbruger taler i mobil på kontoret",
               ekstra=[prisfordeling(), tabel_billigst_pr_udbyder(), tabel_aarsomkostning(),
                       udbydergitter(), tabel_pr_datamaengde(), begrebstabel(), statistiktabel(),
                       tabel_prgb_rangliste(),
