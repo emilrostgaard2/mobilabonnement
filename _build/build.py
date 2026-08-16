@@ -92,10 +92,11 @@ except Exception:
     for _u in UDBYDERE:
         _u["logo_w"], _u["logo_h"] = 240, 96
 
-# Kun udbydere vi har prisdata for kan få en prisside
+# Alle udbydersider findes med gennemgang, også uden prisdata — de hører
+# derfor i menuen. Tabellerne på siden tilpasser sig selv.
 UDBYDERE_MED_DATA = [u for u in UDBYDERE
                      if any(a["udbyder"] == u["slug"] for a in ABON)]
-skabelon.NAV_UDBYDERE = UDBYDERE_MED_DATA or UDBYDERE
+skabelon.NAV_UDBYDERE = UDBYDERE
 
 # Streamingtjenester findes kun, hvis feedet indeholder dem
 TJENESTER_I_DATA = {t for a in ABON for t in a.get("streaming", [])}

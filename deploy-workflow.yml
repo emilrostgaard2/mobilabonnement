@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
   schedule:
-    # Hent friske priser hver dag kl. 05:12 og 17:12 dansk tid
+    # Hent friske priser to gange dagligt. Tiderne er UTC:
+    # 04:12 og 16:12 UTC = 06:12 og 18:12 dansk sommertid
     - cron: '12 4,16 * * *'
   workflow_dispatch:
 
