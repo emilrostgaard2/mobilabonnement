@@ -1239,3 +1239,63 @@ body{overflow-x:clip;max-width:100%;position:relative}
   @keyframes puls-prik{0%,100%{box-shadow:0 0 0 3px rgba(0,209,143,.18)}
                        50%{box-shadow:0 0 0 6px rgba(0,209,143,.05)}}
 }
+
+/* ==========================================================================
+   Regningstjek i heroen
+   ========================================================================== */
+.regningstjek{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);
+  border-radius:var(--r-xl);padding:1.9rem;backdrop-filter:blur(8px);
+  box-shadow:0 24px 60px -28px rgba(0,0,0,.55)}
+.rt-sporgsmaal{margin:0 0 1.1rem}
+.rt-sporgsmaal label{font-family:var(--font-display);font-size:1.28rem;font-weight:700;
+  letter-spacing:-.02em;color:#fff;line-height:1.3;display:block;cursor:pointer}
+
+.rt-felt{position:relative;display:flex;align-items:center}
+.rt-felt input{width:100%;font-family:var(--font-tal);font-size:2.4rem;font-weight:600;
+  color:#fff;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.18);
+  border-radius:var(--r-m);padding:.7rem 5.5rem .7rem 1.1rem;
+  -moz-appearance:textfield;transition:border-color .18s,background .18s}
+.rt-felt input::-webkit-outer-spin-button,
+.rt-felt input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.rt-felt input::placeholder{color:rgba(255,255,255,.28)}
+.rt-felt input:focus{outline:none;border-color:var(--puls);background:rgba(255,255,255,.12)}
+.rt-felt input.rt-fejl{border-color:var(--koral);animation:rt-ryst .4s}
+@keyframes rt-ryst{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}
+                   75%{transform:translateX(5px)}}
+.rt-enhed{position:absolute;right:1.1rem;font-family:var(--font-tal);font-size:1rem;
+  color:rgba(255,255,255,.5);pointer-events:none}
+
+.rt-hurtigtekst{font-size:.84rem;color:rgba(255,255,255,.55);margin:1rem 0 .5rem}
+.rt-hurtigvalg{display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.rt-hurtig{font-family:var(--font-tal);font-size:.88rem;color:#fff;cursor:pointer;
+  background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.18);
+  border-radius:999px;padding:.5rem 1rem;transition:.16s}
+.rt-hurtig:hover{background:rgba(0,209,143,.18);border-color:var(--puls)}
+.rt-start{width:100%;justify-content:center;font-size:1.02rem;padding:.9rem 1.2rem}
+.rt-hjaelp{font-size:.8rem;color:rgba(255,255,255,.5);margin:.9rem 0 0;line-height:1.5}
+
+.rt-overskrift{font-family:var(--font-display);font-size:1.45rem;font-weight:700;
+  color:#fff;line-height:1.25;margin:0 0 .8rem;letter-spacing:-.02em}
+.rt-tal{color:var(--puls)}
+.rt-brod{font-size:.95rem;color:rgba(255,255,255,.8);line-height:1.6;margin-bottom:1rem}
+.rt-brod strong{color:#fff}
+.rt-tal-gitter{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:1.2rem 0}
+.rt-tal-gitter div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--r-m);padding:.8rem .5rem;text-align:center}
+.rt-tal-gitter b{display:block;font-family:var(--font-tal);font-size:1.15rem;color:var(--puls)}
+.rt-tal-gitter span{display:block;font-size:.7rem;color:rgba(255,255,255,.55);margin-top:.2rem}
+.rt-billigst{border-top:1px solid rgba(255,255,255,.12);padding-top:1rem}
+.rt-cta{width:100%;justify-content:center;margin-top:.4rem}
+.rt-igen{display:block;margin:.9rem auto 0;background:none;border:none;cursor:pointer;
+  font-size:.86rem;color:rgba(255,255,255,.6);padding:.4rem}
+.rt-igen:hover{color:#fff;text-decoration:underline}
+
+@media(max-width:900px){
+  .regningstjek{padding:1.4rem}
+  .rt-sporgsmaal label{font-size:1.12rem}
+  .rt-felt input{font-size:2rem}
+  .rt-tal-gitter{grid-template-columns:1fr;gap:.45rem}
+  .rt-tal-gitter div{display:flex;align-items:baseline;justify-content:space-between;
+    text-align:left;padding:.6rem .9rem}
+  .rt-tal-gitter span{margin:0}
+}

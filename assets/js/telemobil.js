@@ -579,3 +579,102 @@
     byg();
   });
 })();
+
+/* ---- Regningstjek i heroen ---- */
+(function () {
+  "use strict";
+  var boks = document.querySelector("[data-regningstjek]");
+  if (!boks) return;
+
+  var data;
+  try {
+    data = JSON.parse(boks.querySelector("[data-rt-data]").textContent);
+  } catch (e) { return; }
+
+  var felt = boks.querySelector("#rt-belob");
+  var trin1 = boks.querySelector('[data-rt-trin="1"]');
+  var trin2 = boks.querySelector('[data-rt-trin="2"]');
+  var knap = boks.querySelector("[data-rt-beregn]");
+
+  function kr(n) {
+    return Math.round(n).toLocaleString("da-DK");
+  }
+
+  function beregn() {
+    var belob = parseInt(felt.value, 10);
+    if (!belob || belob < 1) {
+      felt.focus();
+      felt.classList.add("rt-fejl");
+      setTimeout(function () { felt.classList.remove("rt-fejl"); }, 1200);
+      return;
+    }
+
+    var b = data.billigste;
+    var forskel = belob - b.gns12;
+    var aar = forskel * 12;
+    var treAar = forskel * 36;
+    var overMedian = belob - data.median;
+
+    var html;
+    if (forskel <= 0) {
+      // Betaler allerede under markedets billigste — sig det ligeud
+      html =
+        '<p class="rt-overskrift">Du betaler allerede skarpt</p>' +
+        '<p class="rt-brod">Din pris på <strong>' + kr(belob) + ' kr.</strong> ligger på ' +
+        'niveau med det billigste, vi kan finde (' + kr(b.gns12) + ' kr. om måneden ' +
+        'i gennemsnit over 12 måneder). Der er ikke meget at hente ved at skifte — ' +
+        'men tjek at du får den datamængde, du faktisk bruger.</p>' +
+        '<a class="knap knap-primaer rt-cta" href="/billigste-mobilabonnement/">' +
+        'Se hele sammenligningen →</a>';
+    } else {
+      var placering = overMedian > 0
+        ? 'Det er <strong>' + kr(overMedian) + ' kr. mere</strong> end medianen på det ' +
+          'danske marked (' + kr(data.median) + ' kr.).'
+        : 'Du ligger under medianen på ' + kr(data.median) + ' kr., men der er stadig ' +
+          'billigere abonnementer.';
+
+      html =
+        '<p class="rt-overskrift">Du kan spare <span class="rt-tal">' + kr(aar) +
+        ' kr.</span> om året</p>' +
+        '<p class="rt-brod">Du betaler <strong>' + kr(belob) + ' kr. om måneden</strong>. ' +
+        placering + '</p>' +
+        '<div class="rt-tal-gitter">' +
+          '<div><b>' + kr(forskel) + ' kr.</b><span>pr. måned</span></div>' +
+          '<div><b>' + kr(aar) + ' kr.</b><span>pr. år</span></div>' +
+          '<div><b>' + kr(treAar) + ' kr.</b><span>over 3 år</span></div>' +
+        '</div>' +
+        '<p class="rt-brod rt-billigst">Billigst lige nu er <strong>' + b.navn +
+        '</strong> med ' + b.data + ' på ' + b.net + ' til <strong>' +
+        kr(b.pris) + ' kr./md.</strong>' +
+        (b.pris !== b.gns12 ? ' (' + kr(b.gns12) + ' kr. i gennemsnit over 12 mdr.)' : '') +
+        '</p>' +
+        '<a class="knap knap-primaer rt-cta" href="/billigste-mobilabonnement/">' +
+        'Se alle ' + data.antal + ' abonnementer →</a>';
+    }
+
+    html += '<button type="button" class="rt-igen" data-rt-igen>← Prøv et andet beløb</button>';
+    trin2.innerHTML = html;
+    trin1.hidden = true;
+    trin2.hidden = false;
+  }
+
+  knap.addEventListener("click", beregn);
+  felt.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") beregn();
+  });
+
+  boks.querySelectorAll("[data-belob]").forEach(function (k) {
+    k.addEventListener("click", function () {
+      felt.value = k.getAttribute("data-belob");
+      beregn();
+    });
+  });
+
+  boks.addEventListener("click", function (e) {
+    if (!e.target.closest("[data-rt-igen]")) return;
+    trin2.hidden = true;
+    trin1.hidden = false;
+    felt.value = "";
+    felt.focus();
+  });
+})();

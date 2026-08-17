@@ -417,6 +417,62 @@ def logobaand(titel="Vi sammenligner priser fra"):
 </div>"""
 
 
+def regningstjek():
+    """Hero-værktøj: indtast din nuværende regning, se hvad markedet koster.
+    Bygget så det kan bruges uden forudsætninger — ingen gigabyte, ingen filtre."""
+    S = statistik()
+    billigste = min((a for a in ABON if a["pris"] > 0), key=visningspris)
+    ub = UMAP[billigste["udbyder"]]
+
+    # Realistiske hurtigvalg, så man ikke behøver taste
+    hurtig = "".join(
+        f'<button type="button" class="rt-hurtig" data-belob="{v}">{v} kr.</button>'
+        for v in (99, 149, 199, 249, 299))
+
+    data = json.dumps({
+        "median": S["median"],
+        "gns": S["gns"],
+        "min": S["min"],
+        "maks": S["maks"],
+        "antal": S["antal"],
+        "billigste": {
+            "navn": billigste["navn"],
+            "udbyder": ub["navn"],
+            "pris": visningspris(billigste),
+            "gns12": round(gns12(billigste) or billigste["pris"]),
+            "data": gb_tekst(billigste["data_gb"]),
+            "net": netlabel(ub),
+            "link": f"/udbydere/{ub['slug']}/",
+        },
+    }, ensure_ascii=False)
+
+    return f"""<div class="regningstjek" data-regningstjek>
+  <script type="application/json" data-rt-data>{data}</script>
+
+  <div class="rt-trin" data-rt-trin="1">
+    <p class="rt-sporgsmaal"><label for="rt-belob">Hvad betaler du for dit
+    mobilabonnement i dag?</label></p>
+
+    <div class="rt-felt">
+      <input type="number" id="rt-belob" inputmode="numeric" min="0" max="2000"
+             placeholder="0" autocomplete="off" aria-describedby="rt-hjaelp">
+      <span class="rt-enhed">kr./md.</span>
+    </div>
+
+    <p class="rt-hurtigtekst">Eller vælg et beløb:</p>
+    <div class="rt-hurtigvalg">{hurtig}</div>
+
+    <button type="button" class="knap knap-primaer rt-start" data-rt-beregn>
+      Se hvad du kan spare
+    </button>
+    <p class="rt-hjaelp" id="rt-hjaelp">Beløbet står på din seneste regning. Vi gemmer
+    ingenting, og du skal ikke oplyse noget om dig selv.</p>
+  </div>
+
+  <div class="rt-trin rt-svar" data-rt-trin="2" hidden aria-live="polite"></div>
+</div>"""
+
+
 def hero_forside():
     # Prisspredningen mellem udbydere. Vi prøver først et snævert datainterval,
     # men udvider automatisk, indtil mindst fire udbydere er repræsenteret —
@@ -471,7 +527,7 @@ def hero_forside():
           <a href="/guides/hvor-meget-data/" class="knap knap-lys">Hvor meget data skal jeg have?</a>
         </div>
       </div>
-      <div class="mast" data-etiket="Pris for {interval} hos udbyderne" role="img" aria-label="Prisspredning: laveste månedspris for et abonnement {interval} hos {len(udvalg)} forskellige udbydere">{mast}</div>
+      {regningstjek()}
     </div>
   </div>
 </section>"""
@@ -1250,7 +1306,7 @@ def byg_forside():
 """
 
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk,
+        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
         hero=hero_forside(), efter_hero=logobaand(), krumme=krumme,
         indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, TJENESTE, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
