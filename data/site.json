@@ -1,8 +1,0 @@
-{
-  "domaene": "https://telemobil.dk",
-  "navn": "Telemobil",
-  "udgivet": "2026-08-13",
-  "data_verificeret": true,
-  "_om_data_verificeret": "Sæt til true, når alle priser og netværksangivelser i udbydere.json og abonnementer.json er kontrolleret mod udbydernes egne sider. Build advarer, så længe den er false.",
-  "priskilde": "Adtraction data feed"
-}
