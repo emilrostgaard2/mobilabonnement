@@ -2,10 +2,14 @@ name: Upload telemobil.dk til Simply
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '12 4,16 * * *'
   workflow_dispatch:
 concurrency:
   group: deploy-telemobil
   cancel-in-progress: false
+permissions:
+  contents: write
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -14,20 +18,27 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Hent priser fra Adtraction
+        env:
+          ADTRACTION_CHANNEL_ID: ${{ secrets.ADTRACTION_CHANNEL_ID }}
+        run: python3 _build/adtraction.py
+
       - name: Byg siderne
-        run: |
-          if [ -f _build/build.py ]; then
-            python3 _build/build.py
-          else
-            echo "Ingen _build/build.py endnu - springer bygning over."
-          fi
+        run: python3 _build/build.py
+
       - name: Validér
+        run: python3 _build/validate.py
+
+      - name: Gem opdaterede priser i repoet
         run: |
-          if [ -f _build/validate.py ]; then
-            python3 _build/validate.py
-          else
-            echo "Ingen _build/validate.py endnu - springer validering over."
-          fi
+          git config user.name "telemobil-bot"
+          git config user.email "bot@telemobil.dk"
+          git add -A
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "Priser opdateret $(date -u +%Y-%m-%d\ %H:%M)"
+          git push
+
       - name: Upload med lftp
         env:
           SERVER: ${{ secrets.FTP_SERVER }}
@@ -42,10 +53,11 @@ jobs:
             set net:max-retries 3;
             set net:timeout 60;
             open -u '$BRUGER','$KODE' '$SERVER';
-            mirror --reverse --only-newer --verbose=1 \
+            mirror --reverse --only-newer --delete --verbose=1 \
               --exclude-glob .git/ \
               --exclude-glob .github/ \
               --exclude-glob _build/ \
+              --exclude-glob data/ \
               --exclude-glob .gitignore \
               --exclude-glob '*.md' \
               ./ public_html/;
