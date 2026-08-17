@@ -249,8 +249,9 @@ def main():
     ud = {
         "_kilde": "Adtraction data feed",
         "_hentet": date.today().isoformat(),
-        "_advarsel": ("Genereret automatisk. Redigér ikke i hånden — kør "
-                      "_build/adtraction.py i stedet."),
+        "_advarsel": ("Genereret automatisk af _build/adtraction.py ved hvert build. "
+                      "Redigér ikke i hånden, og overskriv ikke filen med en ældre "
+                      "version — så mister du de nyeste priser."),
         "kilde": "adtraction",
         "opdateret": date.today().isoformat(),
         "abonnementer": abonnementer,

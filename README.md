@@ -89,3 +89,15 @@ med en besked i byggeloggen.
 Importøren skriver aldrig en tom fil. Kan ingen abonnementer oversættes, stopper
 den med en fejl, og det gamle datasæt bliver stående. Byggeloggen viser, hvad der
 blev sprunget over og hvorfor.
+
+
+## Vigtigt: data/abonnementer.json
+
+Filen genereres automatisk ved hvert build og committes tilbage af workflowet.
+
+**Overskriv den aldrig manuelt.** Lægger du en ældre version ind — for eksempel fra en
+zip — mister du de nyeste priser, indtil næste kørsel henter dem igen. Nye udbydere
+forsvinder fra tabellerne i mellemtiden.
+
+Skal du lægge nye filer ind udefra, så lad `data/abonnementer.json` og `data/site.json`
+blive stående som de er.
