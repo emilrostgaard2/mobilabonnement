@@ -596,8 +596,42 @@
   var trin2 = boks.querySelector('[data-rt-trin="2"]');
   var knap = boks.querySelector("[data-rt-beregn]");
 
-  function kr(n) {
-    return Math.round(n).toLocaleString("da-DK");
+  function kr(n) { return Math.round(n).toLocaleString("da-DK"); }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  // Ét forslagskort med rigtig pris, besparelse og direkte link
+  function kort(f, belob) {
+    var spar = belob - f.gns12;
+    var sparlinje = spar > 0
+      ? '<span class="rf-spar">Spar ' + kr(spar * 12) + ' kr./år</span>'
+      : '';
+    var intro = f.intro_mdr
+      ? '<span class="rf-intro">' + f.intro_mdr + ' mdr. tilbud · derefter ' +
+        kr(f.normalpris) + ' kr.</span>'
+      : '<span class="rf-intro">Fast pris</span>';
+
+    return '<div class="rf-kort">' +
+      '<div class="rf-hoved">' +
+        '<img src="' + f.logo + '" alt="' + esc(f.udbyder) + '" width="' + f.logo_w +
+          '" height="22" loading="lazy">' +
+        '<span class="rf-hvorfor">' + esc(f.hvorfor) + '</span>' +
+      '</div>' +
+      '<div class="rf-navn">' + esc(f.navn) + '</div>' +
+      '<div class="rf-fakta">' + esc(f.data) + ' · ' + esc(f.net) + '</div>' +
+      '<div class="rf-pris"><b>' + kr(f.pris) + '</b><span>kr./md.</span>' + sparlinje + '</div>' +
+      intro +
+      '<div class="rf-knapper">' +
+        '<a class="knap knap-primaer rf-cta" href="' + f.link +
+          '" rel="sponsored nofollow noopener" target="_blank" data-udgaaende="hero">' +
+          'Se tilbud →</a>' +
+        '<a class="rf-laes" href="' + f.side + '">Læs om ' + esc(f.udbyder) + '</a>' +
+      '</div>' +
+    '</div>';
   }
 
   function beregn() {
@@ -609,50 +643,49 @@
       return;
     }
 
-    var b = data.billigste;
-    var forskel = belob - b.gns12;
-    var aar = forskel * 12;
-    var treAar = forskel * 36;
+    // Kun forslag der faktisk er billigere end det, brugeren betaler
+    var relevante = data.forslag.filter(function (f) { return f.gns12 < belob; });
+    var bedste = data.forslag.reduce(function (a, b) {
+      return b.gns12 < a.gns12 ? b : a;
+    });
+    var spar = belob - bedste.gns12;
     var overMedian = belob - data.median;
 
     var html;
-    if (forskel <= 0) {
-      // Betaler allerede under markedets billigste — sig det ligeud
+    if (spar <= 0) {
       html =
         '<p class="rt-overskrift">Du betaler allerede skarpt</p>' +
         '<p class="rt-brod">Din pris på <strong>' + kr(belob) + ' kr.</strong> ligger på ' +
-        'niveau med det billigste, vi kan finde (' + kr(b.gns12) + ' kr. om måneden ' +
-        'i gennemsnit over 12 måneder). Der er ikke meget at hente ved at skifte — ' +
-        'men tjek at du får den datamængde, du faktisk bruger.</p>' +
-        '<a class="knap knap-primaer rt-cta" href="/billigste-mobilabonnement/">' +
-        'Se hele sammenligningen →</a>';
+        'niveau med markedets billigste. Der er ikke meget at hente — men tjek at du får ' +
+        'den datamængde, du faktisk bruger.</p>' +
+        '<div class="rf-gitter">' + data.forslag.map(function (f) {
+          return kort(f, belob);
+        }).join("") + '</div>';
     } else {
-      var placering = overMedian > 0
-        ? 'Det er <strong>' + kr(overMedian) + ' kr. mere</strong> end medianen på det ' +
-          'danske marked (' + kr(data.median) + ' kr.).'
-        : 'Du ligger under medianen på ' + kr(data.median) + ' kr., men der er stadig ' +
-          'billigere abonnementer.';
-
       html =
-        '<p class="rt-overskrift">Du kan spare <span class="rt-tal">' + kr(aar) +
-        ' kr.</span> om året</p>' +
-        '<p class="rt-brod">Du betaler <strong>' + kr(belob) + ' kr. om måneden</strong>. ' +
-        placering + '</p>' +
-        '<div class="rt-tal-gitter">' +
-          '<div><b>' + kr(forskel) + ' kr.</b><span>pr. måned</span></div>' +
-          '<div><b>' + kr(aar) + ' kr.</b><span>pr. år</span></div>' +
-          '<div><b>' + kr(treAar) + ' kr.</b><span>over 3 år</span></div>' +
+        '<p class="rt-overskrift">Du kan spare op til <span class="rt-tal">' +
+        kr(spar * 12) + ' kr.</span> om året</p>' +
+        '<p class="rt-brod">Du betaler <strong>' + kr(belob) + ' kr./md.</strong>' +
+        (overMedian > 0
+          ? ' — <strong>' + kr(overMedian) + ' kr. mere</strong> end medianen på det ' +
+            'danske marked (' + kr(data.median) + ' kr.).'
+          : '. Du ligger allerede under medianen, men der er stadig billigere valg.') +
+        ' Her er tre, der passer til forskellige behov:</p>' +
+        '<div class="rf-gitter">' +
+          (relevante.length ? relevante : data.forslag).map(function (f) {
+            return kort(f, belob);
+          }).join("") +
         '</div>' +
-        '<p class="rt-brod rt-billigst">Billigst lige nu er <strong>' + b.navn +
-        '</strong> med ' + b.data + ' på ' + b.net + ' til <strong>' +
-        kr(b.pris) + ' kr./md.</strong>' +
-        (b.pris !== b.gns12 ? ' (' + kr(b.gns12) + ' kr. i gennemsnit over 12 mdr.)' : '') +
-        '</p>' +
-        '<a class="knap knap-primaer rt-cta" href="/billigste-mobilabonnement/">' +
-        'Se alle ' + data.antal + ' abonnementer →</a>';
+        '<p class="rf-note">Priserne er den pris, du starter på. Tallet i parentes er ' +
+        'gennemsnittet over 12 måneder. Annoncelinks — vi kan modtage provision.</p>';
     }
 
-    html += '<button type="button" class="rt-igen" data-rt-igen>← Prøv et andet beløb</button>';
+    html += '<div class="rf-bund">' +
+      '<a class="rf-alle" href="/billigste-mobilabonnement/">Se alle ' + data.antal +
+      ' abonnementer →</a>' +
+      '<button type="button" class="rt-igen" data-rt-igen>← Prøv et andet beløb</button>' +
+      '</div>';
+
     trin2.innerHTML = html;
     trin1.hidden = true;
     trin2.hidden = false;

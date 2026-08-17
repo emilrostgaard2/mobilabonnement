@@ -418,32 +418,58 @@ def logobaand(titel="Vi sammenligner priser fra"):
 
 
 def regningstjek():
-    """Hero-værktøj: indtast din nuværende regning, se hvad markedet koster.
-    Bygget så det kan bruges uden forudsætninger — ingen gigabyte, ingen filtre."""
+    """Hero-værktøj: indtast din regning, få tre konkrete forslag med det samme.
+    Ingen gigabyte, ingen filtre, ingen viderestilling."""
     S = statistik()
-    billigste = min((a for a in ABON if a["pris"] > 0), key=visningspris)
-    ub = UMAP[billigste["udbyder"]]
+    med_data = [a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0]
+    endelig = [a for a in med_data if a["data_gb"] < 900]
+    frie = [a for a in ABON if a["data_gb"] >= 900 and a["pris"] > 0]
 
-    # Realistiske hurtigvalg, så man ikke behøver taste
+    def pak(a, hvorfor):
+        u = UMAP[a["udbyder"]]
+        return {
+            "navn": a["navn"],
+            "udbyder": u["navn"],
+            "logo": f"/assets/img/logoer/{u['logo']}",
+            "logo_w": round(u["logo_w"] * 22 / u["logo_h"]),
+            "pris": visningspris(a),
+            "gns12": round(gns12(a) or a["pris"]),
+            "normalpris": a["pris"],
+            "intro_mdr": a.get("intro_mdr") or 0,
+            "data": gb_tekst(a["data_gb"]),
+            "data_gb": a["data_gb"],
+            "net": netlabel(u),
+            "hvorfor": hvorfor,
+            "link": a["link"],
+            "side": f"/udbydere/{u['slug']}/",
+        }
+
+    # Spred forslagene over forskellige udbydere — tre kort fra samme selskab
+    # ligner en annonce frem for en anbefaling
+    forslag = []
+    brugte = set()
+
+    def vaelg(kandidater, noegle, hvorfor):
+        friske = [a for a in kandidater if a["udbyder"] not in brugte]
+        pulje = friske or kandidater
+        if not pulje:
+            return
+        a = min(pulje, key=noegle)
+        brugte.add(a["udbyder"])
+        forslag.append(pak(a, hvorfor))
+
+    vaelg(med_data, visningspris, "Laveste pris med mobildata")
+    vaelg(endelig, lambda a: a["pris"] / a["data_gb"], "Mest data for pengene")
+    vaelg(frie or endelig, lambda a: gns12(a) or 9e9,
+          "Fri data uden loft" if frie else "God balance mellem pris og data")
+
     hurtig = "".join(
         f'<button type="button" class="rt-hurtig" data-belob="{v}">{v} kr.</button>'
         for v in (99, 149, 199, 249, 299))
 
     data = json.dumps({
-        "median": S["median"],
-        "gns": S["gns"],
-        "min": S["min"],
-        "maks": S["maks"],
-        "antal": S["antal"],
-        "billigste": {
-            "navn": billigste["navn"],
-            "udbyder": ub["navn"],
-            "pris": visningspris(billigste),
-            "gns12": round(gns12(billigste) or billigste["pris"]),
-            "data": gb_tekst(billigste["data_gb"]),
-            "net": netlabel(ub),
-            "link": f"/udbydere/{ub['slug']}/",
-        },
+        "median": S["median"], "gns": S["gns"], "min": S["min"], "antal": S["antal"],
+        "forslag": forslag[:3],
     }, ensure_ascii=False)
 
     return f"""<div class="regningstjek" data-regningstjek>
