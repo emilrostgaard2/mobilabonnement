@@ -118,32 +118,35 @@ skabelon.VAERKTOEJER = [x for x in skabelon.VAERKTOEJER if _MULIGE.get(x[0], Tru
 
 IDAG = date.today()
 OPDATERET = dansk_dato(IDAG)
+skabelon.OPDATERET_GLOBAL = OPDATERET
 ISO = IDAG.isoformat()
 
 # Afledte nøgletal — bruges i tekst, så tal og tabeller aldrig kan komme i utakt
 med_gb = [a for a in ABON if 0 < a["data_gb"] < 900]
 fri = [a for a in ABON if a["data_gb"] >= 900]
 billigst = min((a for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")),
-               key=lambda a: a["pris"])
+               key=visningspris)
 billigst_med_data = min((a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0),
-                        key=lambda a: a["pris"])
+                        key=visningspris)
 bedste_pr_gb = min(med_gb, key=lambda a: a["pris"] / a["data_gb"])
 
+# Alle "fra"-priser bruger visningsprisen — altså det tal, kortet viser stort.
+# Ellers står der 29 kr. i titlen, mens tabellen viser 18 kr. øverst.
 D = {
-    "min_pris": billigst["pris"],
-    "min_pris_data": billigst_med_data["pris"],
+    "min_pris": visningspris(billigst),
+    "min_pris_data": visningspris(billigst_med_data),
     "min_data_gb": billigst_med_data["data_gb"],
-    "pris_lille": min(a["pris"] for a in ABON if 0 < a["data_gb"] <= 10),
-    "pris_mellem": min(a["pris"] for a in ABON if 15 <= a["data_gb"] <= 30),
-    "pris_stor": min(a["pris"] for a in ABON if 50 <= a["data_gb"] < 900),
-    "pris_fri": min(a["pris"] for a in fri) if fri else 199,
+    "pris_lille": min(visningspris(a) for a in ABON if 0 < a["data_gb"] <= 10),
+    "pris_mellem": min(visningspris(a) for a in ABON if 15 <= a["data_gb"] <= 30),
+    "pris_stor": min(visningspris(a) for a in ABON if 50 <= a["data_gb"] < 900),
+    "pris_fri": min(visningspris(a) for a in fri) if fri else 199,
     "antal": len(ABON),
     "antal_udbydere": len(UDBYDERE),
-    "maks_besparelse": max(a["pris"] for a in ABON) - billigst["pris"],
+    "maks_besparelse": max(a["pris"] for a in ABON) - visningspris(billigst),
 }
 
 def _min(kriterie, standard=0):
-    kandidater = [a["pris"] for a in ABON
+    kandidater = [visningspris(a) for a in ABON
                   if kriterie(a) and a["pris"] > 0 and not a.get("forbrugsafregnet")]
     return min(kandidater) if kandidater else standard
 
@@ -1247,7 +1250,7 @@ def byg_forside():
 """
 
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_forside(), efter_hero=logobaand(), krumme=krumme,
         indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, TJENESTE, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
@@ -1335,7 +1338,7 @@ def byg_billigste():
 """
 
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side("Sammenligning", f"Billigste mobilabonnement — fra {D['min_pris']} kr.",
                        f"Vi har regnet {D['antal']} abonnementer igennem og fundet, hvad de reelt koster "
                        "pr. gigabyte. Under tabellen forklarer vi, hvad du skal se efter, "
@@ -1405,7 +1408,7 @@ def byg_fridata():
 """
 
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side("Fri data", "Mobilabonnement med fri data",
                        f"Fri data koster fra {D['pris_fri']} kr. om måneden. Her er hvad det dækker, "
                        "hvad det ikke dækker, og hvordan du regner ud, om du overhovedet har brug for det.",
@@ -1432,7 +1435,7 @@ def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links
 </section>
 """
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side(etiket, h1, intro,
                        '<a href="#sammenlign" class="knap knap-primaer">Se priserne</a>'),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
@@ -1462,7 +1465,7 @@ def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
 </section>
 """
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side(etiket, h1, intro, '<a href="#sammenlign" class="knap knap-primaer">Se priserne</a>', chips),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
@@ -1930,7 +1933,7 @@ def byg_tjenesteside(tjeneste):
 <section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>
 """
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side(tjeneste, f"Mobilabonnement med {e(tjeneste)}", hero_tekst,
                        '<a href="#indhold" class="knap knap-primaer">Se regnestykket</a>', chips),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
@@ -2235,10 +2238,11 @@ GB_INTERVALLER = [
 def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
     sti = f"/mobilabonnement-{slug}/"
     udvalg = sorted([a for a in ABON if lav <= a["data_gb"] <= hoej and a["pris"] > 0],
-                    key=lambda a: gns12(a) or 9e9)
+                    key=visningspris)
     if not udvalg:
         return
     billigst_g = udvalg[0]
+    fra = visningspris(billigst_g)
     u = UMAP[billigst_g["udbyder"]]
     krumme = [("/", "Forside"), (None, f"Mobilabonnement {navn}")]
 
@@ -2249,8 +2253,9 @@ def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
 
     faq = [
         {"sp": f"Hvad koster et mobilabonnement med {navn}?",
-         "sv": f"Det billigste med {navn} koster {kr(gns12(billigst_g))} kr. om måneden regnet "
-               f"som gennemsnit over 12 måneder. Det er {u['navn']} {billigst_g['navn']}."},
+         "sv": f"Det billigste med {navn} koster {kr(fra)} kr. om måneden. Regnet som "
+               f"gennemsnit over 12 måneder er det {kr(gns12(billigst_g))} kr. "
+               f"Det er {u['navn']} {billigst_g['navn']}."},
         {"sp": f"Er {navn} nok til mig?",
          "sv": beskrivelse + " Tjek dit faktiske forbrug i telefonens indstillinger — de fleste "
                "danskere bruger mindre, end de tror."},
@@ -2280,7 +2285,7 @@ def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
   <div class="udtag">
   <p><strong>Kort svar:</strong> Der er {len(udvalg)} abonnementer med {navn} i vores
   sammenligning. Det billigste er {e(u['navn'])} {e(billigst_g['navn'])} til
-  {kr(gns12(billigst_g))} kr. om måneden i gennemsnit over 12 måneder.
+  {kr(fra)} kr. om måneden — {kr(gns12(billigst_g))} kr. i gennemsnit over 12 måneder.
   {e(navn)} passer til: {e(profil.lower())}.</p>
   </div>
 
@@ -2315,15 +2320,15 @@ def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
 """
     return skriv(sti, shell(
         sti=sti,
-        titel=f"Mobilabonnement {navn} — fra {kr(gns12(billigst_g))} kr./md.",
+        titel=f"Mobilabonnement {navn} — fra {kr(fra)} kr./md.",
         beskrivelse=(f"Sammenlign {len(udvalg)} mobilabonnementer med {navn}. "
-                     f"Fra {kr(gns12(billigst_g))} kr./md. regnet over 12 måneder, "
+                     f"Fra {kr(fra)} kr./md. Vi viser også prisen over 12 måneder, "
                      "så introtilbud ikke skjuler normalprisen."),
         opdateret=OPDATERET,
         hero=hero_side(f"{navn}", f"Mobilabonnement med {e(navn)}",
                        e(beskrivelse),
                        '<a href="#sammenlign" class="knap knap-primaer">Se abonnementerne</a>',
-                       [("Planer", str(len(udvalg))), ("Fra", f"{kr(gns12(billigst_g))} kr."),
+                       [("Planer", str(len(udvalg))), ("Fra", f"{kr(fra)} kr."),
                         ("Profil", profil)]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
@@ -3309,7 +3314,7 @@ def byg_udbyderoversigt():
 </section>
 """
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side("Udbydere", f"Alle {D['antal_udbydere']} danske mobilselskaber",
                        "Vi gennemgår hvert selskab for sig — netværk, priser, ejerforhold og "
                        "de ulemper, de selv undlader at nævne.",
@@ -3468,7 +3473,7 @@ def byg_udbyder(u):
 """
 
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side(netlabel(u).replace("s net", "s netværk") if u["netvaerk"] != "MVNO" else "Udbyder uden eget net", f"{e(u['navn'])} — {e(u['tagline'])}",
                        e(u["kort"]),
                        '<a href="#sammenlign" class="knap knap-primaer">Se priser</a>'
@@ -3499,7 +3504,7 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
 </section>
 """
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side(etiket, h1, besk,
                        billede=guidebillede(billede, altbillede or h1, prioritet=True) if billede else None),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
@@ -3672,7 +3677,7 @@ def byg_statisk(sti, titel, besk, etiket, h1, brodtekst, prioritet="0.5", jsonld
         noder.append(jsonld_ekstra)
     krop = brodtekst + f'<section class="sektion baand-smal">{afsloering()}</section>'
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side(etiket, h1, besk), efter_hero=logobaand(), krumme=krumme, indhold=krop,
         jsonld=[graf(*noder)],
     ), prioritet=prioritet, hyppighed="monthly")
@@ -3894,7 +3899,7 @@ def byg_404():
   </p>
 </section>"""
     html = shell(sti="/404.html", titel="Siden blev ikke fundet",
-                 beskrivelse="Siden blev ikke fundet. Find i stedet det billigste mobilabonnement i vores sammenligning af danske udbydere og priser.", opdateret=OPDATERET,
+                 beskrivelse="Siden blev ikke fundet. Find i stedet det billigste mobilabonnement i vores sammenligning af danske udbydere og priser.",
                  hero=hero_side("404", "Vi kunne ikke finde siden", "Men vi kan finde et billigt abonnement til dig."),
                  indhold=krop)
     with open(os.path.join(ROD, "404.html"), "w", encoding="utf-8") as f:
@@ -3965,7 +3970,7 @@ kategori. <a href="/guides/hvor-meget-data/">Se hele guiden til dataforbrug</a>.
     byg_niche(
         "/mobilabonnement-uden-binding/", "Uden binding",
         "Mobilabonnement uden binding",
-        f"Mobilabonnement uden binding — priser fra {min(a['pris'] for a in ubinding)} kr./md.",
+        f"Mobilabonnement uden binding — priser fra {min(visningspris(a) for a in ubinding)} kr./md.",
         "Sammenlign mobilabonnementer uden binding. Skift når du vil, uden opsigelsesgebyr "
         "eller bindingsperiode.",
         "Alle abonnementer her kan opsiges med kort varsel. Sorteret efter laveste pris.",

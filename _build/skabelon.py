@@ -65,6 +65,7 @@ MENU = [
 
 
 NAV_UDBYDERE = []
+OPDATERET_GLOBAL = ""
 
 # Uden en versionsnøgle ville browsere holde fast i den gamle CSS og JS i et år,
 # fordi .htaccess sætter Cache-Control: immutable. Nøglen skifter, når filen gør.
@@ -616,7 +617,9 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
 
 
 def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
-              billigst_id=None, id_attr="sammenlign", vis=10):
+              billigst_id=None, id_attr="sammenlign", vis=10, opdateret=None):
+    if opdateret is None:
+        opdateret = OPDATERET_GLOBAL
     betalte = [gns12(x) for x in abonnementer if x["pris"] > 0 and not x.get("forbrugsafregnet")]
     betalte = [x for x in betalte if x]
     gnsnit_aar = (sum(betalte) / len(betalte) * 12) if betalte else None
@@ -680,6 +683,11 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     <span class="etiket">Sammenligning</span>
     <h2>{e(titel)}</h2>
     <p class="led">{undertitel}</p>
+    <p class="opdateret-stribe">
+      <span class="op-prik" aria-hidden="true"></span>
+      <span><strong>Opdateret {e(opdateret)}</strong> · {len(abonnementer)} abonnementer
+      hentet automatisk fra udbydernes datafeed</span>
+    </p>
   </div>
   {filterhtml}
   <div class="listeramme afslør">

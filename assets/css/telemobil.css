@@ -1225,3 +1225,17 @@ body{overflow-x:clip;max-width:100%;position:relative}
   .cb-knapper{width:100%}
   .cb-knapper .knap{flex:1;justify-content:center}
 }
+
+/* Friskhedsmarkering over tabellen */
+.opdateret-stribe{display:inline-flex;align-items:baseline;gap:.55rem;
+  font-family:var(--font-tal);font-size:.78rem;line-height:1.5;color:var(--graa);
+  background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-m);
+  padding:.55rem 1.05rem;margin-top:1rem;box-shadow:var(--skygge-blod);max-width:100%}
+.opdateret-stribe strong{color:var(--blaek);font-weight:600}
+.op-prik{width:7px;height:7px;border-radius:50%;background:var(--puls);flex-shrink:0;
+  position:relative;top:-1px;box-shadow:0 0 0 3px rgba(0,209,143,.18)}
+@media(prefers-reduced-motion:no-preference){
+  .op-prik{animation:puls-prik 2.4s ease-in-out infinite}
+  @keyframes puls-prik{0%,100%{box-shadow:0 0 0 3px rgba(0,209,143,.18)}
+                       50%{box-shadow:0 0 0 6px rgba(0,209,143,.05)}}
+}
