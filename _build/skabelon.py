@@ -548,7 +548,10 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     stats = [
         (gb_tekst(a["data_gb"]), "data i DK"),
         ("Fri" if a["tale"] == "fri" else e(a["tale"]), "tale"),
-        ("—" if a["data_gb"] == 0 else ("Fri" if a.get("eu_gb", 0) >= 900 else f'{a.get("eu_gb", 0)} GB'), "EU-data"),
+        ("—" if a["data_gb"] == 0
+         else "Fri" if a.get("eu_gb", 0) >= 900
+         else "Ingen" if not a.get("eu_gb")
+         else f'{a["eu_gb"]} GB', "EU-data"),
         (pr_gb_tekst, "pris pr. GB"),
     ]
     statbokse = "".join(f'<div class="stat"><b>{v}</b><span>{t}</span></div>' for v, t in stats)
@@ -560,6 +563,10 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
         chips.append('<span class="chp">0 kr. i oprettelse</span>')
     if a.get("esim"):
         chips.append('<span class="chp">eSIM samme dag</span>')
+    if a.get("sms") and a["sms"] != "fri":
+        chips.append('<span class="chp chp-advar">Begrænset sms</span>')
+    if a["data_gb"] > 0 and not a.get("eu_gb"):
+        chips.append('<span class="chp chp-advar">Ingen EU-data</span>')
     chips.insert(0, f'<span class="chp chp-net">{netlabel(u)}</span>')
     if a.get("femg") and a["data_gb"] > 0:
         chips.append('<span class="chp">5G</span>')
@@ -695,7 +702,9 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     {visflere}
     <div class="listefod">
       <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> regner intropris,
-      normalpris og oprettelse sammen — det er den reelle pris.</span>
+      normalpris og oprettelse sammen — det er den reelle pris. Står der
+      <strong>Ingen</strong> under EU-data, kan abonnementet ikke bruges til data på
+      rejsen uden tillæg.</span>
       <span>Kilde: udbydernes egne prislister</span>
     </div>
   </div>
