@@ -495,7 +495,15 @@ def regningstjek():
     ingenting, og du skal ikke oplyse noget om dig selv.</p>
   </div>
 
-  <div class="rt-trin rt-svar" data-rt-trin="2" hidden aria-live="polite"></div>
+</div>
+
+<div class="rt-overlay" data-rt-overlay hidden>
+  <div class="rt-dialog" role="dialog" aria-modal="true" aria-labelledby="rt-dialog-titel">
+    <button type="button" class="rt-luk" data-rt-luk aria-label="Luk">
+      <span aria-hidden="true">×</span>
+    </button>
+    <div class="rt-dialog-krop" data-rt-svar aria-live="polite"></div>
+  </div>
 </div>"""
 
 

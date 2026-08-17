@@ -592,9 +592,33 @@
   } catch (e) { return; }
 
   var felt = boks.querySelector("#rt-belob");
-  var trin1 = boks.querySelector('[data-rt-trin="1"]');
-  var trin2 = boks.querySelector('[data-rt-trin="2"]');
   var knap = boks.querySelector("[data-rt-beregn]");
+  var overlay = document.querySelector("[data-rt-overlay]");
+  // Flyt overlayet ud af heroen. Ellers fanger heroens stakkontekst det under
+  // den faste header, og krydset kan ikke klikkes.
+  if (overlay && overlay.parentElement !== document.body) {
+    document.body.appendChild(overlay);
+  }
+  var svar = overlay ? overlay.querySelector("[data-rt-svar]") : null;
+  var sidstFokus = null;
+
+  function aabn() {
+    sidstFokus = document.activeElement;
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(function () {
+      overlay.classList.add("vist");
+      var f = overlay.querySelector("[data-rt-luk]");
+      if (f) f.focus();
+    });
+  }
+
+  function luk() {
+    overlay.classList.remove("vist");
+    document.body.style.overflow = "";
+    setTimeout(function () { overlay.hidden = true; }, 240);
+    if (sidstFokus) sidstFokus.focus();
+  }
 
   function kr(n) { return Math.round(n).toLocaleString("da-DK"); }
 
@@ -654,7 +678,7 @@
     var html;
     if (spar <= 0) {
       html =
-        '<p class="rt-overskrift">Du betaler allerede skarpt</p>' +
+        '<p class="rt-overskrift" id="rt-dialog-titel">Du betaler allerede skarpt</p>' +
         '<p class="rt-brod">Din pris på <strong>' + kr(belob) + ' kr.</strong> ligger på ' +
         'niveau med markedets billigste. Der er ikke meget at hente — men tjek at du får ' +
         'den datamængde, du faktisk bruger.</p>' +
@@ -663,7 +687,7 @@
         }).join("") + '</div>';
     } else {
       html =
-        '<p class="rt-overskrift">Du kan spare op til <span class="rt-tal">' +
+        '<p class="rt-overskrift" id="rt-dialog-titel">Du kan spare op til <span class="rt-tal">' +
         kr(spar * 12) + ' kr.</span> om året</p>' +
         '<p class="rt-brod">Du betaler <strong>' + kr(belob) + ' kr./md.</strong>' +
         (overMedian > 0
@@ -683,12 +707,11 @@
     html += '<div class="rf-bund">' +
       '<a class="rf-alle" href="/billigste-mobilabonnement/">Se alle ' + data.antal +
       ' abonnementer →</a>' +
-      '<button type="button" class="rt-igen" data-rt-igen>← Prøv et andet beløb</button>' +
+      '<button type="button" class="rt-igen" data-rt-luk>Prøv et andet beløb</button>' +
       '</div>';
 
-    trin2.innerHTML = html;
-    trin1.hidden = true;
-    trin2.hidden = false;
+    svar.innerHTML = html;
+    aabn();
   }
 
   knap.addEventListener("click", beregn);
@@ -703,11 +726,11 @@
     });
   });
 
-  boks.addEventListener("click", function (e) {
-    if (!e.target.closest("[data-rt-igen]")) return;
-    trin2.hidden = true;
-    trin1.hidden = false;
-    felt.value = "";
-    felt.focus();
+  // Luk: kryds, knap, klik på baggrund eller Esc
+  overlay.addEventListener("click", function (e) {
+    if (e.target.closest("[data-rt-luk]") || !e.target.closest(".rt-dialog")) luk();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !overlay.hidden) luk();
   });
 })();

@@ -1333,3 +1333,37 @@ body{overflow-x:clip;max-width:100%;position:relative}
   .rf-knapper{flex-direction:column;align-items:stretch;gap:.5rem}
   .rf-laes{text-align:center}
 }
+
+/* ==========================================================================
+   Regningstjek: svaret som overlay
+   ========================================================================== */
+.rt-overlay[hidden]{display:none}
+.rt-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;
+  justify-content:center;padding:1.5rem;background:rgba(8,11,28,.72);
+  backdrop-filter:blur(6px);opacity:0;transition:opacity .24s}
+.rt-overlay.vist{opacity:1}
+.rt-dialog{position:relative;width:min(560px,100%);max-height:min(86vh,900px);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  background:linear-gradient(165deg,#151B3D,#0E1330);
+  border:1px solid rgba(255,255,255,.14);border-radius:var(--r-xl);
+  padding:2rem 1.9rem 1.7rem;box-shadow:0 40px 90px -30px rgba(0,0,0,.75);
+  transform:translateY(16px) scale(.98);transition:transform .28s cubic-bezier(.22,1,.36,1)}
+.rt-overlay.vist .rt-dialog{transform:none}
+.rt-luk{position:absolute;top:.9rem;right:.9rem;width:36px;height:36px;display:flex;
+  align-items:center;justify-content:center;font-size:1.5rem;line-height:1;cursor:pointer;
+  color:rgba(255,255,255,.65);background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);border-radius:50%;transition:.16s}
+.rt-luk:hover{background:rgba(255,255,255,.16);color:#fff}
+.rt-luk:focus-visible{outline:2px solid var(--puls);outline-offset:2px}
+.rt-dialog .rt-overskrift{padding-right:2.6rem}
+.rt-dialog .rt-igen{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;padding:.5rem 1.1rem;margin:0}
+.rt-dialog .rt-igen:hover{background:rgba(255,255,255,.16);text-decoration:none}
+@media(max-width:640px){
+  .rt-overlay{padding:.9rem;align-items:flex-end}
+  .rt-dialog{padding:1.6rem 1.2rem 1.2rem;max-height:92vh;
+    border-radius:var(--r-xl) var(--r-xl) 0 0}
+}
+@media(prefers-reduced-motion:reduce){
+  .rt-overlay,.rt-dialog{transition:none}
+}
