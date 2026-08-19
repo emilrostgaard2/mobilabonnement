@@ -133,48 +133,106 @@
     taellere.forEach(function (el) { tObs.observe(el); });
   }
 
-  /* ---- Abonnementsliste: filter, sortering og visning ---- */
+  /* ---- Abonnementsliste: filtre, sortering, detaljer ---- */
   (function () {
     var krop = document.querySelector(".planliste");
     if (!krop) return;
 
     var planer = Array.prototype.slice.call(krop.querySelectorAll(".plan"));
+    var bar = document.querySelector(".filterbar");
     var visFlereBoks = document.querySelector(".vis-flere");
     var visFlereKnap = document.querySelector("[data-vis-flere]");
     var resterendeTekst = document.querySelector("[data-resterende]");
     var antalVist = document.querySelector("[data-antal-vist]");
+    var tomBesked = document.querySelector("[data-tom]");
     var PORTION = 10;
 
-    var dataFilter = "alle";
-    var prisFilter = "alle";
+    var valgt = { data: [], pris: [], binding: [], slug: [], net: [], ekstra: [] };
+    var kunTilbud = false;
     var grænse = PORTION;
 
-    function passer(p) {
-      var gb = parseInt(p.getAttribute("data-gb"), 10);
-      var pris = parseFloat(p.getAttribute("data-pris"));
-      if (dataFilter === "lille" && gb > 15) return false;
-      if (dataFilter === "mellem" && !(gb > 15 && gb <= 50)) return false;
-      if (dataFilter === "stor" && !(gb > 50 && gb < 900)) return false;
-      if (dataFilter === "fri" && gb < 900) return false;
-      if (prisFilter === "u50" && !(pris > 0 && pris < 50)) return false;
-      if (prisFilter === "50-99" && !(pris >= 50 && pris <= 99)) return false;
-      if (prisFilter === "100-199" && !(pris >= 100 && pris <= 199)) return false;
-      if (prisFilter === "o200" && pris < 200) return false;
+    function tal(el, navn) { return parseFloat(el.getAttribute("data-" + navn)); }
+
+    /* Hver gruppe er et ELLER internt, og et OG på tværs af grupper —
+       det er sådan folk forventer at filtre opfører sig. */
+    function iData(p, v) {
+      var gb = tal(p, "gb");
+      if (v === "lille") return gb > 0 && gb <= 15;
+      if (v === "mellem") return gb > 15 && gb <= 50;
+      if (v === "stor") return gb > 50 && gb <= 100;
+      if (v === "xl") return gb > 100 && gb < 900;
+      if (v === "fri") return gb >= 900;
+      return true;
+    }
+    function iPris(p, v) {
+      var k = tal(p, "pris");
+      if (v === "u50") return k > 0 && k < 50;
+      if (v === "50-99") return k >= 50 && k <= 99;
+      if (v === "100-149") return k >= 100 && k <= 149;
+      if (v === "150-199") return k >= 150 && k <= 199;
+      if (v === "o200") return k >= 200;
+      return true;
+    }
+    function iBinding(p, v) {
+      var b = tal(p, "binding");
+      if (v === "0") return b === 0;
+      if (v === "1-6") return b > 0 && b <= 6;
+      if (v === "o6") return b > 6;
       return true;
     }
 
-    // Én funktion styrer synlighed — så sortering altid viser de øverste
+    function passer(p) {
+      if (kunTilbud && p.getAttribute("data-tilbud") !== "1") return false;
+      if (valgt.data.length && !valgt.data.some(function (v) { return iData(p, v); })) return false;
+      if (valgt.pris.length && !valgt.pris.some(function (v) { return iPris(p, v); })) return false;
+      if (valgt.binding.length && !valgt.binding.some(function (v) { return iBinding(p, v); })) return false;
+      if (valgt.slug.length && valgt.slug.indexOf(p.getAttribute("data-slug")) === -1) return false;
+      if (valgt.net.length && valgt.net.indexOf(p.getAttribute("data-net")) === -1) return false;
+      if (valgt.ekstra.length) {
+        var flag = (p.getAttribute("data-ekstra") || "").split(" ");
+        for (var i = 0; i < valgt.ekstra.length; i++) {
+          if (flag.indexOf(valgt.ekstra[i]) === -1) return false;
+        }
+      }
+      return true;
+    }
+
+    function opdaterKnapper() {
+      var noget = kunTilbud;
+      Object.keys(valgt).forEach(function (n) {
+        var grp = bar && bar.querySelector('.fb-grp[data-gruppe="' + n + '"]');
+        if (!grp) return;
+        var knap = grp.querySelector(".fb-knap");
+        var antal = valgt[n].length;
+        if (antal) noget = true;
+        var maerke = knap.querySelector(".fb-tal");
+        if (antal) {
+          knap.setAttribute("data-aktiv", "1");
+          if (!maerke) {
+            maerke = document.createElement("span");
+            maerke.className = "fb-tal";
+            knap.insertBefore(maerke, knap.querySelector(".fb-pil"));
+          }
+          maerke.textContent = antal;
+        } else {
+          knap.removeAttribute("data-aktiv");
+          if (maerke) maerke.remove();
+        }
+      });
+      Array.prototype.forEach.call(document.querySelectorAll("[data-nulstil]"), function (k) {
+        if (k.closest(".filterbar")) k.hidden = !noget;
+      });
+    }
+
     function opdater() {
       var matchende = 0;
       planer.forEach(function (p) {
-        if (!passer(p)) {
-          p.hidden = true;
-          return;
-        }
+        if (!passer(p)) { p.hidden = true; return; }
         matchende++;
         p.hidden = matchende > grænse;
       });
       if (antalVist) antalVist.textContent = matchende;
+      if (tomBesked) tomBesked.hidden = matchende !== 0;
       var tilbage = Math.max(0, matchende - grænse);
       if (visFlereBoks) {
         visFlereBoks.hidden = tilbage === 0;
@@ -183,41 +241,13 @@
             (tilbage === 1 ? "" : "er") + " tilbage";
         }
       }
+      opdaterKnapper();
     }
 
-    if (visFlereKnap) {
-      visFlereKnap.addEventListener("click", function () {
-        grænse += PORTION;
-        opdater();
-      });
-    }
-
-    function knapgruppe(vaelger, saet) {
-      var knapper = Array.prototype.slice.call(document.querySelectorAll(vaelger));
-      knapper.forEach(function (k) {
-        k.addEventListener("click", function () {
-          knapper.forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
-          k.setAttribute("aria-pressed", "true");
-          saet(k);
-          grænse = PORTION;
-          opdater();
-        });
-      });
-    }
-
-    knapgruppe(".chip[data-filter]", function (k) {
-      dataFilter = k.getAttribute("data-filter");
-    });
-    knapgruppe(".chip[data-pris]", function (k) {
-      prisFilter = k.getAttribute("data-pris");
-    });
-
-    knapgruppe("[data-sorter]", function (k) {
-      var noegle = k.getAttribute("data-sorter");
+    function sorter(noegle) {
       var faldende = noegle === "gb";
       planer.sort(function (a, b) {
-        var va = parseFloat(a.getAttribute("data-" + noegle));
-        var vb = parseFloat(b.getAttribute("data-" + noegle));
+        var va = tal(a, noegle), vb = tal(b, noegle);
         if (isNaN(va)) va = faldende ? -Infinity : Infinity;
         if (isNaN(vb)) vb = faldende ? -Infinity : Infinity;
         // Abonnementer uden data hører nederst ved pris pr. GB
@@ -228,6 +258,112 @@
         return faldende ? vb - va : va - vb;
       });
       planer.forEach(function (p) { krop.appendChild(p); });
+    }
+
+    /* ---- Foldemenuer ---- */
+    function lukAlle(undtagen) {
+      Array.prototype.forEach.call(document.querySelectorAll(".fb-grp"), function (g) {
+        if (g === undtagen) return;
+        var k = g.querySelector(".fb-knap"), m = g.querySelector(".fb-menu");
+        if (k) k.setAttribute("aria-expanded", "false");
+        if (m) m.hidden = true;
+      });
+    }
+
+    if (bar) {
+      Array.prototype.forEach.call(bar.querySelectorAll(".fb-grp[data-gruppe]"), function (grp) {
+        var knap = grp.querySelector(".fb-knap");
+        var menu = grp.querySelector(".fb-menu");
+        knap.addEventListener("click", function (ev) {
+          ev.stopPropagation();
+          var aaben = knap.getAttribute("aria-expanded") === "true";
+          lukAlle(grp);
+          knap.setAttribute("aria-expanded", aaben ? "false" : "true");
+          menu.hidden = aaben;
+        });
+        menu.addEventListener("click", function (ev) { ev.stopPropagation(); });
+      });
+
+      Array.prototype.forEach.call(bar.querySelectorAll(".fb-menu input[data-f]"), function (inp) {
+        inp.addEventListener("change", function () {
+          var n = inp.getAttribute("data-f"), v = inp.value;
+          var i = valgt[n].indexOf(v);
+          if (inp.checked && i === -1) valgt[n].push(v);
+          if (!inp.checked && i > -1) valgt[n].splice(i, 1);
+          grænse = PORTION;
+          opdater();
+        });
+      });
+
+      Array.prototype.forEach.call(bar.querySelectorAll("[data-ryd]"), function (k) {
+        k.addEventListener("click", function () {
+          var n = k.getAttribute("data-ryd");
+          valgt[n] = [];
+          Array.prototype.forEach.call(
+            bar.querySelectorAll('input[data-f="' + n + '"]'),
+            function (i) { i.checked = false; });
+          grænse = PORTION;
+          opdater();
+        });
+      });
+
+      var tilbudKnap = bar.querySelector("[data-kun-tilbud]");
+      if (tilbudKnap) {
+        tilbudKnap.addEventListener("click", function () {
+          kunTilbud = !kunTilbud;
+          tilbudKnap.setAttribute("aria-pressed", kunTilbud ? "true" : "false");
+          grænse = PORTION;
+          opdater();
+        });
+      }
+
+      var sortVaelger = bar.querySelector("[data-sorter]");
+      if (sortVaelger) {
+        sortVaelger.addEventListener("change", function () {
+          sorter(sortVaelger.value);
+          grænse = PORTION;
+          opdater();
+        });
+      }
+
+      document.addEventListener("click", function () { lukAlle(null); });
+      document.addEventListener("keydown", function (ev) {
+        if (ev.key === "Escape") lukAlle(null);
+      });
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-nulstil]"), function (k) {
+      k.addEventListener("click", function () {
+        Object.keys(valgt).forEach(function (n) { valgt[n] = []; });
+        kunTilbud = false;
+        if (bar) {
+          Array.prototype.forEach.call(bar.querySelectorAll("input[data-f]"),
+            function (i) { i.checked = false; });
+          var t = bar.querySelector("[data-kun-tilbud]");
+          if (t) t.setAttribute("aria-pressed", "false");
+        }
+        grænse = PORTION;
+        opdater();
+      });
+    });
+
+    if (visFlereKnap) {
+      visFlereKnap.addEventListener("click", function () {
+        grænse += PORTION;
+        opdater();
+      });
+    }
+
+    /* ---- Se detaljer ---- */
+    krop.addEventListener("click", function (ev) {
+      var k = ev.target.closest && ev.target.closest(".pk-detaljer");
+      if (!k) return;
+      var panel = document.getElementById(k.getAttribute("aria-controls"));
+      if (!panel) return;
+      var aaben = k.getAttribute("aria-expanded") === "true";
+      k.setAttribute("aria-expanded", aaben ? "false" : "true");
+      k.textContent = aaben ? "Se detaljer" : "Skjul detaljer";
+      panel.hidden = aaben;
     });
 
     opdater();

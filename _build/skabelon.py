@@ -516,16 +516,27 @@ def beregn_maerker(abonnementer):
     return m
 
 
+def _netgruppe(u):
+    """Rå netværksnøgle til filtrering."""
+    n = (u.get("netvaerk") or "").strip()
+    if n in ("", "MVNO", "Se udbyder"):
+        return "MVNO"
+    return n
+
+
 def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
-    """Ét abonnement som rækkekort."""
+    """Ét abonnement som kompakt rækkekort med foldbare detaljer."""
     logo = f"/assets/img/logoer/{u['logo']}"
     forbrug = a.get("forbrugsafregnet")
+    intro = a.get("intro_pris") is not None and a.get("intro_mdr")
+    vist_pris = a["intro_pris"] if intro else a["pris"]
+
     pr_gb = a["pris"] / a["data_gb"] if 0 < a["data_gb"] < 900 else 0
     pr_gb_tekst = (f"{pr_gb:.2f}".replace(".", ",") + " kr.") if pr_gb else "—"
     g = gns12(a)
     aar = (g * 12) if g is not None else 0
-    # Vis regnestykket, så tallet kan efterprøves
-    if a.get("intro_pris") is not None and a.get("intro_mdr"):
+
+    if intro:
         m = min(a["intro_mdr"], 12)
         formel = f'{a["intro_pris"]}×{m} + {a["pris"]}×{12 - m}'
     else:
@@ -534,110 +545,200 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
         formel += f' + {a["oprettelse"]}'
     formel += " ÷ 12"
 
-    # Mærkater — dynamiske først, så det mest øjenfangende står forrest
-    maerker = ""
-    for tekst, klasse in (dyn or {}).get(a["id"], []):
-        maerker += f'<span class="mrk mrk-{klasse}">{e(tekst)}</span>'
-    if a.get("intro_pris") is not None and a.get("intro_mdr"):
-        maerker += f'<span class="mrk mrk-sol">Tilbud i {a["intro_mdr"]} mdr.</span>'
+    # ---- Faneblad over kortet: ét budskab, ikke fem -----------------------
+    dyn_liste = (dyn or {}).get(a["id"], [])
+    if a.get("badge"):
+        flagtekst, flagklasse = e(a["badge"]), "sol"
+    elif intro:
+        flagtekst = f'{kr(a["intro_pris"])} kr./md. de første {a["intro_mdr"]} mdr.'
+        flagklasse = "nat"
+    elif dyn_liste:
+        flagtekst, flagklasse = e(dyn_liste[0][0]), dyn_liste[0][1]
+    else:
+        flagtekst, flagklasse = "", ""
+    flag = (f'<span class="pk-flag pk-flag-{flagklasse}">{flagtekst}</span>'
+            if flagtekst else "")
+
+    # ---- Fire nøgletal — det folk faktisk scanner efter ------------------
+    stats = [
+        (gb_tekst(a["data_gb"]), "data i Danmark"),
+        ("Fri" if a["tale"] == "fri" else e(a["tale"]), "tale"),
+        ("Ingen" if a["binding"] == 0 else f'{a["binding"]} mdr.', "binding"),
+        (f'{kr(a.get("oprettelse", 0))} kr.', "oprettelse"),
+    ]
+    statbokse = "".join(f'<div class="pk-stat"><b>{v}</b><span>{t}</span></div>'
+                        for v, t in stats)
+
+    # ---- Højst tre plusser, så rækken ikke svulmer op -------------------
+    plus = []
+    if a["data_gb"] >= 900:
+        plus.append("Fri data")
+    elif a["data_gb"] > 0:
+        plus.append(f'{a["data_gb"]} GB data')
+    plus.append("Ingen binding" if a["binding"] == 0 else f'{a["binding"]} mdr. binding')
+    if a.get("femg") and a["data_gb"] > 0:
+        plus.append("5G")
+    if a.get("esim"):
+        plus.append("eSIM")
     if a.get("streaming"):
         n = len(a["streaming"])
-        maerker += f'<span class="mrk mrk-berry">{n} streamingtjeneste{"r" if n > 1 else ""}</span>'
+        plus.append(f'{n} streamingtjeneste{"r" if n > 1 else ""}')
+    if a.get("eu_gb", 0) >= 900:
+        plus.append("Fri EU-data")
+    chips = "".join(f'<span class="pk-chip">{e(t)}</span>' for t in plus[:3])
 
-    # Statbokse
-    stats = [
-        (gb_tekst(a["data_gb"]), "data i DK"),
-        ("Fri" if a["tale"] == "fri" else e(a["tale"]), "tale"),
-        ("—" if a["data_gb"] == 0
-         else "Fri" if a.get("eu_gb", 0) >= 900
-         else "Ingen" if not a.get("eu_gb")
-         else f'{a["eu_gb"]} GB', "EU-data"),
-        (pr_gb_tekst, "pris pr. GB"),
-    ]
-    statbokse = "".join(f'<div class="stat"><b>{v}</b><span>{t}</span></div>' for v, t in stats)
-
-    # Chips
-    chips = ['<span class="chp">Ingen binding</span>' if a["binding"] == 0
-             else f'<span class="chp chp-advar">{a["binding"]} mdr. binding</span>']
-    if a.get("oprettelse", 0) == 0:
-        chips.append('<span class="chp">0 kr. i oprettelse</span>')
-    if a.get("esim"):
-        chips.append('<span class="chp">eSIM samme dag</span>')
-    if a.get("sms") and a["sms"] != "fri":
-        chips.append('<span class="chp chp-advar">Begrænset sms</span>')
+    # ---- Advarsler hører i detaljepanelet, ikke i rækken ----------------
+    advarsler = []
     if a["data_gb"] > 0 and not a.get("eu_gb"):
-        chips.append('<span class="chp chp-advar">Ingen EU-data</span>')
-    chips.insert(0, f'<span class="chp chp-net">{netlabel(u)}</span>')
-    if a.get("streaming"):
-        chips.append('<span class="chp">' + e(", ".join(a["streaming"][:3]))
-                     + ("…" if len(a["streaming"]) > 3 else "") + "</span>")
+        advarsler.append("Ingen EU-data inkluderet — data i udlandet koster ekstra.")
+    if a.get("sms") and a["sms"] != "fri":
+        advarsler.append(f'Sms er begrænset til {e(a["sms"])}.')
+    if a.get("oprettelse"):
+        advarsler.append(f'Oprettelse på {kr(a["oprettelse"])} kr. betales én gang.')
+    advarhtml = ("<ul class=\"pk-advar\">"
+                 + "".join(f"<li>{t}</li>" for t in advarsler) + "</ul>") if advarsler else ""
 
-    # Prisblok
+    eu_tekst = ("—" if a["data_gb"] == 0 else "Fri" if a.get("eu_gb", 0) >= 900
+                else "Ingen" if not a.get("eu_gb") else f'{a["eu_gb"]} GB')
+    fakta = [
+        ("Netværk", netlabel(u)),
+        ("EU-data", eu_tekst),
+        ("Pris pr. GB", pr_gb_tekst),
+        ("Sms", "Fri" if a.get("sms") == "fri" else e(a.get("sms") or "—")),
+        ("Samlet på 12 mdr.", f'{kr(aar)} kr.' if aar else "—"),
+        ("Gns. pr. md. over 12 mdr.", f'{kr(g)} kr.' if g is not None else "—"),
+    ]
+    if a.get("streaming"):
+        fakta.append(("Streaming", e(", ".join(a["streaming"]))))
+    faktahtml = "".join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in fakta)
+
+    # ---- Prisblok --------------------------------------------------------
     if forbrug:
-        prisblok = ('<div class="p-tal"><b>0</b><span>kr./md.</span></div>'
-                    '<div class="p-normal">+ takst pr. minut og sms</div>'
-                    '<div class="p-gns">Du betaler kun for det, du bruger</div>')
-    elif a.get("intro_pris") is not None and a.get("intro_mdr"):
-        prisblok = (
-                    f'<div class="p-tal"><b>{kr(a["intro_pris"])}</b><span>kr./md.</span></div>'
-                    f'<div class="p-normal">Normalpris {kr(a["pris"])} kr./md.</div>'
-                    f'<div class="p-gns">Gns. <strong>{kr(g)} kr./md.</strong> over 12 mdr.</div>'
-                    f'<div class="p-formel" title="Sådan er tallet beregnet">{formel}</div>')
+        prisblok = ('<div class="pk-tal"><b>0</b><span>kr.</span></div>'
+                    '<div class="pk-under">+ takst pr. minut og sms</div>')
+    elif intro:
+        prisblok = (f'<div class="pk-tal"><b>{kr(a["intro_pris"])}</b><span>kr.</span></div>'
+                    f'<div class="pk-under">Herefter {kr(a["pris"])} kr./md.</div>')
     else:
-        prisblok = (f'<div class="p-tal"><b>{kr(a["pris"])}</b><span>kr./md.</span></div>'
-                    f'<div class="p-gns">{kr(aar)} kr. samlet på 12 mdr.</div>'
-                    f'<div class="p-formel" title="Sådan er tallet beregnet">{formel}</div>')
+        prisblok = (f'<div class="pk-tal"><b>{kr(a["pris"])}</b><span>kr.</span></div>'
+                    f'<div class="pk-under">{kr(aar)} kr. samlet på 12 mdr.</div>')
 
     spar = ""
-    if gnsnit_aar and not forbrug and aar < gnsnit_aar:
-        spar = f'<div class="p-spar">{kr((gnsnit_aar - aar) / 12)} kr./md. under snittet</div>'
+    if gnsnit_aar and not forbrug and aar and aar < gnsnit_aar:
+        spar = f'<div class="pk-spar">{kr((gnsnit_aar - aar) / 12)} kr./md. under snittet</div>'
 
-    # Én fane over kortet frem for flere mærkater inde i det
-    dyn_liste = (dyn or {}).get(a["id"], [])
-    if dyn_liste:
-        fanetekst, faneklasse = dyn_liste[0]
-    elif a.get("intro_pris") and a.get("intro_mdr"):
-        fanetekst = f'{kr(a["intro_pris"])} kr./md. de første {a["intro_mdr"]} mdr.'
-        faneklasse = "sol"
-    elif a.get("streaming"):
-        n = len(a["streaming"])
-        fanetekst = f'{n} streamingtjeneste{"r" if n > 1 else ""} inkluderet'
-        faneklasse = "berry"
-    else:
-        fanetekst, faneklasse = "", ""
-    fane = (f'<span class="plan-fane plan-fane-{faneklasse}">{e(fanetekst)}</span>'
-            if fanetekst else "")
+    # ---- Filterflag ------------------------------------------------------
+    ekstra = []
+    if a.get("femg") and a["data_gb"] > 0:
+        ekstra.append("5g")
+    if a.get("esim"):
+        ekstra.append("esim")
+    if a.get("tale") == "fri":
+        ekstra.append("fritale")
+    if a.get("eu_gb", 0) > 0:
+        ekstra.append("eudata")
+    if a.get("streaming"):
+        ekstra.append("streaming")
 
-    nettype = "5G" if a.get("femg") and a["data_gb"] > 0 else ("Data" if a["data_gb"] else "Tale")
-
+    tag = ("Taletid" if a["data_gb"] == 0
+           else "5G internet" if a.get("femg") else "4G internet")
+    panel_id = f'd-{e(a["id"])}'
     klasse = " fremhaev" if billigst_pr_gb else ""
-    return f"""<article class="plan{klasse}" data-gb="{a['data_gb']}" data-pris="{a["intro_pris"] if a.get("intro_pris") and a.get("intro_mdr") else a["pris"]}"
-  data-normalpris="{a['pris']}"
-  data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}" data-udbyder="{e(u['navn'])}">
-  {fane}
-  <div class="plan-ident">
-    <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy"
-      width="{round(u.get('logo_w', 240) * 46 / u.get('logo_h', 96))}" height="46"
-      decoding="async">
-    <span class="plan-type">{nettype}</span>
-  </div>
-  <div class="plan-midt">
-    <h3 class="plan-navn">{e(u['navn'])} — {e(a['navn'])}</h3>
-    <div class="plan-stats">{statbokse}</div>
-    <div class="plan-chips">{"".join(chips)}</div>
-  </div>
-  <div class="plan-pris">
-    <div class="pris-boks">
-    {prisblok}
-    {spar}
-    <a class="knap knap-primaer" href="{a['link']}" rel="sponsored nofollow noopener" target="_blank"
-       data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
-       aria-label="Se tilbud på {e(a['navn'])} hos {e(u['navn'])}">Se tilbud <span aria-hidden="true">→</span></a>
-    <a class="p-laes" href="/udbydere/{u['slug']}/">Se detaljer</a>
+    logo_w = round(u.get("logo_w", 240) * 40 / u.get("logo_h", 96))
+
+    return f"""<article class="plan{klasse}" data-gb="{a['data_gb']}" data-pris="{vist_pris}"
+  data-normalpris="{a['pris']}" data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}"
+  data-binding="{a['binding']}" data-net="{e(_netgruppe(u))}" data-slug="{e(u['slug'])}"
+  data-tilbud="{1 if intro else 0}" data-ekstra="{' '.join(ekstra)}"
+  data-udbyder="{e(u['navn'])}">
+  {flag}
+  <div class="pk-raekke">
+    <div class="pk-ident">
+      <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy"
+        width="{logo_w}" height="40" decoding="async">
+      <span class="pk-tag">{tag}</span>
     </div>
-    <small class="p-hos">Annoncelink · vi kan modtage provision</small>
+    <div class="pk-midt">
+      <h3 class="pk-navn">{e(u['navn'])} – {e(a['navn'])}</h3>
+      <div class="pk-stats">{statbokse}</div>
+      <div class="pk-chips">{chips}</div>
+    </div>
+    <div class="pk-pris">
+      {prisblok}
+      {spar}
+      <button type="button" class="pk-detaljer" aria-expanded="false"
+        aria-controls="{panel_id}">Se detaljer</button>
+      <a class="knap knap-primaer pk-cta" href="{a['link']}" rel="sponsored nofollow noopener"
+        target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
+        aria-label="Se tilbud på {e(a['navn'])} hos {e(u['navn'])}">Se tilbud</a>
+    </div>
+  </div>
+  <div class="pk-panel" id="{panel_id}" hidden>
+    <dl class="pk-fakta">{faktahtml}</dl>
+    {advarhtml}
+    <div class="pk-panelfod">
+      <span class="pk-formel" title="Sådan er gennemsnittet beregnet">{formel}</span>
+      <a href="/udbydere/{u['slug']}/">Læs vores gennemgang af {e(u['navn'])} →</a>
+    </div>
   </div>
 </article>"""
+
+
+def _drop(navn, noegle, valg, ikon=""):
+    """Én filterknap med foldemenu og flervalg."""
+    punkter = "".join(
+        f'<label><input type="checkbox" data-f="{noegle}" value="{e(v)}">'
+        f'<span>{e(t)}</span></label>' for v, t in valg)
+    return f"""<div class="fb-grp" data-gruppe="{noegle}">
+      <button type="button" class="fb-knap" aria-expanded="false">{ikon}{e(navn)}<i class="fb-pil" aria-hidden="true"></i></button>
+      <div class="fb-menu" hidden>{punkter}
+        <button type="button" class="fb-ryd" data-ryd="{noegle}">Ryd</button>
+      </div>
+    </div>"""
+
+
+def filterbar(abonnementer, udbydere_map):
+    """Kompakt filterlinje med foldemenuer — samme højde som én knap."""
+    selskaber, net = {}, {}
+    for a in abonnementer:
+        u = udbydere_map[a["udbyder"]]
+        selskaber[u["slug"]] = u["navn"]
+        net[_netgruppe(u)] = netlabel(u)
+
+    data_valg = [("lille", "Op til 15 GB"), ("mellem", "15–50 GB"),
+                 ("stor", "50–100 GB"), ("xl", "Over 100 GB"), ("fri", "Fri data")]
+    pris_valg = [("u50", "Under 50 kr."), ("50-99", "50–99 kr."),
+                 ("100-149", "100–149 kr."), ("150-199", "150–199 kr."),
+                 ("o200", "200 kr. og op")]
+    bind_valg = [("0", "Ingen binding"), ("1-6", "Op til 6 mdr."), ("o6", "Over 6 mdr.")]
+    ekstra_valg = [("5g", "5G"), ("esim", "eSIM"), ("fritale", "Fri tale"),
+                   ("eudata", "EU-data"), ("streaming", "Streaming")]
+    selskab_valg = sorted(selskaber.items(), key=lambda x: x[1].lower())
+    net_valg = sorted(net.items(), key=lambda x: x[1].lower())
+
+    return f"""<div class="filterbar" role="group" aria-label="Filtrér abonnementer">
+  <div class="fb-venstre">
+    {_drop("Data", "data", data_valg)}
+    {_drop("Pris", "pris", pris_valg)}
+    {_drop("Binding", "binding", bind_valg)}
+    {_drop("Selskab", "slug", selskab_valg)}
+    {_drop("Netværk", "net", net_valg)}
+    {_drop("Ekstra", "ekstra", ekstra_valg)}
+    <div class="fb-grp fb-sortgrp">
+      <label class="visuelt-skjult" for="fb-sorter">Sortér efter</label>
+      <select id="fb-sorter" class="fb-sorter" data-sorter>
+        <option value="pris">Pris: lav til høj</option>
+        <option value="aar">Gns. 12 mdr.: lav til høj</option>
+        <option value="prgb">Pris pr. GB: lav til høj</option>
+        <option value="gb">Mest data først</option>
+      </select>
+    </div>
+    <button type="button" class="fb-toggle" data-kun-tilbud aria-pressed="false">
+      <span aria-hidden="true">★</span> Tilbud</button>
+    <button type="button" class="fb-nulstil" data-nulstil hidden>Nulstil</button>
+  </div>
+  <span class="fb-antal"><span data-antal-vist>{len(abonnementer)}</span></span>
+</div>"""
 
 
 def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
@@ -666,41 +767,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
                     f'Vis {min(10, resten)} abonnementer mere</button>'
                     f'<small data-resterende>{resten} abonnementer tilbage</small></div>')
 
-    filterhtml = ""
-    if filtre:
-        filterhtml = """<div class="filterpanel">
-  <div class="fp-raekke">
-    <span class="fp-titel">Datamængde</span>
-    <div class="fp-valg">
-      <button class="chip" data-filter="alle" aria-pressed="true">Alle</button>
-      <button class="chip" data-filter="lille" aria-pressed="false">Op til 15 GB</button>
-      <button class="chip" data-filter="mellem" aria-pressed="false">15–50 GB</button>
-      <button class="chip" data-filter="stor" aria-pressed="false">Over 50 GB</button>
-      <button class="chip" data-filter="fri" aria-pressed="false">Fri data</button>
-    </div>
-  </div>
-  <div class="fp-raekke">
-    <span class="fp-titel">Pris pr. md.</span>
-    <div class="fp-valg">
-      <button class="chip" data-pris="alle" aria-pressed="true">Alle</button>
-      <button class="chip" data-pris="u50" aria-pressed="false">Under 50 kr.</button>
-      <button class="chip" data-pris="50-99" aria-pressed="false">50–99 kr.</button>
-      <button class="chip" data-pris="100-199" aria-pressed="false">100–199 kr.</button>
-      <button class="chip" data-pris="o200" aria-pressed="false">Over 200 kr.</button>
-    </div>
-  </div>
-  <div class="fp-raekke fp-sort">
-    <span class="fp-titel">Sortér efter</span>
-    <div class="fp-valg">
-      <button class="chip chip-sort" data-sorter="pris" aria-pressed="true">Laveste pris</button>
-      <button class="chip chip-sort" data-sorter="aar" aria-pressed="false">Gns. 12 mdr.</button>
-      <button class="chip chip-sort" data-sorter="prgb" aria-pressed="false">Pris pr. GB</button>
-      <button class="chip chip-sort" data-sorter="gb" aria-pressed="false">Mest data</button>
-    </div>
-    <span class="fp-antal"><span data-antal-vist>ANTAL</span> abonnementer</span>
-  </div>
-</div>"""
-        filterhtml = filterhtml.replace("ANTAL", str(len(abonnementer)))
+    filterhtml = filterbar(abonnementer, udbydere_map) if filtre else ""
 
     return f"""<section class="sektion baand" id="{id_attr}">
   <div class="sektion-hoved afslør">
@@ -716,12 +783,12 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
   {filterhtml}
   <div class="listeramme afslør">
     <div class="planliste">{kort}</div>
+    <p class="pk-tom" data-tom hidden>Ingen abonnementer matcher filtrene.
+      <button type="button" class="knap knap-linje knap-lille" data-nulstil>Nulstil filtre</button></p>
     {visflere}
     <div class="listefod">
-      <span>Sorteret efter laveste månedspris. <strong>Gns. 12 mdr.</strong> regner intropris,
-      normalpris og oprettelse sammen — det er den reelle pris. Står der
-      <strong>Ingen</strong> under EU-data, kan abonnementet ikke bruges til data på
-      rejsen uden tillæg.</span>
+      <span>Klik <strong>Se detaljer</strong> for EU-data, pris pr. GB og den reelle
+      12-måneders pris, hvor intropris, normalpris og oprettelse regnes sammen.</span>
       <span>Kilde: udbydernes egne prislister</span>
     </div>
   </div>

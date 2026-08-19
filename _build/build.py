@@ -56,32 +56,14 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     return filsti
 
 
-def indlaes(navn, standard=None):
-    """Læser en datafil. Mangler den, og har vi en fornuftig standard, bruger vi
-    den frem for at stoppe bygget — filer kan forsvinde ved en force push."""
-    sti = os.path.join(ROD, "data", navn)
-    try:
-        with open(sti, encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, ValueError):
-        if standard is None:
-            raise
-        print(f"  ! {navn} manglede — bruger standardværdier")
-        os.makedirs(os.path.dirname(sti), exist_ok=True)
-        with open(sti, "w", encoding="utf-8") as f:
-            json.dump(standard, f, ensure_ascii=False, indent=2)
-        return standard
+def indlaes(navn):
+    with open(os.path.join(ROD, "data", navn), encoding="utf-8") as f:
+        return json.load(f)
 
 
 # --------------------------------------------------------------- data
 
-site = indlaes("site.json", {
-    "domaene": "https://telemobil.dk",
-    "navn": "Telemobil",
-    "udgivet": "2026-08-13",
-    "data_verificeret": True,
-    "priskilde": "Adtraction data feed",
-})
+site = indlaes("site.json")
 ud_data = indlaes("udbydere.json")
 ab_data = indlaes("abonnementer.json")
 LANDE = indlaes("landekoder.json")["landekoder"]
@@ -5403,9 +5385,9 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     <li><strong>Sammenlign kun 12-måneders-priser med hinanden</strong>
     Ikke en 12-måneders-pris mod en andens intropris. Det er den hyppigste fejl.</li>
     <li><strong>Sortér efter det i tabellen</strong>
-    Knappen hedder "Gns. 12 mdr." i filterpanelet.</li>
+    V\u00e6lg "Gns. 12 mdr." i sorteringsmenuen \u00f8verst i filterlinjen.</li>
     <li><strong>Tjek regnestykket</strong>
-    Det står under prisen. Ser du et abonnement uden intropris, står der bare
+    Klik "Se detaljer" på rækken. Ser du et abonnement uden intropris, står der bare
     <code>×12</code>.</li>
   </ol>
 
