@@ -282,13 +282,29 @@ def main():
         for s in sorted(set(sprunget))[:12]:
             print("  -", s)
 
-    # Sæt verificeringsflaget, når data kommer fra en rigtig kilde
+    # Sæt verificeringsflaget, når data kommer fra en rigtig kilde.
+    # Filen kan mangle efter en force push — så opretter vi den frem for at fejle,
+    # nu hvor priserne allerede er hentet og skrevet.
     site_sti = os.path.join(ROD, "data", "site.json")
-    site = json.load(open(site_sti, encoding="utf-8"))
+    standard = {
+        "domaene": "https://telemobil.dk",
+        "navn": "Telemobil",
+        "udgivet": "2026-08-13",
+    }
+    try:
+        with open(site_sti, encoding="utf-8") as f:
+            site = json.load(f)
+    except (OSError, ValueError):
+        site = standard
+        print("\nsite.json manglede — oprettet med standardværdier")
+    for n, v in standard.items():
+        site.setdefault(n, v)
     site["data_verificeret"] = True
     site["priskilde"] = "Adtraction data feed"
-    json.dump(site, open(site_sti, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-    print("\ndata_verificeret sat til true i site.json")
+    os.makedirs(os.path.dirname(site_sti), exist_ok=True)
+    with open(site_sti, "w", encoding="utf-8") as f:
+        json.dump(site, f, ensure_ascii=False, indent=2)
+    print("data_verificeret sat til true i site.json")
 
 
 if __name__ == "__main__":

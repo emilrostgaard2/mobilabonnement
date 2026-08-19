@@ -56,14 +56,32 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     return filsti
 
 
-def indlaes(navn):
-    with open(os.path.join(ROD, "data", navn), encoding="utf-8") as f:
-        return json.load(f)
+def indlaes(navn, standard=None):
+    """Læser en datafil. Mangler den, og har vi en fornuftig standard, bruger vi
+    den frem for at stoppe bygget — filer kan forsvinde ved en force push."""
+    sti = os.path.join(ROD, "data", navn)
+    try:
+        with open(sti, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        if standard is None:
+            raise
+        print(f"  ! {navn} manglede — bruger standardværdier")
+        os.makedirs(os.path.dirname(sti), exist_ok=True)
+        with open(sti, "w", encoding="utf-8") as f:
+            json.dump(standard, f, ensure_ascii=False, indent=2)
+        return standard
 
 
 # --------------------------------------------------------------- data
 
-site = indlaes("site.json")
+site = indlaes("site.json", {
+    "domaene": "https://telemobil.dk",
+    "navn": "Telemobil",
+    "udgivet": "2026-08-13",
+    "data_verificeret": True,
+    "priskilde": "Adtraction data feed",
+})
 ud_data = indlaes("udbydere.json")
 ab_data = indlaes("abonnementer.json")
 LANDE = indlaes("landekoder.json")["landekoder"]
