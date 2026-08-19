@@ -221,6 +221,50 @@ def inspect(raa):
     print(json.dumps(poster[0], ensure_ascii=False, indent=1)[:2000])
 
 
+
+def gem_historik(abonnementer):
+    """Tilføjer et dagligt øjebliksbillede til data/prishistorik.json.
+
+    Vi gemmer aggregerede tal, ikke hele datasættet — filen skal kunne vokse i
+    årevis uden at fylde. Én linje pr. dag; køres importøren flere gange samme
+    dag, overskrives dagens post."""
+    sti = os.path.join(ROD, "data", "prishistorik.json")
+    try:
+        with open(sti, encoding="utf-8") as f:
+            historik = json.load(f)
+    except (FileNotFoundError, ValueError):
+        historik = {"maalinger": []}
+
+    grupper = [("1-10", 1, 10), ("11-20", 11, 20), ("21-40", 21, 40),
+               ("41-80", 41, 80), ("81-200", 81, 200), ("201+", 201, 899),
+               ("fri", 900, 9999)]
+    betalte = [a for a in abonnementer if a.get("pris", 0) > 0]
+    maaling = {"dato": date.today().isoformat(), "antal": len(betalte),
+               "udbydere": len({a["udbyder"] for a in betalte}), "grupper": {}}
+    for navn, lav, hoej in grupper:
+        priser = sorted(a["pris"] for a in betalte if lav <= a["data_gb"] <= hoej)
+        if not priser:
+            continue
+        n = len(priser)
+        maaling["grupper"][navn] = {
+            "antal": n,
+            "min": priser[0],
+            "median": round(priser[n // 2] if n % 2
+                            else (priser[n // 2 - 1] + priser[n // 2]) / 2, 2),
+            "gns": round(sum(priser) / n, 2),
+            "maks": priser[-1],
+        }
+
+    historik["maalinger"] = [m for m in historik["maalinger"]
+                             if m["dato"] != maaling["dato"]]
+    historik["maalinger"].append(maaling)
+    historik["maalinger"].sort(key=lambda m: m["dato"])
+    with open(sti, "w", encoding="utf-8") as f:
+        json.dump(historik, f, ensure_ascii=False, indent=1)
+    print(f"\nPrishistorik: {len(historik['maalinger'])} målinger gemt "
+          f"({historik['maalinger'][0]['dato']} til {maaling['dato']})")
+
+
 def main():
     if not KANAL:
         sys.exit("ADTRACTION_CHANNEL_ID er ikke sat. Sæt den som miljøvariabel.")
@@ -268,6 +312,7 @@ def main():
         json.dump(ud, f, ensure_ascii=False, indent=1)
 
     print(f"\nSkrev {len(abonnementer)} abonnementer til data/abonnementer.json")
+    gem_historik(abonnementer)
     if net_aendret:
         print("\nNetværk opdateret fra feedet:")
         for x in net_aendret:

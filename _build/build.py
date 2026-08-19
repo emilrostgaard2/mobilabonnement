@@ -582,6 +582,34 @@ def guidebillede(navn, alt, prioritet=False, mappe="guides"):
 # Hvert billede får sin egen tekstblok, så sektionen bidrager med reelt indhold
 # og ikke bare er dekoration. Nøglen er filnavnet i /assets/img/sider/.
 SIDEBILLEDER = {
+    "under-100-kr": {
+        "alt": "Ungt par griner sammen over en mobiltelefon ved et cafébord "
+               "på en brostensgade i en dansk by",
+        "h2": "Hundrede kroner er et tal, ikke en grænse",
+        "tekst": [
+            "De fleste sætter loftet ved 100 kr., fordi det er et rundt tal — ikke fordi "
+            "forbruget stopper der. Det betyder, at mange vælger 8 GB til 89 kr. frem for "
+            "30 GB til 109 kr. og bagefter køber ekstra data til langt højere styk­pris.",
+            "Under 100 kr. får du i dag typisk fri tale, fri sms og et sted mellem 5 og "
+            "50 GB, afhængigt af udbyder. Tjek dit reelle forbrug først: ligger du "
+            "stabilt under loftet, er der intet at hente ved at betale mere.",
+        ],
+        "link": ("/guides/hvor-meget-data/", "Find dit reelle dataforbrug"),
+    },
+    "taletidskort": {
+        "alt": "Par ved en gammel mønttelefon på et marked i en dansk by",
+        "h2": "Forudbetalt betyder, at regningen ikke kan løbe løbsk",
+        "tekst": [
+            "Med taletidskort betaler du forud. Er saldoen brugt, stopper forbruget — "
+            "der kommer ingen regning bagefter. Det er den eneste løsning med et reelt "
+            "hårdt loft, og derfor den, mange vælger til et barn eller til en ekstra "
+            "telefon, der sjældent bruges.",
+            "Til gengæld er styk­prisen højere end i et abonnement, og saldoen kan udløbe, "
+            "hvis kortet ikke bruges i en periode. Bruger du telefonen dagligt, er et "
+            "almindeligt abonnement uden binding næsten altid billigere.",
+        ],
+        "link": ("/mobilabonnement-til-boern/", "Mobilabonnement til børn"),
+    },
     "billigste": {
         "alt": "To personer sammenligner priser på mobilabonnementer på deres telefoner "
                "ved et cafébord i en dansk by",
@@ -898,6 +926,55 @@ billigste abonnement, vi har registreret hos hvert selskab, og hvad det koster p
 gigabyte.</p>
 <table><thead><tr><th>Udbyder</th><th>Abonnement</th><th>Data</th><th>Netværk</th>
 <th>Pris pr. GB</th><th>Pris/md.</th></tr></thead><tbody>{raekker}</tbody></table>"""
+
+
+def prisstatistik():
+    """Gennemsnit, median og laveste normalpris pr. datastørrelse.
+
+    Medianen står med, fordi gennemsnittet trækkes skævt af enkelte dyre
+    abonnementer. Vi regner altid på normalprisen, aldrig på introprisen —
+    ellers måler man kampagner frem for prisniveau."""
+    grupper = [("1-10 GB", 1, 10), ("11-20 GB", 11, 20), ("21-40 GB", 21, 40),
+               ("41-80 GB", 41, 80), ("81-200 GB", 81, 200),
+               ("Over 200 GB", 201, 899), ("Fri data", 900, 9999)]
+    raekker = ""
+    alle_priser = []
+    for navn, lav, hoej in grupper:
+        priser = sorted(a["pris"] for a in ABON
+                        if lav <= a["data_gb"] <= hoej and a["pris"] > 0
+                        and not a.get("forbrugsafregnet"))
+        if not priser:
+            continue
+        alle_priser += priser
+        n = len(priser)
+        gns = sum(priser) / n
+        median = (priser[n // 2] if n % 2
+                  else (priser[n // 2 - 1] + priser[n // 2]) / 2)
+        raekker += (f'<tr><td><strong>{e(navn)}</strong></td>'
+                    f'<td>{n}</td>'
+                    f'<td>{kr(priser[0])} kr.</td>'
+                    f'<td>{kr(median)} kr.</td>'
+                    f'<td>{kr(gns)} kr.</td>'
+                    f'<td>{kr(priser[-1])} kr.</td></tr>')
+    if not alle_priser:
+        return ""
+    spredning = max(alle_priser) - min(alle_priser)
+    return f"""<h2 id="prisniveau">Prisniveauet på det danske marked lige nu</h2>
+<p>Tallene herunder er regnet på <strong>normalprisen</strong> for alle
+{len(alle_priser)} betalte abonnementer i vores database, ikke på introprisen.
+En intropris fortæller, hvad en kampagne koster i tre måneder — ikke hvad
+markedet ligger på.</p>
+<p>Medianen er den midterste pris i hver gruppe. Den er mere retvisende end
+gennemsnittet, fordi et enkelt dyrt abonnement trækker gennemsnittet op uden at
+sige noget om, hvad folk faktisk betaler. Ligger gennemsnittet højere end
+medianen, er der få dyre abonnementer, der trækker feltet skævt.</p>
+<table><thead><tr><th>Datamængde</th><th>Antal</th><th>Laveste</th>
+<th>Median</th><th>Gennemsnit</th><th>Højeste</th></tr></thead>
+<tbody>{raekker}</tbody></table>
+<p class="tabelnote">Fra {kr(min(alle_priser))} kr. til {kr(max(alle_priser))} kr. om
+måneden — en spredning på {kr(spredning)} kr., svarende til
+{kr(spredning * 12)} kr. om året mellem det billigste og det dyreste
+abonnement på markedet. Opdateret {OPDATERET}.</p>"""
 
 
 def tabel_pr_datamaengde():
@@ -1622,7 +1699,7 @@ def byg_billigste():
     '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1
 ).replace(
     '<h2>De skjulte omkostninger, folk overser</h2>',
-    erfaring('billigste') + redaktionens_valg() + prisfordeling() + tabel_billigst_pr_udbyder()
+    erfaring('billigste') + redaktionens_valg() + prisstatistik() + prisfordeling() + tabel_billigst_pr_udbyder()
     + tabel_prgb_rangliste() + tabel_aarsomkostning() + overforbrug() + '<h2>De skjulte omkostninger, folk overser</h2>', 1
 ).replace(
     '<h2>Hvilket abonnement passer til din situation?</h2>',
@@ -3995,6 +4072,199 @@ def byg_statisk(sti, titel, besk, etiket, h1, brodtekst, prioritet="0.5", jsonld
     ), prioritet=prioritet, hyppighed="monthly")
 
 
+
+# ------------------------------------------------------------ PRISUDVIKLING
+
+def _historik():
+    """Læser prishistorikken. Filen skrives af adtraction.py ved hvert build."""
+    try:
+        with open(os.path.join(ROD, "data", "prishistorik.json"), encoding="utf-8") as f:
+            return json.load(f).get("maalinger", [])
+    except (FileNotFoundError, ValueError):
+        return []
+
+
+GRUPPENAVNE = {"1-10": "1-10 GB", "11-20": "11-20 GB", "21-40": "21-40 GB",
+               "41-80": "41-80 GB", "81-200": "81-200 GB",
+               "201+": "Over 200 GB", "fri": "Fri data"}
+
+
+def _kurve(maalinger, noegle="median", bredde=760, hoejde=260):
+    """SVG-kurve over medianprisen pr. datagruppe. Ingen JavaScript — kurven
+    skal kunne læses af både browsere og crawlere."""
+    if len(maalinger) < 2:
+        return ""
+    grupper = [g for g in GRUPPENAVNE if any(g in m["grupper"] for m in maalinger)]
+    farver = ["#3D5AFE", "#00A873", "#7C4DFF", "#FF5C7A", "#FFC53D", "#0B1026", "#2438D8"]
+    alle = [m["grupper"][g][noegle] for m in maalinger for g in grupper
+            if g in m["grupper"]]
+    if not alle:
+        return ""
+    lav, hoej = min(alle), max(alle)
+    spænd = (hoej - lav) or 1
+    pad_v, pad_h, pad_t, pad_b = 52, 16, 18, 34
+    tegneb = bredde - pad_v - pad_h
+    tegneh = hoejde - pad_t - pad_b
+
+    def x(i):
+        return pad_v + (tegneb * i / max(len(maalinger) - 1, 1))
+
+    def y(v):
+        return pad_t + tegneh - (tegneh * (v - lav) / spænd)
+
+    linjer, forklaring = "", ""
+    for n, g in enumerate(grupper):
+        punkter = [f"{x(i):.1f},{y(m['grupper'][g][noegle]):.1f}"
+                   for i, m in enumerate(maalinger) if g in m["grupper"]]
+        if len(punkter) < 2:
+            continue
+        f_ = farver[n % len(farver)]
+        linjer += (f'<polyline fill="none" stroke="{f_}" stroke-width="2"'
+                   f' stroke-linejoin="round" points="{" ".join(punkter)}"></polyline>')
+        forklaring += (f'<span class="pu-nøgle"><i style="background:{f_}"></i>'
+                       f'{e(GRUPPENAVNE[g])}</span>')
+
+    gitter = ""
+    for k in range(5):
+        v = lav + spænd * k / 4
+        yy = y(v)
+        gitter += (f'<line x1="{pad_v}" y1="{yy:.1f}" x2="{bredde - pad_h}" y2="{yy:.1f}"'
+                   f' stroke="#E3E7F4" stroke-width="1"></line>'
+                   f'<text x="{pad_v - 8}" y="{yy + 4:.1f}" text-anchor="end"'
+                   f' font-size="10" fill="#5C6489">{kr(v)}</text>')
+
+    første, sidste = maalinger[0]["dato"], maalinger[-1]["dato"]
+    return f"""<figure class="prisudvikling">
+  <svg viewBox="0 0 {bredde} {hoejde}" role="img" width="100%" height="auto"
+    aria-label="Kurve over medianprisen pr. datastørrelse fra {e(første)} til {e(sidste)}">
+    {gitter}{linjer}
+    <text x="{pad_v}" y="{hoejde - 10}" font-size="10" fill="#5C6489">{e(første)}</text>
+    <text x="{bredde - pad_h}" y="{hoejde - 10}" text-anchor="end" font-size="10"
+      fill="#5C6489">{e(sidste)}</text>
+  </svg>
+  <figcaption class="pu-forklaring">{forklaring}</figcaption>
+</figure>"""
+
+
+def _udviklingstabel(maalinger):
+    """Sammenligner den nyeste måling med den ældste."""
+    if len(maalinger) < 2:
+        return ""
+    først, sidst = maalinger[0], maalinger[-1]
+    raekker = ""
+    for g, navn in GRUPPENAVNE.items():
+        if g not in først["grupper"] or g not in sidst["grupper"]:
+            continue
+        a, b = først["grupper"][g]["median"], sidst["grupper"][g]["median"]
+        d = b - a
+        pct = (d / a * 100) if a else 0
+        if abs(pct) < 0.5:
+            retning = '<span class="pu-flad">uændret</span>'
+        elif d > 0:
+            retning = f'<span class="pu-op">+{kr(d)} kr. ({pct:+.1f} %)</span>'
+        else:
+            retning = f'<span class="pu-ned">{kr(d)} kr. ({pct:+.1f} %)</span>'
+        raekker += (f'<tr><td><strong>{e(navn)}</strong></td><td>{kr(a)} kr.</td>'
+                    f'<td>{kr(b)} kr.</td><td>{retning}</td></tr>')
+    return f"""<h2 id="udvikling">Sådan har medianprisen flyttet sig</h2>
+<p>Fra {e(først["dato"])} til {e(sidst["dato"])}. Vi sammenligner medianprisen,
+fordi den ikke påvirkes af, at enkelte dyre abonnementer kommer til eller falder
+fra i mellemtiden.</p>
+<table><thead><tr><th>Datamængde</th><th>{e(først["dato"])}</th>
+<th>{e(sidst["dato"])}</th><th>Ændring</th></tr></thead>
+<tbody>{raekker}</tbody></table>"""
+
+
+def byg_prisudvikling():
+    sti = "/prisudvikling/"
+    maalinger = _historik()
+    titel = "Prisudvikling på mobilabonnementer i Danmark"
+    besk = ("Se hvordan priserne på mobilabonnementer har udviklet sig. Vi måler "
+            "median- og gennemsnitspris pr. datastørrelse to gange dagligt og "
+            "gemmer hver måling.")
+    krumme = [("/", "Forside"), (None, "Prisudvikling")]
+
+    if len(maalinger) < 2:
+        indhold_midt = f"""<h2>Målingerne er lige begyndt</h2>
+<p>Vi gemmer et øjebliksbillede af markedet to gange i døgnet. Der er
+{len(maalinger)} måling{"er" if len(maalinger) != 1 else ""} indtil videre, og
+kurven kræver mindst to. Kom tilbage om en uge — så er der noget at se.</p>
+<p>Indtil da kan du se det aktuelle prisniveau på
+<a href="/billigste-mobilabonnement/#prisniveau">billigste mobilabonnement</a>.</p>"""
+    else:
+        først, sidst = maalinger[0], maalinger[-1]
+        dage = len(maalinger)
+        indhold_midt = f"""<h2>Hvad tallene viser</h2>
+<p>Vi har {dage} målinger fra {e(først["dato"])} til {e(sidst["dato"])}. Hver
+måling dækker {sidst["antal"]} abonnementer fra {sidst["udbydere"]} udbydere.</p>
+{_kurve(maalinger)}
+{_udviklingstabel(maalinger)}"""
+
+    brod = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta="Målingerne gemmes automatisk ved hvert build")}
+<p class="led">Alle sammenligningssider viser, hvad et abonnement koster i dag.
+Ingen viser, hvad det kostede for tre måneder siden. Vi gemmer hver eneste
+måling, så du kan se, om priserne rent faktisk falder — eller om det bare er
+kampagnerne, der skifter navn.</p>
+
+<h2>Sådan måler vi</h2>
+<p>To gange i døgnet henter vi priserne og gemmer fire tal for hver
+datastørrelse: laveste pris, median, gennemsnit og højeste pris. Vi regner
+altid på <strong>normalprisen</strong>, aldrig på introprisen. En intropris
+siger noget om en kampagne, ikke om prisniveauet.</p>
+<p>Medianen er det vigtigste tal. Gennemsnittet trækkes op af enkelte dyre
+abonnementer, mens medianen viser den midterste pris — altså hvad et typisk
+abonnement i den gruppe koster.</p>
+
+{indhold_midt}
+
+{prisstatistik()}
+
+<h2>Hvorfor det er værd at holde øje med</h2>
+<p>Mobilpriserne i Danmark bevæger sig ikke jævnt. De falder i perioder med hård
+konkurrence og stiger, når selskaberne justerer efter inflation — ofte samlet og
+med kort varsel. Har du et abonnement, der er mere end et år gammelt, betaler du
+med stor sandsynlighed over medianen for din datastørrelse.</p>
+<p>Det er også derfor, prisen alene er et dårligt beslutningsgrundlag. Et
+abonnement, der er billigt i dag, kan være dyrt om et halvt år, hvis udbyderen
+lever af introtilbud. Vores <a href="/12-maaneders-prisen/">12-måneders-pris</a>
+tager højde for det.</p>
+</section>
+<section class="sektion baand-smal">
+  {laesvidere([("/billigste-mobilabonnement/", "Billigste mobilabonnement lige nu"),
+               ("/12-maaneders-prisen/", "Sådan regner vi 12-måneders-prisen"),
+               ("/metode/", "Vores metode"),
+               ("/guides/prisstigning-mobilabonnement/", "Hvad gør du ved en prisstigning?")])}
+  {forfatterboks()}
+  {afsloering()}
+</section>"""
+
+    faq = [
+        {"sp": "Stiger priserne på mobilabonnementer?",
+         "sv": "Det svinger. Vi måler median- og gennemsnitsprisen pr. datastørrelse to "
+               "gange dagligt og viser udviklingen på denne side, så du kan se det "
+               "faktiske forløb frem for at gætte."},
+        {"sp": "Hvorfor bruger I medianprisen?",
+         "sv": "Fordi gennemsnittet trækkes skævt af enkelte dyre abonnementer. Medianen "
+               "er den midterste pris og viser bedre, hvad et typisk abonnement koster."},
+        {"sp": "Regner I med introprisen?",
+         "sv": "Nej. Vi bruger altid normalprisen. En intropris måler en kampagne, ikke "
+               "prisniveauet på markedet."},
+        {"sp": "Hvor ofte opdateres tallene?",
+         "sv": "To gange i døgnet. Hver måling gemmes, så historikken vokser dag for dag."},
+    ]
+
+    return skriv(sti, shell(
+        sti=sti, titel=f"{titel} ({OPDATERET})", beskrivelse=besk,
+        hero=hero_side("Prisudvikling", titel,
+                       "Vi gemmer priserne to gange i døgnet, så du kan se, hvordan "
+                       "markedet flytter sig — ikke bare hvad det koster i dag.",
+                       '<a href="#udvikling" class="knap knap-primaer">Se udviklingen</a>'),
+        efter_hero=logobaand(), krumme=krumme, indhold=brod + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, titel, besk))],
+    ), prioritet="0.8", hyppighed="daily")
+
 # --------------------------------------------------------------- FILER
 
 def ryd_forældede():
@@ -4224,6 +4494,7 @@ def main():
     byg_forside()
     byg_billigste()
     byg_fridata()
+    byg_prisudvikling()
 
     # Nichesider
     unge = sorted([a for a in ABON if a["data_gb"] >= 20], key=lambda a: a["pris"])[:12]
@@ -4949,6 +5220,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     u100 = sorted([a for a in ABON if 0 < a["pris"] < 100], key=lambda a: gns12(a) or 9e9)
     byg_kategori(
         sti="/mobilabonnement-under-100-kr/", etiket="Under 100 kr.",
+        billede="under-100-kr", spejlvend=False,
         h1="Mobilabonnement under 100 kr. om måneden",
         titel=f"Mobilabonnement under 100 kr. — {len(u100)} valg fra {D['min_pris']} kr.",
         besk=(f"Se alle {len(u100)} mobilabonnementer under 100 kr./md. Sorteret efter den "
@@ -5272,6 +5544,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     smaa = sorted([a for a in ABON if a["data_gb"] <= 10], key=lambda a: a["pris"])[:12]
     byg_kategori(
         sti="/taletidskort/", etiket="Taletidskort",
+        billede="taletidskort", spejlvend=True,
         h1="Taletidskort — forudbetalt og uden overraskelser",
         titel="Taletidskort — forudbetalt mobil uden regning",
         besk=("Taletid er forudbetalt, så regningen aldrig kan løbe løbsk. Se hvornår det "

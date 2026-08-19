@@ -1548,3 +1548,18 @@ body{overflow-x:clip;max-width:100%;position:relative}
   .fb-antal{display:none}
   .fb-menu{position:fixed;left:.75rem;right:.75rem;top:auto;min-width:0;width:auto}
 }
+
+/* ==========================================================================
+   Prisudvikling — kurve uden JavaScript
+   ========================================================================== */
+.prisudvikling{margin:1.6rem 0;background:#fff;border:1px solid var(--graa-lys);
+  border-radius:var(--r-l);padding:1.2rem 1rem .9rem;box-shadow:var(--skygge-blod)}
+.prisudvikling svg{display:block;width:100%;height:auto}
+.pu-forklaring{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem;margin-top:.8rem;
+  padding-top:.8rem;border-top:1px solid #EEF1FA}
+.pu-nøgle{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--graa)}
+.pu-nøgle i{width:14px;height:3px;border-radius:2px;flex-shrink:0}
+.pu-op{color:#C2405A;font-weight:600;font-family:var(--font-tal);font-size:.86rem}
+.pu-ned{color:var(--puls-dyb);font-weight:600;font-family:var(--font-tal);font-size:.86rem}
+.pu-flad{color:var(--graa);font-family:var(--font-tal);font-size:.86rem}
+.tabelnote{font-size:.86rem;color:var(--graa);margin-top:.7rem}
