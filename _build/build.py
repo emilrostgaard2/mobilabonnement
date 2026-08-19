@@ -567,14 +567,228 @@ def hero_forside():
 </section>"""
 
 
-def guidebillede(navn, alt, prioritet=False):
+def guidebillede(navn, alt, prioritet=False, mappe="guides"):
     """Responsivt billede med srcset — 640 til mobil, 1280 til desktop."""
-    b = "/assets/img/guides"
+    b = f"/assets/img/{mappe}"
     return (f'<img src="{b}/{navn}-1280.webp"'
             f' srcset="{b}/{navn}-640.webp 640w, {b}/{navn}-1280.webp 1280w"'
             f' sizes="(max-width: 900px) 100vw, 46vw"'
             f' alt="{e(alt)}" width="1280" height="698"'
             f' {"fetchpriority=\'high\'" if prioritet else "loading=\'lazy\'"} decoding="async">')
+
+
+
+# ---------------------------------------------------------------- SIDEBILLEDER
+# Hvert billede får sin egen tekstblok, så sektionen bidrager med reelt indhold
+# og ikke bare er dekoration. Nøglen er filnavnet i /assets/img/sider/.
+SIDEBILLEDER = {
+    "billigste": {
+        "alt": "To personer sammenligner priser på mobilabonnementer på deres telefoner "
+               "ved et cafébord i en dansk by",
+        "h2": "Billigst på skiltet er ikke altid billigst på årsregningen",
+        "tekst": [
+            "Et abonnement til 49 kr. med intropris i tre måneder og 39 kr. i oprettelse "
+            "koster mere over et år end et til 69 kr. uden hverken intropris eller "
+            "oprettelse. Forskellen er ikke lille: den løber typisk op i to til tre "
+            "hundrede kroner om året.",
+            "Derfor står der en gennemsnitspris over 12 måneder ved hvert abonnement i "
+            "tabellen ovenfor. Klik <strong>Se detaljer</strong> for at se regnestykket "
+            "bag tallet — intropris, normalpris og oprettelse lagt sammen og delt med tolv.",
+        ],
+        "link": ("/12-maaneders-prisen/", "Sådan regner vi 12-måneders-prisen"),
+    },
+    "bedste": {
+        "alt": "Fire venner kigger sammen på mobiltelefoner og en tablet ved et bord "
+               "udenfor på en brostensbelagt gade",
+        "h2": "Der findes ikke ét bedste abonnement — kun det bedste til dig",
+        "tekst": [
+            "En studerende, der streamer i toget hver dag, og en pensionist, der bruger "
+            "telefonen til opkald og DR-appen, har ikke brug for det samme. Det ene "
+            "abonnement koster 249 kr. og er pengene værd. Det andet koster 59 kr. og "
+            "er stadig for dyrt, hvis halvdelen af dataen aldrig bliver brugt.",
+            "Vores anbefalinger bygger på tre ting: den reelle pris over et år, hvor "
+            "meget data du faktisk bruger, og hvilket net udbyderen kører på. Rækkefølgen "
+            "i tabellen afhænger aldrig af, hvad vi tjener på et klik.",
+        ],
+        "link": ("/metode/", "Sådan vurderer vi abonnementerne"),
+    },
+    "uden-binding": {
+        "alt": "Et par sidder ved et blomstermarked og taler sammen med telefonerne "
+               "liggende på bordet",
+        "h2": "Ingen binding betyder ikke ingen opsigelsesvarsel",
+        "tekst": [
+            "De to ting forveksles konstant. Ingen binding betyder, at du ikke har "
+            "forpligtet dig til at blive et bestemt antal måneder. Opsigelsesvarslet er "
+            "noget andet: næsten alle danske udbydere har et varsel på løbende måned "
+            "plus en måned, også når der ikke er binding.",
+            "I praksis betyder det, at du kan skifte når som helst, men at der går op "
+            "til to måneder, før det gamle abonnement stopper. Din nye udbyder klarer "
+            "selv opsigelsen, når du tager nummeret med.",
+        ],
+        "link": ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
+    },
+    "med-fri-data": {
+        "alt": "Kvinde sidder i en have med sin telefon og en kop kaffe på bordet",
+        "h2": "De fleste betaler for fri data, de aldrig bruger",
+        "tekst": [
+            "Den typiske danske mobilbruger ligger på 15 til 25 GB om måneden. Fri data "
+            "giver først mening, hvis du bruger telefonen som internetforbindelse "
+            "derhjemme, ser meget video uden for wi-fi, eller deler forbindelsen med "
+            "andre enheder.",
+            "Er du i tvivl, så find det faktiske forbrug frem i din nuværende udbyders "
+            "app, før du opgraderer. Ligger du under 30 GB, er et almindeligt abonnement "
+            "næsten altid billigere — også på et år.",
+        ],
+        "link": ("/guides/hvor-meget-data/", "Find ud af hvor meget data du bruger"),
+    },
+    "med-fri-tale": {
+        "alt": "To personer griner sammen over en kop kaffe på en bænk ved en sø i en park",
+        "h2": "Fri tale er standard — det er undtagelserne, du skal kigge efter",
+        "tekst": [
+            "Næsten alle danske abonnementer har fri tale og fri sms inkluderet i dag, så "
+            "det er sjældent det, der adskiller dem. Det, der reelt varierer, er hvad "
+            "der <em>ikke</em> er med.",
+            "Opkald til udlandet, opkald fra udlandet og overtakserede numre som 90-numre "
+            "falder som regel uden for fri tale og afregnes per minut. Ringer du "
+            "jævnligt til familie i et andet land, er det dér, du skal sammenligne — "
+            "ikke på minutprisen i Danmark.",
+        ],
+        "link": ("/guides/mobilabonnement-i-udlandet/", "Mobilabonnement i udlandet"),
+    },
+    "til-unge": {
+        "alt": "Fire studerende sidder ved et bord på en universitetscampus med "
+               "telefoner og en tablet",
+        "h2": "Meget data, ingen binding — og et nummer der kan flyttes",
+        "tekst": [
+            "Unge bruger markant mere data end gennemsnittet, fordi mere af forbruget "
+            "ligger uden for wi-fi: musik i bussen, video i pauserne, navigation og "
+            "deling af forbindelsen til en bærbar. 30 til 50 GB er et realistisk "
+            "udgangspunkt, hvor 10 GB ofte er for lidt.",
+            "Til gengæld skifter behovet hurtigt, når man flytter hjemmefra eller "
+            "begynder at pendle. Vælg derfor uden binding, så et skifte ikke koster "
+            "noget, og tag nummeret med — det er gratis og tager få dage.",
+        ],
+        "link": ("/mobilabonnement-uden-binding/", "Alle abonnementer uden binding"),
+    },
+    "til-aeldre": {
+        "alt": "Ældre par sidder ved et cafébord i en dansk by og kigger sammen på "
+               "en mobiltelefon",
+        "h2": "Her anbefaler vi ikke det billigste",
+        "tekst": [
+            "Det er den ene side på hele sitet, hvor prisen ikke afgør rækkefølgen alene. "
+            "De billigste udbydere sparer penge ved kun at have digital kundeservice — "
+            "chat, e-mail og selvbetjening i en app. Er telefonen et redskab og ikke en "
+            "hobby, er et telefonnummer til kundeservice mere værd end tyve kroner.",
+            "Tre ting kan alle udbydere ordne gratis over telefonen, og de er værd at "
+            "bede om fra start: spærring for overtakserede numre, spærring for udgående "
+            "udlandsopkald og datastop. Tilsammen fjerner de næsten alle uventede regninger.",
+        ],
+        "link": ("/guides/undgaa-hoej-regning/", "Sådan undgår du en høj mobilregning"),
+    },
+    "til-boern": {
+        "alt": "Mor og barn sidder på en bænk i skoven og kigger sammen på en mobiltelefon",
+        "h2": "Det vigtigste valg er ikke abonnementet — det er spærringerne",
+        "tekst": [
+            "Et barn har sjældent brug for mere end 5 til 10 GB, og fri tale betyder "
+            "mindre end evnen til at ringe hjem. Til gengæld er det her, en uventet "
+            "regning gør mest ondt, fordi et enkelt køb i et spil kan løbe op i "
+            "hundredvis af kroner.",
+            "Bed udbyderen spærre for overtakserede numre og for indholdstakserede "
+            "sms-tjenester, og slå datastop til. Det er gratis, og det kan ikke "
+            "omgås fra telefonen. Taletidskort er et alternativ, hvis du vil have "
+            "et hårdt loft frem for en regning.",
+        ],
+        "link": ("/taletidskort/", "Taletidskort til børn"),
+    },
+    "med-telefon": {
+        "alt": "Par sidder ved et cafébord og pakker en ny mobiltelefon ud sammen",
+        "h2": "Regn afdraget ud, før du siger ja",
+        "tekst": [
+            "Telefon på afbetaling ser billigt ud, fordi beløbet står som en lille "
+            "månedlig ydelse ved siden af abonnementet. Men prisen er delt op i to: "
+            "afdraget på telefonen og selve abonnementet — og det abonnement er ofte "
+            "dyrere end et tilsvarende uden telefon.",
+            "Gang den samlede månedspris med bindingsperioden, og træk prisen på et "
+            "løst abonnement fra. Det tal er, hvad telefonen reelt koster dig. "
+            "Sammenlign det med kontantprisen, før du binder dig i to år.",
+        ],
+        "link": ("/mobilabonnement-uden-binding/", "Abonnementer uden binding"),
+    },
+    "med-esim": {
+        "alt": "To personer sidder ved et cafébord i udlandet og aktiverer et "
+               "abonnement på telefonen",
+        "h2": "Samme dag, uden at vente på posten",
+        "tekst": [
+            "Med eSIM er der intet fysisk kort. Du scanner en kode eller trykker "
+            "aktivér i udbyderens app, og abonnementet virker inden for få minutter. "
+            "Det gør et skifte til noget, du kan nå på en formiddag i stedet for at "
+            "vente to hverdage på et brev.",
+            "De fleste telefoner fra 2019 og frem understøtter eSIM, men ikke alle "
+            "udbydere tilbyder det, og nogle tager et gebyr for at udstede et nyt. "
+            "Tjek begge dele, før du regner med det.",
+        ],
+        "link": ("/guides/esim/", "Sådan virker eSIM"),
+    },
+    "med-musik": {
+        "alt": "Gruppe venner sidder på en café med hovedtelefoner og musik på telefonen",
+        "h2": "Et bundle er kun en besparelse, hvis du allerede betaler for tjenesten",
+        "tekst": [
+            "Musik inkluderet i abonnementet lyder som gratis, men er det sjældent. "
+            "Abonnementet med tjenesten koster typisk 40 til 80 kr. mere om måneden "
+            "end det samme abonnement uden — omtrent hvad tjenesten koster alene.",
+            "Regnestykket er enkelt: betaler du allerede for tjenesten, sparer du "
+            "reelt pengene. Gør du ikke, betaler du for noget nyt. Og skifter du "
+            "abonnement senere, forsvinder tjenesten med det.",
+        ],
+        "link": ("/mobilabonnement-med-streaming/", "Alle abonnementer med streaming"),
+    },
+    "med-streaming": {
+        "alt": "Fire venner sidder i en sofa og ser en film sammen på en bærbar computer",
+        "h2": "Tjek hvad der sker, når kampagnen udløber",
+        "tekst": [
+            "Streaming i abonnementet er ofte en kampagne på seks eller tolv måneder. "
+            "Bagefter fortsætter abonnementet til fuld pris — nogle gange med tjenesten, "
+            "nogle gange uden. Det står i vilkårene, ikke i tilbuddet.",
+            "Regn derfor på prisen efter kampagnen, ikke i den. Og husk, at data er den "
+            "anden halvdel af regnestykket: streaming uden for wi-fi æder hurtigt et "
+            "lille abonnement, så en tjeneste i et 10 GB-abonnement er en dårlig handel.",
+        ],
+        "link": ("/guides/hvor-meget-data/", "Hvor meget data bruger streaming?"),
+    },
+}
+
+
+def sidebillede(navn, *, spejlvend=False):
+    """To-kolonne-sektion: billede i den ene kolonne, redaktionel tekst i den anden.
+
+    Ligger midt på siden mellem tabellen og brødteksten. Teksten er reelt indhold
+    med et internt link, ikke en billedtekst — så sektionen bidrager til siden
+    frem for kun at pynte."""
+    d = SIDEBILLEDER.get(navn)
+    if not d:
+        return ""
+    afsnit = "".join(f"<p>{t}</p>" for t in d["tekst"])
+    href, ankertekst = d["link"]
+    har_billede = os.path.exists(os.path.join(ROD, "assets", "img", "sider", f"{navn}-1280.webp"))
+    bil = (f'<div class="todelt-billede">{guidebillede(navn, d["alt"], mappe="sider")}</div>'
+           if har_billede else "")
+    txt = f'''<div class="todelt-tekst">
+      <span class="etiket">Værd at vide</span>
+      <h2>{e(d["h2"])}</h2>
+      {afsnit}
+      <div class="todelt-knapper">
+        <a href="{href}" class="knap knap-linje">{e(ankertekst)}</a>
+      </div>
+    </div>'''
+    if not har_billede:
+        # Uden billede giver to kolonner ingen mening — sektionen bliver smal og læsevenlig
+        return f'''<section class="sektion baand-smal">
+  <div class="todelt-tekst afslør">{txt[txt.index(">") + 1:txt.rindex("</div>")]}</div>
+</section>'''
+    indre = (txt + bil) if spejlvend else (bil + txt)
+    return f'''<section class="sektion baand">
+  <div class="todelt afslør">{indre}</div>
+</section>'''
 
 
 def radar(chips=None):
@@ -1401,6 +1615,8 @@ def byg_billigste():
                       "abonnementer, der matcher dit dataforbrug.",
            billigst_id=bedste_pr_gb['id'])}
 
+{sidebillede("billigste")}
+
 {(indhold.billigste_brodtekst(D)).replace(
     '<section class="sektion baand-smal artikel">',
     '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1
@@ -1477,6 +1693,8 @@ def byg_fridata():
                       "hvad forskellen reelt koster dig om måneden.",
            billigst_id=min(fri, key=lambda a: a['pris'])['id'] if fri else None)}
 
+{sidebillede("med-fri-data", spejlvend=True)}
+
 {indhold.fridata_brodtekst(D).replace(
     '<section class="sektion baand-smal artikel">',
     '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1
@@ -1511,11 +1729,13 @@ def byg_fridata():
 
 # --------------------------------------------------------------- NICHESIDER
 
-def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links):
+def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links,
+              billede=None, spejlvend=False):
     krumme = [("/", "Forside"), (None, etiket)]
     krop = f"""
 {pristabel(udvalg, UMAP, titel=f"Bedste valg — {etiket.lower()}", undertitel=intro,
            billigst_id=udvalg[0]['id'] if udvalg else None)}
+{sidebillede(billede, spejlvend=spejlvend) if billede else ""}
 <section class="sektion baand-smal artikel">{gennemgangslinje(OPDATERET)}{brodtekst}
 {tabel_billigst_pr_udbyder()}{tabel_pr_datamaengde()}{fejltabel()}{begrebstabel()}</section>
 <section class="sektion baand-smal">
@@ -1535,7 +1755,8 @@ def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links
 
 
 def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
-                 faq, links, chips=None, ekstra_tabeller=None, tabeltitel=None):
+                 faq, links, chips=None, ekstra_tabeller=None, tabeltitel=None,
+                 billede=None, spejlvend=False):
     """Kategoriside: hero med radar, tabel, langt indhold og ekstra datatabeller."""
     krumme = [("/", "Forside"), (None, etiket)]
     t = {"gennemgang": gennemgangslinje(OPDATERET)}
@@ -1547,6 +1768,7 @@ def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
     krop = f"""
 {pristabel(udvalg, UMAP, titel=tabeltitel or f"{etiket} — sammenlignet på pris",
            undertitel=intro, billigst_id=udvalg[0]['id'] if udvalg else None)}
+{sidebillede(billede, spejlvend=spejlvend) if billede else ""}
 {brod}
 <section class="sektion baand-smal">
   {laesvidere(links)}
@@ -4054,7 +4276,7 @@ kategori. <a href="/guides/hvor-meget-data/">Se hele guiden til dataforbrug</a>.
         [("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
          ("/guides/hvor-meget-data/", "Hvor meget data har jeg brug for?"),
          ("/mobilabonnement-uden-binding/", "Abonnementer uden binding")],
-    )
+        billede="til-unge", spejlvend=False)
 
     ubinding = sorted([a for a in ABON if a["binding"] == 0], key=lambda a: a["pris"])[:15]
     byg_niche(
@@ -4099,12 +4321,13 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         [("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
          ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
          ("/udbydere/", "Alle udbydere")],
-    )
+        billede="uden-binding", spejlvend=True)
 
     # ---------------- Seks nye kategorisider ----------------
     fritale = sorted([a for a in ABON if a["tale"] == "fri"], key=lambda a: a["pris"])
     byg_kategori(
         sti="/mobilabonnement-med-fri-tale/", etiket="Fri tale",
+        billede="med-fri-tale", spejlvend=False,
         h1="Billigste mobilabonnement med fri tale",
         titel=f"Mobilabonnement med fri tale — priser fra {D['pris_fritale']} kr./md.",
         besk=(f"Sammenlign mobilabonnementer med fri tale og fri sms. Priser fra "
@@ -4142,6 +4365,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                            key=lambda a: a["pris"] / a["data_gb"])[:14]
     byg_kategori(
         sti="/bedste-mobilabonnement/", etiket="Bedste abonnement",
+        billede="bedste", spejlvend=True,
         h1="Bedste mobilabonnement — sådan finder du dit",
         titel=f"Bedste mobilabonnement {IDAG.year} — sammenlignet på pris, data og net",
         besk=("Der findes ikke ét bedste mobilabonnement. Se vores kriterier, og find det "
@@ -4216,6 +4440,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     stream = sorted([a for a in ABON if a.get("streaming")], key=lambda a: a["pris"])
     byg_kategori(
         sti="/mobilabonnement-med-streaming/", etiket="Med streaming",
+        billede="med-streaming", spejlvend=False,
         h1="Mobilabonnement med streaming inkluderet",
         titel=f"Mobilabonnement med streaming — fra {D['pris_streaming']} kr./md.",
         besk=(f"Sammenlign mobilabonnementer med streaming inkluderet. Fra {D['pris_streaming']} "
@@ -4251,6 +4476,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     boernudvalg = sorted([a for a in ABON if a["data_gb"] <= 15], key=lambda a: a["pris"])
     byg_kategori(
         sti="/mobilabonnement-til-boern/", etiket="Til børn",
+        billede="til-boern", spejlvend=True,
         h1="Mobilabonnement til børn",
         titel=f"Mobilabonnement til børn — trygt og fra {D['pris_boern']} kr./md.",
         besk=("Find et trygt mobilabonnement til dit barn. Se hvordan du sikrer mod store "
@@ -4287,6 +4513,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                         key=lambda a: a["pris"])[:16]
     byg_kategori(
         sti="/mobilabonnement-med-esim/", etiket="Med eSIM",
+        billede="med-esim", spejlvend=False,
         h1="Mobilabonnement med eSIM",
         titel=f"Mobilabonnement med eSIM — klar samme dag, fra {D['pris_esim']} kr.",
         besk=("Sammenlign mobilabonnementer med eSIM. Aktivér med en QR-kode og vær i gang "
@@ -4934,6 +5161,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                          key=lambda a: gns12(a) or 9e9)
     byg_kategori(
         sti="/mobilabonnement-med-musik/", etiket="Med musik",
+        billede="med-musik", spejlvend=True,
         h1="Mobilabonnement med musik inkluderet",
         titel=f"Mobilabonnement med musik — fra {D['pris_musik']} kr./md.",
         besk=("Sammenlign mobilabonnementer med musik, podcast og lydbøger inkluderet. "
@@ -4970,6 +5198,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     aeldreudvalg = sorted([a for a in ABON if a["data_gb"] <= 15], key=lambda a: gns12(a) or 9e9)
     byg_kategori(
         sti="/mobilabonnement-til-aeldre/", etiket="Til ældre",
+        billede="til-aeldre", spejlvend=False,
         h1="Mobilabonnement til ældre",
         titel=f"Mobilabonnement til ældre — trygt og fra {D['pris_aeldre']} kr./md.",
         besk=("Find et trygt mobilabonnement til en ældre bruger. Vi forklarer hvorfor "
@@ -5006,6 +5235,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     udenbinding = sorted([a for a in ABON if a["binding"] == 0], key=lambda a: gns12(a) or 9e9)[:14]
     byg_kategori(
         sti="/mobilabonnement-med-telefon/", etiket="Med telefon",
+        billede="med-telefon", spejlvend=True,
         h1="Mobilabonnement med telefon på afbetaling",
         titel="Mobilabonnement med telefon — regn efter før du binder dig",
         besk=("Telefon og abonnement samlet ser billigt ud, men binder dig i 24-36 måneder. "
