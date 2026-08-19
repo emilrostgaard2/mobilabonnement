@@ -13,23 +13,20 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Hent priser fra Adtraction
         env:
           ADTRACTION_CHANNEL_ID: ${{ secrets.ADTRACTION_CHANNEL_ID }}
         run: python3 _build/adtraction.py
-
       - name: Byg siderne
         run: python3 _build/build.py
-
       - name: Validér
         run: python3 _build/validate.py
-
       - name: Gem opdaterede priser i repoet
         run: |
           git config user.name "telemobil-bot"
@@ -38,8 +35,8 @@ jobs:
           git diff --quiet && git diff --staged --quiet || \
             git commit -m "Priser opdateret $(date -u +%Y-%m-%d\ %H:%M)"
           git push
-
       - name: Upload med lftp
+        timeout-minutes: 12
         env:
           SERVER: ${{ secrets.FTP_SERVER }}
           BRUGER: ${{ secrets.FTP_USERNAME }}
@@ -50,8 +47,11 @@ jobs:
             set ftp:ssl-allow true;
             set ssl:verify-certificate no;
             set ftp:passive-mode true;
-            set net:max-retries 3;
-            set net:timeout 60;
+            set net:max-retries 2;
+            set net:timeout 20;
+            set net:reconnect-interval-base 5;
+            set mirror:parallel-transfer-count 4;
+            set xfer:clobber true;
             open -u '$BRUGER','$KODE' '$SERVER';
             mirror --reverse --only-newer --delete --verbose=1 \
               --exclude-glob .git/ \
