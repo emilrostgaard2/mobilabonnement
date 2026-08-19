@@ -568,8 +568,6 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     if a["data_gb"] > 0 and not a.get("eu_gb"):
         chips.append('<span class="chp chp-advar">Ingen EU-data</span>')
     chips.insert(0, f'<span class="chp chp-net">{netlabel(u)}</span>')
-    if a.get("femg") and a["data_gb"] > 0:
-        chips.append('<span class="chp">5G</span>')
     if a.get("streaming"):
         chips.append('<span class="chp">' + e(", ".join(a["streaming"][:3]))
                      + ("…" if len(a["streaming"]) > 3 else "") + "</span>")
@@ -580,7 +578,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
                     '<div class="p-normal">+ takst pr. minut og sms</div>'
                     '<div class="p-gns">Du betaler kun for det, du bruger</div>')
     elif a.get("intro_pris") is not None and a.get("intro_mdr"):
-        prisblok = (f'<div class="p-intro">Tilbud i {a["intro_mdr"]} mdr.</div>'
+        prisblok = (
                     f'<div class="p-tal"><b>{kr(a["intro_pris"])}</b><span>kr./md.</span></div>'
                     f'<div class="p-normal">Normalpris {kr(a["pris"])} kr./md.</div>'
                     f'<div class="p-gns">Gns. <strong>{kr(g)} kr./md.</strong> over 12 mdr.</div>'
@@ -594,18 +592,37 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     if gnsnit_aar and not forbrug and aar < gnsnit_aar:
         spar = f'<div class="p-spar">{kr((gnsnit_aar - aar) / 12)} kr./md. under snittet</div>'
 
+    # Én fane over kortet frem for flere mærkater inde i det
+    dyn_liste = (dyn or {}).get(a["id"], [])
+    if dyn_liste:
+        fanetekst, faneklasse = dyn_liste[0]
+    elif a.get("intro_pris") and a.get("intro_mdr"):
+        fanetekst = f'{kr(a["intro_pris"])} kr./md. de første {a["intro_mdr"]} mdr.'
+        faneklasse = "sol"
+    elif a.get("streaming"):
+        n = len(a["streaming"])
+        fanetekst = f'{n} streamingtjeneste{"r" if n > 1 else ""} inkluderet'
+        faneklasse = "berry"
+    else:
+        fanetekst, faneklasse = "", ""
+    fane = (f'<span class="plan-fane plan-fane-{faneklasse}">{e(fanetekst)}</span>'
+            if fanetekst else "")
+
+    nettype = "5G" if a.get("femg") and a["data_gb"] > 0 else ("Data" if a["data_gb"] else "Tale")
+
     klasse = " fremhaev" if billigst_pr_gb else ""
     return f"""<article class="plan{klasse}" data-gb="{a['data_gb']}" data-pris="{a["intro_pris"] if a.get("intro_pris") and a.get("intro_mdr") else a["pris"]}"
   data-normalpris="{a['pris']}"
   data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}" data-udbyder="{e(u['navn'])}">
+  {fane}
   <div class="plan-ident">
     <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy"
-      width="{round(u.get('logo_w', 240) * 56 / u.get('logo_h', 96))}" height="56"
+      width="{round(u.get('logo_w', 240) * 46 / u.get('logo_h', 96))}" height="46"
       decoding="async">
+    <span class="plan-type">{nettype}</span>
   </div>
   <div class="plan-midt">
-    <div class="plan-mrk">{maerker}</div>
-    <h3 class="plan-navn">{e(a['navn'])}</h3>
+    <h3 class="plan-navn">{e(u['navn'])} — {e(a['navn'])}</h3>
     <div class="plan-stats">{statbokse}</div>
     <div class="plan-chips">{"".join(chips)}</div>
   </div>
@@ -616,7 +633,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     <a class="knap knap-primaer" href="{a['link']}" rel="sponsored nofollow noopener" target="_blank"
        data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
        aria-label="Se tilbud på {e(a['navn'])} hos {e(u['navn'])}">Se tilbud <span aria-hidden="true">→</span></a>
-    <a class="p-laes" href="/udbydere/{u['slug']}/">Læs mere om {e(u['navn'])} →</a>
+    <a class="p-laes" href="/udbydere/{u['slug']}/">Se detaljer</a>
     </div>
     <small class="p-hos">Annoncelink · vi kan modtage provision</small>
   </div>

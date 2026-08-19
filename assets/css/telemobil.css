@@ -1367,3 +1367,88 @@ body{overflow-x:clip;max-width:100%;position:relative}
 @media(prefers-reduced-motion:reduce){
   .rt-overlay,.rt-dialog{transition:none}
 }
+
+/* ==========================================================================
+   Rækkekort: roligere layout med fane over kortet
+   ========================================================================== */
+.planliste{gap:1.5rem;padding-top:.6rem}
+.plan{position:relative;overflow:visible;
+  grid-template-columns:minmax(126px,.52fr) minmax(300px,2fr) 196px;
+  gap:1.5rem;padding:1.5rem 1.4rem 1.25rem;border-radius:var(--r-l)}
+
+/* Fanen sidder oven på kortets kant, som i referencen */
+.plan-fane{position:absolute;top:-13px;left:20px;z-index:2;
+  font-size:.76rem;font-weight:650;letter-spacing:-.005em;white-space:nowrap;
+  padding:.32rem .85rem;border-radius:var(--r-s);
+  background:var(--blaek);color:#fff;box-shadow:0 4px 12px -4px rgba(11,16,38,.35)}
+.plan-fane-puls{background:var(--puls-dyb)}
+.plan-fane-sol{background:#8A6100}
+.plan-fane-berry{background:#5B2FD6}
+.plan-fane-signal{background:var(--signal-dyb)}
+
+.plan-ident{flex-direction:column;align-items:flex-start;gap:.6rem;justify-content:center}
+.plan-ident img{height:46px;max-width:120px}
+.plan-type{font-size:.72rem;font-weight:650;color:var(--signal-dyb);
+  background:#EEF2FF;border-radius:999px;padding:.2rem .7rem}
+
+.plan-navn{font-size:1.06rem;font-weight:700;letter-spacing:-.015em;margin-bottom:.85rem;
+  font-family:var(--font-brod)}
+
+/* Statbokse: lysere, større tal, mindre kant */
+.plan-stats{gap:.55rem}
+.stat{background:#FAFBFE;border:1px solid #EDF0F8;border-radius:var(--r-m);padding:.62rem .5rem}
+.stat b{font-size:1.05rem;font-weight:650;letter-spacing:-.01em}
+.stat span{font-size:.7rem;color:#8A93B2;margin-top:.1rem}
+
+.plan-chips{margin-top:.7rem;gap:.4rem}
+.chp{background:#F4F7FF;border:1px solid #E6ECFB;border-radius:999px;
+  padding:.3rem .7rem;font-size:.76rem;color:#4A5578}
+.chp::before{font-weight:700}
+.chp-net{background:#F4F7FF;border-color:#E6ECFB;font-weight:600;color:#4A5578}
+
+/* Prispanel: smallere og mere roligt */
+.pris-boks{background:#FAFBFE;border:1px solid #EDF0F8;padding:1rem .9rem}
+.pris-boks .p-tal b{font-size:2.05rem;letter-spacing:-.03em}
+.pris-boks .p-tal span{font-size:.82rem}
+.pris-boks .p-normal,.pris-boks .p-gns{font-size:.73rem;color:#8A93B2}
+.pris-boks .p-formel{display:none}
+.pris-boks .p-spar{color:var(--puls-dyb);border-top-color:#E4E9F5}
+.plan-pris .knap{margin-top:.65rem;padding:.68rem 1rem;font-size:.92rem;font-weight:650}
+.p-laes{margin-top:.5rem;font-size:.8rem;font-weight:500}
+.p-laes{color:#6B7599;text-decoration:underline;text-underline-offset:2px}
+.p-laes:hover{color:var(--signal-dyb)}
+.p-hos{margin-top:.4rem;font-size:.62rem;color:#A0A8C4}
+
+@media(max-width:1000px){
+  .plan{grid-template-columns:1fr!important;gap:1.1rem;padding:1.5rem 1.2rem 1.2rem}
+  .plan-ident{flex-direction:row;align-items:center;gap:.9rem}
+  .plan-fane{left:16px}
+}
+
+/* Strammere kort — mindre luft, alt lodret centreret */
+.planliste{gap:1.35rem}
+.plan{grid-template-columns:minmax(110px,.42fr) minmax(300px,2fr) 186px;
+  gap:1.3rem;padding:1.2rem 1.2rem 1.05rem;align-items:center}
+.plan-ident{gap:.5rem}
+.plan-ident img{height:38px;max-width:104px}
+.plan-type{font-size:.68rem;padding:.16rem .6rem}
+.plan-navn{font-size:1rem;margin-bottom:.7rem}
+.plan-stats{gap:.5rem}
+.stat{padding:.55rem .45rem}
+.stat b{font-size:1rem}
+.stat span{font-size:.67rem}
+.plan-chips{margin-top:.6rem;gap:.35rem}
+.chp{padding:.26rem .62rem;font-size:.73rem}
+.pris-boks{padding:.85rem .8rem}
+.pris-boks .p-tal b{font-size:1.9rem}
+.pris-boks .p-gns,.pris-boks .p-normal{font-size:.71rem;line-height:1.35}
+.pris-boks .p-spar{margin-top:.35rem;padding-top:.35rem;font-size:.71rem}
+.plan-pris .knap{margin-top:.55rem;padding:.6rem 1rem;font-size:.88rem}
+.p-laes{margin-top:.4rem;font-size:.76rem}
+.p-hos{margin-top:.3rem;font-size:.6rem}
+
+/* Sidste opstramning: mindre luft omkring venstre kolonne og prisboks */
+.plan{padding:1.15rem 1.15rem 1rem;gap:1.15rem}
+.plan-ident{align-items:flex-start}
+.pris-boks{padding:.8rem .75rem}
+.plan-navn{margin-bottom:.65rem;line-height:1.3}
