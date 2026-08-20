@@ -191,8 +191,9 @@ def laesetid(html):
 
 
 def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
-          hero=None, efter_hero="", opdateret="", ekstra_hoved=""):
-    indhold, toc = indholdsfortegnelse(indhold)
+          hero=None, efter_hero="", opdateret="", ekstra_hoved="", toc=True):
+    indhold, _toc = indholdsfortegnelse(indhold)
+    toc = _toc if toc else ""
     if toc:
         indhold = indhold.replace('<section class="sektion baand-smal artikel">',
                                   f'<section class="sektion baand-smal">{toc}</section>'

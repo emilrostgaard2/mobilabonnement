@@ -4410,13 +4410,6 @@ ser sådan ud.</p>
 sjældent — kig forbi igen om et par dage.</p>"""
 
     brod = f"""<section class="sektion baand-smal artikel">
-{gennemgangslinje(OPDATERET, fakta=f"{len(gaver)} gavekampagner kontrolleret manuelt")}
-<p class="led">En kampagne er kun et tilbud, hvis den er billigere end
-alternativet. Her er de aktuelle kampagner — og regnestykket, der afgør, om de
-er pengene værd.</p>
-</section>
-
-<section class="sektion baand-smal artikel">
 {gavedel}
 
 <h2>Gave eller afbetaling — kend forskellen</h2>
@@ -4500,7 +4493,7 @@ sikkerhedsventil, ikke en gratis prøveperiode.</p>
                        "Intropriser og tilbud med gave — og regnestykket der afgør, "
                        "om de er pengene værd.",
                        '<a href="#intropriser" class="knap knap-primaer">Se tilbuddene</a>'),
-        efter_hero=logobaand(), krumme=krumme, indhold=brod + faqblok(faq),
+        efter_hero="", krumme=krumme, indhold=brod + faqblok(faq), toc=False,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk))],
     ), prioritet="0.9", hyppighed="daily")
@@ -4829,12 +4822,6 @@ det til {kr(g) if g is not None else "—"} kr./md.</p>
                   if andre else "")
 
     brod = f"""<section class="sektion baand-smal artikel">
-{gennemgangslinje(OPDATERET, fakta=f"{len(kampagner)} kampagner kontrolleret manuelt")}
-<p class="led">{e(u.get("tagline") or "")} {e(u['navn'])} kører på
-{e(netlabel(u))}. Her er selskabets aktuelle kampagner, og hvad de koster,
-når hele bindingsperioden regnes med.</p>
-</section>
-<section class="sektion baand-smal artikel">
 {kortdel}
 
 {regnestykke}
@@ -4881,7 +4868,7 @@ når hele bindingsperioden regnes med.</p>
         beskrivelse=besk,
         hero=hero_side("Kampagne", h1, besk,
                        '<a href="#tilbud" class="knap knap-primaer">Se tilbuddene</a>'),
-        efter_hero=logobaand(), krumme=krumme, indhold=brod + faqblok(faq),
+        efter_hero="", krumme=krumme, indhold=brod + faqblok(faq), toc=False,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, h1, besk))],
     ), prioritet="0.8", hyppighed="daily")
@@ -4914,10 +4901,6 @@ måneder for {e(billigst_mp["produkt"])}.</p>
                   if andre else "")
 
     brod = f"""<section class="sektion baand-smal artikel">
-{gennemgangslinje(OPDATERET, fakta=f"{len(kampagner)} kampagner kontrolleret manuelt")}
-<p class="led">{e(d["intro"])}</p>
-</section>
-<section class="sektion baand-smal artikel">
 {kortdel}
 {d["tekst"]}
 {andre_html}
@@ -4935,7 +4918,7 @@ måneder for {e(billigst_mp["produkt"])}.</p>
         sti=sti, titel=f"{d['h1']} ({OPDATERET})", beskrivelse=besk,
         hero=hero_side("Kampagne", d["h1"], besk,
                        '<a href="#tilbud" class="knap knap-primaer">Se tilbuddene</a>'),
-        efter_hero=logobaand(), krumme=krumme, indhold=brod + faqblok(d["faq"]),
+        efter_hero="", krumme=krumme, indhold=brod + faqblok(d["faq"]), toc=False,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(d["faq"]),
                      artikelld(sti, d["h1"], besk))],
     ), prioritet="0.8", hyppighed="daily")
