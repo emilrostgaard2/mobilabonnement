@@ -5,7 +5,7 @@ LinkedIn: https://www.linkedin.com/in/emil-rostgaard-702809195/
 Adresse: Lundbyesgade 13, 8000 Aarhus C, Danmark
 
 /* SITE */
-Sidst opdateret: 2026-08-20
+Sidst opdateret: 2026-08-17
 Sprog: Dansk
 Byggesystem: Statisk generering med Python
 Doktrin: Priser sorteres efter pris, ikke efter provision

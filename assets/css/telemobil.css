@@ -1595,7 +1595,8 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .kamp-mrk{position:absolute;top:.7rem;left:.7rem;z-index:2;background:var(--nat);color:#fff;
   font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
   border-radius:6px;padding:.22rem .5rem}
-.kamp-top{background:#F4F7FF;padding:1.4rem 1rem .9rem;text-align:center;position:relative}
+.kamp-top{background:#fff;padding:1.2rem 1rem .8rem;text-align:center;position:relative;
+  border-bottom:1px solid #EEF1FA}
 .kamp-top img{width:100%;max-width:170px;height:150px;object-fit:contain;margin:0 auto;display:block}
 .kamp-intet{height:150px;display:flex;align-items:center;justify-content:center;
   color:var(--graa);font-size:.8rem}
