@@ -4265,6 +4265,711 @@ tager højde for det.</p>
                      artikelld(sti, titel, besk))],
     ), prioritet="0.8", hyppighed="daily")
 
+
+# ---------------------------------------------------------------- KAMPAGNER
+
+def _kampagner():
+    """Læser manuelt vedligeholdte gavekampagner og filtrerer udløbne fra."""
+    try:
+        with open(os.path.join(ROD, "data", "kampagner.json"), encoding="utf-8") as f:
+            raa = json.load(f).get("kampagner", [])
+    except (FileNotFoundError, ValueError):
+        return []
+    idag = ISO
+    gyldige = []
+    for k in raa:
+        if k.get("udloeber") and k["udloeber"] < idag:
+            continue
+        if k.get("udbyder") not in UMAP:
+            print(f"  ADVARSEL: kampagne '{k.get('id')}' har ukendt udbyder "
+                  f"'{k.get('udbyder')}' — springes over")
+            continue
+        gyldige.append(k)
+    return gyldige
+
+
+def mindstepris(k):
+    """Det samlede beløb kunden minimum betaler i bindingsperioden.
+
+    Teleselskaber skal oplyse det tal ved kampagner med binding, og det er det
+    eneste, der kan sammenlignes på tværs. Månedsprisen alene siger intet, når
+    der ligger en udbetaling og et oprettelsesgebyr oveni."""
+    mdr = k.get("binding") or 1
+    return (k.get("maanedspris", 0) * mdr
+            + k.get("udbetaling", 0) + k.get("oprettelse", 0))
+
+
+def kampagnekort(k):
+    u = UMAP[k["udbyder"]]
+    mp = mindstepris(k)
+    if k.get("billede"):
+        b = f'/assets/img/kampagner/{k["billede"]}'
+        bil = (f'<img src="{b}-480.webp" alt="{e(k["produkt"])} — kampagne hos '
+               f'{e(u["navn"])}" loading="lazy" width="480" height="480" decoding="async">')
+    else:
+        bil = '<div class="kamp-intet">Billede mangler</div>'
+    maerke = (f'<span class="kamp-mrk">{e(k["maerke"])}</span>'
+              if k.get("maerke") else "")
+    vaerdi = (f'<span class="kamp-vaerdi">Værdi <b>{kr(k["vaerdi"])} kr.</b></span>'
+              if k.get("vaerdi") else "")
+
+    udb = k.get("udbetaling", 0)
+    linjer = [f'Du betaler <strong>{kr(udb)} kr.</strong> for produktet'
+              if udb else "Produktet koster <strong>0 kr.</strong>"]
+    if k.get("binding"):
+        linjer.append(f'Mindstepris <strong>{kr(mp)} kr.</strong> '
+                      f'over {k["binding"]} mdr.')
+    if k.get("normalpris") and k.get("normalpris") != k.get("maanedspris"):
+        linjer.append(f'Herefter <strong>{kr(k["normalpris"])} kr./md.</strong>')
+    if k.get("udloeber"):
+        linjer.append(f'Gælder til {e(k["udloeber"])}')
+
+    logo_w = round(u.get("logo_w", 240) * 20 / u.get("logo_h", 96))
+    return f"""<article class="kamp">
+  {maerke}
+  <div class="kamp-top">{vaerdi}{bil}</div>
+  <div class="kamp-krop">
+    <img class="kamp-logo" src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])} logo"
+      loading="lazy" width="{logo_w}" height="20" decoding="async">
+    <h3 class="kamp-navn">{e(k["produkt"])}</h3>
+    <div class="kamp-tal">
+      <div><b>{e(k.get("tale") or "—")}</b><span>tale</span></div>
+      <div><b>{e(k.get("data") or "—")}</b><span>data</span></div>
+      <div><b>{kr(k.get("maanedspris", 0))} kr.</b><span>pr. md.</span></div>
+    </div>
+    <p class="kamp-linjer">{"<br>".join(linjer)}</p>
+    <a class="knap knap-primaer kamp-cta" href="{k['link']}"
+      rel="sponsored nofollow noopener" target="_blank"
+      data-udgaaende="{e(u['slug'])}" data-kampagne="{e(k.get('id', ''))}"
+      aria-label="Se kampagnen på {e(k['produkt'])} hos {e(u['navn'])}">Se tilbud</a>
+  </div>
+</article>"""
+
+
+def byg_kampagner():
+    sti = "/kampagner/"
+    gaver = _kampagner()
+    intro = sorted([a for a in ABON if a.get("intro_pris") is not None
+                    and a.get("intro_mdr")],
+                   key=lambda a: a["intro_pris"])
+
+    titel = "Mobilabonnement kampagner og tilbud"
+    besk = ("Se aktuelle kampagner på mobilabonnementer — intropriser og tilbud med "
+            "gave. Vi regner mindsteprisen ud, så du kan se, hvad tilbuddet reelt koster.")
+    krumme = [("/", "Forside"), (None, "Kampagner")]
+
+    if gaver:
+        gavedel = f"""<h2 id="gaver">Kampagner med gave eller hardware</h2>
+<p>Ved hver kampagne står <strong>mindsteprisen</strong>: det samlede beløb, du
+betaler i hele bindingsperioden, når abonnement, udbetaling og oprettelse lægges
+sammen. Det er det eneste tal, der kan sammenlignes på tværs af tilbud.</p>
+<div class="kampagner">{"".join(kampagnekort(k) for k in gaver)}</div>
+
+<h2 id="efter-selskab">Kampagner efter selskab</h2>
+<p>Vi har en side pr. selskab med deres aktuelle tilbud, en vurdering af
+selskabet bag kampagnen, og deres abonnementer med intropris.</p>
+<ul class="trin">{"".join(
+    f'<li><a href="/kampagner/{s}/"><strong>{e(UMAP[s]["navn"])} kampagne</strong></a>'
+    f' {len([k for k in gaver if k["udbyder"] == s])} aktuelle tilbud på '
+    f'{e(netlabel(UMAP[s]))}</li>'
+    for s in KAMPAGNE_UDBYDERE)}</ul>
+
+{f'''<h2 id="efter-produkt">Kampagner efter produkt</h2>
+<p>Leder du efter noget bestemt, er der en side pr. produkttype med det, du
+skal kigge efter, før du siger ja.</p>
+<ul class="trin">{"".join(
+    f"<li><a href='/kampagner/{n}/'><strong>{e(KAMPAGNE_KATEGORIER[n]['h1'])}</strong></a> "
+    f"{e(KAMPAGNE_KATEGORIER[n]['intro'])}</li>"
+    for n in KAMPAGNE_AKTIVE_KAT)}</ul>''' if KAMPAGNE_AKTIVE_KAT else ""}"""
+    else:
+        gavedel = """<h2 id="gaver">Kampagner med gave eller hardware</h2>
+<p>Vi har ingen aktuelle gavekampagner på listen lige nu. Tilbud med AirPods,
+tablets og højttalere kommer og går, og vi lægger dem kun op, når vi har
+kontrolleret vilkårene. Kig forbi igen — eller se intropriserne herunder, som
+opdateres automatisk to gange i døgnet.</p>"""
+
+    if intro:
+        billigst = intro[0]
+        ub = UMAP[billigst["udbyder"]]
+        g = gns12(billigst)
+        introdel = f"""<h2 id="intropriser">Abonnementer med intropris lige nu</h2>
+<p>{len(intro)} abonnementer kører med nedsat pris i en periode. Den laveste er
+{e(ub["navn"])} {e(billigst["navn"])} til {kr(billigst["intro_pris"])} kr./md. i
+{billigst["intro_mdr"]} måneder — men over et helt år svarer det til
+{kr(g) if g is not None else "—"} kr./md., fordi prisen stiger til
+{kr(billigst["pris"])} kr. bagefter.</p>
+<p>Det er hele pointen med tabellen herunder: den viser både introprisen og
+12-måneders-prisen, så du kan se, om tilbuddet reelt er billigt eller bare
+ser sådan ud.</p>
+{pristabel(intro, UMAP, titel="Alle abonnementer med intropris",
+           undertitel="Sorteret efter introprisen. Klik Se detaljer for regnestykket.",
+           billigst_id=billigst["id"], id_attr="intropriser-tabel", vis=10)}"""
+    else:
+        introdel = """<h2 id="intropriser">Abonnementer med intropris</h2>
+<p>Der er ingen abonnementer med intropris i vores data lige nu. Det sker
+sjældent — kig forbi igen om et par dage.</p>"""
+
+    brod = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"{len(gaver)} gavekampagner kontrolleret manuelt")}
+<p class="led">En kampagne er kun et tilbud, hvis den er billigere end
+alternativet. Her er de aktuelle kampagner — og regnestykket, der afgør, om de
+er pengene værd.</p>
+</section>
+
+<section class="sektion baand-smal artikel">
+{gavedel}
+
+<h2>Gave eller afbetaling — kend forskellen</h2>
+<p>Når hardware følger med et abonnement, er den sjældent gratis. Selskabet
+tjener pengene ind igen på månedsprisen i bindingsperioden. Det behøver ikke
+være en dårlig handel, men du skal kende regnestykket.</p>
+<p>Sammenlign altid to scenarier over hele bindingsperioden:</p>
+<ol class="trin">
+<li><strong>Kampagnen</strong>
+Udbetaling + månedspris gange antal måneder + oprettelse. Det er mindsteprisen.</li>
+<li><strong>Alternativet</strong>
+Det billigste abonnement uden binding gange samme antal måneder, plus hvad
+produktet koster i almindelig handel.</li>
+</ol>
+<p>Er forskellen lille, vinder abonnementet uden binding — for så beholder du
+friheden til at skifte. Er forskellen stor, er kampagnen reelt god.</p>
+
+<h2>Fire ting der afgør, om en kampagne er værd at tage</h2>
+<h3>Har du brug for produktet?</h3>
+<p>En tablet til 0 kr. er ikke gratis, hvis den ender i en skuffe. Regn den
+kun med i regnestykket, hvis du ville have købt den alligevel.</p>
+<h3>Hvad koster det efter kampagnen?</h3>
+<p>Intropriser løber typisk 3 til 6 måneder. Bagefter fortsætter abonnementet
+til normalpris, og de fleste glemmer at skifte. Sæt en påmindelse i kalenderen
+samme dag, du bestiller.</p>
+<h3>Er der binding?</h3>
+<p>Kampagner med hardware har næsten altid 6 måneders binding — det er sådan,
+rabatten finansieres. Rene prisrabatter har som regel ingen. Er du i tvivl, så
+søg efter ordet «bindingsperiode» i vilkårene.</p>
+<h3>Dækker nettet, hvor du bor?</h3>
+<p>Prisen er ligegyldig, hvis signalet ikke rækker. Tjek
+<a href="/daekningskort/">dækningen på din adresse</a>, inden du bestiller.</p>
+
+{introdel}
+
+<h2>Din fortrydelsesret gælder også her</h2>
+<p>Som privatkunde har du 14 dages fortrydelsesret ved onlinekøb, og det
+gælder både abonnementet og den hardware, der følger med. Fortryder du, sender
+du produktet retur og betaler kun for det forbrug, du har haft. Det er en
+sikkerhedsventil, ikke en gratis prøveperiode.</p>
+</section>
+<section class="sektion baand-smal">
+  {laesvidere([("/billigste-mobilabonnement/", "Billigste mobilabonnement uden kampagne"),
+               ("/12-maaneders-prisen/", "Sådan regner vi 12-måneders-prisen"),
+               ("/prisudvikling/", "Stiger priserne i øjeblikket?"),
+               ("/mobilabonnement-med-telefon/", "Abonnement med telefon på afbetaling")])}
+  {forfatterboks()}
+  {afsloering()}
+</section>"""
+
+    faq = [
+        {"sp": "Hvad er mindsteprisen?",
+         "sv": "Det samlede beløb, du minimum betaler i hele bindingsperioden: "
+               "månedsprisen gange antal måneder, plus udbetaling for hardware og "
+               "eventuelt oprettelsesgebyr. Selskaberne skal oplyse det ved kampagner "
+               "med binding, og det er det tal, du skal sammenligne på."},
+        {"sp": "Skal jeg binde mig for at få en kampagne?",
+         "sv": "Ved kampagner med gave næsten altid, typisk 6 måneder — det er sådan, "
+               "rabatten på hardwaren finansieres. Rene prisrabatter har som regel "
+               "ingen binding."},
+        {"sp": "Er en gratis gave reelt gratis?",
+         "sv": "Sjældent. Er månedsprisen højere end et tilsvarende abonnement uden "
+               "gave, betaler du for produktet over bindingsperioden. Sammenlign "
+               "mindsteprisen med prisen på et billigt abonnement plus produktet købt "
+               "for sig."},
+        {"sp": "Hvad sker der, når kampagneperioden udløber?",
+         "sv": "Abonnementet fortsætter til normalpris. De fleste selskaber advarer "
+               "ikke, så sæt en påmindelse i kalenderen, når du bestiller."},
+        {"sp": "Beholder jeg mit telefonnummer?",
+         "sv": "Ja. Nummerportering er gratis, og din nye udbyder klarer det — "
+               "inklusive opsigelsen. Opsig aldrig selv det gamle abonnement først, "
+               "så risikerer du at miste nummeret."},
+        {"sp": "Kan jeg fortryde?",
+         "sv": "Ja, du har 14 dages fortrydelsesret ved onlinekøb. Den dækker både "
+               "abonnementet og hardwaren, der følger med."},
+    ]
+
+    return skriv(sti, shell(
+        sti=sti, titel=f"{titel} ({OPDATERET})", beskrivelse=besk,
+        hero=hero_side("Kampagner", titel,
+                       "Intropriser og tilbud med gave — og regnestykket der afgør, "
+                       "om de er pengene værd.",
+                       '<a href="#intropriser" class="knap knap-primaer">Se tilbuddene</a>'),
+        efter_hero=logobaand(), krumme=krumme, indhold=brod + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, titel, besk))],
+    ), prioritet="0.9", hyppighed="daily")
+
+
+# ------------------------------------------------- KAMPAGNE-UNDERSIDER
+# Hub på /kampagner/ og undersider pr. udbyder og pr. produkttype. Hver
+# underside har sin egen redaktionelle tekst — ellers ville de være tynde
+# kopier af hinanden, og så er det bedre slet ikke at have dem.
+
+KAMPAGNE_KATEGORIER = {
+    "hoeretelefoner": {
+        "navn": "Høretelefoner",
+        "h1": "Mobilabonnement med høretelefoner",
+        "soeg": "AirPods og andre høretelefoner",
+        "intro": "AirPods er den mest efterspurgte gave i danske mobilkampagner. "
+                 "Her er de aktuelle tilbud — og regnestykket, der afgør, om de "
+                 "er billigere end at købe dem selv.",
+        "tekst": """<h2>Hvornår er høretelefoner med i abonnementet en god handel?</h2>
+<p>Høretelefoner er den gave, der oftest kan betale sig, fordi de fleste
+alligevel bruger dem dagligt. Men prisen afhænger af tre ting, som sjældent
+står i tilbuddet: udbetalingen, hvor mange måneder du binder dig, og hvad
+abonnementet koster bagefter.</p>
+<p>Regn det ud sådan her: læg udbetalingen sammen med månedsprisen gange
+bindingsperioden. Sammenlign så med, hvad du ville betale for det billigste
+abonnement uden binding i samme periode, plus høretelefonerne købt i
+almindelig handel. Er forskellen under et par hundrede kroner, er du bedre
+tjent med friheden til at skifte.</p>
+<h2>Aktiv støjreduktion er det, der skiller modellerne</h2>
+<p>De fleste kampagner findes i flere varianter af samme produkt, hvor
+forskellen er støjreduktion. Pendler du i tog eller bus, eller arbejder du i
+et åbent kontor, er merprisen som regel pengene værd. Bruger du dem mest
+derhjemme, er basismodellen rigelig — og den er typisk flere hundrede kroner
+billigere i udbetaling.</p>
+<h2>Husk garantien</h2>
+<p>Høretelefoner, der følger med et abonnement, er stadig et køb, og du har
+to års reklamationsret efter købeloven. Det er udbyderen, du skal gå til —
+ikke producenten. Gem ordrebekræftelsen.</p>""",
+        "faq": [
+            {"sp": "Er AirPods gratis med et mobilabonnement?",
+             "sv": "Sjældent helt gratis. Du betaler typisk en udbetaling på mellem 99 "
+                   "og 799 kr., og abonnementet har som regel 6 måneders binding til en "
+                   "månedspris, der er højere end et tilsvarende abonnement uden gave. "
+                   "Mindsteprisen på hvert kort viser, hvad det samlet koster."},
+            {"sp": "Kan jeg beholde høretelefonerne, hvis jeg opsiger abonnementet?",
+             "sv": "Ja, produktet er dit. Men opsiger du inden bindingsperioden er "
+                   "udløbet, skal du som regel betale de resterende måneder alligevel."},
+            {"sp": "Hvad er forskellen på modellerne med og uden støjreduktion?",
+             "sv": "Aktiv støjreduktion dæmper omgivelseslyd elektronisk. Det betyder "
+                   "mest i tog, bus og fly. Derhjemme er forskellen langt mindre, og "
+                   "basismodellen har typisk en væsentligt lavere udbetaling."},
+        ],
+    },
+    "tablet": {
+        "navn": "Tablets",
+        "h1": "Mobilabonnement med tablet",
+        "soeg": "tablets",
+        "intro": "Tablets dukker jævnligt op som gave i mobilkampagner — ofte til "
+                 "0 kr. Her er de aktuelle tilbud, og hvornår de reelt er en "
+                 "besparelse.",
+        "tekst": """<h2>En tablet til 0 kr. er sjældent gratis</h2>
+<p>Tablets er den gave, hvor forskellen mellem tilbud og reel besparelse er
+størst. Udbetalingen er ofte nul, hvilket ser stærkt ud, men til gengæld er
+månedsprisen typisk højere end på et tilsvarende abonnement uden gave. Over
+seks måneders binding henter selskabet pengene ind igen.</p>
+<p>Det gør ikke tilbuddet dårligt — men det betyder, at du skal ville have
+tabletten. En tablet, du ikke bruger, er ikke en besparelse på nul kroner.
+Den er et tab på hele forskellen i månedspris.</p>
+<h2>Tjek om den har simkort — og om du får brug for det</h2>
+<p>Nogle tablets i kampagner har plads til simkort, andre kun wi-fi. En
+tablet med simkort kræver som regel sit eget abonnement eller et
+datadelingskort, og det er en ekstra udgift, der ikke står i tilbuddet.
+Bruger du den kun derhjemme, er wi-fi-modellen fuldt tilstrækkelig.</p>
+<h2>Sammenlign med kontantprisen</h2>
+<p>Tabletmodeller i kampagner er typisk mellemklasse, og de falder hurtigt i
+pris i almindelig handel. Slå modellen op, inden du siger ja — «værdi 2.499
+kr.» i et tilbud er producentens vejledende pris, ikke hvad den koster i en
+butik i dag.</p>""",
+        "faq": [
+            {"sp": "Er en tablet til 0 kr. reelt gratis?",
+             "sv": "Nej. Udbetalingen er nul, men månedsprisen i bindingsperioden er "
+                   "som regel højere end på et tilsvarende abonnement uden gave. "
+                   "Sammenlign mindsteprisen med et billigt abonnement plus tabletten "
+                   "købt for sig."},
+            {"sp": "Skal tabletten have sit eget abonnement?",
+             "sv": "Kun hvis den har simkort, og du vil bruge den uden wi-fi. Så kræver "
+                   "det enten et selvstændigt abonnement eller et datadelingskort — en "
+                   "udgift, der sjældent nævnes i kampagnen."},
+            {"sp": "Hvad er «værdi» på et tilbud?",
+             "sv": "Det er som regel producentens vejledende pris. Den kan ligge et "
+                   "godt stykke over, hvad produktet faktisk koster i handlen. Slå "
+                   "modellen op, før du regner besparelsen ud."},
+        ],
+    },
+    "hoejttaler": {
+        "navn": "Højttalere",
+        "h1": "Mobilabonnement med højttaler",
+        "soeg": "bluetooth-højttalere",
+        "intro": "Bluetooth-højttalere er en fast gæst i mobilkampagner. Se de "
+                 "aktuelle tilbud og hvad de reelt koster over bindingsperioden.",
+        "tekst": """<h2>Højttalere har den største prisforskel</h2>
+<p>Bluetooth-højttalere er den produktgruppe, hvor den opgivne værdi
+oftest ligger langt fra den faktiske butikspris. Modellerne er populære og
+sælges næsten altid med rabat i almindelig handel, så en «værdi» på 1.500 kr.
+kan svare til en butikspris på det halve.</p>
+<p>Det betyder ikke, at tilbuddene er dårlige — men regnestykket skal laves
+på den reelle pris, ikke på den vejledende. Slå modellen op, før du regner
+med besparelsen.</p>
+<h2>Tjek batteritid og vandtæthed</h2>
+<p>De to specifikationer afgør, om højttaleren bliver brugt. Batteritid
+under ti timer betyder, at den skal lades mellem hver brug. Er den ikke
+mindst IPX5-klassificeret, tåler den ikke at stå ude i regnvejr eller ved
+poolkanten — som er præcis dér, den slags højttalere ender.</p>
+<h2>Overvej om du hellere vil have rabatten</h2>
+<p>Er højttaleren ikke noget, du ville have købt alligevel, så kig i stedet
+på abonnementer med ren intropris. De giver typisk en lavere pris i tre til
+seks måneder uden binding, og du kan skifte igen bagefter.</p>""",
+        "faq": [
+            {"sp": "Hvor meget er en højttaler i en kampagne værd?",
+             "sv": "Den opgivne værdi er producentens vejledende pris. Bluetooth-"
+                   "højttalere sælges næsten altid billigere i handlen, så slå modellen "
+                   "op og regn på den faktiske pris."},
+            {"sp": "Hvad skal jeg kigge efter i specifikationerne?",
+             "sv": "Batteritid og vandtæthed. Under ti timers batteritid betyder "
+                   "hyppig opladning, og uden mindst IPX5 tåler den ikke at stå udenfor."},
+        ],
+    },
+    "telefon": {
+        "navn": "Telefoner",
+        "h1": "Mobilabonnement med telefon i kampagne",
+        "soeg": "telefoner",
+        "intro": "Kampagner hvor en telefon indgår til nedsat pris. Her er "
+                 "tilbuddene — og hvordan du regner ud, hvad telefonen reelt koster.",
+        "tekst": """<h2>Telefonen er delt i to beløb</h2>
+<p>Når en telefon indgår i en kampagne, er prisen næsten altid splittet op:
+en udbetaling og et abonnement, der er dyrere end et tilsvarende uden telefon.
+Det er den forskel, der er telefonens reelle pris — ikke udbetalingen alene.</p>
+<p>Regnestykket: udbetaling plus månedsprisen gange bindingsperioden, minus
+hvad et tilsvarende abonnement uden telefon ville koste i samme periode. Det
+tal sammenligner du med kontantprisen på telefonen.</p>
+<h2>Bindingsperioden er længere her</h2>
+<p>Hvor gavekampagner typisk har seks måneders binding, løber telefonaftaler
+ofte i 12 eller 24 måneder. Det er lang tid på et marked, hvor priserne
+flytter sig. Bliver et tilsvarende abonnement 40 kr. billigere om et år, kan
+du ikke skifte uden at betale resten af bindingen.</p>
+<h2>Overvej at dele det op</h2>
+<p>Det billigste er som regel at købe telefonen kontant eller på afbetaling
+hos en forhandler, og tage det billigste abonnement uden binding ved siden af.
+Det kræver mere af dig, men du beholder friheden. Se
+<a href="/mobilabonnement-med-telefon/">alle abonnementer med telefon</a> for
+den samlede oversigt.</p>""",
+        "faq": [
+            {"sp": "Er det billigere at få telefonen med abonnementet?",
+             "sv": "Nogle gange. Regn telefonens reelle pris ud: udbetaling plus "
+                   "månedspris gange bindingsperiode, minus prisen på et tilsvarende "
+                   "abonnement uden telefon. Sammenlign så med kontantprisen."},
+            {"sp": "Hvor lang binding er der på telefonaftaler?",
+             "sv": "Typisk 12 til 24 måneder, altså væsentligt længere end de seks "
+                   "måneder, gavekampagner normalt har."},
+        ],
+    },
+    "gavekort": {
+        "navn": "Gavekort",
+        "h1": "Mobilabonnement med gavekort",
+        "soeg": "gavekort",
+        "intro": "Nogle udbydere giver et gavekort i stedet for hardware. Se de "
+                 "aktuelle tilbud og hvad de er værd i praksis.",
+        "tekst": """<h2>Gavekort er den nemmeste gave at regne på</h2>
+<p>I modsætning til hardware har et gavekort en pris, der ikke er til
+diskussion. Et gavekort på 500 kr. er 500 kr. værd — hvis du bruger det. Det
+gør regnestykket enkelt: træk gavekortets værdi fra mindsteprisen, og
+sammenlign resultatet med et tilsvarende abonnement uden gave.</p>
+<h2>Men kun hvis du bruger det</h2>
+<p>Gavekort er som regel til en bestemt tjeneste eller butik. Er det et sted,
+du alligevel handler, er værdien reel. Er det ikke, er den nul — og så er
+tilbuddet i praksis et almindeligt abonnement til en højere pris.</p>
+<h2>Tjek udløbsdatoen</h2>
+<p>Gavekort udstedt i Danmark skal som udgangspunkt gælde i mindst tre år,
+men vilkårene kan være strammere ved kampagner, og nogle kort udbetales i
+rater over bindingsperioden i stedet for på én gang. Læs det med småt.</p>""",
+        "faq": [
+            {"sp": "Hvornår er et gavekort en reel besparelse?",
+             "sv": "Kun hvis du ville have handlet det pågældende sted alligevel. "
+                   "Ellers er værdien nul, og du sidder tilbage med et dyrere "
+                   "abonnement."},
+            {"sp": "Hvor længe gælder et gavekort?",
+             "sv": "Gavekort udstedt i Danmark skal som udgangspunkt gælde mindst tre "
+                   "år, men kampagnevilkår kan være strammere. Tjek betingelserne."},
+        ],
+    },
+}
+
+
+def _kampagne_intro_for(udbyder_slug):
+    """De abonnementer fra udbyderen der har intropris. Bruges på udbydersiden,
+    så den også har noget at vise, når gavekampagnerne slipper op."""
+    return sorted([a for a in ABON if a["udbyder"] == udbyder_slug
+                   and a.get("intro_pris") is not None and a.get("intro_mdr")],
+                  key=lambda a: a["intro_pris"])
+
+
+def _kampagne_regnestykke(u, kampagner):
+    """Stiller hver kampagne op mod det billigste alternativ på markedet.
+
+    Det er den beregning, siden lever af — og den giver et andet resultat for
+    hver udbyder, fordi månedspris, udbetaling og binding er forskellige."""
+    if not kampagner:
+        return ""
+    frie = [a for a in ABON if a["binding"] == 0 and a["pris"] > 0
+            and not a.get("forbrugsafregnet")]
+    if not frie:
+        return ""
+    alt = min(frie, key=lambda a: a["pris"])
+    alt_u = UMAP[alt["udbyder"]]
+    egne = [a for a in ABON if a["udbyder"] == u["slug"] and a["pris"] > 0]
+    egen_billigst = min(egne, key=lambda a: a["pris"]) if egne else None
+
+    raekker = ""
+    for k in sorted(kampagner, key=mindstepris):
+        mdr = k.get("binding") or 1
+        mp = mindstepris(k)
+        alt_pris = alt["pris"] * mdr
+        rest = mp - alt_pris
+        if rest <= 0:
+            dom = (f'<span class="pu-ned">Kampagnen er {kr(abs(rest))} kr. '
+                   f'billigere — produktet oveni</span>')
+        else:
+            dom = (f'<span class="pu-op">Produktet koster dig reelt '
+                   f'{kr(rest)} kr.</span>')
+        raekker += (f'<tr><td><strong>{e(k["produkt"])}</strong></td>'
+                    f'<td>{kr(mp)} kr.</td><td>{kr(alt_pris)} kr.</td>'
+                    f'<td>{dom}</td></tr>')
+
+    egen_linje = ""
+    if egen_billigst:
+        egen_linje = (f'<p>Til sammenligning koster {e(u["navn"])}s eget billigste '
+                      f'abonnement {kr(egen_billigst["pris"])} kr./md. uden kampagne. '
+                      f'Vil du bare have lav pris hos dem, er det dét, du skal kigge '
+                      f'på — ikke kampagnen.</p>')
+
+    return f"""<h2 id="regnestykke">Hvad koster produktet dig reelt?</h2>
+<p>Herunder stiller vi hver kampagne op mod markedets billigste abonnement uden
+binding: {e(alt_u["navn"])} {e(alt["navn"])} til {kr(alt["pris"])} kr./md.
+Forskellen er, hvad produktet i praksis koster dig — ud over det abonnement, du
+alligevel skulle have haft.</p>
+<table><thead><tr><th>Produkt</th><th>Mindstepris</th>
+<th>Billigste alternativ</th><th>Forskel</th></tr></thead>
+<tbody>{raekker}</tbody></table>
+<p class="tabelnote">Alternativet er regnet over samme antal måneder som
+kampagnens bindingsperiode. <a href="/kampagner/#gaver">Sådan regner vi
+mindsteprisen</a>. Ligger forskellen under produktets butikspris, er
+kampagnen en god handel — er den over, betaler du overpris for at få det
+gennem abonnementet.</p>
+{egen_linje}"""
+
+
+def byg_kampagne_udbyder(u, kampagner):
+    """Underside: /kampagner/{slug}/ — én udbyders kampagner.
+
+    Teksten bygger på udbyderens egne data (net, ejer, fordele, ulemper), så
+    siden siger noget, hub-siden ikke gør."""
+    sti = f"/kampagner/{u['slug']}/"
+    intro_abo = _kampagne_intro_for(u["slug"])
+    regnestykke = _kampagne_regnestykke(u, kampagner)
+    billigst_mp = min(kampagner, key=mindstepris) if kampagner else None
+
+    titel = f"{u['navn']} kampagne"
+    h1 = f"{u['navn']} kampagner og tilbud"
+    besk = (f"Aktuelle kampagner hos {u['navn']}. Vi regner mindsteprisen ud, så du "
+            f"kan se, hvad tilbuddet reelt koster over bindingsperioden.")
+    krumme = [("/", "Forside"), ("/kampagner/", "Kampagner"), (None, u["navn"])]
+
+    fordele = "".join(f"<li>{e(f)}</li>" for f in (u.get("fordele") or [])[:3])
+    ulemper = "".join(f"<li>{e(f)}</li>" for f in (u.get("ulemper") or [])[:3])
+    passer = ""
+    if u.get("bedst_til") or u.get("daarligt_til"):
+        passer = f"""<h2>Hvem passer {e(u['navn'])} til?</h2>
+<p><strong>Godt valg hvis:</strong> {e(u.get('bedst_til') or '—')}</p>
+<p><strong>Dårligt valg hvis:</strong> {e(u.get('daarligt_til') or '—')}</p>
+<p>Det gælder også, når du tager en kampagne. En gave er seks måneders binding
+til et selskab — og de seks måneder skal fungere i hverdagen, ikke kun på
+bestillingsdagen.</p>"""
+
+    vurdering = ""
+    if fordele or ulemper:
+        vurdering = f"""<h2>Er {e(u['navn'])} et godt sted at tage en kampagne?</h2>
+<p>En kampagne binder dig som regel i seks måneder, og i den periode er du
+kunde hos selskabet på godt og ondt. Derfor er det værd at kigge på selve
+udbyderen, ikke kun på gaven.</p>
+<div class="plusminus">
+  <div class="pm pm-plus"><h3>Det taler for</h3><ul>{fordele}</ul></div>
+  <div class="pm pm-minus"><h3>Det taler imod</h3><ul>{ulemper}</ul></div>
+</div>"""
+
+    if kampagner:
+        kortdel = f"""<h2 id="tilbud">Kampagner hos {e(u['navn'])} lige nu</h2>
+<p>{len(kampagner)} aktuelle kampagne{"r" if len(kampagner) != 1 else ""}.
+Ved hver står mindsteprisen — det samlede beløb over hele bindingsperioden,
+inklusive udbetaling og oprettelse. Den billigste lige nu er
+{e(billigst_mp["produkt"])} til {kr(mindstepris(billigst_mp))} kr. i alt.</p>
+<div class="kampagner">{"".join(kampagnekort(k) for k in kampagner)}</div>"""
+    else:
+        kortdel = f"""<h2 id="tilbud">Kampagner hos {e(u['navn'])}</h2>
+<p>{e(u['navn'])} har ingen aktuelle kampagner med gave på vores liste. Se
+<a href="/kampagner/">alle kampagner på markedet</a> i stedet.</p>"""
+
+    if intro_abo:
+        b = intro_abo[0]
+        g = gns12(b)
+        introdel = f"""<h2 id="intropriser">{e(u['navn'])} med intropris</h2>
+<p>Ud over gavekampagnerne kører {e(u['navn'])} nedsat pris på
+{len(intro_abo)} abonnement{"er" if len(intro_abo) != 1 else ""}. Det billigste
+er {e(b['navn'])} til {kr(b['intro_pris'])} kr./md. i {b['intro_mdr']} måneder,
+hvorefter prisen stiger til {kr(b['pris'])} kr. Regnet over et helt år svarer
+det til {kr(g) if g is not None else "—"} kr./md.</p>
+{pristabel(intro_abo, UMAP, titel=f"{u['navn']} — abonnementer med intropris",
+           undertitel="Sorteret efter introprisen.",
+           billigst_id=b["id"], id_attr=f"intro-{u['slug']}", vis=10, filtre=False)}"""
+    else:
+        introdel = ""
+
+    andre = "".join(
+        f'<li><a href="/kampagner/{s}/">{e(UMAP[s]["navn"])} kampagne</a></li>'
+        for s in sorted(KAMPAGNE_UDBYDERE) if s != u["slug"])
+    andre_html = (f'<h2>Kampagner hos andre selskaber</h2><ul class="trin">{andre}</ul>'
+                  if andre else "")
+
+    brod = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"{len(kampagner)} kampagner kontrolleret manuelt")}
+<p class="led">{e(u.get("tagline") or "")} {e(u['navn'])} kører på
+{e(netlabel(u))}. Her er selskabets aktuelle kampagner, og hvad de koster,
+når hele bindingsperioden regnes med.</p>
+</section>
+<section class="sektion baand-smal artikel">
+{kortdel}
+
+{regnestykke}
+
+{vurdering}
+
+{passer}
+
+{introdel}
+
+{andre_html}
+</section>
+<section class="sektion baand-smal">
+  {laesvidere([(f"/udbydere/{u['slug']}/", f"Vores gennemgang af {u['navn']}"),
+               ("/kampagner/", "Alle kampagner på markedet"),
+               ("/billigste-mobilabonnement/", "Billigste abonnement uden kampagne"),
+               ("/12-maaneders-prisen/", "Sådan regner vi 12-måneders-prisen")])}
+  {forfatterboks()}
+  {afsloering()}
+</section>"""
+
+    faq = [
+        {"sp": f"Har {u['navn']} en kampagne lige nu?",
+         "sv": (f"Ja, {len(kampagner)} aktuel"
+                f"{'le kampagner' if len(kampagner) != 1 else ' kampagne'} med gave. "
+                f"Listen opdateres, når vi har kontrolleret vilkårene."
+                if kampagner else
+                f"Ikke med gave lige nu. Vi lægger kampagner op, når vi har "
+                f"kontrolleret vilkårene, så listen kan ændre sig.")},
+        {"sp": f"Hvilket net kører {u['navn']} på?",
+         "sv": f"{u['navn']} bruger {netlabel(u)}. Dækningen er den samme som hos "
+               f"andre selskaber på samme net, så den afhænger af din adresse — "
+               f"ikke af hvilket selskab du vælger."},
+        {"sp": "Hvad er mindsteprisen på en kampagne?",
+         "sv": "Det samlede beløb over hele bindingsperioden: månedsprisen gange antal "
+               "måneder plus udbetaling for produktet plus eventuelt oprettelsesgebyr."},
+        {"sp": f"Kan jeg beholde mit nummer, hvis jeg skifter til {u['navn']}?",
+         "sv": "Ja. Nummerportering er gratis, og den nye udbyder klarer det — "
+               "inklusive opsigelsen hos dit gamle selskab."},
+    ]
+
+    return skriv(sti, shell(
+        sti=sti, titel=f"{titel} ({OPDATERET}) — tilbud og mindstepris",
+        beskrivelse=besk,
+        hero=hero_side("Kampagne", h1, besk,
+                       '<a href="#tilbud" class="knap knap-primaer">Se tilbuddene</a>'),
+        efter_hero=logobaand(), krumme=krumme, indhold=brod + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, h1, besk))],
+    ), prioritet="0.8", hyppighed="daily")
+
+
+def byg_kampagne_kategori(noegle, kampagner):
+    """Underside: /kampagner/{kategori}/ — én produkttype på tværs af selskaber."""
+    d = KAMPAGNE_KATEGORIER[noegle]
+    sti = f"/kampagner/{noegle}/"
+    billigst_mp = min(kampagner, key=mindstepris) if kampagner else None
+
+    besk = d["intro"]
+    krumme = [("/", "Forside"), ("/kampagner/", "Kampagner"), (None, d["navn"])]
+
+    selskaber = sorted({UMAP[k["udbyder"]]["navn"] for k in kampagner})
+    if kampagner:
+        kortdel = f"""<h2 id="tilbud">Aktuelle tilbud med {e(d["soeg"])}</h2>
+<p>{len(kampagner)} kampagne{"r" if len(kampagner) != 1 else ""} fra
+{e(", ".join(selskaber))}. Laveste mindstepris er
+{kr(mindstepris(billigst_mp))} kr. over {billigst_mp.get("binding") or 1}
+måneder for {e(billigst_mp["produkt"])}.</p>
+<div class="kampagner">{"".join(kampagnekort(k) for k in kampagner)}</div>"""
+    else:
+        kortdel = ""
+
+    andre = "".join(
+        f'<li><a href="/kampagner/{n}/">{e(KAMPAGNE_KATEGORIER[n]["navn"])}</a></li>'
+        for n in KAMPAGNE_KATEGORIER if n != noegle and n in KAMPAGNE_AKTIVE_KAT)
+    andre_html = (f'<h2>Andre produkttyper</h2><ul class="trin">{andre}</ul>'
+                  if andre else "")
+
+    brod = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"{len(kampagner)} kampagner kontrolleret manuelt")}
+<p class="led">{e(d["intro"])}</p>
+</section>
+<section class="sektion baand-smal artikel">
+{kortdel}
+{d["tekst"]}
+{andre_html}
+</section>
+<section class="sektion baand-smal">
+  {laesvidere([("/kampagner/", "Alle kampagner på markedet"),
+               ("/billigste-mobilabonnement/", "Billigste abonnement uden kampagne"),
+               ("/mobilabonnement-uden-binding/", "Abonnementer uden binding"),
+               ("/12-maaneders-prisen/", "Sådan regner vi 12-måneders-prisen")])}
+  {forfatterboks()}
+  {afsloering()}
+</section>"""
+
+    return skriv(sti, shell(
+        sti=sti, titel=f"{d['h1']} ({OPDATERET})", beskrivelse=besk,
+        hero=hero_side("Kampagne", d["h1"], besk,
+                       '<a href="#tilbud" class="knap knap-primaer">Se tilbuddene</a>'),
+        efter_hero=logobaand(), krumme=krumme, indhold=brod + faqblok(d["faq"]),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(d["faq"]),
+                     artikelld(sti, d["h1"], besk))],
+    ), prioritet="0.8", hyppighed="daily")
+
+
+KAMPAGNE_UDBYDERE = []
+KAMPAGNE_AKTIVE_KAT = []
+
+
+def byg_kampagne_undersider():
+    """Bygger kun undersider, der har noget at vise. En tom underside er værre
+    end ingen underside."""
+    global KAMPAGNE_UDBYDERE, KAMPAGNE_AKTIVE_KAT
+    alle = _kampagner()
+
+    pr_udbyder = {}
+    pr_kategori = {}
+    for k in alle:
+        pr_udbyder.setdefault(k["udbyder"], []).append(k)
+        kat = k.get("kategori")
+        if kat in KAMPAGNE_KATEGORIER:
+            pr_kategori.setdefault(kat, []).append(k)
+        elif kat:
+            print(f"  ADVARSEL: kampagne '{k.get('id')}' har ukendt kategori '{kat}'")
+
+    KAMPAGNE_UDBYDERE = sorted(pr_udbyder)
+    KAMPAGNE_AKTIVE_KAT = [n for n in KAMPAGNE_KATEGORIER if n in pr_kategori]
+
+    for s in KAMPAGNE_UDBYDERE:
+        byg_kampagne_udbyder(UMAP[s], pr_udbyder[s])
+    for n in KAMPAGNE_AKTIVE_KAT:
+        byg_kampagne_kategori(n, pr_kategori[n])
+    return pr_udbyder, pr_kategori
+
 # --------------------------------------------------------------- FILER
 
 def ryd_forældede():
@@ -4495,6 +5200,8 @@ def main():
     byg_billigste()
     byg_fridata()
     byg_prisudvikling()
+    byg_kampagne_undersider()
+    byg_kampagner()
 
     # Nichesider
     unge = sorted([a for a in ABON if a["data_gb"] >= 20], key=lambda a: a["pris"])[:12]

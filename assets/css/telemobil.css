@@ -1563,3 +1563,54 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .pu-ned{color:var(--puls-dyb);font-weight:600;font-family:var(--font-tal);font-size:.86rem}
 .pu-flad{color:var(--graa);font-family:var(--font-tal);font-size:.86rem}
 .tabelnote{font-size:.86rem;color:var(--graa);margin-top:.7rem}
+
+/* ==========================================================================
+   Grupperet Sammenlign-menu — fire kolonner med overskrift
+   ========================================================================== */
+.nav-menu-grupper{width:900px;display:grid;grid-template-columns:repeat(4,1fr);
+  gap:.2rem 1rem;align-items:start}
+.mp-gruppe{min-width:0}
+.mp-titel{font-size:.68rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--graa);margin:.35rem 0 .45rem;padding:0 .7rem;
+  border-bottom:1px solid #EEF1FA;padding-bottom:.45rem}
+.nav-menu-grupper a{display:block;padding:.4rem .7rem;border-radius:var(--r-s)}
+.nav-menu-grupper .mp-navn{font-size:.87rem;overflow-wrap:anywhere}
+.nav-menu-grupper .mp-under{font-size:.73rem}
+
+@media(max-width:1180px){
+  .nav-menu-grupper{width:min(92vw,700px);grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:900px){
+  .nav-menu-grupper{width:auto;grid-template-columns:1fr;gap:0}
+  .mp-titel{margin-top:.7rem}
+}
+
+/* ---------- Kampagnekort ---------- */
+.kampagner{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:1rem;margin:1.4rem 0}
+.kamp{position:relative;display:flex;flex-direction:column;background:#fff;
+  border:1px solid var(--graa-lys);border-radius:var(--r-l);overflow:hidden;
+  transition:border-color .16s,box-shadow .16s}
+.kamp:hover{border-color:#C3CFF0;box-shadow:var(--skygge-blod)}
+.kamp-mrk{position:absolute;top:.7rem;left:.7rem;z-index:2;background:var(--nat);color:#fff;
+  font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  border-radius:6px;padding:.22rem .5rem}
+.kamp-top{background:#F4F7FF;padding:1.4rem 1rem .9rem;text-align:center;position:relative}
+.kamp-top img{width:100%;max-width:170px;height:150px;object-fit:contain;margin:0 auto;display:block}
+.kamp-intet{height:150px;display:flex;align-items:center;justify-content:center;
+  color:var(--graa);font-size:.8rem}
+.kamp-vaerdi{position:absolute;top:.7rem;right:.7rem;font-size:.72rem;color:var(--graa)}
+.kamp-vaerdi b{font-family:var(--font-tal);color:var(--blaek)}
+.kamp-krop{padding:.9rem 1rem 1rem;display:flex;flex-direction:column;flex:1}
+.kamp-navn{font-family:var(--font-display);font-size:1rem;font-weight:700;
+  letter-spacing:-.02em;line-height:1.3;margin:0 0 .5rem}
+.kamp-tal{display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;margin-bottom:.6rem}
+.kamp-tal div{background:#F7F9FD;border:1px solid #EAEFF9;border-radius:8px;
+  padding:.35rem .2rem;text-align:center}
+.kamp-tal b{display:block;font-family:var(--font-tal);font-size:.82rem;line-height:1.2}
+.kamp-tal span{display:block;font-size:.6rem;color:var(--graa);margin-top:.05rem}
+.kamp-logo{height:20px;width:auto;max-width:80px;object-fit:contain;object-position:left center;
+  margin-bottom:.5rem}
+.kamp-linjer{font-size:.76rem;color:var(--graa);line-height:1.5;margin:0 0 .7rem}
+.kamp-linjer strong{color:var(--blaek);font-family:var(--font-tal)}
+.kamp-cta{margin-top:auto;width:100%;justify-content:center;padding:.55rem 1rem;font-size:.88rem}

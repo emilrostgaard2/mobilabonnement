@@ -1,0 +1,40 @@
+{
+ "_om": "Kampagner med gave eller hardware. Udfyldes MANUELT — de findes ikke i Adtraction-feedet. Slet en post, når kampagnen udløber; siden bygger kun det, der står her.",
+ "_felter": {
+  "id": "Kort unikt id, kun små bogstaver og bindestreg",
+  "udbyder": "Skal matche en slug i udbydere.json",
+  "produkt": "Produktets navn, fx 'Apple AirPods 4'",
+  "maerke": "Valgfri etiket øverst på kortet, fx 'MEST POPULÆRE'",
+  "billede": "Filnavn i /assets/img/kampagner/ uden endelse. Udelad hvis du ikke har et billede endnu",
+  "vaerdi": "Produktets normalpris i kr. (tal)",
+  "udbetaling": "Hvad kunden selv betaler for produktet i kr. (tal, 0 hvis gratis)",
+  "maanedspris": "Abonnementets pris pr. md. i kampagneperioden (tal)",
+  "normalpris": "Prisen pr. md. efter kampagnen (tal, valgfri)",
+  "binding": "Antal måneders binding (tal)",
+  "oprettelse": "Oprettelsesgebyr i kr. (tal, 0 hvis gratis)",
+  "data": "Fx 'Fri data' eller '50 GB'",
+  "tale": "Fx 'Fri tale'",
+  "link": "Dit affiliate-link",
+  "udloeber": "Sidste gyldige dag som ÅÅÅÅ-MM-DD. Kampagnen skjules automatisk dagen efter. Udelad hvis den er løbende",
+  "kategori": "Produkttype. Én af: hoeretelefoner, tablet, hoejttaler, telefon, gavekort. Styrer hvilken underside kampagnen vises på. Udelad hvis den ikke passer i nogen"
+ },
+ "_eksempel": {
+  "id": "eksempel-slet-mig",
+  "udbyder": "telmore",
+  "produkt": "Apple AirPods 4",
+  "maerke": "MEST POPULÆRE",
+  "billede": "airpods-4",
+  "vaerdi": 1199,
+  "udbetaling": 99,
+  "maanedspris": 149,
+  "normalpris": 199,
+  "binding": 6,
+  "oprettelse": 0,
+  "data": "50 GB",
+  "tale": "Fri tale",
+  "link": "https://example.com/dit-affiliate-link",
+  "udloeber": "2026-12-31",
+  "kategori": "hoeretelefoner"
+ },
+ "kampagner": []
+}

@@ -19,28 +19,44 @@ FORFATTER = {
             "Telemobils tabeller bygger på."),
 }
 
-SAMMENLIGN = [
-    ("/billigste-mobilabonnement/", "Billigste mobilabonnement", "Hele markedet sorteret efter pris"),
-    ("/bedste-mobilabonnement/", "Bedste mobilabonnement", "Bedst samlet værdi"),
-    ("/mobilabonnement-med-fri-data/", "Fri data", "Ubegrænset data i Danmark"),
-    ("/mobilabonnement-med-fri-tale/", "Fri tale", "Ubegrænsede opkald og sms"),
-    ("/mobilabonnement-uden-data/", "Uden data", "Kun tale og sms"),
-    ("/mobilabonnement-uden-binding/", "Uden binding", "Opsig når du vil"),
-    ("/mobilabonnement-med-streaming/", "Med streaming", "Netflix og co. i abonnementet"),
-    ("/mobilabonnement-med-musik/", "Med musik", "Musik, podcast og lydbøger"),
-    ("/mobilabonnement-med-esim/", "Med eSIM", "Klar samme dag"),
-    ("/mobilabonnement-med-telefon/", "Med telefon", "Regn efter før du binder dig"),
-    ("/mobilabonnement-til-boern/", "Til børn", "Trygt og uden overraskelser"),
-    ("/mobilabonnement-til-unge/", "Til unge", "Meget data, ingen binding"),
-    ("/mobilabonnement-til-aeldre/", "Til ældre", "Tryghed frem for laveste pris"),
-    ("/taletidskort/", "Taletidskort", "Forudbetalt uden regning"),
-    ("/mobilabonnement-under-100-kr/", "Under 100 kr.", "Alle billige abonnementer"),
-    ("/mobilabonnement-1-10-gb/", "1–10 GB", "Til let brug"),
-    ("/mobilabonnement-10-30-gb/", "10–30 GB", "Danmarks mest almindelige"),
-    ("/mobilabonnement-30-50-gb/", "30–50 GB", "Til pendleren"),
-    ("/mobilabonnement-50-gb/", "50 GB og op", "Til storforbrugeren"),
-    ("/mobilabonnement-100-gb/", "100 GB og op", "Mobilen som internet"),
+# Menuen er grupperet, fordi 22 punkter i én kolonne ikke kan skimmes.
+# Overskrifterne svarer til de tre spørgsmål folk faktisk stiller: hvad koster
+# det, hvad er med, og hvem er det til.
+SAMMENLIGN_GRUPPER = [
+    ("Efter pris", [
+        ("/billigste-mobilabonnement/", "Billigste abonnement", "Hele markedet sorteret efter pris"),
+        ("/bedste-mobilabonnement/", "Bedste abonnement", "Bedst samlet værdi"),
+        ("/kampagner/", "Kampagner og tilbud", "Intropriser og gaver lige nu"),
+        ("/mobilabonnement-under-100-kr/", "Under 100 kr.", "Alle billige abonnementer"),
+        ("/prisudvikling/", "Prisudvikling", "Stiger eller falder priserne?"),
+    ]),
+    ("Efter indhold", [
+        ("/mobilabonnement-med-fri-data/", "Fri data", "Ubegrænset data i Danmark"),
+        ("/mobilabonnement-med-fri-tale/", "Fri tale", "Ubegrænsede opkald og sms"),
+        ("/mobilabonnement-med-streaming/", "Med streaming", "Streamingtjenester i prisen"),
+        ("/mobilabonnement-med-musik/", "Med musik", "Musik, podcast og lydbøger"),
+        ("/mobilabonnement-med-esim/", "Med eSIM", "Klar samme dag"),
+        ("/mobilabonnement-med-telefon/", "Med telefon", "Regn efter før du binder dig"),
+        ("/mobilabonnement-uden-data/", "Uden data", "Kun tale og sms"),
+        ("/mobilabonnement-uden-binding/", "Uden binding", "Opsig når du vil"),
+    ]),
+    ("Efter hvem det er til", [
+        ("/mobilabonnement-til-boern/", "Til børn", "Trygt og uden overraskelser"),
+        ("/mobilabonnement-til-unge/", "Til unge", "Meget data, ingen binding"),
+        ("/mobilabonnement-til-aeldre/", "Til ældre", "Tryghed frem for laveste pris"),
+        ("/taletidskort/", "Taletidskort", "Forudbetalt uden regning"),
+    ]),
+    ("Efter datamængde", [
+        ("/mobilabonnement-1-10-gb/", "1–10 GB", "Til let brug"),
+        ("/mobilabonnement-10-30-gb/", "10–30 GB", "Danmarks mest almindelige"),
+        ("/mobilabonnement-30-50-gb/", "30–50 GB", "Til pendleren"),
+        ("/mobilabonnement-50-gb/", "50 GB og op", "Til storforbrugeren"),
+        ("/mobilabonnement-100-gb/", "100 GB og op", "Mobilen som internet"),
+    ]),
 ]
+
+# Flad liste — bruges af sitemap, footer og andre steder der vil have alle sider.
+SAMMENLIGN = [punkt for _, punkter in SAMMENLIGN_GRUPPER for punkt in punkter]
 
 VAERKTOEJER = [
     ("/sammenlign/", "Udbyder mod udbyder", "To selskaber side om side"),
@@ -199,6 +215,14 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
         f'<span class="mp-under">{e(b)}</span></a>'
         for h, t, b in SAMMENLIGN
     )
+    sammenlign_grupper = "".join(
+        f'<div class="mp-gruppe"><h3 class="mp-titel">{e(overskrift)}</h3>'
+        + "".join(
+            f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span>'
+            f'<span class="mp-under">{e(b)}</span></a>' for h, t, b in punkter)
+        + "</div>"
+        for overskrift, punkter in SAMMENLIGN_GRUPPER
+    )
     vaerktoej_punkter = "".join(
         f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span>'
         f'<span class="mp-under">{e(b)}</span></a>'
@@ -217,7 +241,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-sammenlign">
     Sammenlign <span class="pil-ned" aria-hidden="true"></span>
   </button>
-  <div class="nav-menu nav-menu-liste" id="menu-sammenlign">{sammenlign_punkter}</div>
+  <div class="nav-menu nav-menu-grupper" id="menu-sammenlign">{sammenlign_grupper}</div>
 </div>
 <div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-vaerktoej">
