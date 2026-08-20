@@ -52,9 +52,7 @@
    "data": "Fri data",
    "tale": "Fri tale",
    "link": "https://go.adt284.net/t/t?a=1666103641&as=2102885611&t=2&tk=1&url=https://www.oister.dk/mobilabonnement/tilbehor-til-abonnement/oister-mobil-fri-tale-fri-data-inkl-airpods-4/"
-  }
- ],
- "_venter_paa_lager": [
+  },
   {
    "id": "telmore-airpods-4-anc",
    "udbyder": "telmore",
@@ -88,6 +86,23 @@
    "tale": "Fri tale",
    "udloeber": "2026-08-24",
    "link": "https://on.telmore.dk/t/t?a=1721073357&as=2102885611&t=2&tk=1&url=https://www.telmore.dk/shop/tilgift/apple/airpods-pro-3-hvid"
+  },
+  {
+   "id": "yousee-airpods-4",
+   "udbyder": "yousee",
+   "produkt": "Apple AirPods 4",
+   "maerke": "Velkomstrabat",
+   "kategori": "hoeretelefoner",
+   "billede": "yousee-airpods-4",
+   "vaerdi": 1099,
+   "udbetaling": 99,
+   "maanedspris": 179,
+   "binding": 6,
+   "oprettelse": 0,
+   "data": "25 GB",
+   "tale": "Fri tale",
+   "link": "https://at.yousee.dk/t/t?a=1697234454&as=2102885611&t=2&tk=1&url=https://yousee.dk/shop/tilbehoer/apple/airpods-4?plan=25-gb-mobil"
   }
- ]
+ ],
+ "_tjek_yousee_link": "YouSees program-id (a=1697234454) er ikke bekræftet fra din egen Adtraction-konto. Hent dit eget basislink under Annoncører og erstat, før du regner med provision."
 }
