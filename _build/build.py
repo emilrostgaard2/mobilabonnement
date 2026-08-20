@@ -4944,8 +4944,18 @@ def byg_kampagne_undersider():
         elif kat:
             print(f"  ADVARSEL: kampagne '{k.get('id')}' har ukendt kategori '{kat}'")
 
+    # En produktside med ét enkelt tilbud er for tynd til at fortjene at
+    # eksistere — den rangerer ikke, og brugeren får mindre end forventet.
+    # Kampagnen forsvinder ikke: den vises stadig på hub og selskabsside.
+    MINDST = 3
     KAMPAGNE_UDBYDERE = sorted(pr_udbyder)
-    KAMPAGNE_AKTIVE_KAT = [n for n in KAMPAGNE_KATEGORIER if n in pr_kategori]
+    KAMPAGNE_AKTIVE_KAT = [n for n in KAMPAGNE_KATEGORIER
+                           if len(pr_kategori.get(n, [])) >= MINDST]
+    for n in KAMPAGNE_KATEGORIER:
+        antal = len(pr_kategori.get(n, []))
+        if 0 < antal < MINDST:
+            print(f"  Springer /kampagner/{n}/ over — kun {antal} "
+                  f"kampagne{'r' if antal != 1 else ''} (kræver {MINDST})")
 
     for s in KAMPAGNE_UDBYDERE:
         byg_kampagne_udbyder(UMAP[s], pr_udbyder[s])
