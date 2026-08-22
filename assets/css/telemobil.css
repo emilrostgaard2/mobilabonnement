@@ -1758,3 +1758,60 @@ body{overflow-x:clip;max-width:100%;position:relative}
   .sektion-hoved:has(.opdateret-stribe){display:block}
   .opdateret-stribe{margin-top:1rem;max-width:100%}
 }
+
+/* ==========================================================================
+   Menu — én kolonne. To kolonner blev til en mur, man lukkede igen.
+   ========================================================================== */
+.nav-menu-enkel{width:340px;display:flex;flex-direction:column;gap:.05rem}
+.nav-menu-enkel a{display:block;padding:.5rem .75rem;border-radius:var(--r-s)}
+.nav-menu-enkel .mp-navn{font-size:.9rem}
+.nav-menu-enkel .mp-under{font-size:.76rem}
+@media(max-width:900px){.nav-menu-enkel{width:auto}}
+
+/* ==========================================================================
+   "Se priser" — lag over siden, ikke et sideskift
+   ========================================================================== */
+.hp-overlay{position:fixed;inset:0;z-index:200;background:rgba(11,16,38,.55);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:5vh 1rem 2rem;overflow-y:auto;backdrop-filter:blur(2px)}
+.hp-overlay[hidden]{display:none}
+.hp-dialog{background:#fff;border-radius:var(--r-xl);width:100%;max-width:620px;
+  box-shadow:var(--skygge-loft);overflow:hidden}
+.hp-hoved{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;
+  padding:1.2rem 1.3rem .9rem;border-bottom:1px solid var(--graa-lys)}
+.hp-hoved h2{font-size:1.15rem;margin:0 0 .2rem;letter-spacing:-.02em}
+.hp-hoved p{margin:0;font-size:.78rem;color:var(--graa)}
+.hp-luk{width:34px;height:34px;flex-shrink:0;border-radius:50%;border:1px solid var(--graa-lys);
+  background:#fff;font-size:1.3rem;line-height:1;color:var(--graa);cursor:pointer}
+.hp-luk:hover{background:#F4F7FF;color:var(--blaek)}
+.hp-filtre{display:flex;gap:.4rem;flex-wrap:wrap;padding:.85rem 1.3rem;
+  border-bottom:1px solid var(--graa-lys)}
+.hp-chip{font-size:.8rem;font-family:var(--font-brod);padding:.36rem .8rem;cursor:pointer;
+  border:1px solid var(--graa-lys);border-radius:999px;background:#fff;color:var(--blaek)}
+.hp-chip[aria-pressed="true"]{background:var(--blaek);border-color:var(--blaek);color:#fff}
+.hp-liste{list-style:none;margin:0;padding:.4rem .6rem;max-height:52vh;overflow-y:auto}
+.hp-raekke{display:grid;grid-template-columns:56px minmax(0,1fr) auto auto;
+  gap:.75rem;align-items:center;padding:.6rem .7rem;border-radius:var(--r-m)}
+.hp-raekke[hidden]{display:none}
+.hp-raekke:hover{background:#F7F9FD}
+.hp-raekke img{height:22px;width:auto;max-width:56px;object-fit:contain;object-position:left center}
+.hp-navn{min-width:0}
+.hp-navn b{display:block;font-size:.88rem;font-weight:600;line-height:1.25}
+.hp-navn span{display:block;font-size:.72rem;color:var(--graa);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hp-pris{text-align:right;white-space:nowrap}
+.hp-pris b{font-family:var(--font-tal);font-size:1.15rem;font-weight:600}
+.hp-pris span{display:block;font-size:.66rem;color:var(--graa)}
+.hp-cta{padding:.42rem .9rem;font-size:.82rem}
+.hp-tom{text-align:center;color:var(--graa);font-size:.85rem;padding:1.4rem 1rem;margin:0}
+.hp-tom[hidden]{display:none}
+.hp-fod{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  flex-wrap:wrap;padding:.9rem 1.3rem;border-top:1px solid var(--graa-lys);background:#FAFBFF}
+.hp-fod small{font-size:.72rem;color:var(--graa);max-width:34ch;line-height:1.4}
+@media(max-width:560px){
+  .hp-overlay{padding:0}
+  .hp-dialog{max-width:100%;min-height:100%;border-radius:0}
+  .hp-raekke{grid-template-columns:40px minmax(0,1fr) auto;gap:.5rem}
+  .hp-cta{grid-column:1 / -1;width:100%;justify-content:center;margin-top:.3rem}
+  .hp-liste{max-height:none}
+}

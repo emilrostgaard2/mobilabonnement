@@ -145,6 +145,14 @@ D = {
     "maks_besparelse": max(a["pris"] for a in ABON) - visningspris(billigst),
 }
 
+def fra(vaerdi, foran=" — fra ", bagved=" kr./md."):
+    """Prisløfte til titel og beskrivelse — tomt, hvis der ingen pris er.
+
+    Uden det her bliver en tom kategori til "fra 0 kr./md." i søgeresultatet,
+    og det er værre end slet ingen pris."""
+    return f"{foran}{kr(vaerdi)}{bagved}" if vaerdi else ""
+
+
 def _min(kriterie, standard=0):
     kandidater = [visningspris(a) for a in ABON
                   if kriterie(a) and a["pris"] > 0 and not a.get("forbrugsafregnet")]
@@ -4993,6 +5001,84 @@ def byg_kampagne_undersider():
         byg_kampagne_kategori(n, pr_kategori[n])
     return pr_udbyder, pr_kategori
 
+def minificer_css(css):
+    """Fjerner kommentarer og overflødigt mellemrum.
+
+    CSS'en lægges direkte i hver side i stedet for at hentes som en fil.
+    Det sparer et netværkskald, og det kald lå på den kritiske sti —
+    browseren kunne ikke tegne noget, før filen var hentet."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    css = re.sub(r"\s+", " ", css)
+    css = re.sub(r"\s*([{}:;,>~])\s*", r"\1", css)
+    css = css.replace(";}", "}")
+    return css.strip()
+
+
+
+def hurtigpris_dialog():
+    """Popup bag "Se priser" i menuen.
+
+    Folk klikker på knappen for at se, hvad tingene koster — ikke for at
+    forlade den side, de står på. Derfor et lag over siden med de billigste
+    abonnementer og fire hurtige filtre, som kan lukkes igen med et kryds.
+
+    Listen holdes på 12 rækker: nok til at svare på spørgsmålet, lille nok til
+    ikke at tynge hver eneste side."""
+    med_pris = sorted((a for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")),
+                      key=lambda a: (a.get("intro_pris") or a["pris"]))[:12]
+    if not med_pris:
+        return ""
+
+    raekker = ""
+    for a in med_pris:
+        u = UMAP[a["udbyder"]]
+        intro = a.get("intro_pris") is not None and a.get("intro_mdr")
+        vist = a["intro_pris"] if intro else a["pris"]
+        under = (f'i {a["intro_mdr"]} mdr., derefter {kr(a["pris"])} kr.'
+                 if intro else ("Ingen binding" if a["binding"] == 0
+                                else f'{a["binding"]} mdr. binding'))
+        gb = a["data_gb"]
+        gruppe = ("fri" if gb >= 900 else "stor" if gb > 50
+                  else "mellem" if gb > 15 else "lille")
+        raekker += f"""<li class="hp-raekke" data-gruppe="{gruppe}">
+  <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy"
+    width="{round(u['logo_w'] * 22 / u['logo_h'])}" height="22" decoding="async">
+  <div class="hp-navn"><b>{e(u['navn'])}</b><span>{gb_tekst(gb)} · {e(under)}</span></div>
+  <div class="hp-pris"><b>{kr(vist)}</b><span>kr./md.</span></div>
+  <a class="knap knap-primaer hp-cta" href="{a['link']}" rel="sponsored nofollow noopener"
+    target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
+    aria-label="Se tilbud på {e(a['navn'])} hos {e(u['navn'])}">Se tilbud</a>
+</li>"""
+
+    return f"""<div class="hp-overlay" data-hp-overlay hidden>
+  <div class="hp-dialog" role="dialog" aria-modal="true" aria-labelledby="hp-titel">
+    <div class="hp-hoved">
+      <div>
+        <h2 id="hp-titel">Billigste abonnementer lige nu</h2>
+        <p>Opdateret {e(OPDATERET)} · {D['antal']} abonnementer i alt</p>
+      </div>
+      <button type="button" class="hp-luk" data-hp-luk aria-label="Luk">
+        <span aria-hidden="true">×</span></button>
+    </div>
+    <div class="hp-filtre" role="group" aria-label="Filtrér efter datamængde">
+      <button type="button" class="hp-chip" data-hp-filter="alle" aria-pressed="true">Alle</button>
+      <button type="button" class="hp-chip" data-hp-filter="lille" aria-pressed="false">Op til 15 GB</button>
+      <button type="button" class="hp-chip" data-hp-filter="mellem" aria-pressed="false">15–50 GB</button>
+      <button type="button" class="hp-chip" data-hp-filter="stor" aria-pressed="false">Over 50 GB</button>
+      <button type="button" class="hp-chip" data-hp-filter="fri" aria-pressed="false">Fri data</button>
+    </div>
+    <ul class="hp-liste">{raekker}</ul>
+    <p class="hp-tom" data-hp-tom hidden>Ingen af de billigste abonnementer
+      matcher — se hele listen for flere.</p>
+    <div class="hp-fod">
+      <a href="/billigste-mobilabonnement/" class="knap knap-linje">Se alle {D['antal']} abonnementer</a>
+      <small>Vi får provision, hvis du klikker videre. Det påvirker ikke rækkefølgen.</small>
+    </div>
+  </div>
+</div>"""
+
+
+
 # --------------------------------------------------------------- FILER
 
 def ryd_forældede():
@@ -5219,6 +5305,10 @@ def byg_404():
 # --------------------------------------------------------------- kør
 
 def main():
+    # Popup'en ligger på hver side, så den skal bygges før noget andet
+    skabelon.HURTIGPRIS = hurtigpris_dialog()
+    skabelon.CSS_INLINE = minificer_css(
+        open(os.path.join(ROD, "assets", "css", "telemobil.css"), encoding="utf-8").read())
     byg_forside()
     byg_billigste()
     byg_fridata()
@@ -6165,9 +6255,10 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         sti="/mobilabonnement-med-musik/", etiket="Med musik",
         billede="med-musik", spejlvend=True,
         h1="Mobilabonnement med musik inkluderet",
-        titel=f"Mobilabonnement med musik — fra {D['pris_musik']} kr./md.",
-        besk=("Sammenlign mobilabonnementer med musik, podcast og lydbøger inkluderet. "
-              f"Fra {D['pris_musik']} kr./md. Musik fylder næsten ingen data."),
+        titel=f"Mobilabonnement med musik{fra(D['pris_musik'])}",
+        besk=("Sammenlign mobilabonnementer med musik, podcast og lydbøger inkluderet."
+              + fra(D['pris_musik'], " Fra ", " kr./md.")
+              + " Musik fylder næsten ingen data."),
         intro=("Abonnementer med musik-, podcast- eller lydbogstjeneste. Lyd fylder langt "
                "mindre data end video, så du behøver ikke et stort abonnement."),
         udvalg=musikudvalg, tekstfunktion=sider3.musik,

@@ -875,3 +875,62 @@
     if (e.key === "Escape" && !overlay.hidden) luk();
   });
 })();
+
+  /* ---- "Se priser" i menuen: lag over siden frem for et sideskift ---- */
+  (function () {
+    var overlay = document.querySelector("[data-hp-overlay]");
+    var knap = document.querySelector("[data-hurtigpris]");
+    if (!overlay || !knap) return;
+    var dialog = overlay.querySelector(".hp-dialog");
+    var raekker = Array.prototype.slice.call(overlay.querySelectorAll(".hp-raekke"));
+    var tom = overlay.querySelector("[data-hp-tom]");
+    var sidstFokus = null;
+
+    function aaben(ev) {
+      // Ctrl/cmd-klik og midterklik skal stadig kunne åbne siden i ny fane
+      if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button > 0) return;
+      ev.preventDefault();
+      sidstFokus = document.activeElement;
+      overlay.hidden = false;
+      document.body.style.overflow = "hidden";
+      var f = overlay.querySelector(".hp-luk");
+      if (f) f.focus();
+    }
+    function luk() {
+      overlay.hidden = true;
+      document.body.style.overflow = "";
+      if (sidstFokus) sidstFokus.focus();
+    }
+
+    knap.addEventListener("click", aaben);
+    overlay.addEventListener("click", function (ev) {
+      if (ev.target === overlay || ev.target.closest("[data-hp-luk]")) luk();
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && !overlay.hidden) luk();
+      // Hold tabulator inde i dialogen, så skærmlæsere ikke falder ud bagved
+      if (ev.key === "Tab" && !overlay.hidden) {
+        var kan = dialog.querySelectorAll("button, a[href]");
+        if (!kan.length) return;
+        var f = kan[0], l = kan[kan.length - 1];
+        if (ev.shiftKey && document.activeElement === f) { ev.preventDefault(); l.focus(); }
+        else if (!ev.shiftKey && document.activeElement === l) { ev.preventDefault(); f.focus(); }
+      }
+    });
+
+    Array.prototype.forEach.call(overlay.querySelectorAll("[data-hp-filter]"), function (c) {
+      c.addEventListener("click", function () {
+        var v = c.getAttribute("data-hp-filter");
+        Array.prototype.forEach.call(overlay.querySelectorAll("[data-hp-filter]"), function (x) {
+          x.setAttribute("aria-pressed", x === c ? "true" : "false");
+        });
+        var vist = 0;
+        raekker.forEach(function (r) {
+          var med = v === "alle" || r.getAttribute("data-gruppe") === v;
+          r.hidden = !med;
+          if (med) vist++;
+        });
+        if (tom) tom.hidden = vist !== 0;
+      });
+    });
+  })();

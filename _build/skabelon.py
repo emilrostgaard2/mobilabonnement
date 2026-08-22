@@ -19,55 +19,53 @@ FORFATTER = {
             "Telemobils tabeller bygger på."),
 }
 
-# Menuen er grupperet, fordi 22 punkter i én kolonne ikke kan skimmes.
-# Overskrifterne svarer til de tre spørgsmål folk faktisk stiller: hvad koster
-# det, hvad er med, og hvem er det til.
-SAMMENLIGN_GRUPPER = [
-    ("Efter pris", [
-        ("/billigste-mobilabonnement/", "Billigste abonnement", "Hele markedet sorteret efter pris"),
-        ("/bedste-mobilabonnement/", "Bedste abonnement", "Bedst samlet værdi"),
-        ("/kampagner/", "Kampagner og tilbud", "Intropriser og gaver lige nu"),
-        ("/mobilabonnement-under-100-kr/", "Under 100 kr.", "Alle billige abonnementer"),
-        ("/prisudvikling/", "Prisudvikling", "Stiger eller falder priserne?"),
-    ]),
-    ("Efter indhold", [
-        ("/mobilabonnement-med-fri-data/", "Fri data", "Ubegrænset data i Danmark"),
-        ("/mobilabonnement-med-fri-tale/", "Fri tale", "Ubegrænsede opkald og sms"),
-        ("/mobilabonnement-med-streaming/", "Med streaming", "Streamingtjenester i prisen"),
-        ("/mobilabonnement-med-musik/", "Med musik", "Musik, podcast og lydbøger"),
-        ("/mobilabonnement-med-esim/", "Med eSIM", "Klar samme dag"),
-        ("/mobilabonnement-med-telefon/", "Med telefon", "Regn efter før du binder dig"),
-        ("/mobilabonnement-uden-data/", "Uden data", "Kun tale og sms"),
-        ("/mobilabonnement-uden-binding/", "Uden binding", "Opsig når du vil"),
-    ]),
-    ("Efter hvem det er til", [
-        ("/mobilabonnement-til-boern/", "Til børn", "Trygt og uden overraskelser"),
-        ("/mobilabonnement-til-unge/", "Til unge", "Meget data, ingen binding"),
-        ("/mobilabonnement-til-aeldre/", "Til ældre", "Tryghed frem for laveste pris"),
-        ("/taletidskort/", "Taletidskort", "Forudbetalt uden regning"),
-    ]),
-    ("Efter datamængde", [
-        ("/mobilabonnement-1-10-gb/", "1–10 GB", "Til let brug"),
-        ("/mobilabonnement-10-30-gb/", "10–30 GB", "Danmarks mest almindelige"),
-        ("/mobilabonnement-30-50-gb/", "30–50 GB", "Til pendleren"),
-        ("/mobilabonnement-50-gb/", "50 GB og op", "Til storforbrugeren"),
-        ("/mobilabonnement-100-gb/", "100 GB og op", "Mobilen som internet"),
-    ]),
+# Menuen viser kun de sider, folk faktisk leder efter. Resten står i footeren.
+# En liste på 22 punkter kan ikke skimmes — den bliver til en mur, man lukker igen.
+SAMMENLIGN_MENU = [
+    ("/billigste-mobilabonnement/", "Billigste abonnement", "Hele markedet sorteret efter pris"),
+    ("/bedste-mobilabonnement/", "Bedste abonnement", "Bedst samlet værdi"),
+    ("/kampagner/", "Kampagner og tilbud", "Intropriser og gaver lige nu"),
+    ("/mobilabonnement-med-fri-data/", "Fri data", "Ubegrænset data i Danmark"),
+    ("/mobilabonnement-med-fri-tale/", "Fri tale", "Ubegrænsede opkald og sms"),
+    ("/mobilabonnement-uden-binding/", "Uden binding", "Opsig når du vil"),
+    ("/mobilabonnement-med-streaming/", "Med streaming", "Streamingtjenester i prisen"),
+    ("/mobilabonnement-med-musik/", "Med musik", "Musik, podcast og lydbøger"),
+    ("/mobilabonnement-med-esim/", "Med eSIM", "Klar samme dag"),
+    ("/mobilabonnement-til-boern/", "Til børn", "Trygt og uden overraskelser"),
+    ("/mobilabonnement-under-100-kr/", "Under 100 kr.", "Alle billige abonnementer"),
 ]
 
-# Flad liste — bruges af sitemap, footer og andre steder der vil have alle sider.
-SAMMENLIGN = [punkt for _, punkter in SAMMENLIGN_GRUPPER for punkt in punkter]
+# Alt det øvrige — findes i footeren og i krydslinks, ikke i topmenuen.
+SAMMENLIGN_OEVRIGE = [
+    ("/prisudvikling/", "Prisudvikling", "Stiger eller falder priserne?"),
+    ("/mobilabonnement-med-telefon/", "Med telefon", "Regn efter før du binder dig"),
+    ("/mobilabonnement-uden-data/", "Uden data", "Kun tale og sms"),
+    ("/mobilabonnement-til-unge/", "Til unge", "Meget data, ingen binding"),
+    ("/mobilabonnement-til-aeldre/", "Til ældre", "Tryghed frem for laveste pris"),
+    ("/taletidskort/", "Taletidskort", "Forudbetalt uden regning"),
+    ("/mobilabonnement-1-10-gb/", "1–10 GB", "Til let brug"),
+    ("/mobilabonnement-10-30-gb/", "10–30 GB", "Danmarks mest almindelige"),
+    ("/mobilabonnement-30-50-gb/", "30–50 GB", "Til pendleren"),
+    ("/mobilabonnement-50-gb/", "50 GB og op", "Til storforbrugeren"),
+    ("/mobilabonnement-100-gb/", "100 GB og op", "Mobilen som internet"),
+]
+
+# Flad liste — sitemap og krydslinks vil have dem alle.
+SAMMENLIGN = SAMMENLIGN_MENU + SAMMENLIGN_OEVRIGE
 
 VAERKTOEJER = [
+    ("/daekningskort/", "Dækningstjek", "Se hvilket net der dækker hos dig"),
     ("/sammenlign/", "Udbyder mod udbyder", "To selskaber side om side"),
+    ("/hvem-ringer-til-mig/", "Hvem ringer til mig?", "Slå et ukendt nummer op"),
+    ("/speedtest/", "Hastighedstest", "Mål din forbindelse"),
+    ("/12-maaneders-prisen/", "12-måneders-prisen", "Sådan regner vi"),
+]
+
+VAERKTOEJER_OEVRIGE = [
     ("/mobilabonnement-med-streaming/tjenester/", "Streaming pr. tjeneste", "Netflix, HBO Max, Disney+ …"),
     ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor og 3"),
-    ("/daekningskort/", "Dækningstjek", "Se hvilket net der dækker"),
-    ("/speedtest/", "Hastighedstest", "Mål din forbindelse"),
     ("/landekoder/", "Landekoder", "Alle telefonkoder med søgning"),
-    ("/hvem-ringer-til-mig/", "Hvem ringer til mig?", "Slå ukendt nummer op"),
     ("/hvad-koster-et-mobilabonnement/", "Hvad koster det?", "Gennemsnit og statistik"),
-    ("/12-maaneders-prisen/", "12-måneders-prisen", "Vores beregningsmetode"),
     ("/ordbog/", "Teleordbog", "Alle begreber forklaret"),
     ("/pin-og-puk-kode/", "PIN- og PUK-kode", "Simkortet er spærret?"),
 ]
@@ -81,6 +79,7 @@ MENU = [
 
 
 NAV_UDBYDERE = []
+HURTIGPRIS = ""
 OPDATERET_GLOBAL = ""
 
 # Uden en versionsnøgle ville browsere holde fast i den gamle CSS og JS i et år,
@@ -97,6 +96,7 @@ def _filversion(relativ_sti):
         return "0"
 
 
+CSS_INLINE = ""
 CSS_V = _filversion("assets/css/telemobil.css")
 JS_V = _filversion("assets/js/telemobil.js")
 
@@ -214,16 +214,9 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
     sammenlign_punkter = "".join(
         f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span>'
         f'<span class="mp-under">{e(b)}</span></a>'
-        for h, t, b in SAMMENLIGN
+        for h, t, b in SAMMENLIGN_MENU
     )
-    sammenlign_grupper = "".join(
-        f'<div class="mp-gruppe"><h3 class="mp-titel">{e(overskrift)}</h3>'
-        + "".join(
-            f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span>'
-            f'<span class="mp-under">{e(b)}</span></a>' for h, t, b in punkter)
-        + "</div>"
-        for overskrift, punkter in SAMMENLIGN_GRUPPER
-    )
+
     vaerktoej_punkter = "".join(
         f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span>'
         f'<span class="mp-under">{e(b)}</span></a>'
@@ -242,13 +235,13 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-sammenlign">
     Sammenlign <span class="pil-ned" aria-hidden="true"></span>
   </button>
-  <div class="nav-menu nav-menu-grupper" id="menu-sammenlign">{sammenlign_grupper}</div>
+  <div class="nav-menu nav-menu-enkel" id="menu-sammenlign">{sammenlign_punkter}</div>
 </div>
 <div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-vaerktoej">
     Værktøjer <span class="pil-ned" aria-hidden="true"></span>
   </button>
-  <div class="nav-menu nav-menu-liste nav-menu-smal" id="menu-vaerktoej">{vaerktoej_punkter}</div>
+  <div class="nav-menu nav-menu-enkel" id="menu-vaerktoej">{vaerktoej_punkter}</div>
 </div>
 <div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-udbydere">
@@ -264,7 +257,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
             continue
         a = ' aria-current="page"' if sti == href or (href != "/" and sti.startswith(href)) else ""
         navpunkter += f'<a href="{href}"{a}>{e(tekst)}</a>'
-    navpunkter += '<a href="/billigste-mobilabonnement/" class="nav-cta">Se priser</a>'
+    navpunkter += '<a href="/billigste-mobilabonnement/" class="nav-cta" data-hurtigpris>Se priser</a>'
 
     krummehtml = ""
     if krumme:
@@ -320,7 +313,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <script>document.documentElement.className+=" js";</script>
-<link rel="stylesheet" href="/assets/css/telemobil.css?v={CSS_V}">
+<style>{CSS_INLINE}</style>
 {ekstra_hoved}
 {blokke}</head>
 <body>
@@ -348,6 +341,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 </main>
 
 {fod(opdateret)}
+{HURTIGPRIS}
 <script src="/assets/js/telemobil.js?v={JS_V}" defer></script>
 </body>
 </html>
@@ -376,14 +370,38 @@ def fod(opdateret):
       </div>
 
       <div>
-        <div class="fodtitel">Populært</div>
+        <div class="fodtitel">Flere sammenligninger</div>
         <ul>
-          <li><a href="/billigste-mobilabonnement/">Billigste mobilabonnement</a></li>
-          <li><a href="/bedste-mobilabonnement/">Bedste mobilabonnement</a></li>
-          <li><a href="/mobilabonnement-med-fri-data/">Fri data</a></li>
-          <li><a href="/mobilabonnement-under-100-kr/">Under 100 kr.</a></li>
           <li><a href="/udbydere/">Alle udbydere</a></li>
-          <li><a href="/sammenlign/">Udbyder mod udbyder</a></li>
+          <li><a href="/mobilabonnement-med-telefon/">Med telefon</a></li>
+          <li><a href="/mobilabonnement-uden-data/">Uden data</a></li>
+          <li><a href="/mobilabonnement-til-unge/">Til unge</a></li>
+          <li><a href="/mobilabonnement-til-aeldre/">Til ældre</a></li>
+          <li><a href="/taletidskort/">Taletidskort</a></li>
+          <li><a href="/prisudvikling/">Prisudvikling</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="fodtitel">Efter datamængde</div>
+        <ul>
+          <li><a href="/mobilabonnement-1-10-gb/">1–10 GB</a></li>
+          <li><a href="/mobilabonnement-10-30-gb/">10–30 GB</a></li>
+          <li><a href="/mobilabonnement-30-50-gb/">30–50 GB</a></li>
+          <li><a href="/mobilabonnement-50-gb/">50 GB og op</a></li>
+          <li><a href="/mobilabonnement-100-gb/">100 GB og op</a></li>
+          <li><a href="/hvad-koster-et-mobilabonnement/">Hvad koster det?</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="fodtitel">Værktøjer</div>
+        <ul>
+          <li><a href="/netvaerk/">Mobilnetværk</a></li>
+          <li><a href="/mobilabonnement-med-streaming/tjenester/">Streaming pr. tjeneste</a></li>
+          <li><a href="/landekoder/">Landekoder</a></li>
+          <li><a href="/ordbog/">Teleordbog</a></li>
+          <li><a href="/pin-og-puk-kode/">PIN- og PUK-kode</a></li>
         </ul>
       </div>
 

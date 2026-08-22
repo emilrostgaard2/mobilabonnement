@@ -7,6 +7,7 @@ Kør fra projektroden:  python3 _build/validate.py
 import os
 import re
 import sys
+import glob
 import json
 from html.parser import HTMLParser
 
@@ -200,6 +201,30 @@ def main():
                 continue
             if f"<loc>https://telemobil.dk{u}</loc>" not in sm:
                 advarsler.append(f"{u}: ikke med i sitemap.xml")
+
+    # Prisløfter i titel og beskrivelse skal kunne findes i prisdata.
+    # "fra 0 kr./md." opstår, når en kategori ikke har nogen abonnementer —
+    # og et forkert prisløfte i søgeresultatet er værre end ingen pris.
+    with open(os.path.join(ROD, "data", "abonnementer.json"), encoding="utf-8") as f:
+        _ab = json.load(f)["abonnementer"]
+    _gyldige = {a["pris"] for a in _ab if a.get("pris")}
+    _gyldige |= {a["intro_pris"] for a in _ab if a.get("intro_pris")}
+    _laveste = min(_gyldige) if _gyldige else 0
+    for sti_html in sorted(glob.glob(os.path.join(ROD, "**", "index.html"), recursive=True)):
+        _h = open(sti_html, encoding="utf-8").read()
+        _url = "/" + os.path.relpath(sti_html, ROD).replace("index.html", "")
+        _t = re.search(r"<title>(.*?)</title>", _h, re.S)
+        _d = re.search(r'name="description" content="(.*?)"', _h, re.S)
+        for _felt, _tekst in (("titel", _t.group(1) if _t else ""),
+                              ("beskrivelse", _d.group(1) if _d else "")):
+            for _tal in re.findall(r"\b(\d{1,4}) kr", _tekst):
+                _n = int(_tal)
+                if _n == 0:
+                    fejl.append(f"{_url}: {_felt} lover 0 kr. — kategorien har "
+                                f"ingen abonnementer")
+                elif _n < _laveste:
+                    fejl.append(f"{_url}: {_felt} lover {_n} kr., men laveste "
+                                f"pris i data er {_laveste} kr.")
 
     # Verificeringsflag
     with open(os.path.join(ROD, "data", "site.json"), encoding="utf-8") as f:
