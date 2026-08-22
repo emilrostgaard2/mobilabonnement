@@ -326,14 +326,6 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <body>
 <a class="spring" href="#indhold">Spring til indhold</a>
 
-<div class="topstribe">
-  <div class="baand">
-    <span><i class="prik"></i> Priser opdateret {e(opdateret)}</span>
-    <span>Uafhængig sammenligning</span>
-    <span>Ingen binding på 9 ud af 10 abonnementer</span>
-  </div>
-</div>
-
 <header class="hoved">
   <div class="baand">
     <a href="/" class="logo" aria-label="Telemobil forside">

@@ -69,13 +69,6 @@ p{margin:0 0 1.15em}
 /* ==========================================================================
    Topbar + navigation
    ========================================================================== */
-.topstribe{
-  background:var(--nat);color:#B9C2E8;font-size:.8rem;
-  padding:.45rem 0;font-family:var(--font-tal);letter-spacing:.02em;
-}
-.topstribe .baand{display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;align-items:center}
-.topstribe span{display:inline-flex;align-items:center;gap:.4rem}
-.topstribe .prik{width:7px;height:7px;border-radius:50%;background:var(--puls);box-shadow:0 0 0 0 rgba(0,209,143,.6);animation:puls 2.4s infinite}
 @keyframes puls{0%{box-shadow:0 0 0 0 rgba(0,209,143,.55)}70%{box-shadow:0 0 0 9px rgba(0,209,143,0)}100%{box-shadow:0 0 0 0 rgba(0,209,143,0)}}
 
 .hoved{position:sticky;top:0;z-index:90;background:rgba(255,255,255,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--graa-lys);transition:box-shadow .25s}
@@ -1049,7 +1042,6 @@ body{overflow-x:clip;max-width:100%;position:relative}
 
 @media(max-width:760px){
   /* Topstriben fylder tre linjer på mobil uden at give værdi */
-  .topstribe{display:none}
   .hero{padding:2rem 0 2.2rem}
   .sektion{padding:2.4rem 0}
   .baand,.baand-smal{width:min(100% - 1.6rem,var(--maks))}
