@@ -1617,14 +1617,76 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .kamp-cta{margin-top:auto;width:100%;justify-content:center;padding:.55rem 1rem;font-size:.88rem}
 
 /* ==========================================================================
-   Anmeldelsesscore — egne stjerner, ikke Trustpilots varemærkede grafik
+   Anmeldelsesscore — delvis stjerne laves med bredde, ikke med tegn
    ========================================================================== */
-.tp-stjerner{color:#F5A524;letter-spacing:.02em;font-size:.9em}
-.tp-lille{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;
+.tp-stjerner{position:relative;display:inline-block;line-height:1;
+  font-size:.95em;letter-spacing:.06em;white-space:nowrap;flex-shrink:0}
+.tp-tom{color:#D8DCEA}
+.tp-fyld{position:absolute;left:0;top:0;overflow:hidden;color:#F5A524;
+  white-space:nowrap;pointer-events:none}
+.tp-lille{display:inline-flex;align-items:center;gap:.32rem;font-size:.72rem;
   color:var(--graa);white-space:nowrap}
-.tp-lille .tp-stjerner{font-size:.78rem}
-.tp-lille b{font-family:var(--font-tal);font-size:.74rem;color:var(--blaek);font-weight:600}
-.tp-stor{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;
+.tp-lille b{font-family:var(--font-tal);font-size:.75rem;color:var(--blaek);font-weight:600}
+.tp-lille i{font-style:normal;font-size:.66rem;color:var(--graa)}
+.tp-stor{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
   background:#FFFCF5;border:1px solid #F5E4C3;border-radius:var(--r-m);
   padding:.7rem .9rem;font-size:.9rem;margin:1.4rem 0}
-.tp-stor .tp-stjerner{font-size:1.1rem}
+.tp-stor .tp-stjerner{font-size:1.15rem}
+
+/* ==========================================================================
+   Logobånd — samme bredde som indholdet nedenunder
+   ========================================================================== */
+.logobaand{background:#fff;padding:1.2rem 0;border-block:1px solid var(--graa-lys)}
+.logobaand-indre{max-width:1180px;margin:0 auto;padding:0 1.5rem;
+  overflow:hidden;position:relative}
+.logobaand::before,.logobaand::after{content:none}
+.logobaand-indre::before,.logobaand-indre::after{content:"";position:absolute;
+  top:0;bottom:0;width:64px;z-index:2;pointer-events:none}
+.logobaand-indre::before{left:1.5rem;background:linear-gradient(90deg,#fff,transparent)}
+.logobaand-indre::after{right:1.5rem;background:linear-gradient(-90deg,#fff,transparent)}
+@media(max-width:640px){
+  .logobaand-indre{padding:0 1rem}
+  .logobaand-indre::before{left:1rem}
+  .logobaand-indre::after{right:1rem}
+}
+
+/* ==========================================================================
+   Lys hero — læsbar, rolig, uden effekter
+   ========================================================================== */
+.hero-lys{background:linear-gradient(180deg,#F4F7FF 0%,#FBFCFF 100%);
+  color:var(--blaek);border-bottom:1px solid var(--graa-lys);
+  padding:2.6rem 0 2.4rem;position:relative;overflow:visible}
+.hero-lys::after,.hero-lys .hero-net{display:none}
+.hero-lys h1{color:var(--blaek);font-size:clamp(1.9rem,4.4vw,3rem);
+  line-height:1.12;letter-spacing:-.03em;margin:.5rem 0 .8rem;max-width:16ch}
+.hero-lys .led{color:var(--graa);font-size:1.06rem;line-height:1.6;max-width:52ch}
+.hero-lys .etiket{color:var(--signal-dyb)}
+.hero-lys .etiket::before{background:var(--grad-signal)}
+.hl-gitter{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+  gap:2.4rem;align-items:center}
+@media(max-width:900px){.hl-gitter{grid-template-columns:1fr;gap:1.6rem}}
+
+.hl-knapper{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.5rem}
+.hl-knapper .knap{font-size:1rem;padding:.85rem 1.6rem}
+
+/* Tre løfter under knapperne — det folk vil vide, før de scroller */
+.hl-loefter{display:flex;gap:1.4rem;flex-wrap:wrap;margin-top:1.5rem;
+  padding-top:1.2rem;border-top:1px solid #E4E9F7}
+.hl-loefte{display:flex;align-items:center;gap:.5rem;font-size:.88rem;color:var(--blaek)}
+.hl-loefte::before{content:"✓";display:grid;place-items:center;width:20px;height:20px;
+  border-radius:50%;background:rgba(0,209,143,.14);color:var(--puls-dyb);
+  font-size:.72rem;font-weight:700;flex-shrink:0}
+
+/* Faktakort til højre — konkrete tal frem for grafik */
+.hl-kort{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);
+  padding:1.3rem 1.4rem;box-shadow:var(--skygge-blod)}
+.hl-kort h2{font-size:.72rem;font-family:var(--font-tal);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--graa);margin:0 0 .9rem;font-weight:600}
+.hl-tal{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.hl-tal div{background:#F7F9FD;border:1px solid #EAEFF9;border-radius:var(--r-m);
+  padding:.75rem .8rem}
+.hl-tal b{display:block;font-family:var(--font-tal);font-size:1.5rem;line-height:1.1;
+  letter-spacing:-.02em;color:var(--blaek)}
+.hl-tal span{display:block;font-size:.75rem;color:var(--graa);margin-top:.2rem;line-height:1.35}
+.hl-fod{margin:.9rem 0 0;font-size:.78rem;color:var(--graa);line-height:1.5}
+@media(max-width:400px){.hl-tal{grid-template-columns:1fr}}

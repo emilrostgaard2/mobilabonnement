@@ -550,29 +550,33 @@ def _netgruppe(u):
 
 
 def stjerner(u, *, kompakt=False):
-    """Anmeldelsesscore som egne stjerner.
+    """Anmeldelsesscore som fem stjerner, hvor den delvise stjerne fyldes med CSS.
 
-    Vi tegner selv stjernerne — Trustpilots grønne stjerne er deres varemærke.
-    Kilde og dato står altid med, så læseren kan se, hvor gammelt tallet er.
-    Mangler scoren, vises intet frem for et tomt felt."""
+    Vi bruger ikke halvstjerne-tegn — de findes ikke i alle skrifttyper og
+    falder tilbage til noget tilfældigt. I stedet lægges fem fyldte stjerner
+    oven på fem tomme og klippes til den rigtige bredde.
+
+    Trustpilot må gerne nævnes ved navn som kilde. Det, man ikke må, er at
+    bruge deres logo eller grønne stjerne — derfor vores egne."""
     tp = (u.get("trustpilot") or {})
     score, antal, hentet = tp.get("score"), tp.get("antal"), tp.get("hentet")
     if not score:
         return ""
-    fyldt = int(score)
-    halv = (score - fyldt) >= 0.25
-    ikoner = ("★" * fyldt) + ("⯨" if halv else "") + ("☆" * (5 - fyldt - (1 if halv else 0)))
+    pct = max(0, min(100, round(score / 5 * 100)))
     tal = f"{score:.1f}".replace(".", ",")
+    graf = (f'<span class="tp-stjerner" role="img" aria-label="{tal} af 5 stjerner">'
+            f'<span class="tp-tom">★★★★★</span>'
+            f'<span class="tp-fyld" style="width:{pct}%">★★★★★</span></span>')
     if kompakt:
-        return (f'<span class="tp tp-lille" title="Trustpilot {tal} af 5'
-                f'{f" · {antal} anmeldelser" if antal else ""}'
-                f'{f" · hentet {hentet}" if hentet else ""}">'
-                f'<span class="tp-stjerner" aria-hidden="true">{ikoner}</span>'
-                f'<b>{tal}</b></span>')
+        titel = (f"Trustpilot {tal} af 5"
+                 + (f" · {kr(antal)} anmeldelser" if antal else "")
+                 + (f" · hentet {hentet}" if hentet else ""))
+        return (f'<span class="tp tp-lille" title="{e(titel)}">{graf}'
+                f'<b>{tal}</b> <i>Trustpilot</i></span>')
     an = f" baseret på {kr(antal)} anmeldelser" if antal else ""
     da = f" Hentet {e(hentet)}." if hentet else ""
-    return (f'<p class="tp tp-stor"><span class="tp-stjerner" aria-hidden="true">{ikoner}</span>'
-            f'<strong>{tal} af 5</strong> på Trustpilot{an}.{da}</p>')
+    return (f'<p class="tp tp-stor">{graf}'
+            f'<span><strong>{tal} af 5</strong> på Trustpilot{an}.{da}</span></p>')
 
 
 def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):

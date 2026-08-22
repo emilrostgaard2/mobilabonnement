@@ -413,7 +413,9 @@ def logobaand(titel="Vi sammenligner priser fra"):
     overskrift = f'<div class="logobaand-titel">{e(titel)}</div>' if titel else ""
     return f"""<div class="logobaand">
   {overskrift}
-  <div class="logospor" aria-hidden="true">{logoer}{logoer}</div>
+  <div class="logobaand-indre">
+    <div class="logospor" aria-hidden="true">{logoer}{logoer}</div>
+  </div>
 </div>"""
 
 
@@ -540,28 +542,38 @@ def hero_forside():
         h = 22 + round(78 * a["pris"] / hoejest)
         mast += (f'<b data-navn="{e(u["navn"].split()[0])}" data-pris="{a["pris"]} kr."'
                  f' style="height:{h}%;background:linear-gradient(180deg,{farver[i]}bb,{farver[i]})"></b>')
-    return f"""<section class="hero">
-  <div class="hero-net" aria-hidden="true"></div>
+    billigst = min((a for a in ABON if a["pris"] > 0), key=lambda a: a["pris"], default=None)
+    bu = UMAP[billigst["udbyder"]]["navn"] if billigst else ""
+    return f"""<section class="hero hero-lys">
   <div class="baand">
-    <div class="hero-gitter">
+    <div class="hl-gitter">
       <div>
         <span class="etiket">Opdateret {e(OPDATERET)}</span>
-        <h1>Sammenlign <em>mobilabonnementer</em> fra alle danske udbydere</h1>
+        <h1>Sammenlign mobilabonnementer og find det billigste</h1>
         <p class="led">Vi har regnet {D['antal']} abonnementer fra {D['antal_udbydere']}
-        udbydere igennem og sorteret dem efter pris. Ingen formular, ingen login —
-        bare tallene.</p>
-        <div class="hero-tal">
-          <div><b data-tael="{D['antal']}">{D['antal']}</b><small>Abonnementer</small></div>
-          <div><b data-tael="{D['antal_udbydere']}">{D['antal_udbydere']}</b><small>Udbydere</small></div>
-          <div><b data-tael="{D['min_pris']}" data-suffiks=" kr.">{D['min_pris']} kr.</b><small>Laveste pris</small></div>
-          <div><b data-tael="{D['maks_besparelse'] * 12}" data-suffiks=" kr.">{kr(D['maks_besparelse'] * 12)} kr.</b><small>Maks. besparelse/år</small></div>
-        </div>
-        <div class="hero-knapper">
+        udbydere igennem og sorteret dem efter pris. Du skal ikke oprette dig eller
+        udfylde noget — priserne står lige nedenfor.</p>
+        <div class="hl-knapper">
           <a href="#sammenlign" class="knap knap-primaer">Se alle priser</a>
-          <a href="/guides/hvor-meget-data/" class="knap knap-lys">Hvor meget data skal jeg have?</a>
+          <a href="/guides/hvor-meget-data/" class="knap knap-linje">Hvor meget data har jeg brug for?</a>
+        </div>
+        <div class="hl-loefter">
+          <span class="hl-loefte">Gratis at bruge</span>
+          <span class="hl-loefte">Ingen oplysninger om dig</span>
+          <span class="hl-loefte">Priser opdateret to gange dagligt</span>
         </div>
       </div>
-      {regningstjek()}
+      <div class="hl-kort">
+        <h2>Markedet lige nu</h2>
+        <div class="hl-tal">
+          <div><b>{D['min_pris']} kr.</b><span>Laveste pris pr. måned{f" — hos {e(bu)}" if bu else ""}</span></div>
+          <div><b>{D['antal']}</b><span>Abonnementer i tabellen</span></div>
+          <div><b>{D['antal_udbydere']}</b><span>Udbydere sammenlignet</span></div>
+          <div><b>{kr(D['maks_besparelse'] * 12)} kr.</b><span>Forskel på et år mellem billigst og dyrest</span></div>
+        </div>
+        <p class="hl-fod">Alle priser er normalpriser inklusive moms. Ved tilbud med
+        intropris viser vi også, hvad abonnementet koster over 12 måneder.</p>
+      </div>
     </div>
   </div>
 </section>"""
@@ -831,17 +843,19 @@ def radar(chips=None):
 
 
 def hero_side(etiket, h1, tekst, knapper="", chips=None, billede=None):
-    return f"""<section class="hero" style="padding:2.6rem 0 2.6rem">
-  <div class="hero-net" aria-hidden="true"></div>
+    """Lys og rolig hero. Radargrafikken er droppet — den sagde ingenting og
+    gjorde teksten sværere at læse for dem, der har brug for kontrast."""
+    hoejre = f'<div class="hero-billede">{billede}</div>' if billede else ""
+    return f"""<section class="hero hero-lys">
   <div class="baand">
-    <div class="hero-todelt">
+    <div class="{'hl-gitter' if hoejre else ''}">
       <div>
         <span class="etiket">{e(etiket)}</span>
         <h1>{h1}</h1>
         <p class="led">{tekst}</p>
-        {f'<div class="hero-knapper" style="margin-top:1.3rem">{knapper}</div>' if knapper else ''}
+        {f'<div class="hl-knapper">{knapper}</div>' if knapper else ''}
       </div>
-      {f'<div class="hero-billede">{billede}</div>' if billede else radar(chips)}
+      {hoejre}
     </div>
   </div>
 </section>"""
