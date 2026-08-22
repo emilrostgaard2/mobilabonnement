@@ -829,9 +829,11 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
 
     return f"""<section class="sektion baand" id="{id_attr}">
   <div class="sektion-hoved afslør">
-    <span class="etiket">Sammenligning</span>
-    <h2>{e(titel)}</h2>
-    <p class="led">{undertitel}</p>
+    <div class="sh-tekst">
+      <span class="etiket">Sammenligning</span>
+      <h2>{e(titel)}</h2>
+      <p class="led">{undertitel}</p>
+    </div>
     <p class="opdateret-stribe">
       <span class="op-prik" aria-hidden="true"></span>
       <span><strong>Opdateret {e(opdateret)}</strong> · {len(abonnementer)} abonnementer

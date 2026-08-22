@@ -542,17 +542,14 @@ def hero_forside():
         h = 22 + round(78 * a["pris"] / hoejest)
         mast += (f'<b data-navn="{e(u["navn"].split()[0])}" data-pris="{a["pris"]} kr."'
                  f' style="height:{h}%;background:linear-gradient(180deg,{farver[i]}bb,{farver[i]})"></b>')
-    billigst = min((a for a in ABON if a["pris"] > 0), key=lambda a: a["pris"], default=None)
-    bu = UMAP[billigst["udbyder"]]["navn"] if billigst else ""
     return f"""<section class="hero hero-lys">
   <div class="baand">
     <div class="hl-gitter">
       <div>
         <span class="etiket">Opdateret {e(OPDATERET)}</span>
-        <h1>Sammenlign mobilabonnementer og find det billigste</h1>
-        <p class="led">Vi har regnet {D['antal']} abonnementer fra {D['antal_udbydere']}
-        udbydere igennem og sorteret dem efter pris. Du skal ikke oprette dig eller
-        udfylde noget — priserne står lige nedenfor.</p>
+        <h1>Sammenlign mobilabonnementer fra danske udbydere</h1>
+        <p class="led">{D['antal']} abonnementer fra {D['antal_udbydere']} udbydere,
+        sorteret efter pris. Ingen oprettelse, ingen formular.</p>
         <div class="hl-knapper">
           <a href="#sammenlign" class="knap knap-primaer">Se alle priser</a>
           <a href="/guides/hvor-meget-data/" class="knap knap-linje">Hvor meget data har jeg brug for?</a>
@@ -560,20 +557,10 @@ def hero_forside():
         <div class="hl-loefter">
           <span class="hl-loefte">Gratis at bruge</span>
           <span class="hl-loefte">Ingen oplysninger om dig</span>
-          <span class="hl-loefte">Priser opdateret to gange dagligt</span>
+          <span class="hl-loefte">Opdateret to gange dagligt</span>
         </div>
       </div>
-      <div class="hl-kort">
-        <h2>Markedet lige nu</h2>
-        <div class="hl-tal">
-          <div><b>{D['min_pris']} kr.</b><span>Laveste pris pr. måned{f" — hos {e(bu)}" if bu else ""}</span></div>
-          <div><b>{D['antal']}</b><span>Abonnementer i tabellen</span></div>
-          <div><b>{D['antal_udbydere']}</b><span>Udbydere sammenlignet</span></div>
-          <div><b>{kr(D['maks_besparelse'] * 12)} kr.</b><span>Forskel på et år mellem billigst og dyrest</span></div>
-        </div>
-        <p class="hl-fod">Alle priser er normalpriser inklusive moms. Ved tilbud med
-        intropris viser vi også, hvad abonnementet koster over 12 måneder.</p>
-      </div>
+      {regningstjek()}
     </div>
   </div>
 </section>"""
@@ -888,30 +875,57 @@ def hurtigvalg():
         brugte.add(val["udbyder"])
         valg.append((kat, val, detalje))
 
+    # Snittet bruges til at sige noget konkret om hvert kort — "spar 71 kr./md."
+    # er langt stærkere end "laveste pris pr. gigabyte".
+    betalte = [gns12(x) for x in ABON if x["pris"] > 0 and not x.get("forbrugsafregnet")]
+    betalte = sorted(x for x in betalte if x)
+    median = (betalte[len(betalte) // 2] if betalte else 0)
+
     kort = ""
     for i, (kat, a, detalje) in enumerate(valg):
         u = UMAP[a["udbyder"]]
         g = gns12(a) or a["pris"]
         if a.get("intro_pris") is not None and a.get("intro_mdr"):
             vist = a["intro_pris"]
-            under = (f'i {a["intro_mdr"]} mdr. — derefter {kr(a["pris"])} kr./md. · '
-                     f'gns. {kr(g)} kr./md. over 12 mdr.')
+            under = (f'{kr(a["intro_pris"])} kr. i {a["intro_mdr"]} mdr., '
+                     f'derefter {kr(a["pris"])} kr.')
         else:
             vist = a["pris"]
-            under = f'fast pris · {kr(g * 12)} kr. samlet på 12 mdr.'
+            under = f'Fast pris · {kr(g * 12)} kr. samlet på et år'
+
+        # Det ene tal der gør kortet værd at kigge på
+        if median and g < median:
+            spar = f'<span class="valg-spar">Spar {kr((median - g) * 12)} kr. om året</span>'
+        elif a["data_gb"] >= 900:
+            spar = '<span class="valg-spar valg-spar-ro">Intet dataloft</span>'
+        else:
+            spar = ('<span class="valg-spar valg-spar-ro">'
+                    f'{kr(g)} kr./md. over 12 mdr.</span>')
+
+        pr_gb = (f'{a["pris"] / a["data_gb"]:.2f}'.replace(".", ",") + " kr./GB"
+                 if 0 < a["data_gb"] < 900 else "—")
+        binding = "Ingen binding" if a["binding"] == 0 else f'{a["binding"]} mdr. binding'
+        stjerne = stjerner(u, kompakt=True)
+
         kort += f"""<div class="valgkort v{i}">
   <span class="valg-badge">{e(kat)}</span>
   <div class="valg-top">
-    <span class="valg-logo"><img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy" width="{round(u['logo_w'] * 26 / u['logo_h'])}" height="26" decoding="async"></span>
-    <div>
-      <b>{e(a['navn'])}</b>
-      <small>{netlabel(u)}</small>
-    </div>
+    <span class="valg-logo"><img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}"
+      loading="lazy" width="{round(u['logo_w'] * 26 / u['logo_h'])}" height="26" decoding="async"></span>
+    {stjerne}
   </div>
-  <div class="valg-tag">{gb_tekst(a['data_gb'])} · {e(detalje)}</div>
+  <b class="valg-navn">{e(u['navn'])} {e(a['navn'])}</b>
   <div class="valg-pris">{kr(vist)}<span> kr./md.</span></div>
   <div class="valg-under">{under}</div>
-  <a class="knap knap-linje valg-knap" href="/udbydere/{u['slug']}/">Se abonnementet →</a>
+  {spar}
+  <ul class="valg-fakta">
+    <li><span>Data</span><b>{gb_tekst(a['data_gb'])}</b></li>
+    <li><span>Pris pr. GB</span><b>{pr_gb}</b></li>
+    <li><span>Binding</span><b>{e(binding)}</b></li>
+    <li><span>Netværk</span><b>{netlabel(u)}</b></li>
+  </ul>
+  <a class="knap knap-primaer valg-knap" href="/udbydere/{u['slug']}/">Se abonnementet</a>
+  <small class="valg-hvorfor">{e(detalje)}</small>
 </div>"""
 
     return f'<div class="baand"><div class="hurtigvalg">{kort}</div></div>'
