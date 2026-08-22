@@ -1624,9 +1624,10 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .tp-tom{color:#D8DCEA}
 .tp-fyld{position:absolute;left:0;top:0;overflow:hidden;color:#F5A524;
   white-space:nowrap;pointer-events:none}
-.tp-lille{display:inline-flex;align-items:center;gap:.32rem;font-size:.72rem;
-  color:var(--graa);white-space:nowrap}
-.tp-lille b{font-family:var(--font-tal);font-size:.75rem;color:var(--blaek);font-weight:600}
+.tp-lille{display:inline-flex;flex-direction:column;align-items:flex-start;gap:.1rem;
+  font-size:.72rem;color:var(--graa);white-space:nowrap}
+.tp-under{display:flex;align-items:baseline;gap:.25rem}
+.tp-lille b{font-family:var(--font-tal);font-size:.74rem;color:var(--blaek);font-weight:600}
 .tp-lille i{font-style:normal;font-size:.66rem;color:var(--graa)}
 .tp-stor{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
   background:#FFFCF5;border:1px solid #F5E4C3;border-radius:var(--r-m);
@@ -1640,40 +1641,34 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .logobaand-indre{max-width:1180px;margin:0 auto;padding:0 1.5rem;
   overflow:hidden;position:relative}
 .logobaand::before,.logobaand::after{content:none}
-.logobaand-indre::before,.logobaand-indre::after{content:"";position:absolute;
-  top:0;bottom:0;width:64px;z-index:2;pointer-events:none}
-.logobaand-indre::before{left:1.5rem;background:linear-gradient(90deg,#fff,transparent)}
-.logobaand-indre::after{right:1.5rem;background:linear-gradient(-90deg,#fff,transparent)}
-@media(max-width:640px){
-  .logobaand-indre{padding:0 1rem}
-  .logobaand-indre::before{left:1rem}
-  .logobaand-indre::after{right:1rem}
-}
+.logobaand-indre::before,.logobaand-indre::after{content:none}
+@media(max-width:640px){.logobaand-indre{padding:0 1rem}}
 
 /* ==========================================================================
    Lys hero — læsbar, rolig, uden effekter
    ========================================================================== */
-.hero-lys{background:linear-gradient(180deg,#F4F7FF 0%,#FBFCFF 100%);
-  color:var(--blaek);border-bottom:1px solid var(--graa-lys);
-  padding:2.6rem 0 2.4rem;position:relative;overflow:visible}
+.hero-lys{background:#F5F8FF;color:var(--blaek);
+  border-bottom:1px solid var(--graa-lys);
+  padding:1.9rem 0 1.7rem;position:relative;overflow:visible}
 .hero-lys::after,.hero-lys .hero-net{display:none}
-.hero-lys h1{color:var(--blaek);font-size:clamp(1.9rem,4.4vw,3rem);
-  line-height:1.12;letter-spacing:-.03em;margin:.5rem 0 .8rem;max-width:16ch}
-.hero-lys .led{color:var(--graa);font-size:1.06rem;line-height:1.6;max-width:52ch}
+.hero-lys h1{color:var(--blaek);font-size:clamp(1.65rem,3.4vw,2.35rem);
+  line-height:1.15;letter-spacing:-.025em;margin:.45rem 0 .6rem;max-width:20ch}
+.hero-lys .led{color:#3B4260;font-size:1rem;line-height:1.55;max-width:46ch;opacity:1}
 .hero-lys .etiket{color:var(--signal-dyb)}
 .hero-lys .etiket::before{background:var(--grad-signal)}
-.hl-gitter{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
-  gap:2.4rem;align-items:center}
+.hl-gitter{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);
+  gap:2.2rem;align-items:center}
 @media(max-width:900px){.hl-gitter{grid-template-columns:1fr;gap:1.6rem}}
 
-.hl-knapper{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.5rem}
-.hl-knapper .knap{font-size:1rem;padding:.85rem 1.6rem}
+.hl-knapper{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.1rem}
+.hl-knapper .knap{font-size:.95rem;padding:.72rem 1.35rem}
 
 /* Tre løfter under knapperne — det folk vil vide, før de scroller */
-.hl-loefter{display:flex;gap:1.4rem;flex-wrap:wrap;margin-top:1.5rem;
-  padding-top:1.2rem;border-top:1px solid #E4E9F7}
-.hl-loefte{display:flex;align-items:center;gap:.5rem;font-size:.88rem;color:var(--blaek)}
-.hl-loefte::before{content:"✓";display:grid;place-items:center;width:20px;height:20px;
+.hl-loefter{display:flex;gap:.5rem 1.2rem;flex-wrap:wrap;margin-top:1.1rem;
+  padding-top:.95rem;border-top:1px solid #E4E9F7}
+.hl-loefte{display:flex;align-items:center;gap:.42rem;font-size:.82rem;color:#3B4260;
+  white-space:nowrap}
+.hl-loefte::before{content:"✓";display:grid;place-items:center;width:18px;height:18px;
   border-radius:50%;background:rgba(0,209,143,.14);color:var(--puls-dyb);
   font-size:.72rem;font-weight:700;flex-shrink:0}
 
@@ -1690,3 +1685,29 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .hl-tal span{display:block;font-size:.75rem;color:var(--graa);margin-top:.2rem;line-height:1.35}
 .hl-fod{margin:.9rem 0 0;font-size:.78rem;color:var(--graa);line-height:1.5}
 @media(max-width:400px){.hl-tal{grid-template-columns:1fr}}
+
+/* ==========================================================================
+   Regningstjek på lys hero — kortet var bygget til mørk baggrund
+   ========================================================================== */
+.hero-lys .regningstjek{background:#fff;border:1px solid var(--graa-lys);
+  border-radius:var(--r-l);box-shadow:var(--skygge-blod);padding:1.4rem 1.5rem;color:var(--blaek)}
+.hero-lys .rt-sporgsmaal label{color:var(--blaek);font-size:1.1rem;line-height:1.3}
+.hero-lys .rt-felt input{color:var(--blaek);background:#F7F9FD;
+  border:1px solid var(--graa-lys);font-size:1.9rem;padding:.65rem 5rem .65rem .9rem}
+.hero-lys .rt-felt input::placeholder{color:#AEB6CE}
+.hero-lys .rt-felt input:focus{border-color:var(--signal);background:#fff;
+  box-shadow:0 0 0 3px rgba(61,90,254,.12)}
+.hero-lys .rt-enhed{color:var(--graa)}
+.hero-lys .rt-hurtigtekst{color:var(--graa)}
+.hero-lys .rt-hurtig{color:var(--blaek);background:#F4F7FF;border:1px solid var(--graa-lys)}
+.hero-lys .rt-hurtig:hover,.hero-lys .rt-hurtig[aria-pressed="true"]{
+  background:rgba(0,209,143,.12);border-color:var(--puls-dyb);color:var(--blaek)}
+.hero-lys .rt-hjaelp{color:var(--graa)}
+.hero-lys .rt-overskrift{color:var(--blaek)}
+.hero-lys .rt-brod{color:#3B4260}
+.hero-lys .rt-brod strong{color:var(--blaek)}
+.hero-lys .rt-tal{color:var(--puls-dyb)}
+.hero-lys .rt-start{font-size:.98rem;padding:.8rem 1.2rem}
+
+/* Brødteksten i hero må ikke arve den lyse farve fra den mørke udgave */
+.hero-lys .led,.hero-lys p.led{color:#3B4260;opacity:1}

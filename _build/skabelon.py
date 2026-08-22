@@ -572,7 +572,7 @@ def stjerner(u, *, kompakt=False):
                  + (f" · {kr(antal)} anmeldelser" if antal else "")
                  + (f" · hentet {hentet}" if hentet else ""))
         return (f'<span class="tp tp-lille" title="{e(titel)}">{graf}'
-                f'<b>{tal}</b> <i>Trustpilot</i></span>')
+                f'<span class="tp-under"><b>{tal}</b> <i>på Trustpilot</i></span></span>')
     an = f" baseret på {kr(antal)} anmeldelser" if antal else ""
     da = f" Hentet {e(hentet)}." if hentet else ""
     return (f'<p class="tp tp-stor">{graf}'
