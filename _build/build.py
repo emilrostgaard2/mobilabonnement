@@ -1774,8 +1774,8 @@ def byg_billigste():
 
 def byg_fridata():
     sti = "/mobilabonnement-med-fri-data/"
-    titel = f"Mobilabonnement med fri data — priser fra {D['pris_fri']} kr./md."
-    besk = (f"Sammenlign mobilabonnementer med fri data. Priser fra {D['pris_fri']} kr./md. "
+    titel = f"Mobilabonnement med fri data{fra(D['pris_fri'], ' — priser fra ')}"
+    besk = ("Sammenlign mobilabonnementer med fri data." + fra(D['pris_fri'], " Priser fra ") + " "
             "Se hvad fri data reelt dækker, og om du overhovedet har brug for det.")
     krumme = [("/", "Forside"), (None, "Fri data")]
     udvalg = fri + [a for a in ABON if a["data_gb"] >= 50 and a["data_gb"] < 900]
@@ -5420,9 +5420,10 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         sti="/mobilabonnement-med-fri-tale/", etiket="Fri tale",
         billede="med-fri-tale", spejlvend=False,
         h1="Billigste mobilabonnement med fri tale",
-        titel=f"Mobilabonnement med fri tale — priser fra {D['pris_fritale']} kr./md.",
-        besk=(f"Sammenlign mobilabonnementer med fri tale og fri sms. Priser fra "
-              f"{D['pris_fritale']} kr./md. Se hvad fri tale dækker — og hvad det ikke gør."),
+        titel=f"Mobilabonnement med fri tale{fra(D['pris_fritale'], ' — priser fra ')}",
+        besk=("Sammenlign mobilabonnementer med fri tale og fri sms."
+              + fra(D['pris_fritale'], " Priser fra ")
+              + " Se hvad fri tale dækker — og hvad det ikke gør."),
         intro=(f"Alle abonnementer her har ubegrænsede opkald og sms til danske numre. "
                f"Priserne starter ved {D['pris_fritale']} kr. om måneden."),
         udvalg=fritale, tekstfunktion=sider.fri_tale,
@@ -5498,8 +5499,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_kategori(
         sti="/mobilabonnement-uden-data/", etiket="Uden data",
         h1="Mobilabonnement uden data",
-        titel=f"Mobilabonnement uden data — priser fra {D['pris_udendata']} kr./md.",
-        besk=(f"Sammenlign mobilabonnementer uden data. Priser fra {D['pris_udendata']} kr./md. "
+        titel=f"Mobilabonnement uden data{fra(D['pris_udendata'], ' — priser fra ')}",
+        besk=("Sammenlign mobilabonnementer uden data." + fra(D['pris_udendata'], " Priser fra ") + " "
               "Se også hvorfor et lille dataabonnement ofte er billigere."),
         intro=("Abonnementer med tale og sms, men uden mobildata. Bemærk at forbrugsafregnede "
                "abonnementer har 0 kr. i fast pris, men koster pr. minut."),
@@ -5533,8 +5534,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         sti="/mobilabonnement-med-streaming/", etiket="Med streaming",
         billede="med-streaming", spejlvend=False,
         h1="Mobilabonnement med streaming inkluderet",
-        titel=f"Mobilabonnement med streaming — fra {D['pris_streaming']} kr./md.",
-        besk=(f"Sammenlign mobilabonnementer med streaming inkluderet. Fra {D['pris_streaming']} "
+        titel=f"Mobilabonnement med streaming{fra(D['pris_streaming'])}",
+        besk=("Sammenlign mobilabonnementer med streaming inkluderet." + fra(D['pris_streaming'], " Fra ", "") + " "
               "kr./md. Se regnestykket, der afgør om det kan betale sig for dig."),
         intro=("Abonnementer hvor streamingtjenester indgår i prisen. Regn efter, hvad du "
                "betaler for de samme tjenester i dag."),
@@ -5569,7 +5570,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         sti="/mobilabonnement-til-boern/", etiket="Til børn",
         billede="til-boern", spejlvend=True,
         h1="Mobilabonnement til børn",
-        titel=f"Mobilabonnement til børn — trygt og fra {D['pris_boern']} kr./md.",
+        titel=f"Mobilabonnement til børn — trygt{fra(D['pris_boern'], ' og fra ')}",
         besk=("Find et trygt mobilabonnement til dit barn. Se hvordan du sikrer mod store "
               "regninger med datastop, spærringer og det rigtige valg af abonnementstype."),
         intro=("Små abonnementer uden binding, der passer til en børnetelefon. Slå altid "
@@ -5606,7 +5607,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         sti="/mobilabonnement-med-esim/", etiket="Med eSIM",
         billede="med-esim", spejlvend=False,
         h1="Mobilabonnement med eSIM",
-        titel=f"Mobilabonnement med eSIM — klar samme dag, fra {D['pris_esim']} kr.",
+        titel=f"Mobilabonnement med eSIM — klar samme dag{fra(D['pris_esim'], ', fra ', ' kr.')}",
         besk=("Sammenlign mobilabonnementer med eSIM. Aktivér med en QR-kode og vær i gang "
               "på få minutter i stedet for at vente på et fysisk simkort."),
         intro=("Alle abonnementer her kan leveres som eSIM. Du får en QR-kode og kan være i "
@@ -6293,7 +6294,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         sti="/mobilabonnement-til-aeldre/", etiket="Til ældre",
         billede="til-aeldre", spejlvend=False,
         h1="Mobilabonnement til ældre",
-        titel=f"Mobilabonnement til ældre — trygt og fra {D['pris_aeldre']} kr./md.",
+        titel=f"Mobilabonnement til ældre — trygt{fra(D['pris_aeldre'], ' og fra ')}",
         besk=("Find et trygt mobilabonnement til en ældre bruger. Vi forklarer hvorfor "
               "billigst sjældent er bedst her, og hvordan du undgår overraskelser på regningen."),
         intro=("Små abonnementer uden binding. Bemærk at vi ikke automatisk anbefaler det "
