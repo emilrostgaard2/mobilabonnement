@@ -1615,3 +1615,16 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .kamp-linjer{font-size:.76rem;color:var(--graa);line-height:1.5;margin:0 0 .7rem}
 .kamp-linjer strong{color:var(--blaek);font-family:var(--font-tal)}
 .kamp-cta{margin-top:auto;width:100%;justify-content:center;padding:.55rem 1rem;font-size:.88rem}
+
+/* ==========================================================================
+   Anmeldelsesscore — egne stjerner, ikke Trustpilots varemærkede grafik
+   ========================================================================== */
+.tp-stjerner{color:#F5A524;letter-spacing:.02em;font-size:.9em}
+.tp-lille{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;
+  color:var(--graa);white-space:nowrap}
+.tp-lille .tp-stjerner{font-size:.78rem}
+.tp-lille b{font-family:var(--font-tal);font-size:.74rem;color:var(--blaek);font-weight:600}
+.tp-stor{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;
+  background:#FFFCF5;border:1px solid #F5E4C3;border-radius:var(--r-m);
+  padding:.7rem .9rem;font-size:.9rem;margin:1.4rem 0}
+.tp-stor .tp-stjerner{font-size:1.1rem}

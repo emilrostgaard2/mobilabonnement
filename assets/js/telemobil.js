@@ -245,7 +245,7 @@
     }
 
     function sorter(noegle) {
-      var faldende = noegle === "gb";
+      var faldende = noegle === "gb" || noegle === "tp";
       planer.sort(function (a, b) {
         var va = tal(a, noegle), vb = tal(b, noegle);
         if (isNaN(va)) va = faldende ? -Infinity : Infinity;
@@ -254,6 +254,11 @@
         if (noegle === "prgb") {
           if (va === 0) va = Infinity;
           if (vb === 0) vb = Infinity;
+        }
+        // Udbydere uden anmeldelsesscore hører nederst, ikke øverst
+        if (noegle === "tp") {
+          if (va === 0) va = -Infinity;
+          if (vb === 0) vb = -Infinity;
         }
         return faldende ? vb - va : va - vb;
       });

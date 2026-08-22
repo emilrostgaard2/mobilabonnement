@@ -549,6 +549,32 @@ def _netgruppe(u):
     return n
 
 
+def stjerner(u, *, kompakt=False):
+    """Anmeldelsesscore som egne stjerner.
+
+    Vi tegner selv stjernerne — Trustpilots grønne stjerne er deres varemærke.
+    Kilde og dato står altid med, så læseren kan se, hvor gammelt tallet er.
+    Mangler scoren, vises intet frem for et tomt felt."""
+    tp = (u.get("trustpilot") or {})
+    score, antal, hentet = tp.get("score"), tp.get("antal"), tp.get("hentet")
+    if not score:
+        return ""
+    fyldt = int(score)
+    halv = (score - fyldt) >= 0.25
+    ikoner = ("★" * fyldt) + ("⯨" if halv else "") + ("☆" * (5 - fyldt - (1 if halv else 0)))
+    tal = f"{score:.1f}".replace(".", ",")
+    if kompakt:
+        return (f'<span class="tp tp-lille" title="Trustpilot {tal} af 5'
+                f'{f" · {antal} anmeldelser" if antal else ""}'
+                f'{f" · hentet {hentet}" if hentet else ""}">'
+                f'<span class="tp-stjerner" aria-hidden="true">{ikoner}</span>'
+                f'<b>{tal}</b></span>')
+    an = f" baseret på {kr(antal)} anmeldelser" if antal else ""
+    da = f" Hentet {e(hentet)}." if hentet else ""
+    return (f'<p class="tp tp-stor"><span class="tp-stjerner" aria-hidden="true">{ikoner}</span>'
+            f'<strong>{tal} af 5</strong> på Trustpilot{an}.{da}</p>')
+
+
 def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     """Ét abonnement som kompakt rækkekort med foldbare detaljer."""
     logo = f"/assets/img/logoer/{u['logo']}"
@@ -675,6 +701,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
   data-normalpris="{a['pris']}" data-prgb="{pr_gb:.4f}" data-aar="{aar:.0f}"
   data-binding="{a['binding']}" data-net="{e(_netgruppe(u))}" data-slug="{e(u['slug'])}"
   data-tilbud="{1 if intro else 0}" data-ekstra="{' '.join(ekstra)}"
+  data-tp="{(u.get('trustpilot') or {}).get('score') or 0}"
   data-udbyder="{e(u['navn'])}">
   {flag}
   <div class="pk-raekke">
@@ -682,6 +709,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
       <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy"
         width="{logo_w}" height="40" decoding="async">
       <span class="pk-tag">{tag}</span>
+      {stjerner(u, kompakt=True)}
     </div>
     <div class="pk-midt">
       <h3 class="pk-navn">{e(u['navn'])} – {e(a['navn'])}</h3>
@@ -756,6 +784,7 @@ def filterbar(abonnementer, udbydere_map):
         <option value="aar">Gns. 12 mdr.: lav til høj</option>
         <option value="prgb">Pris pr. GB: lav til høj</option>
         <option value="gb">Mest data først</option>
+        <option value="tp">Bedst bedømt først</option>
       </select>
     </div>
     <button type="button" class="fb-toggle" data-kun-tilbud aria-pressed="false">

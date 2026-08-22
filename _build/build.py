@@ -17,7 +17,7 @@ sys.path.insert(0, STI)
 from skabelon import (  # noqa: E402
     shell, e, kr, gb_tekst, netlabel, gns12, DOMAENE, SITENAVN, FORFATTER,
     afsloering, forfatterboks, gennemgangslinje, faqblok, laesvidere,
-    ctabaand, pristabel,
+    ctabaand, pristabel, stjerner,
 )
 import indhold  # noqa: E402
 import sider  # noqa: E402
@@ -3793,6 +3793,8 @@ def byg_udbyder(u):
 
   <h2>{e(uq.get("h2_vurdering", f"Vores vurdering af {u['navn']}"))}</h2>
   {afsnit}
+
+  {stjerner(u)}
 
   <div class="plusminus">
     <div class="pm pm-plus"><h3>Det taler for</h3><ul>{fordele}</ul></div>
