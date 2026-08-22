@@ -212,15 +212,13 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
         return ' aria-current="page"' if sti == href else ""
 
     sammenlign_punkter = "".join(
-        f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span>'
-        f'<span class="mp-under">{e(b)}</span></a>'
-        for h, t, b in SAMMENLIGN_MENU
+        f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span></a>'
+        for h, t, _b in SAMMENLIGN_MENU
     )
 
     vaerktoej_punkter = "".join(
-        f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span>'
-        f'<span class="mp-under">{e(b)}</span></a>'
-        for h, t, b in VAERKTOEJER
+        f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span></a>'
+        for h, t, _b in VAERKTOEJER
     )
     udbyder_punkter = "".join(
         f'<a href="/udbydere/{u["slug"]}/"{aktiv("/udbydere/" + u["slug"] + "/")}>'

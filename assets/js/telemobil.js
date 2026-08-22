@@ -910,7 +910,7 @@
       if (ev.key === "Escape" && !overlay.hidden) luk();
       // Hold tabulator inde i dialogen, så skærmlæsere ikke falder ud bagved
       if (ev.key === "Tab" && !overlay.hidden) {
-        var kan = dialog.querySelectorAll("button, a[href]");
+        var kan = dialog.querySelectorAll("button, a[href], select");
         if (!kan.length) return;
         var f = kan[0], l = kan[kan.length - 1];
         if (ev.shiftKey && document.activeElement === f) { ev.preventDefault(); l.focus(); }
@@ -918,19 +918,29 @@
       }
     });
 
+    var valgtGruppe = "alle";
+    var vaelger = overlay.querySelector("[data-hp-selskab]");
+
+    function filtrer() {
+      var selskab = vaelger ? vaelger.value : "alle";
+      var vist = 0;
+      raekker.forEach(function (r) {
+        var med = (valgtGruppe === "alle" || r.getAttribute("data-gruppe") === valgtGruppe)
+               && (selskab === "alle" || r.getAttribute("data-slug") === selskab);
+        r.hidden = !med;
+        if (med) vist++;
+      });
+      if (tom) tom.hidden = vist !== 0;
+    }
+
     Array.prototype.forEach.call(overlay.querySelectorAll("[data-hp-filter]"), function (c) {
       c.addEventListener("click", function () {
-        var v = c.getAttribute("data-hp-filter");
+        valgtGruppe = c.getAttribute("data-hp-filter");
         Array.prototype.forEach.call(overlay.querySelectorAll("[data-hp-filter]"), function (x) {
           x.setAttribute("aria-pressed", x === c ? "true" : "false");
         });
-        var vist = 0;
-        raekker.forEach(function (r) {
-          var med = v === "alle" || r.getAttribute("data-gruppe") === v;
-          r.hidden = !med;
-          if (med) vist++;
-        });
-        if (tom) tom.hidden = vist !== 0;
+        filtrer();
       });
     });
+    if (vaelger) vaelger.addEventListener("change", filtrer);
   })();

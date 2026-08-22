@@ -5024,10 +5024,24 @@ def hurtigpris_dialog():
 
     Listen holdes på 12 rækker: nok til at svare på spørgsmålet, lille nok til
     ikke at tynge hver eneste side."""
-    med_pris = sorted((a for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")),
-                      key=lambda a: (a.get("intro_pris") or a["pris"]))[:12]
+    # De to billigste fra hvert selskab. Ellers ville listen kun bestå af
+    # lavprisudbyderne, og så kan man ikke bruge selskabsfiltret til noget.
+    alle = sorted((a for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")),
+                  key=lambda a: (a.get("intro_pris") or a["pris"]))
+    pr_udbyder = {}
+    med_pris = []
+    for a in alle:
+        n = pr_udbyder.get(a["udbyder"], 0)
+        if n < 2:
+            pr_udbyder[a["udbyder"]] = n + 1
+            med_pris.append(a)
     if not med_pris:
         return ""
+
+    selskaber = sorted({UMAP[a["udbyder"]]["slug"]: UMAP[a["udbyder"]]["navn"]
+                        for a in med_pris}.items(), key=lambda x: x[1].lower())
+    selskabsvalg = "".join(f'<option value="{e(sl)}">{e(nv)}</option>'
+                           for sl, nv in selskaber)
 
     raekker = ""
     for a in med_pris:
@@ -5040,7 +5054,7 @@ def hurtigpris_dialog():
         gb = a["data_gb"]
         gruppe = ("fri" if gb >= 900 else "stor" if gb > 50
                   else "mellem" if gb > 15 else "lille")
-        raekker += f"""<li class="hp-raekke" data-gruppe="{gruppe}">
+        raekker += f"""<li class="hp-raekke" data-gruppe="{gruppe}" data-slug="{e(u['slug'])}">
   <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy"
     width="{round(u['logo_w'] * 22 / u['logo_h'])}" height="22" decoding="async">
   <div class="hp-navn"><b>{e(u['navn'])}</b><span>{gb_tekst(gb)} · {e(under)}</span></div>
@@ -5055,7 +5069,7 @@ def hurtigpris_dialog():
     <div class="hp-hoved">
       <div>
         <h2 id="hp-titel">Billigste abonnementer lige nu</h2>
-        <p>Opdateret {e(OPDATERET)} · {D['antal']} abonnementer i alt</p>
+        <p>De to billigste fra hvert selskab · opdateret {e(OPDATERET)}</p>
       </div>
       <button type="button" class="hp-luk" data-hp-luk aria-label="Luk">
         <span aria-hidden="true">×</span></button>
@@ -5066,6 +5080,10 @@ def hurtigpris_dialog():
       <button type="button" class="hp-chip" data-hp-filter="mellem" aria-pressed="false">15–50 GB</button>
       <button type="button" class="hp-chip" data-hp-filter="stor" aria-pressed="false">Over 50 GB</button>
       <button type="button" class="hp-chip" data-hp-filter="fri" aria-pressed="false">Fri data</button>
+      <label class="visuelt-skjult" for="hp-selskab">Vælg selskab</label>
+      <select id="hp-selskab" class="hp-vaelg" data-hp-selskab>
+        <option value="alle">Alle selskaber</option>{selskabsvalg}
+      </select>
     </div>
     <ul class="hp-liste">{raekker}</ul>
     <p class="hp-tom" data-hp-tom hidden>Ingen af de billigste abonnementer
