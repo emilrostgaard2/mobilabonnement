@@ -1,9 +1,9 @@
 {
  "_kilde": "Adtraction data feed",
- "_hentet": "2026-08-23",
+ "_hentet": "2026-08-24",
  "_advarsel": "Genereret automatisk af _build/adtraction.py ved hvert build. Redigér ikke i hånden, og overskriv ikke filen med en ældre version — så mister du de nyeste priser.",
  "kilde": "adtraction",
- "opdateret": "2026-08-23",
+ "opdateret": "2026-08-24",
  "abonnementer": [
   {
    "id": "lebara-1",
