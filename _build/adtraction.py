@@ -81,20 +81,65 @@ def slug(navn):
 
 
 def introperiode(post):
-    """Udleder introprisens længde. Feedet har den kun i promotionText."""
+    """Udleder introprisens længde. Feedet har den kun i promotionText.
+
+    Udbyderne formulerer sig vidt forskelligt: "første 3 mdr", "i 6 måneder",
+    "første ÅR", "første md.". Genkender vi ikke formuleringen, kasseres
+    tilbuddet, og siden viser normalprisen — altså går vi glip af kampagnen.
+    Derfor dækker vi alle de former, feedet faktisk indeholder."""
     t = post.get("promotionText") or ""
+
+    # "første ÅR", "resten af året", "frem til 31.3.2027" → tolv måneder
+    if re.search(r"(første|hele)\s*(1\s*)?år\b", t, re.I):
+        return 12
+    if re.search(r"resten af året", t, re.I):
+        return 12
+    if re.search(r"frem til\s+\d", t, re.I):
+        return 12
+
+    # "første md.", "første måned" uden tal → én måned
+    if re.search(r"første\s+(md\.?|måned)\b", t, re.I):
+        return 1
+
     m = re.search(r"første\s+(\d+)\s*(mdr|måned)", t, re.I)
     if m:
         return int(m.group(1))
     m = re.search(r"i\s+(\d+)\s*(mdr|måned)", t, re.I)
     if m:
         return int(m.group(1))
+    # "20 % rabat i 6 måneder" fanges ovenfor; "Prisrabat i 3 måneder" ligeså
+    m = re.search(r"(\d+)\s*(mdr|måneder)", t, re.I)
+    if m:
+        return int(m.group(1))
     return 0
+
+
+def inkluderet(post):
+    """Hvad der følger med ud over tale og data.
+
+    Feedet siger kun ja/nej — ikke hvilke tjenester. Vi skriver derfor det,
+    feedet faktisk oplyser, og opfinder ikke navne som Netflix eller HBO.
+    Bemærk at nøglen "audioBooks " har et mellemrum til sidst i feedet."""
+    ud = []
+    if post.get("streaming"):
+        # usp1 er typisk "3 valgfrie streamingtjenester" — mere præcist end et flag
+        u = (post.get("usp1") or "").strip()
+        ud.append(u if "streaming" in u.lower() else "Streaming inkluderet")
+    if post.get("music"):
+        ud.append("Musik")
+    if post.get("audioBooks") or post.get("audioBooks "):
+        ud.append("Lydbøger")
+    return ud
+
+
+# Markering for ubegrænset data. Skal ligge over enhver reel datamængde —
+# Duka sælger fx et abonnement med 1000 GB, og det er IKKE fri data.
+UBEGRAENSET = 9999
 
 
 def datamaengde(post, felt, ubegraenset_felt):
     if post.get(ubegraenset_felt):
-        return 999
+        return UBEGRAENSET
     v = post.get(felt)
     return tal(v, 0) if v is not None else 0
 
@@ -155,7 +200,7 @@ def oversaet(post, i):
         "eu_gb": data_eu,
         "femg": bool(post.get("5g")),
         "esim": bool(post.get("eSim")),
-        "streaming": [],
+        "streaming": inkluderet(post),
         "forbrugsafregnet": False,
         "badge": None,
         "link": link,

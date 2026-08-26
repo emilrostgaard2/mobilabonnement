@@ -105,7 +105,7 @@ def _har(f):
     return any(f(a) for a in ABON)
 
 _MULIGE = {
-    "/mobilabonnement-med-fri-data/": _har(lambda a: a["data_gb"] >= 900),
+    "/mobilabonnement-med-fri-data/": _har(lambda a: a["data_gb"] >= 9999),
     "/mobilabonnement-med-fri-tale/": _har(lambda a: a["tale"] == "fri"),
     "/mobilabonnement-uden-data/": _har(lambda a: a["data_gb"] == 0),
 
@@ -122,8 +122,8 @@ skabelon.OPDATERET_GLOBAL = OPDATERET
 ISO = IDAG.isoformat()
 
 # Afledte nøgletal — bruges i tekst, så tal og tabeller aldrig kan komme i utakt
-med_gb = [a for a in ABON if 0 < a["data_gb"] < 900]
-fri = [a for a in ABON if a["data_gb"] >= 900]
+med_gb = [a for a in ABON if 0 < a["data_gb"] < 9999]
+fri = [a for a in ABON if a["data_gb"] >= 9999]
 billigst = min((a for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")),
                key=visningspris)
 billigst_med_data = min((a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0),
@@ -134,12 +134,17 @@ bedste_pr_gb = min(med_gb, key=lambda a: a["pris"] / a["data_gb"])
 # Ellers står der 29 kr. i titlen, mens tabellen viser 18 kr. øverst.
 D = {
     "min_pris": visningspris(billigst),
+    # Til titler og beskrivelser i søgeresultatet — tilbudspriser hører ikke hjemme dér
+    "min_normalpris": min(a["pris"] for a in ABON
+                          if a["pris"] > 0 and not a.get("forbrugsafregnet")),
     "min_pris_data": visningspris(billigst_med_data),
     "min_data_gb": billigst_med_data["data_gb"],
-    "pris_lille": min(visningspris(a) for a in ABON if 0 < a["data_gb"] <= 10),
-    "pris_mellem": min(visningspris(a) for a in ABON if 15 <= a["data_gb"] <= 30),
-    "pris_stor": min(visningspris(a) for a in ABON if 50 <= a["data_gb"] < 900),
-    "pris_fri": min(visningspris(a) for a in fri) if fri else 199,
+    "pris_lille": min(a["pris"] for a in ABON if 0 < a["data_gb"] <= 10),
+    "pris_mellem": min(a["pris"] for a in ABON if 15 <= a["data_gb"] <= 30),
+    "pris_stor": min(a["pris"] for a in ABON if 50 <= a["data_gb"] < 9999),
+    # Normalpris, ikke tilbudspris: et tilbud på 6 kr. i to måneder hører
+    # ikke hjemme i en sidetitel i Google.
+    "pris_fri": min(a["pris"] for a in fri) if fri else 0,
     "antal": len(ABON),
     "antal_udbydere": len(UDBYDERE),
     "maks_besparelse": max(a["pris"] for a in ABON) - visningspris(billigst),
@@ -154,7 +159,12 @@ def fra(vaerdi, foran=" — fra ", bagved=" kr./md."):
 
 
 def _min(kriterie, standard=0):
-    kandidater = [visningspris(a) for a in ABON
+    """Laveste NORMALpris i en kategori — ikke laveste intropris.
+
+    Et tilbud på 6 kr. i to måneder er sandt, men det er ikke prisniveauet.
+    Står det i titlen i Google, ligner det lokkemad, og folk der klikker
+    bliver skuffede. Normalprisen er det, man reelt kommer til at betale."""
+    kandidater = [a["pris"] for a in ABON
                   if kriterie(a) and a["pris"] > 0 and not a.get("forbrugsafregnet")]
     return min(kandidater) if kandidater else standard
 
@@ -164,7 +174,10 @@ D["pris_streaming"] = _min(lambda a: a.get("streaming"))
 D["pris_boern"] = _min(lambda a: a["data_gb"] <= 15)
 D["pris_esim"] = _min(lambda a: a.get("esim"))
 D["pris_bedste"] = D["pris_mellem"]
-MUSIKTJENESTER = {"Deezer", "Telmore Musik", "YouSee Musik", "Mofibo", "Podimo"}
+# Feedet oplyser ikke tjenestenavne — kun at musik eller lydbøger er med.
+# Vi matcher derfor både på navngivne tjenester og på feedets egne etiketter.
+MUSIKTJENESTER = {"Deezer", "Telmore Musik", "YouSee Musik", "Mofibo", "Podimo",
+                  "Musik", "Lydbøger"}
 D["pris_musik"] = _min(lambda a: MUSIKTJENESTER & set(a.get("streaming", [])))
 D["pris_aeldre"] = _min(lambda a: a["data_gb"] <= 10)
 D["antal_u100"] = len([a for a in ABON if 0 < a["pris"] < 100])
@@ -374,7 +387,7 @@ def listeld(abonnementer, navn):
                 "name": f"{u['navn']} — {a['navn']}",
                 "description": (
                     ("Uden mobildata" if a["data_gb"] == 0
-                     else ("Fri data i Danmark" if a["data_gb"] >= 900
+                     else ("Fri data i Danmark" if a["data_gb"] >= 9999
                            else f"{a['data_gb']} GB data i Danmark"))
                     + ", " + ("fri tale" if a["tale"] == "fri" else f"{a['tale']} taletid")
                     + (f", {a['eu_gb']} GB EU-data" if a.get("eu_gb") else "")
@@ -432,8 +445,8 @@ def regningstjek():
     Ingen gigabyte, ingen filtre, ingen viderestilling."""
     S = statistik()
     med_data = [a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0]
-    endelig = [a for a in med_data if a["data_gb"] < 900]
-    frie = [a for a in ABON if a["data_gb"] >= 900 and a["pris"] > 0]
+    endelig = [a for a in med_data if a["data_gb"] < 9999]
+    frie = [a for a in ABON if a["data_gb"] >= 9999 and a["pris"] > 0]
 
     def pak(a, hvorfor):
         u = UMAP[a["udbyder"]]
@@ -860,12 +873,12 @@ def hurtigvalg():
     """Fire kort over tabellen. Vælger fra forskellige udbydere, så de ikke gentages."""
     med_data = [a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0]
     tdc = [a for a in med_data if UMAP[a["udbyder"]]["netvaerk"] == "TDC NET"]
-    frie = [a for a in ABON if a["data_gb"] >= 900]
+    frie = [a for a in ABON if a["data_gb"] >= 9999]
 
     kandidater = [
         ("Billigst med data", sorted(med_data, key=lambda a: a["pris"]),
          "Laveste månedspris med mobildata"),
-        ("Mest data pr. krone", sorted([a for a in med_data if a["data_gb"] < 900],
+        ("Mest data pr. krone", sorted([a for a in med_data if a["data_gb"] < 9999],
                                        key=lambda a: a["pris"] / a["data_gb"]),
          "Laveste pris pr. gigabyte"),
         ("Bedst dækning", sorted(tdc, key=lambda a: a["pris"]),
@@ -904,14 +917,14 @@ def hurtigvalg():
         # Det ene tal der gør kortet værd at kigge på
         if median and g < median:
             spar = f'<span class="valg-spar">Spar {kr((median - g) * 12)} kr. om året</span>'
-        elif a["data_gb"] >= 900:
+        elif a["data_gb"] >= 9999:
             spar = '<span class="valg-spar valg-spar-ro">Intet dataloft</span>'
         else:
             spar = ('<span class="valg-spar valg-spar-ro">'
                     f'{kr(g)} kr./md. over 12 mdr.</span>')
 
         pr_gb = (f'{a["pris"] / a["data_gb"]:.2f}'.replace(".", ",") + " kr./GB"
-                 if 0 < a["data_gb"] < 900 else "—")
+                 if 0 < a["data_gb"] < 9999 else "—")
         binding = "Ingen binding" if a["binding"] == 0 else f'{a["binding"]} mdr. binding'
         stjerne = stjerner(u, kompakt=True)
 
@@ -951,7 +964,7 @@ def tabel_billigst_pr_udbyder():
     raekker = ""
     for a in sorted(bedst.values(), key=lambda x: x["pris"]):
         u = UMAP[a["udbyder"]]
-        prgb = f'{a["pris"] / a["data_gb"]:.2f}'.replace(".", ",") + " kr." if 0 < a["data_gb"] < 900 else "—"
+        prgb = f'{a["pris"] / a["data_gb"]:.2f}'.replace(".", ",") + " kr." if 0 < a["data_gb"] < 9999 else "—"
         raekker += (f'<tr><td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a></td>'
                     f'<td>{e(a["navn"])}</td><td>{gb_tekst(a["data_gb"])}</td>'
                     f'<td>{netlabel(u)}</td><td>{prgb}</td>'
@@ -1023,7 +1036,7 @@ def tabel_pr_datamaengde():
             continue
         bedst = min(kandidater, key=lambda a: a["pris"])
         u = UMAP[bedst["udbyder"]]
-        prgb = f'{bedst["pris"] / bedst["data_gb"]:.2f}'.replace(".", ",") + " kr." if 0 < bedst["data_gb"] < 900 else "—"
+        prgb = f'{bedst["pris"] / bedst["data_gb"]:.2f}'.replace(".", ",") + " kr." if 0 < bedst["data_gb"] < 9999 else "—"
         raekker += (f'<tr><td><strong>{e(navn)}</strong></td>'
                     f'<td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> {e(bedst["navn"])}</td>'
                     f'<td>{prgb}</td><td>{kr(bedst["pris"] * 12)} kr.</td>'
@@ -1037,7 +1050,7 @@ relevant, hvis du bruger mere end 5 GB. Her er den billigste i hver kategori, me
 
 
 def tabel_prgb_rangliste(antal=12):
-    med = [a for a in ABON if 0 < a["data_gb"] < 900]
+    med = [a for a in ABON if 0 < a["data_gb"] < 9999]
     raekker = ""
     for i, a in enumerate(sorted(med, key=lambda x: x["pris"] / x["data_gb"])[:antal], 1):
         u = UMAP[a["udbyder"]]
@@ -1089,7 +1102,7 @@ def udbyder_rangliste():
         if not planer:
             continue
         billigst_u = min(planer, key=lambda a: gns12(a) or 9e9)
-        med_data = [a for a in planer if 0 < a["data_gb"] < 900]
+        med_data = [a for a in planer if 0 < a["data_gb"] < 9999]
         bedst_prgb = min(med_data, key=lambda a: a["pris"] / a["data_gb"]) if med_data else None
         data.append((u, planer, billigst_u, bedst_prgb))
     data.sort(key=lambda x: gns12(x[2]) or 9e9)
@@ -1185,7 +1198,7 @@ def statistik():
     med_data = [a for a in betalte if a["data_gb"] > 0]
     intro = [a for a in betalte if a.get("intro_pris") and a.get("intro_mdr")]
     fast = [a for a in betalte if not (a.get("intro_pris") and a.get("intro_mdr"))]
-    endelig = [a for a in med_data if a["data_gb"] < 900]
+    endelig = [a for a in med_data if a["data_gb"] < 9999]
 
     s = {
         "antal": len(betalte),
@@ -1321,7 +1334,7 @@ def vejviser(aktuel=""):
         ("/billigste-mobilabonnement/", "Billigste", f"fra {D['min_pris']} kr./md."),
         ("/bedste-mobilabonnement/", "Bedste", "vores kriterier"),
         ("/mobilabonnement-med-fri-data/", "Fri data",
-         f"{len([a for a in ABON if a['data_gb'] >= 900])} planer"),
+         f"{len([a for a in ABON if a['data_gb'] >= 9999])} planer"),
         ("/mobilabonnement-med-fri-tale/", "Fri tale",
          f"{len([a for a in ABON if a['tale'] == 'fri'])} planer"),
         ("/mobilabonnement-uden-data/", "Uden data",
@@ -1338,6 +1351,19 @@ def vejviser(aktuel=""):
          f"{len([a for a in ABON if a['binding'] == 0])} planer"),
         ("/netvaerk/", "Mobilnetværk", "de tre danske net"),
         ("/mobilabonnementer-black-friday/", "Black Friday", "er tilbuddene ægte?"),
+        # Datastørrelserne hører med her — ellers får de kun links fra footeren
+        ("/mobilabonnement-1-10-gb/", "1–10 GB",
+         f"{len([a for a in ABON if 1 <= a['data_gb'] <= 10])} planer"),
+        ("/mobilabonnement-10-30-gb/", "10–30 GB",
+         f"{len([a for a in ABON if 10 <= a['data_gb'] <= 30])} planer"),
+        ("/mobilabonnement-30-50-gb/", "30–50 GB",
+         f"{len([a for a in ABON if 30 <= a['data_gb'] <= 50])} planer"),
+        ("/mobilabonnement-50-gb/", "50 GB og op",
+         f"{len([a for a in ABON if 50 <= a['data_gb'] <= 99])} planer"),
+        ("/mobilabonnement-100-gb/", "100 GB og op",
+         f"{len([a for a in ABON if 100 <= a['data_gb'] < 9999])} planer"),
+        ("/prisudvikling/", "Prisudvikling", "stiger priserne?"),
+        ("/kampagner/", "Kampagner", "tilbud lige nu"),
     ]
     punkter = "".join(
         f'<a href="{h}"><b>{e(t)}</b><span>{e(u)}</span></a>'
@@ -1353,7 +1379,7 @@ def redaktionens_valg():
     """Fire redaktionelle picks med begrundelse — ikke bare beregnede tal."""
     med_data = [a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0]
     tdc = [a for a in med_data if UMAP[a["udbyder"]]["netvaerk"] == "TDC NET"]
-    frie = [a for a in ABON if a["data_gb"] >= 900 and a["pris"] > 0]
+    frie = [a for a in ABON if a["data_gb"] >= 9999 and a["pris"] > 0]
     fast = [a for a in med_data if not a.get("intro_pris")]
 
     valg = []
@@ -1364,7 +1390,7 @@ def redaktionens_valg():
             f"skal huske at sætte. Prisen du ser, er prisen om tolv måneder — og det er "
             f"mere værd end de tyve kroner, du kan spare på et introtilbud, du glemmer at "
             f"genforhandle."))
-    endelig = [a for a in med_data if a["data_gb"] < 900]
+    endelig = [a for a in med_data if a["data_gb"] < 9999]
     if endelig:
         v = min(endelig, key=lambda a: a["pris"] / a["data_gb"])
         valg.append((v, "Mest for pengene",
@@ -1492,6 +1518,23 @@ fra. Eksterne kilder åbner i et nyt vindue.</p>
 <a href="/metode/">vores metode</a>.</p>"""
 
 
+def begrebslink():
+    """Kort henvisning i stedet for hele begrebstabellen.
+
+    Tabellen stod ordret på nitten sider. Google ser gentaget indhold, og
+    læseren scroller forbi. Den bor nu ét sted, og resten linker til den."""
+    return """<p class="krydslink">Støder du på et ord, du ikke kender — MVNO,
+datastop, fair use, nummerportering — så står det forklaret i vores
+<a href="/ordbog/">teleordbog</a>.</p>"""
+
+
+def fejllink():
+    """Kort henvisning i stedet for hele fejltabellen."""
+    return """<p class="krydslink">De fem fejl, der koster danskerne flest penge på
+mobilregningen, har vi samlet i gennemgangen af
+<a href="/billigste-mobilabonnement/">billigste mobilabonnement</a>.</p>"""
+
+
 def begrebstabel():
     return """<h2>Begreber du møder, når du sammenligner</h2>
 <p>Udbydernes produktsider bruger en række ord, der ikke betyder helt det, man tror. Her er
@@ -1538,7 +1581,7 @@ forskellen mellem markedets normalpris og det, mange faktisk betaler.</p>"""
 
 def byg_forside():
     sti = "/"
-    titel = f"Sammenlign mobilabonnementer — priser fra {D['min_pris']} kr./md."
+    titel = f"Sammenlign mobilabonnementer — priser fra {D['min_normalpris']} kr./md."
     besk = (f"Sammenlign {D['antal']} mobilabonnementer fra {D['antal_udbydere']} udbydere på ét sted. "
             f"Priser fra {D['min_pris']} kr./md., fri tale og ingen binding. Opdateret {OPDATERET}.")
 
@@ -1690,7 +1733,7 @@ def udbyderkort(u):
 
 def byg_billigste():
     sti = "/billigste-mobilabonnement/"
-    titel = f"Billigste mobilabonnement — priser fra {D['min_pris']} kr./md."
+    titel = f"Billigste mobilabonnement — priser fra {D['min_normalpris']} kr./md."
     besk = (f"Se det billigste mobilabonnement i Danmark lige nu. {D['antal']} abonnementer "
             f"sammenlignet på pris, data og pris pr. GB. Opdateret {OPDATERET}.")
     krumme = [("/", "Forside"), (None, "Billigste mobilabonnement")]
@@ -1758,7 +1801,7 @@ def byg_billigste():
 
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk,
-        hero=hero_side("Sammenligning", f"Billigste mobilabonnement — fra {D['min_pris']} kr.",
+        hero=hero_side("Sammenligning", f"Billigste mobilabonnement — fra {D['min_normalpris']} kr.",
                        f"Vi har regnet {D['antal']} abonnementer igennem og fundet, hvad de reelt koster "
                        "pr. gigabyte. Under tabellen forklarer vi, hvad du skal se efter, "
                        "og hvilke omkostninger der ikke står i prisen.",
@@ -1778,7 +1821,7 @@ def byg_fridata():
     besk = ("Sammenlign mobilabonnementer med fri data." + fra(D['pris_fri'], " Priser fra ") + " "
             "Se hvad fri data reelt dækker, og om du overhovedet har brug for det.")
     krumme = [("/", "Forside"), (None, "Fri data")]
-    udvalg = fri + [a for a in ABON if a["data_gb"] >= 50 and a["data_gb"] < 900]
+    udvalg = fri + [a for a in ABON if a["data_gb"] >= 50 and a["data_gb"] < 9999]
     udvalg = sorted(udvalg, key=lambda a: a["pris"])
 
     faq = [
@@ -1801,10 +1844,11 @@ def byg_fridata():
 
     krop = f"""
 {pristabel(udvalg, UMAP,
-           titel="Fri data og store abonnementer sammenlignet",
-           undertitel="Vi viser både fri data og de store abonnementer fra 50 GB, så du kan se, "
-                      "hvad forskellen reelt koster dig om måneden.",
-           billigst_id=min(fri, key=lambda a: a['pris'])['id'] if fri else None)}
+           titel="Fri data sammenlignet",
+           undertitel="Listen viser abonnementer med fri data. Fjern filtret for også at se "
+                      "de store abonnementer fra 50 GB — de er ofte markant billigere.",
+           billigst_id=min(fri, key=lambda a: a['pris'])['id'] if fri else None,
+           forvalg={"data": ["fri"]})}
 
 {sidebillede("med-fri-data", spejlvend=True)}
 
@@ -1814,7 +1858,7 @@ def byg_fridata():
 ).replace(
     '<h2>Hvad bruger man egentlig data på?</h2>',
     erfaring('fri_data') + tabel_pr_datamaengde() + '<h2>Hvad bruger man egentlig data på?</h2>', 1
-).replace('</section>', tabel_prgb_rangliste() + fejltabel() + begrebstabel() + '</section>', 1)}
+).replace('</section>', tabel_prgb_rangliste() + fejllink() + begrebslink() + '</section>', 1)}
 
 <section class="sektion baand-smal">
   {laesvidere([
@@ -1843,14 +1887,14 @@ def byg_fridata():
 # --------------------------------------------------------------- NICHESIDER
 
 def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links,
-              billede=None, spejlvend=False):
+              billede=None, spejlvend=False, forvalg=None):
     krumme = [("/", "Forside"), (None, etiket)]
     krop = f"""
 {pristabel(udvalg, UMAP, titel=f"Bedste valg — {etiket.lower()}", undertitel=intro,
-           billigst_id=udvalg[0]['id'] if udvalg else None)}
+           billigst_id=udvalg[0]['id'] if udvalg else None, forvalg=forvalg)}
 {sidebillede(billede, spejlvend=spejlvend) if billede else ""}
 <section class="sektion baand-smal artikel">{gennemgangslinje(OPDATERET)}{brodtekst}
-{tabel_billigst_pr_udbyder()}{tabel_pr_datamaengde()}{fejltabel()}{begrebstabel()}</section>
+{tabel_billigst_pr_udbyder()}{tabel_pr_datamaengde()}{fejllink()}{begrebslink()}</section>
 <section class="sektion baand-smal">
   {laesvidere(links)}
   {forfatterboks()}
@@ -1869,7 +1913,7 @@ def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links
 
 def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
                  faq, links, chips=None, ekstra_tabeller=None, tabeltitel=None,
-                 billede=None, spejlvend=False):
+                 billede=None, spejlvend=False, forvalg=None):
     """Kategoriside: hero med radar, tabel, langt indhold og ekstra datatabeller."""
     krumme = [("/", "Forside"), (None, etiket)]
     t = {"gennemgang": gennemgangslinje(OPDATERET)}
@@ -1880,7 +1924,8 @@ def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
 
     krop = f"""
 {pristabel(udvalg, UMAP, titel=tabeltitel or f"{etiket} — sammenlignet på pris",
-           undertitel=intro, billigst_id=udvalg[0]['id'] if udvalg else None)}
+           undertitel=intro, billigst_id=udvalg[0]['id'] if udvalg else None,
+           forvalg=forvalg)}
 {sidebillede(billede, spejlvend=spejlvend) if billede else ""}
 {brod}
 <section class="sektion baand-smal">
@@ -2017,9 +2062,24 @@ TJENESTER_META = {
                      "vurdere, om den erstatter et abonnement, du har i forvejen."),
 }
 
-# Alle tjenester får en side. Har vi ingen aftale med en udbyder, der tilbyder
-# tjenesten, siger siden det ligeud i stedet for at vise opdigtede priser.
-TJENESTER = list(TJENESTER_META)
+# Vi bygger kun side for de tjenester, folk reelt søger på — eller som vi har
+# produkter til. Tretten sider uden ét eneste abonnement og med næsten samme
+# tekst er tynde sider, der trækker hele domænet ned. De små tjenester nævnes
+# i stedet på oversigten og i brødteksten.
+STORE_TJENESTER = ["Netflix", "HBO Max", "Disney+", "Viaplay", "TV 2 Play"]
+
+
+def _tjenester_der_fortjener_side():
+    med_data = {t for a in ABON for t in a.get("streaming", [])}
+    valgte = [t for t in TJENESTER_META if t in STORE_TJENESTER or t in med_data]
+    sprunget = [t for t in TJENESTER_META if t not in valgte]
+    if sprunget:
+        print(f"  Springer {len(sprunget)} tjenestesider over — ingen produkter og "
+              f"lav søgevolumen: {', '.join(sprunget)}")
+    return valgte
+
+
+TJENESTER = _tjenester_der_fortjener_side()
 
 # Hvem tilbyder hvad på det danske marked. Bruges når vi ikke selv har data.
 TJENESTE_UDBYDERE = {
@@ -2115,6 +2175,40 @@ def byg_streamingoversigt():
         efter_hero=logobaand(), krumme=krumme, indhold=krop,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme))],
     ), prioritet="0.7")
+
+
+# Hvad tjenesten koster at tegne selv, og hvad man skal vide om netop den.
+# Uden det her bliver tjenestesiderne næsten identiske — kun navnet skifter.
+TJENESTE_EGET = {
+    "Netflix": ("Netflix sælges i flere niveauer, og de adskiller sig på antal samtidige "
+                "skærme og opløsning. Får du Netflix med i et abonnement, er det oftest "
+                "standardniveauet — tjek om det rækker, hvis I ser på flere skærme.",
+                "Netflix er den tjeneste, flest danske husstande betaler for i forvejen. "
+                "Det gør bundlet stærkere her end ved nogen anden tjeneste: du erstatter "
+                "en udgift, du allerede har, i stedet for at tilføje en ny."),
+    "HBO Max": ("HBO Max findes både med og uden reklamer, og de to koster ikke det samme. "
+                "Tjek hvilken version der indgår, før du regner på besparelsen — det er "
+                "den hyppigste kilde til skuffelse ved netop denne tjeneste.",
+                "Kataloget er stærkest på serier. Ser du mest film, er den reelle værdi "
+                "lavere, end prisskiltet antyder."),
+    "Disney+": ("Disney+ er den mest oplagte tjeneste at få med, hvis der er børn i "
+                "husstanden. Udbydere inkluderer typisk standardpakken med reklamer, mens "
+                "den reklamefri koster ekstra.",
+                "Børneprofiler og forældrekontrol er indbygget. Deles abonnementet med et "
+                "barn, er det værd at sætte op fra start — se også vores side om "
+                "<a href=\"/mobilabonnement-til-boern/\">mobilabonnement til børn</a>."),
+    "Viaplay": ("Viaplay er den dyreste af de store tjenester at købe separat, især med "
+                "sportspakken. Det gør den til den tjeneste, hvor et bundle kan spare flest "
+                "kroner — men kun hvis du rent faktisk ser sport.",
+                "Sportsrettigheder skifter oftere end filmkataloger. Vælger du et abonnement "
+                "på grund af én bestemt rettighed, så tjek hvor længe aftalen løber."),
+    "TV 2 Play": ("TV 2 Play har flere niveauer, fra basis til pakker med sport og flere "
+                  "kanaler. Det er sjældent tydeligt i mobilabonnementets markedsføring, "
+                  "hvilket niveau der indgår — spørg, hvis det er afgørende.",
+                  "Dansk indhold, nyheder og sport er styrken. Ser du primært "
+                  "internationale serier, dækker tjenesten ikke dit behov alene."),
+}
+
 
 
 TJENESTE_DYBDE = {
@@ -2276,14 +2370,15 @@ def byg_tjenesteside(tjeneste):
         {"sp": f"Hvad sker der med {tjeneste}, hvis jeg opsiger abonnementet?",
          "sv": "Adgangen stopper sammen med mobilabonnementet. Din profil og historik ligger "
                "hos tjenesten selv og overlever skiftet."},
-        {"sp": "Bruger streaming meget af min datamængde?",
+        {"sp": f"Hvor meget data bruger {tjeneste} på en måned?",
          "sv": ("Video koster cirka 0,7-1 GB i timen i standardkvalitet og 2-3 GB i HD. Vælger "
                 "du et abonnement med video, bør du have mindst 50 GB." if video else
                 "Musik og lyd fylder 30-150 MB i timen — langt mindre end video. Selv et lille "
                 "abonnement rækker til flere hundrede timer.")},
-        {"sp": "Er det billigere at tegne tjenesten selv?",
-         "sv": "Ofte ja, og du får friheden til at opsige den uden at røre dit mobilabonnement. "
-               "Et bundle er bekvemt, men det binder to beslutninger sammen."},
+        {"sp": f"Er det billigere at tegne {tjeneste} selv?",
+         "sv": f"Ofte ja. Køber du {tjeneste} separat, kan du opsige den uden at røre dit "
+               f"mobilabonnement, og du beholder adgangen, hvis du skifter mobilselskab. "
+               f"Et bundle er bekvemt, men det binder to beslutninger sammen."},
     ]
 
     benchmark = ""
@@ -2323,6 +2418,10 @@ def byg_tjenesteside(tjeneste):
   at prisen nødvendigvis falder tilsvarende.</p>
   <p>{e(hvem_afsnit)}</p>
 
+  <h2>Det du særligt skal vide, hvis du vælger {e(tjeneste)}</h2>
+  <p>{TJENESTE_EGET.get(tjeneste, ("", ""))[0]}</p>
+  <p>{TJENESTE_EGET.get(tjeneste, ("", ""))[1]}</p>
+
   <h2>Alternativet: tegn tjenesten selv</h2>
   <p>Det er ofte det rigtige valg. Køber du {e(tjeneste)} selv, kan du opsige den, når du er
   færdig med en serie, uden at røre dit mobilabonnement — og du kan skifte mobilselskab uden
@@ -2340,19 +2439,15 @@ def byg_tjenesteside(tjeneste):
   </table>
   <p>{e(datanote)} <a href="/guides/hvor-meget-data/">Se hvor meget data du har brug for</a>.</p>
 
-  {tabel_billigst_pr_udbyder()}
-
   <h2>Andre tjenester</h2>
   <p class="tjenestelinks">{andre}</p>
   <p>Se også <a href="/mobilabonnement-med-streaming/tjenester/">alle streamingtjenester</a>,
   <a href="/billigste-mobilabonnement/">billigste mobilabonnement</a> og
   <a href="/mobilabonnement-med-fri-data/">abonnementer med fri data</a>.</p>
 
-  {kilder(["forbrugerombudsmanden", "teleankenaevnet"],
-          ["Hvem der tilbyder tjenesten: udbydernes egne produktsider.",
-           "Dataforbrug: typiske intervaller ud fra streamingtjenesternes oplysninger.",
-           "Priser vises kun for udbydere, vi har et datafeed fra. Vi gengiver ikke priser, "
-           "vi ikke kan holde opdaterede."])}
+  <p class="kildenote">Kilder: udbydernes egne produktsider for hvem der tilbyder
+  {e(tjeneste)}, og streamingtjenestens egne oplysninger om dataforbrug. Vi viser kun
+  priser for udbydere, vi har datafeed fra. Se <a href="/metode/">vores metode</a>.</p>
 </section>
 
 <section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>
@@ -2641,6 +2736,110 @@ def byg_netvaerksside(n):
     ), prioritet="0.75")
 
 
+# Hvert interval får sin egen tekst. Uden det blev de fem sider 95 % identiske,
+# fordi kun overskrift og tabel adskilte dem — og så konkurrerer de indbyrdes
+# i stedet for at rangere hver for sig.
+GB_TEKST = {
+    "1-10-gb": {
+        "h2": "Hvad rækker 10 GB egentlig til?",
+        "brød": """<p>Ti gigabyte lyder af lidt, men det er mere, end de fleste tror. Sociale
+medier bruger omkring 100 MB i timen, musik i høj kvalitet cirka 150 MB, og et
+kort i navigationen under 5 MB for en times kørsel. Bruger du telefonen en time
+om dagen uden for wi-fi til den slags, lander du på 3-5 GB om måneden.</p>
+<p>Det, der vælter regnestykket, er video. En enkelt time YouTube i HD koster
+2-3 GB — altså en fjerdedel af hele måneden. Derfor er reglen for det her
+interval enkel: har du wi-fi hjemme og på arbejde, og ser du ikke video på
+farten, er 10 GB rigeligt.</p>
+<h3>Hvem falder typisk her?</h3>
+<p>Ældre brugere, børn med en første telefon, folk med kontorarbejde og fast
+wi-fi begge steder, og alle med en ekstra telefon eller et tablet-simkort. Det
+er også det rigtige valg til en telefon, der mest ligger i tasken.</p>
+<h3>Den fælde du skal kende</h3>
+<p>Abonnementer i den lave ende er ofte dem med de skarpeste intropriser — og
+med den største stigning bagefter. Et abonnement til 19 kr. i tre måneder, der
+derefter koster 79 kr., er ikke et billigt abonnement. Se 12-måneders-prisen i
+tabellen, ikke tallet på skiltet.</p>""",
+    },
+    "10-30-gb": {
+        "h2": "Danmarks mest almindelige interval",
+        "brød": """<p>Ligger du her, er du helt gennemsnitlig — og det er en fordel. Det er
+intervallet med flest abonnementer på markedet, og dermed den hårdeste
+konkurrence på pris. Du har typisk femten til tyve reelle valgmuligheder, hvor
+den lave ende har to eller tre.</p>
+<p>20-30 GB dækker daglig brug af sociale medier, musik, navigation og et par
+timers video om ugen uden for wi-fi. Det er nok til pendling med tog eller bus,
+så længe du ikke ser film hele vejen.</p>
+<h3>Prisspringet der gør 30 GB til det oplagte valg</h3>
+<p>Forskellen mellem 10 og 30 GB er på det danske marked typisk 15-25 kr. om
+måneden, mens datamængden tredobles. Det er den dårligste byttehandel at spare
+væk. Ligger du omkring 12-15 GB i faktisk forbrug, skal du vælge 30 — ikke
+fordi du får brug for det hele, men fordi du så aldrig skal tænke over det.</p>
+<h3>Tjek dit forbrug tre måneder tilbage</h3>
+<p>Ikke den seneste måned alene. Ferie, sygdom og hjemmearbejde flytter
+forbruget markant, og du skal vælge efter din højeste normale måned — ikke
+gennemsnittet.</p>""",
+    },
+    "30-50-gb": {
+        "h2": "Til dig der bruger telefonen uden for wi-fi hver dag",
+        "brød": """<p>Her begynder video at fylde. 30-50 GB rækker til en times video om dagen
+i standardkvalitet, eller cirka tyve timer i HD om måneden — oven i almindelig
+brug af sociale medier, musik og kort.</p>
+<p>Det er intervallet for pendlere med lang transport, folk der arbejder ude,
+håndværkere, sælgere og alle der bruger telefonen som deres primære skærm i
+løbet af dagen.</p>
+<h3>Her er pris pr. gigabyte vigtigst</h3>
+<p>I den lave ende af markedet betaler man 5-10 kr. pr. GB. I det her interval
+falder tallet typisk til under 2 kr. Det er derfor, du skal sammenligne på pris
+pr. GB frem for månedspris — to abonnementer til samme pris kan give dig vidt
+forskellig mængde data.</p>
+<h3>Slå kvalitetsindstillinger ned, hvis du er tæt på loftet</h3>
+<p>Video i standardkvalitet frem for HD halverer forbruget uden at ødelægge
+oplevelsen på en telefonskærm. Det er den ene indstilling, der kan flytte dig
+et helt interval ned i pris.</p>""",
+    },
+    "50-gb": {
+        "h2": "Når telefonen også skal forsyne andre enheder",
+        "brød": """<p>Over 50 GB handler det sjældent kun om telefonen selv. Det er her, folk
+bruger hotspot til en bærbar, deler forbindelsen på farten, eller har droppet
+fastnetbredbånd i en periode.</p>
+<p>Til orientering: en times videomøde over hotspot koster 1-2 GB, en
+systemopdatering til en bærbar kan tage 5 GB, og en aften med streaming på
+tv'et via hotspot løber let op i 10 GB. Det er den slags, der spiser et stort
+abonnement.</p>
+<h3>Regn efter, før du går hele vejen til fri data</h3>
+<p>Springet fra 50 GB til fri data koster typisk 60-100 kr. om måneden. Bruger
+du under 80 GB, er et stort abonnement med loft næsten altid billigere — og du
+mærker aldrig loftet. Se
+<a href="/mobilabonnement-med-fri-data/">hvad fri data koster</a> og
+sammenlign selv.</p>
+<h3>Tjek hastigheden, ikke kun mængden</h3>
+<p>Store abonnementer hos MVNO'er kan have et hastighedsloft, der ikke fremgår
+af prislisten. Det betyder ikke noget ved almindelig brug, men det gør, hvis du
+henter store filer over hotspot. Det står i abonnementsvilkårene.</p>""",
+    },
+    "100-gb": {
+        "h2": "Mobilen som husstandens internetforbindelse",
+        "brød": """<p>Over 100 GB er du i praksis ved at bruge mobilen i stedet for bredbånd.
+Det kan fungere godt — men det er en anden beslutning end at vælge et
+mobilabonnement, og den bør træffes med åbne øjne.</p>
+<p>En husstand, der streamer video om aftenen, bruger typisk 150-300 GB om
+måneden. Det kan et stort mobilabonnement dække, men hastigheden svinger med
+belastningen på masten, og du deler kapacitet med alle andre i området på det
+tidspunkt, hvor alle ser tv.</p>
+<h3>Sammenlign med bredbånd, før du vælger</h3>
+<p>Fiberbredbånd til en husstand koster ofte det samme som et stort
+mobilabonnement og leverer stabil hastighed hele døgnet. Mobilt giver til
+gengæld ingen gravearbejde, ingen installation og fuld frihed til at flytte.
+Læs <a href="/guides/mobilabonnement-eller-bredbaand/">vores sammenligning af
+de to</a>, før du beslutter dig.</p>
+<h3>Fair use gælder også ved store abonnementer</h3>
+<p>Abonnementer i denne størrelse har næsten altid en klausul om rimeligt
+forbrug. Den rammer sjældent en almindelig husstand, men den findes, og den
+tillader udbyderen at gribe ind ved ekstremt forbrug. Læs vilkårene, hvis du
+planlægger at erstatte bredbånd helt.</p>""",
+    },
+}
+
 GB_INTERVALLER = [
     ("1-10-gb", "1–10 GB", 1, 10, "Let bruger",
      "Til dig der er på wi-fi det meste af dagen og bruger mobilen til beskeder, "
@@ -2666,8 +2865,9 @@ def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
                     key=visningspris)
     if not udvalg:
         return
-    billigst_g = udvalg[0]
-    fra = visningspris(billigst_g)
+    billigst_g = min(udvalg, key=lambda a: a["pris"])
+    # Titlen lover normalprisen — tilbudsprisen står i tabellen
+    fra = billigst_g["pris"]
     u = UMAP[billigst_g["udbyder"]]
     krumme = [("/", "Forside"), (None, f"Mobilabonnement {navn}")]
 
@@ -2684,12 +2884,14 @@ def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
         {"sp": f"Er {navn} nok til mig?",
          "sv": beskrivelse + " Tjek dit faktiske forbrug i telefonens indstillinger — de fleste "
                "danskere bruger mindre, end de tror."},
-        {"sp": "Hvad sker der, hvis jeg løber tør?",
-         "sv": "Det afhænger af udbyderen: nogle sætter hastigheden ned, andre spærrer, og andre "
-               "køber automatisk ekstra data. Slå datastop til for at undgå det sidste."},
-        {"sp": "Kan jeg skifte datamængde senere?",
-         "sv": "Ja, hos de fleste udbydere kan du flytte op og ned fra måned til måned i deres app. "
-               "Det kræver ikke, at du skifter selskab."},
+        {"sp": f"Hvad sker der, hvis jeg bruger mere end {navn}?",
+         "sv": f"Det afhænger af udbyderen: nogle sætter hastigheden ned, andre spærrer, og andre "
+               f"køber automatisk ekstra data på dine vegne. Netop i intervallet {navn} er det "
+               f"værd at slå datastop til, så et overforbrug ikke kan udløse et køb."},
+        {"sp": f"Kan jeg flytte op eller ned fra {navn} senere?",
+         "sv": f"Ja, hos de fleste udbydere kan du skifte datamængde fra måned til måned i deres "
+               f"app uden at skifte selskab. Ligger du fast i toppen af {navn}, er det som regel "
+               f"billigere at gå et trin op end at købe ekstra data."},
     ]
 
     krop = f"""
@@ -2714,20 +2916,14 @@ def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
   {e(navn)} passer til: {e(profil.lower())}.</p>
   </div>
 
+  <h2>{e(GB_TEKST[slug]["h2"])}</h2>
+  {GB_TEKST[slug]["brød"]}
+
   <h2>Hvem passer {e(navn)} til?</h2>
   <p>{e(beskrivelse)}</p>
   <p>Er du i tvivl, så find dit faktiske forbrug i telefonens indstillinger frem for at
   gætte. Kig på de seneste tre måneder og tag den højeste.
   <a href="/guides/hvor-meget-data/">Se hvordan du finder tallet</a>.</p>
-
-  {tabel_pr_datamaengde()}
-
-  <h2>Skal du op eller ned?</h2>
-  <p>Vi anbefaler næsten altid ét trin over dit målte forbrug. Grunden er
-  prisstrukturen på det danske marked: springet mellem kategorierne er ofte
-  20-40 kr. om måneden, mens datamængden fordobles eller tredobles. Den ekstra tyver
-  køber dig, at du aldrig skal tænke over det igen — og det er billigere end at købe
-  ekstra data en enkelt måned.</p>
 
   {tabel_billigst_pr_udbyder()}
   {vejviser(sti)}
@@ -2793,7 +2989,7 @@ def byg_vs(slug_a, slug_b):
     billigst_u = ua if (gns12(fa) or 0) <= (gns12(fb) or 0) else ub
 
     def bedste_prgb(planer):
-        m = [a for a in planer if 0 < a["data_gb"] < 900]
+        m = [a for a in planer if 0 < a["data_gb"] < 9999]
         return min(m, key=lambda a: a["pris"] / a["data_gb"]) if m else None
     ga, gb_ = bedste_prgb(pa), bedste_prgb(pb)
 
@@ -2836,12 +3032,14 @@ def byg_vs(slug_a, slug_b):
                 if ua["netvaerk"] != ub["netvaerk"] else
                 f"Ja, begge kører på {netlabel(ua).replace('s net', '')}. Dækningen er dermed den "
                 "samme, og valget står på pris, vilkår og kundeservice.")},
-        {"sp": "Kan jeg skifte mellem dem uden at miste mit nummer?",
-         "sv": "Ja. Nummerportering er en rettighed i Danmark. Du bestiller hos den nye udbyder, "
-               "oplyser dit nummer, og de klarer resten. Du skal ikke opsige noget selv."},
-        {"sp": f"Hvem har flest abonnementer at vælge mellem?",
-         "sv": f"{ua['navn'] if len(pa) >= len(pb) else ub['navn']} har flest i vores sammenligning "
-               f"med {max(len(pa), len(pb))} abonnementer mod {min(len(pa), len(pb))}."},
+        {"sp": f"Kan jeg skifte fra {ua['navn']} til {ub['navn']} og beholde mit nummer?",
+         "sv": f"Ja. Du bestiller hos {ub['navn']} og oplyser dit nummer — de opsiger selv "
+               f"{ua['navn']} og flytter nummeret. Det er gratis og tager typisk få dage."},
+        {"sp": f"Har {ua['navn']} eller {ub['navn']} flest abonnementer?",
+         "sv": f"{ua['navn'] if len(pa) >= len(pb) else ub['navn']} har flest med "
+               f"{max(len(pa), len(pb))} abonnementer mod {min(len(pa), len(pb))}. "
+               f"Et større udvalg er ikke i sig selv en fordel — det afgørende er, om der "
+               f"findes et abonnement i netop din datastørrelse."},
     ]
 
     krop = f"""
@@ -2936,7 +3134,7 @@ def byg_vs_oversigt():
         if not planer:
             continue
         bu = min(planer, key=lambda a: gns12(a) or 9e9)
-        har_fri = any(a["data_gb"] >= 900 for a in planer)
+        har_fri = any(a["data_gb"] >= 9999 for a in planer)
         har_stream = any(a.get("streaming") for a in planer)
         maks_eu = max(a.get("eu_gb", 0) for a in planer)
         matrix += (f'<tr><td><a href="/udbydere/{u["slug"]}/"><strong>{e(u["navn"])}</strong></a></td>'
@@ -4293,7 +4491,7 @@ tager højde for det.</p>
     ]
 
     return skriv(sti, shell(
-        sti=sti, titel=f"{titel} ({OPDATERET})", beskrivelse=besk,
+        sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side("Prisudvikling", titel,
                        "Vi gemmer priserne to gange i døgnet, så du kan se, hvordan "
                        "markedet flytter sig — ikke bare hvad det koster i dag.",
@@ -5052,7 +5250,7 @@ def hurtigpris_dialog():
                  if intro else ("Ingen binding" if a["binding"] == 0
                                 else f'{a["binding"]} mdr. binding'))
         gb = a["data_gb"]
-        gruppe = ("fri" if gb >= 900 else "stor" if gb > 50
+        gruppe = ("fri" if gb >= 9999 else "stor" if gb > 50
                   else "mellem" if gb > 15 else "lille")
         raekker += f"""<li class="hp-raekke" data-gruppe="{gruppe}" data-slug="{e(u['slug'])}">
   <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" loading="lazy"
@@ -5391,7 +5589,7 @@ kategori. <a href="/guides/hvor-meget-data/">Se hele guiden til dataforbrug</a>.
     byg_niche(
         "/mobilabonnement-uden-binding/", "Uden binding",
         "Mobilabonnement uden binding",
-        f"Mobilabonnement uden binding — priser fra {min(visningspris(a) for a in ubinding)} kr./md.",
+        f"Mobilabonnement uden binding — priser fra {min(a['pris'] for a in ubinding)} kr./md.",
         "Sammenlign mobilabonnementer uden binding. Skift når du vil, uden opsigelsesgebyr "
         "eller bindingsperiode.",
         "Alle abonnementer her kan opsiges med kort varsel. Sorteret efter laveste pris.",
@@ -5430,12 +5628,13 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         [("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
          ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
          ("/udbydere/", "Alle udbydere")],
-        billede="uden-binding", spejlvend=True)
+        forvalg={"binding": ["0"]}, billede="uden-binding", spejlvend=True)
 
     # ---------------- Seks nye kategorisider ----------------
     fritale = sorted([a for a in ABON if a["tale"] == "fri"], key=lambda a: a["pris"])
     byg_kategori(
         sti="/mobilabonnement-med-fri-tale/", etiket="Fri tale",
+        forvalg={"ekstra": ["fritale"]},
         billede="med-fri-tale", spejlvend=False,
         h1="Billigste mobilabonnement med fri tale",
         titel=f"Mobilabonnement med fri tale{fra(D['pris_fritale'], ' — priser fra ')}",
@@ -5447,8 +5646,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=fritale, tekstfunktion=sider.fri_tale,
         chips=[("Fra", f"{D['pris_fritale']} kr."), ("Fri tale", "og sms"), ("Uden", "binding")],
         tabeltitel="Abonnementer med fri tale og sms",
-        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_aarsomkostning(), begrebstabel(),
-                         fejltabel(), vejviser('/mobilabonnement-med-fri-tale/')],
+        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_aarsomkostning(), begrebslink(),
+                         fejllink(), vejviser('/mobilabonnement-med-fri-tale/')],
         faq=[
             {"sp": "Hvad koster det billigste mobilabonnement med fri tale?",
              "sv": f"Det billigste abonnement med fri tale i vores sammenligning koster {D['pris_fritale']} kr. om "
@@ -5471,13 +5670,13 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/mobilabonnement-med-fri-data/", "Mobilabonnement med fri data"),
                ("/udbydere/lebara/", "Lebara — bedst til opkald til udlandet")])
 
-    bedste_udvalg = sorted([a for a in ABON if 10 <= a["data_gb"] < 900],
+    bedste_udvalg = sorted([a for a in ABON if 10 <= a["data_gb"] < 9999],
                            key=lambda a: a["pris"] / a["data_gb"])[:14]
     byg_kategori(
         sti="/bedste-mobilabonnement/", etiket="Bedste abonnement",
         billede="bedste", spejlvend=True,
         h1="Bedste mobilabonnement — sådan finder du dit",
-        titel=f"Bedste mobilabonnement {IDAG.year} — sammenlignet på pris, data og net",
+        titel=f"Bedste mobilabonnement {IDAG.year} — pris, data og netværk",
         besk=("Der findes ikke ét bedste mobilabonnement. Se vores kriterier, og find det "
               "bedste abonnement til netop din situation, dit forbrug og din adresse."),
         intro=("Rangeret efter pris pr. gigabyte — det tal der gør abonnementer af forskellig "
@@ -5525,7 +5724,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=udendata, tekstfunktion=sider.uden_data,
         chips=[("Fra", f"{D['pris_udendata']} kr."), ("Data", "0 GB"), ("Wi-fi", "virker stadig")],
         tabeltitel="Abonnementer uden mobildata",
-        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), tabel_aarsomkostning(), fejltabel(), begrebstabel(), vejviser()],
+        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), tabel_aarsomkostning(), fejllink(), begrebslink(), vejviser()],
         faq=[
             {"sp": "Findes der stadig mobilabonnement uden data?",
              "sv": "Ja, men udvalget er lille. De findes som faste abonnementer med tale og sms, som "
@@ -5550,6 +5749,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     stream = sorted([a for a in ABON if a.get("streaming")], key=lambda a: a["pris"])
     byg_kategori(
         sti="/mobilabonnement-med-streaming/", etiket="Med streaming",
+        forvalg={"ekstra": ["streaming"]},
         billede="med-streaming", spejlvend=False,
         h1="Mobilabonnement med streaming inkluderet",
         titel=f"Mobilabonnement med streaming{fra(D['pris_streaming'])}",
@@ -5560,7 +5760,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=stream, tekstfunktion=sider2.streaming,
         chips=[("Fra", f"{D['pris_streaming']} kr."), ("Tjenester", "inkluderet"), ("Én", "regning")],
         tabeltitel="Abonnementer med streaming inkluderet",
-        ekstra_tabeller=[tabel_pr_datamaengde(), tabel_prgb_rangliste(), tabel_aarsomkostning(), fejltabel(), begrebstabel(), vejviser()],
+        ekstra_tabeller=[tabel_pr_datamaengde(), tabel_prgb_rangliste(), tabel_aarsomkostning(), fejllink(), begrebslink(), vejviser()],
         faq=[
             {"sp": "Kan det betale sig med streaming i mobilabonnementet?",
              "sv": "Kun hvis du allerede betaler for to eller flere af de tjenester, der indgår, og ikke deler dem "
@@ -5596,7 +5796,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=boernudvalg, tekstfunktion=sider2.boern,
         chips=[("Fra", f"{D['pris_boern']} kr."), ("Datastop", "anbefales"), ("Uden", "binding")],
         tabeltitel="Små abonnementer der passer til børn",
-        ekstra_tabeller=[erfaring('boern'), tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), tabel_aarsomkostning(), fejltabel(), begrebstabel(), vejviser()],
+        ekstra_tabeller=[erfaring('boern'), tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), tabel_aarsomkostning(), fejllink(), begrebslink(), vejviser()],
         faq=[
             {"sp": "Hvilket mobilabonnement er bedst til børn?",
              "sv": "Til de yngste er taletid tryggest, fordi udgiften er låst. Fra cirka 11-12 år er et lille "
@@ -5623,6 +5823,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                         key=lambda a: a["pris"])[:16]
     byg_kategori(
         sti="/mobilabonnement-med-esim/", etiket="Med eSIM",
+        forvalg={"ekstra": ["esim"]},
         billede="med-esim", spejlvend=False,
         h1="Mobilabonnement med eSIM",
         titel=f"Mobilabonnement med eSIM — klar samme dag{fra(D['pris_esim'], ', fra ', ' kr.')}",
@@ -5633,7 +5834,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=esimudvalg, tekstfunktion=sider2.esim,
         chips=[("Klar på", "få minutter"), ("Flere numre", "én telefon"), ("Fra", f"{D['pris_esim']} kr.")],
         tabeltitel="Abonnementer der kan leveres som eSIM",
-        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_prgb_rangliste(), fejltabel(), begrebstabel(), vejviser()],
+        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_prgb_rangliste(), fejllink(), begrebslink(), vejviser()],
         faq=[
             {"sp": "Hvad er et eSIM?",
              "sv": "Et digitalt simkort indbygget i telefonen, som aktiveres med en QR-kode i stedet for et fysisk "
@@ -5687,7 +5888,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
                ("/guides/mobil-virker-ikke/", "Mobilen virker ikke — fejlfinding")],
               billede="simkort", altbillede="Tekniker arbejder med simkort i forskellige størrelser",
-              ekstra=[begrebstabel(), tabel_billigst_pr_udbyder(), udbydergitter(),
+              ekstra=[begrebslink(), tabel_billigst_pr_udbyder(), udbydergitter(),
                       tabel_pr_datamaengde(), statistiktabel(), prisfordeling(),
                       tabel_prgb_rangliste(), tabel_aarsomkostning(),
                       vejviser("/guides/simkort/"),
@@ -5726,7 +5927,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/pin-og-puk-kode/", "Simkortet er spærret?")],
               billede="mobil-virker-ikke",
               altbillede="Kvinde fejlsøger på mobilen ved køkkenbordet",
-              ekstra=[udbydergitter(), begrebstabel(), tabel_billigst_pr_udbyder(),
+              ekstra=[udbydergitter(), begrebslink(), tabel_billigst_pr_udbyder(),
                       statistiktabel(), tabel_pr_datamaengde(), prisfordeling(),
                       tabel_aarsomkostning(), vejviser("/guides/mobil-virker-ikke/"),
                       kilder(["teleankenaevnet", "teleanke_klag", "digst_klage"],
@@ -5765,7 +5966,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               billede="undgaa-hoej-regning",
               altbillede="Mand tjekker sit dataforbrug i mobilappen",
               ekstra=[prisfordeling(), tabel_pr_datamaengde(), tabel_aarsomkostning(),
-                      fejltabel(), udbydergitter(), statistiktabel(), begrebstabel(),
+                      fejllink(), udbydergitter(), statistiktabel(), begrebslink(),
                       tabel_billigst_pr_udbyder(), vejviser("/guides/undgaa-hoej-regning/"),
                       kilder(["forbrugerombudsmanden", "teleankenaevnet"],
                              ["Spærringsmuligheder: udbydernes egne selvbetjeningsløsninger.",
@@ -5803,7 +6004,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               billede="koeb-mobiltelefon",
               altbillede="Kvinde undersøger brugte mobiltelefoner i en butik",
               ekstra=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), udbydergitter(),
-                      prisfordeling(), begrebstabel(), statistiktabel(),
+                      prisfordeling(), begrebslink(), statistiktabel(),
                       tabel_pr_datamaengde(), tabel_prgb_rangliste(),
                       vejviser("/guides/koeb-mobiltelefon/"),
                       kilder(["forbrugerombudsmanden", "teleankenaevnet"],
@@ -5929,7 +6130,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               billede="uden-kreditvurdering",
               altbillede="Mand undersøger mobilabonnementer uden kreditvurdering",
               ekstra=[prisfordeling(), tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(),
-                      begrebstabel(), statistiktabel(), tabel_prgb_rangliste(), udbydergitter(),
+                      begrebslink(), statistiktabel(), tabel_prgb_rangliste(), udbydergitter(),
                       vejviser("/guides/mobilabonnement-uden-kreditvurdering/"),
                       kilder(["experian", "borger_kredit", "datatilsynet"],
                              ["Krav til kreditvurdering: udbydernes egne vilkår.",
@@ -5968,7 +6169,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               billede="til-familie",
               altbillede="Familie i parken kigger sammen på mobilen",
               ekstra=[prisfordeling(), tabel_pr_datamaengde(), tabel_aarsomkostning(),
-                      tabel_billigst_pr_udbyder(), fejltabel(), udbydergitter(), statistiktabel(), begrebstabel(),
+                      tabel_billigst_pr_udbyder(), fejllink(), udbydergitter(), statistiktabel(), begrebslink(),
                       vejviser("/mobilabonnement-til-familie/"),
                       kilder(["forbrugerombudsmanden", "teleankenaevnet"],
                              ["Priser: vores egen sammenligning, opdateret " + OPDATERET + ".",
@@ -6005,8 +6206,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement")],
               billede="skift-mobilselskab",
               altbillede="Person opsiger sit mobilabonnement på laptop",
-              ekstra=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), fejltabel(),
-                      begrebstabel(), udbydergitter(), tabel_pr_datamaengde(), statistiktabel(),
+              ekstra=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), fejllink(),
+                      begrebslink(), udbydergitter(), tabel_pr_datamaengde(), statistiktabel(),
                       tabel_billigst_pr_udbyder(),
                       vejviser("/guides/opsig-mobilabonnement/"),
                       kilder(["teleankenaevnet", "teleanke_klag", "digst_klage",
@@ -6047,7 +6248,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               billede="til-erhverv",
               altbillede="Erhvervsbruger taler i mobil på kontoret",
               ekstra=[prisfordeling(), tabel_billigst_pr_udbyder(), tabel_aarsomkostning(),
-                      udbydergitter(), tabel_pr_datamaengde(), begrebstabel(), statistiktabel(),
+                      udbydergitter(), tabel_pr_datamaengde(), begrebslink(), statistiktabel(),
                       tabel_prgb_rangliste(),
                       vejviser("/mobilabonnement-til-erhverv/"),
                       kilder(["forbrugerombudsmanden", "teleankenaevnet", "teleindustrien"],
@@ -6061,7 +6262,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         sti="/mobilabonnement-under-100-kr/", etiket="Under 100 kr.",
         billede="under-100-kr", spejlvend=False,
         h1="Mobilabonnement under 100 kr. om måneden",
-        titel=f"Mobilabonnement under 100 kr. — {len(u100)} valg fra {D['min_pris']} kr.",
+        titel=f"Mobilabonnement under 100 kr. — {len(u100)} valg fra {D['min_normalpris']} kr.",
         besk=(f"Se alle {len(u100)} mobilabonnementer under 100 kr./md. Sorteret efter den "
               "reelle pris over 12 måneder, så introtilbud ikke skjuler normalprisen."),
         intro=(f"{len(u100)} abonnementer under hundrede kroner. Sorteret efter gennemsnitspris "
@@ -6071,7 +6272,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("Binding", "0 mdr.")],
         tabeltitel="Alle abonnementer under 100 kr. om måneden",
         ekstra_tabeller=[prisfordeling(), tabel_billigst_pr_udbyder(), tabel_prgb_rangliste(),
-                         tabel_aarsomkostning(), fejltabel(), begrebstabel(),
+                         tabel_aarsomkostning(), fejllink(), begrebslink(),
                          kilder(
                              ["forbrugerombudsmanden", "reklameidentifikation", "teleankenaevnet"],
                              ["Priser og vilkår: udbydernes egne offentlige prislister, kontrolleret manuelt.",
@@ -6223,7 +6424,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/hvem-ringer-til-mig/", "Ukendt opkald fra udlandet?")],
               billede="i-udlandet",
               altbillede="Kvinde bruger mobilen med roaming på en gade i Italien",
-              ekstra=[erfaring("udlandet"), tabel_billigst_pr_udbyder(), begrebstabel(),
+              ekstra=[erfaring("udlandet"), tabel_billigst_pr_udbyder(), begrebslink(),
                       vejviser("/guides/mobilabonnement-i-udlandet/")])
 
     byg_guide("/guides/prisstigning-mobilabonnement/", "Prisstigning",
@@ -6264,7 +6465,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               billede="prisstigning",
               altbillede="Kvinde gennemgår sin mobilregning efter en prisstigning",
               ekstra=[erfaring("prisstigning"), tabel_aarsomkostning(),
-                      tabel_billigst_pr_udbyder(), fejltabel(),
+                      tabel_billigst_pr_udbyder(), fejllink(),
                       vejviser("/guides/prisstigning-mobilabonnement/")])
 
     # ---------------- Musik, ældre, telefon og taletid ----------------
@@ -6283,8 +6484,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=musikudvalg, tekstfunktion=sider3.musik,
         chips=[("Fra", f"{D['pris_musik']} kr."), ("Musik", "ca. 100 MB/t"), ("Planer", str(len(musikudvalg)))],
         tabeltitel="Abonnementer med musik og lyd inkluderet",
-        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), fejltabel(),
-                         begrebstabel(), vejviser("/mobilabonnement-med-musik/")],
+        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), fejllink(),
+                         begrebslink(), vejviser("/mobilabonnement-med-musik/")],
         faq=[
             {"sp": "Hvad koster mobilabonnement med musik?",
              "sv": f"Fra {D['pris_musik']} kr. om måneden i vores sammenligning. Musiktjenester er "
@@ -6320,8 +6521,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=aeldreudvalg, tekstfunktion=sider3.aeldre,
         chips=[("Fra", f"{D['pris_aeldre']} kr."), ("112", "virker altid"), ("Uden", "binding")],
         tabeltitel="Små abonnementer der passer til en let bruger",
-        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), fejltabel(),
-                         begrebstabel(), vejviser("/mobilabonnement-til-aeldre/")],
+        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), fejllink(),
+                         begrebslink(), vejviser("/mobilabonnement-til-aeldre/")],
         faq=[
             {"sp": "Hvilket mobilabonnement er bedst til ældre?",
              "sv": "Et abonnement med lav datamængde og telefonisk kundeservice. Vi anbefaler sjældent "
@@ -6357,8 +6558,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=udenbinding, tekstfunktion=sider3.telefon,
         chips=[("Binding", "0 mdr."), ("Fra", f"{D['min_pris']} kr."), ("Frihed", "til at skifte")],
         tabeltitel="Abonnementer uden binding til dit kontantkøb",
-        ekstra_tabeller=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), fejltabel(),
-                         begrebstabel(), vejviser("/mobilabonnement-med-telefon/")],
+        ekstra_tabeller=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), fejllink(),
+                         begrebslink(), vejviser("/mobilabonnement-med-telefon/")],
         faq=[
             {"sp": "Kan det betale sig med telefon og abonnement samlet?",
              "sv": "Sjældent. Gang den samlede månedspris med bindingsperioden og sammenlign med "
@@ -6394,7 +6595,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=smaa, tekstfunktion=sider3.taletid,
         chips=[("Betaling", "forudbetalt"), ("Overforbrug", "umuligt"), ("Binding", "aldrig")],
         tabeltitel="Små abonnementer til sammenligning med taletid",
-        ekstra_tabeller=[tabel_billigst_pr_udbyder(), fejltabel(), begrebstabel(),
+        ekstra_tabeller=[tabel_billigst_pr_udbyder(), fejllink(), begrebslink(),
                          vejviser("/taletidskort/")],
         faq=[
             {"sp": "Hvad er forskellen på taletid og abonnement?",
@@ -6486,7 +6687,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/mobilabonnement-uden-binding/", "Abonnementer uden binding")],
               billede="skift-mobilselskab",
               altbillede="Kvinde skifter mobilselskab på laptop og telefon på en café",
-              ekstra=[tabel_billigst_pr_udbyder(), tabel_aarsomkostning(), fejltabel(),
+              ekstra=[tabel_billigst_pr_udbyder(), tabel_aarsomkostning(), fejllink(),
                       vejviser("/guides/skift-mobilselskab/"),
                       kilder(
                           ["digst_klage", "teleankenaevnet", "teleindustrien"],
@@ -6670,7 +6871,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
                ("/udbydere/", "Alle udbydere")],
               billede="esim",
               altbillede="Rejsende aktiverer eSIM på telefonen i en lufthavn",
-              ekstra=[tabel_billigst_pr_udbyder(), begrebstabel(),
+              ekstra=[tabel_billigst_pr_udbyder(), begrebslink(),
                       vejviser("/guides/esim/"),
                       kilder(
                           ["teleindustrien", "teleankenaevnet"],
@@ -6749,7 +6950,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     ordbog_krop = f"""<section class="sektion baand-smal artikel">
   <p class="led">Telemarkedet bruger en række ord, der ikke betyder helt det, man tror.
   Her er de vigtigste oversat til almindeligt dansk.</p>
-  {begrebstabel()}
+  {begrebslink()}
 
   <h2>Enheder og forkortelser</h2>
   <table>

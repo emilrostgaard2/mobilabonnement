@@ -1830,3 +1830,7 @@ body{overflow-x:clip;max-width:100%;position:relative}
   background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;
   background-size:5px 5px,5px 5px;background-repeat:no-repeat}
 .hp-vaelg:hover{border-color:var(--signal)}
+
+/* Krydslink der erstatter en gentaget tabel */
+.krydslink{background:#F7F9FD;border-left:3px solid var(--signal);
+  border-radius:0 var(--r-m) var(--r-m) 0;padding:.8rem 1rem;margin:1.4rem 0;font-size:.92rem}

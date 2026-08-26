@@ -371,6 +371,21 @@
       panel.hidden = aaben;
     });
 
+    // Sider som "uden binding" eller "fri data" åbner med det filter valgt,
+    // så filterlinjen viser, hvad man faktisk kigger på.
+    if (bar && bar.getAttribute("data-forvalg")) {
+      try {
+        var fv = JSON.parse(bar.getAttribute("data-forvalg"));
+        Object.keys(fv).forEach(function (n) {
+          if (!valgt[n]) return;
+          fv[n].forEach(function (v) {
+            var inp = bar.querySelector('input[data-f="' + n + '"][value="' + v + '"]');
+            if (inp) { inp.checked = true; valgt[n].push(v); }
+          });
+        });
+      } catch (e) { /* et ugyldigt forvalg må ikke vælte listen */ }
+    }
+
     opdater();
   })();
 

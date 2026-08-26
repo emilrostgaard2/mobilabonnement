@@ -112,7 +112,7 @@ def kr(v):
 
 
 def gb_tekst(gb):
-    if gb >= 900:
+    if gb >= 9999:
         return "Fri data"
     return f"{gb} GB" if gb > 0 else "Ingen data"
 
@@ -527,8 +527,8 @@ def beregn_maerker(abonnementer):
 
     betalte = [a for a in abonnementer if a["pris"] > 0 and not a.get("forbrugsafregnet")]
     med_data = [a for a in betalte if a["data_gb"] > 0]
-    endelig = [a for a in med_data if a["data_gb"] < 900]
-    frie = [a for a in betalte if a["data_gb"] >= 900]
+    endelig = [a for a in med_data if a["data_gb"] < 9999]
+    frie = [a for a in betalte if a["data_gb"] >= 9999]
 
     if betalte:
         saet(min(betalte, key=lambda a: a["pris"]), "Billigst i alt", "puls")
@@ -594,7 +594,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     intro = a.get("intro_pris") is not None and a.get("intro_mdr")
     vist_pris = a["intro_pris"] if intro else a["pris"]
 
-    pr_gb = a["pris"] / a["data_gb"] if 0 < a["data_gb"] < 900 else 0
+    pr_gb = a["pris"] / a["data_gb"] if 0 < a["data_gb"] < 9999 else 0
     pr_gb_tekst = (f"{pr_gb:.2f}".replace(".", ",") + " kr.") if pr_gb else "—"
     g = gns12(a)
     aar = (g * 12) if g is not None else 0
@@ -634,7 +634,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
 
     # ---- Højst tre plusser, så rækken ikke svulmer op -------------------
     plus = []
-    if a["data_gb"] >= 900:
+    if a["data_gb"] >= 9999:
         plus.append("Fri data")
     elif a["data_gb"] > 0:
         plus.append(f'{a["data_gb"]} GB data')
@@ -646,7 +646,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     if a.get("streaming"):
         n = len(a["streaming"])
         plus.append(f'{n} streamingtjeneste{"r" if n > 1 else ""}')
-    if a.get("eu_gb", 0) >= 900:
+    if a.get("eu_gb", 0) >= 9999:
         plus.append("Fri EU-data")
     chips = "".join(f'<span class="pk-chip">{e(t)}</span>' for t in plus[:3])
 
@@ -661,7 +661,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     advarhtml = ("<ul class=\"pk-advar\">"
                  + "".join(f"<li>{t}</li>" for t in advarsler) + "</ul>") if advarsler else ""
 
-    eu_tekst = ("—" if a["data_gb"] == 0 else "Fri" if a.get("eu_gb", 0) >= 900
+    eu_tekst = ("—" if a["data_gb"] == 0 else "Fri" if a.get("eu_gb", 0) >= 9999
                 else "Ingen" if not a.get("eu_gb") else f'{a["eu_gb"]} GB')
     fakta = [
         ("Netværk", netlabel(u)),
@@ -762,7 +762,7 @@ def _drop(navn, noegle, valg, ikon=""):
     </div>"""
 
 
-def filterbar(abonnementer, udbydere_map):
+def filterbar(abonnementer, udbydere_map, forvalg=None):
     """Kompakt filterlinje med foldemenuer — samme højde som én knap."""
     selskaber, net = {}, {}
     for a in abonnementer:
@@ -781,7 +781,8 @@ def filterbar(abonnementer, udbydere_map):
     selskab_valg = sorted(selskaber.items(), key=lambda x: x[1].lower())
     net_valg = sorted(net.items(), key=lambda x: x[1].lower())
 
-    return f"""<div class="filterbar" role="group" aria-label="Filtrér abonnementer">
+    fv = f' data-forvalg="{e(json.dumps(forvalg))}"' if forvalg else ""
+    return f"""<div class="filterbar"{fv} role="group" aria-label="Filtrér abonnementer">
   <div class="fb-venstre">
     {_drop("Data", "data", data_valg)}
     {_drop("Pris", "pris", pris_valg)}
@@ -808,7 +809,8 @@ def filterbar(abonnementer, udbydere_map):
 
 
 def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
-              billigst_id=None, id_attr="sammenlign", vis=10, opdateret=None):
+              billigst_id=None, id_attr="sammenlign", vis=10, opdateret=None,
+              forvalg=None):
     if opdateret is None:
         opdateret = OPDATERET_GLOBAL
     betalte = [gns12(x) for x in abonnementer if x["pris"] > 0 and not x.get("forbrugsafregnet")]
@@ -833,7 +835,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
                     f'Vis {min(10, resten)} abonnementer mere</button>'
                     f'<small data-resterende>{resten} abonnementer tilbage</small></div>')
 
-    filterhtml = filterbar(abonnementer, udbydere_map) if filtre else ""
+    filterhtml = filterbar(abonnementer, udbydere_map, forvalg) if filtre else ""
 
     return f"""<section class="sektion baand" id="{id_attr}">
   <div class="sektion-hoved afslør">
