@@ -1,4 +1,4 @@
 Contact: mailto:kontakt@telemobil.dk
-Expires: 2027-08-25T00:00:00.000Z
+Expires: 2027-08-26T00:00:00.000Z
 Preferred-Languages: da, en
 Canonical: https://telemobil.dk/.well-known/security.txt
