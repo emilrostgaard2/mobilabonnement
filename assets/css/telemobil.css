@@ -1834,3 +1834,13 @@ body{overflow-x:clip;max-width:100%;position:relative}
 /* Krydslink der erstatter en gentaget tabel */
 .krydslink{background:#F7F9FD;border-left:3px solid var(--signal);
   border-radius:0 var(--r-m) var(--r-m) 0;padding:.8rem 1rem;margin:1.4rem 0;font-size:.92rem}
+
+/* Tabeloverskrift i guides — caption skal fylde hele bredden, ikke klemmes
+   sammen i første kolonne */
+.tabelramme .datatabel{table-layout:auto;width:100%}
+/* display:block gør, at teksten fylder hele bredden i stedet for at blive
+   klemt ned i første kolonne, når tabellen ligger i en scrollbar ramme */
+.tabelramme .datatabel caption{display:block;box-sizing:border-box;width:100%;
+  text-align:left;white-space:normal;
+  padding:.75rem .9rem;font-size:.8rem;color:var(--graa);line-height:1.5}
+.tabel-under{font-size:.78rem;color:var(--graa)}

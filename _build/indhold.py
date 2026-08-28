@@ -496,6 +496,10 @@ kategorier ofte kun er 20–30 kr., mens datamængden fordobles eller tredobles.
 tyver køber dig fuldstændig frihed fra at tænke over sagen — og det er sjældent en dårlig
 handel.</p>
 
+<p class="krydslink">Vil du se, hvor mange gigabyte de enkelte apps bruger i timen, har vi
+tallene for Netflix, TikTok, Spotify og resten i
+<a href="/guides/hvor-meget-data/apps/">oversigten over dataforbrug pr. app</a>.</p>
+
 <h2>Fem måder at bruge mindre data på</h2>
 
 <ol class="trin">

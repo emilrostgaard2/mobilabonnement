@@ -1026,6 +1026,197 @@ måneden — en spredning på {kr(spredning)} kr., svarende til
 abonnement på markedet. Opdateret {OPDATERET}.</p>"""
 
 
+# ---------------------------------------------------------------- NYE GUIDES
+# Tabellerne herunder bygges af de samme data som resten af sitet, så de
+# opdaterer sig selv, når priserne ændrer sig. Det er hele pointen: en
+# top 10-liste, der er forældet, er værre end ingen liste.
+
+def tabel_appforbrug():
+    """Dataforbrug pr. app, i gigabyte pr. time.
+
+    Tallene er de tjenesternes egne oplyste intervaller ved standardkvalitet.
+    De er ikke hentet fra vores feed — derfor står kilden tydeligt."""
+    apper = [
+        ("Video i 4K", "Netflix, YouTube, Disney+", "7 GB", "Slå 4K fra på mobil — skærmen er for lille til at se forskel"),
+        ("Video i HD", "Netflix, HBO Max, Viaplay", "3 GB", "Standardindstillingen på de fleste tjenester"),
+        ("Video i standardkvalitet", "Alle streamingtjenester", "0,7 GB", "Fuldt brugbart på en telefonskærm"),
+        ("Videoopkald", "FaceTime, Teams, Zoom", "1,2 GB", "Slå video fra, og forbruget falder til under 0,1 GB"),
+        ("Korte videoer", "TikTok, Reels, Shorts", "1,5 GB", "Den største skjulte forbruger — man mister tidsfornemmelsen"),
+        ("Musik i høj kvalitet", "Spotify, Tidal, Apple Music", "0,15 GB", "Download over wi-fi i stedet for at streame"),
+        ("Musik i normal kvalitet", "Spotify, YouTube Music", "0,07 GB", "Knap 5 GB hvis du hører musik en time om dagen hele måneden"),
+        ("Podcast og lydbøger", "Podimo, Mofibo, Spotify", "0,06 GB", "Fylder mindre end de fleste tror"),
+        ("Sociale medier", "Instagram, Facebook, Snapchat", "0,3 GB", "Autoafspilning af video er det, der koster"),
+        ("Navigation", "Google Maps, Apple Kort", "0,005 GB", "Hent kortet offline før en lang tur"),
+        ("Beskeder og mail", "Messenger, WhatsApp, Gmail", "0,002 GB", "Reelt ubetydeligt"),
+        ("Web og nyheder", "Browser, nyhedsapps", "0,06 GB", "Billedtunge sider fylder mest"),
+    ]
+    krop = ""
+    for i, (navn, tjenester, gb, raad) in enumerate(apper, 1):
+        krop += f"""<tr>
+  <td class="tal">{i}</td>
+  <td><strong>{e(navn)}</strong><br><span class="tabel-under">{e(tjenester)}</span></td>
+  <td class="tal">{e(gb)}</td>
+  <td>{e(raad)}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Typisk dataforbrug pr. time ved standardindstillinger. Tallene stammer fra
+  tjenesternes egne oplysninger og varierer med kvalitet og enhed.</caption>
+  <thead><tr>
+    <th scope="col">#</th><th scope="col">Aktivitet</th>
+    <th scope="col">Pr. time</th><th scope="col">Sådan sparer du</th>
+  </tr></thead>
+  <tbody>{krop}</tbody>
+</table>
+</div>"""
+
+
+def tabel_5g_prisforskel():
+    """Hvad 5G reelt koster ekstra, målt på vores eget datasæt."""
+    import statistics as st
+    grupper = [("1-10 GB", 1, 10), ("10-30 GB", 10, 30), ("30-50 GB", 30, 50),
+               ("50 GB og op", 50, 9998), ("Fri data", 9999, 99999)]
+    krop = ""
+    for navn, lav, hoej in grupper:
+        i_gruppe = [a for a in ABON if lav <= a["data_gb"] <= hoej and a["pris"] > 0]
+        med = [a["pris"] for a in i_gruppe if a.get("femg")]
+        uden = [a["pris"] for a in i_gruppe if not a.get("femg")]
+        if not med or not uden:
+            forskel = "—"
+            m = f"{st.median(med):.0f} kr." if med else "—"
+            u = f"{st.median(uden):.0f} kr." if uden else "—"
+        else:
+            d = st.median(med) - st.median(uden)
+            m, u = f"{st.median(med):.0f} kr.", f"{st.median(uden):.0f} kr."
+            forskel = f"{'+' if d >= 0 else ''}{d:.0f} kr."
+        krop += f"""<tr>
+  <td><strong>{e(navn)}</strong></td>
+  <td class="tal">{len([a for a in i_gruppe if a.get('femg')])}</td>
+  <td class="tal">{m}</td>
+  <td class="tal">{u}</td>
+  <td class="tal">{forskel}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Medianpris med og uden 5G, opdelt efter datamængde. Beregnet på
+  {len(ABON)} abonnementer den {e(OPDATERET)}.</caption>
+  <thead><tr>
+    <th scope="col">Datamængde</th><th scope="col">Antal med 5G</th>
+    <th scope="col">Median med 5G</th><th scope="col">Median uden</th>
+    <th scope="col">Forskel</th>
+  </tr></thead>
+  <tbody>{krop}</tbody>
+</table>
+</div>"""
+
+
+def tabel_5g_selskaber():
+    """Hvilke selskaber tilbyder 5G, og hvad koster det billigste."""
+    raekker = []
+    for u in UDBYDERE:
+        egne = [a for a in ABON if a["udbyder"] == u["slug"] and a["pris"] > 0]
+        med = [a for a in egne if a.get("femg")]
+        if not egne:
+            continue
+        raekker.append((u, med, egne))
+    raekker.sort(key=lambda r: (not r[1], min((a["pris"] for a in r[1]), default=9e9)))
+    krop = ""
+    for u, med, egne in raekker:
+        if med:
+            b = min(med, key=lambda a: a["pris"])
+            svar = f"{len(med)} af {len(egne)}"
+            fra = f"{kr(b['pris'])} kr."
+        else:
+            svar, fra = "Ingen", "—"
+        krop += f"""<tr>
+  <td><a href="/udbydere/{u['slug']}/"><strong>{e(u['navn'])}</strong></a></td>
+  <td>{e(netlabel(u))}</td>
+  <td class="tal">{svar}</td>
+  <td class="tal">{fra}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Hvilke selskaber har 5G i abonnementet, og hvad det billigste koster.
+  Opdateret {e(OPDATERET)}.</caption>
+  <thead><tr>
+    <th scope="col">Selskab</th><th scope="col">Netværk</th>
+    <th scope="col">Med 5G</th><th scope="col">Billigste med 5G</th>
+  </tr></thead>
+  <tbody>{krop}</tbody>
+</table>
+</div>"""
+
+
+def tabel_udlandstakster():
+    """Hvad det koster at ringe til udlandet fra Danmark.
+
+    Tallene er intervaller, fordi de varierer mellem selskaberne. Vi angiver
+    dem som intervaller frem for at opfinde præcision, vi ikke har."""
+    raekker = [
+        ("EU, Norge, Island, Liechtenstein", "0 kr.", "Indgår i fri tale hos alle danske selskaber",
+         "Reguleret af EU. Du betaler samme takst som til danske numre."),
+        ("Storbritannien", "1-3 kr./min.", "Nej", "Ikke længere omfattet af EU-reglerne efter brexit."),
+        ("Schweiz", "1-4 kr./min.", "Nej", "Ligger geografisk i EU, men er ikke med i aftalen."),
+        ("USA og Canada", "2-6 kr./min.", "Nej", "Ofte billigere end mange EU-nabolande uden for aftalen."),
+        ("Tyrkiet", "4-12 kr./min.", "Nej", "En af de dyrere destinationer fra Danmark."),
+        ("Øvrige Europa", "3-10 kr./min.", "Nej", "Serbien, Ukraine, Albanien med flere."),
+        ("Asien", "3-15 kr./min.", "Nej", "Stor spredning — tjek det enkelte land."),
+        ("Afrika", "5-25 kr./min.", "Nej", "Dyreste kategori. Satellittelefoni koster endnu mere."),
+    ]
+    krop = ""
+    for omraade, pris, fri, note in raekker:
+        krop += f"""<tr>
+  <td><strong>{e(omraade)}</strong></td>
+  <td class="tal">{e(pris)}</td>
+  <td class="tal">{e(fri)}</td>
+  <td>{e(note)}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Vejledende minutpriser for opkald fra Danmark til udlandet. Intervallerne
+  dækker forskellen mellem danske selskaber — tjek altid dit eget selskabs prisliste.</caption>
+  <thead><tr>
+    <th scope="col">Område</th><th scope="col">Pr. minut</th>
+    <th scope="col">Med i fri tale</th><th scope="col">Bemærk</th>
+  </tr></thead>
+  <tbody>{krop}</tbody>
+</table>
+</div>"""
+
+
+def tabel_bredbaand_sammenlign():
+    """Mobilt bredbånd mod fiber og coax — de tal der afgør valget."""
+    raekker = [
+        ("Hastighed ned", "50-300 Mbit/s", "300-1000 Mbit/s", "Fiber vinder klart"),
+        ("Hastighed op", "10-50 Mbit/s", "300-1000 Mbit/s", "Afgørende ved videomøder og upload"),
+        ("Svartid", "20-40 ms", "2-10 ms", "Mærkes ved online spil, ikke ved streaming"),
+        ("Stabilitet i myldretid", "Svinger med masten", "Konstant", "Mobilt deler kapacitet med naboerne"),
+        ("Installation", "Sæt stikket i", "Gravearbejde eller tekniker", "Mobilt er klar samme dag"),
+        ("Binding", "Ofte ingen", "6-12 måneder typisk", "Mobilt er lettere at fortryde"),
+        ("Kan flyttes med", "Ja", "Nej", "Afgørende for lejeboliger og sommerhuse"),
+        ("Datamængde", "Ofte et loft", "Ubegrænset", "Den hyppigste ubehagelige overraskelse"),
+    ]
+    krop = ""
+    for hvad, mobilt, fast, hvornaar in raekker:
+        krop += f"""<tr>
+  <td><strong>{e(hvad)}</strong></td>
+  <td>{e(mobilt)}</td>
+  <td>{e(fast)}</td>
+  <td>{e(hvornaar)}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Mobilt bredbånd sammenlignet med fast forbindelse. Tallene er typiske
+  intervaller på det danske marked og varierer med adresse og udbyder.</caption>
+  <thead><tr>
+    <th scope="col">Forhold</th><th scope="col">Mobilt bredbånd</th>
+    <th scope="col">Fiber eller coax</th><th scope="col">Betydning</th>
+  </tr></thead>
+  <tbody>{krop}</tbody>
+</table>
+</div>"""
+
+
 def tabel_pr_datamaengde():
     grupper = [("Op til 10 GB", 1, 10), ("11-20 GB", 11, 20), ("21-40 GB", 21, 40),
                ("41-80 GB", 41, 80), ("Over 80 GB", 81, 899), ("Fri data", 900, 9999)]
@@ -4113,9 +4304,22 @@ def byg_udbyder(u):
 
 # --------------------------------------------------------------- GUIDES
 
+# Undersider under en guide: brødkrummen skal vise forældresiden, ellers står
+# hierarkiet kun i adressen og hjælper hverken læser eller søgemaskine.
+GUIDE_FORAELDRE = {
+    "/guides/hvor-meget-data/apps/":
+        ("/guides/hvor-meget-data/", "Hvor meget data"),
+    "/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/":
+        ("/guides/mobilabonnement-i-udlandet/", "Mobil i udlandet"),
+}
+
+
 def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
               altbillede="", ekstra=None):
-    krumme = [("/", "Forside"), ("/guides/", "Guides"), (None, etiket)]
+    krumme = [("/", "Forside"), ("/guides/", "Guides")]
+    if sti in GUIDE_FORAELDRE:
+        krumme.append(GUIDE_FORAELDRE[sti])
+    krumme.append((None, etiket))
     krop = f"""
 {brodtekst.replace('<section class="sektion baand-smal artikel">',
                     '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1)
@@ -4191,7 +4395,384 @@ GUIDER = [
     ("/guides/koeb-mobiltelefon/", "Køb mobiltelefon — ny, brugt eller renoveret?",
      "Køb telefonen kontant og abonnementet separat. Se hvad du skal tjekke ved brugt køb.",
      "koeb-mobiltelefon", "Kvinde undersøger brugte telefoner", "Guide", 7),
+    ("/guides/hvor-meget-data/apps/", "Så meget data bruger de enkelte apps",
+     "Netflix, TikTok, Spotify og resten — i gigabyte pr. time.",
+     "dataforbrug-apps", "Kvinde bruger apps på sin telefon på en café", "Data", 5),
+    ("/guides/mobilt-bredbaand/", "Mobilt bredbånd — kan det erstatte fiber?",
+     "Hvornår en 5G-router er nok, og hvornår den bliver en dyr fejl.",
+     "mobilt-bredbaand", "Mand på videomøde med 5G-router på hjemmekontor på landet",
+     "Bredbånd", 5),
+    ("/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/",
+     "Hvad koster det at ringe til udlandet?",
+     "EU er gratis. Resten koster fra 1 til 25 kr. i minuttet — se taksterne.",
+     "ringe-til-udlandet",
+     "Kvinde ringer til udlandet fra sit hjem med verdenskort på væggen", "Udland", 5),
+    ("/guides/er-5g-pengene-vaerd/", "Er 5G pengene værd?",
+     "Hvad 5G koster ekstra i praksis, og hvornår du faktisk mærker forskellen.",
+     "er-5g-pengene-vaerd", "Kvinde på videomøde over 5G fra en café i København",
+     "Netværk", 5),
 ]
+
+
+
+def byg_nye_guides():
+    """Fire guides, der rammer søgninger, de eksisterende sider ikke dækker.
+
+    Afgrænsningen mod det, du allerede har, er bevidst:
+
+      /guides/hvor-meget-data/   → sådan MÅLER du dit eget forbrug
+      /guides/dataforbrug-apps/  → hvad de enkelte apps KOSTER i data
+
+      /guides/mobilabonnement-eller-bredbaand/ → mobilabonnement som hotspot
+      /guides/mobilt-bredbaand/  → dedikeret 5G-router som fast forbindelse
+
+      /guides/mobilabonnement-i-udlandet/ → roaming, altså data MENS du er ude
+      /guides/ringe-til-udlandet/         → opkald TIL udlandet FRA Danmark
+
+      /guides/daekning-og-netvaerk/ → hvilket net dækker hvor
+      /guides/er-5g-pengene-vaerd/  → hvad 5G koster ekstra, og om det kan betale sig
+    """
+    med5g = [a for a in ABON if a.get("femg") and a["pris"] > 0]
+    uden5g = [a for a in ABON if not a.get("femg") and a["pris"] > 0]
+    billigst_5g = min(med5g, key=lambda a: a["pris"], default=None)
+    selskaber_5g = len({a["udbyder"] for a in med5g})
+
+    # ------------------------------------------------ dataforbrug pr. app
+    byg_guide(
+        "/guides/hvor-meget-data/apps/", "Dataforbrug pr. app",
+        "Så meget data bruger de enkelte apps",
+        "Dataforbrug pr. app — Netflix, TikTok og Spotify i tal",
+        "Hvor mange gigabyte de mest brugte apps bruger i timen, og hvilke "
+        "indstillinger der flytter mest på regningen.",
+        f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> Video er den eneste app-kategori, der
+for alvor bruger data. En time video i HD koster omkring 3 GB. En time musik koster 0,15
+GB. Beskeder og kort er reelt gratis.</p></div>
+
+<p>De fleste vælger datamængde ud fra en fornemmelse. Problemet er, at fornemmelsen næsten
+altid tager fejl: folk overvurderer, hvor meget sociale medier fylder, og undervurderer,
+hvor meget video fylder. Her er de faktiske tal.</p>
+
+{tabel_appforbrug()}
+
+<h2>Den ene indstilling, der flytter mest</h2>
+<p>Slår du videokvalitet ned fra HD til standard i streamingapperne, falder forbruget til
+under en fjerdedel. På en telefonskærm på seks tommer er forskellen svær at se, og du kan
+stadig se HD, når du er på wi-fi.</p>
+<p>Indstillingen hedder forskelligt fra app til app — "Afspilningskvalitet",
+"Videokvalitet" eller "Databesparelse" — men findes i dem alle.</p>
+
+<h3>Regnestykket</h3>
+<p>Ser du en time video om dagen uden for wi-fi, koster det 90 GB om måneden i HD og 21 GB
+i standardkvalitet. Det er forskellen mellem et abonnement til over 150 kr. og et til
+under 80 kr.</p>
+
+<h2>Det folk overvurderer</h2>
+<p><strong>Sociale medier.</strong> En time på Instagram eller Facebook bruger omkring 0,3
+GB — en tiendedel af en time video. Det, der koster, er autoafspilning af video i
+feedet, og den kan slås fra.</p>
+<p><strong>Musik.</strong> En time i normal kvalitet bruger 0,07 GB. Hører du musik en
+time hver dag hele måneden, er det 2 GB. Selv i høj kvalitet bliver det kun 4,5 GB.</p>
+<p><strong>Navigation.</strong> Google Maps bruger under 5 MB på en times kørsel. Det er
+ikke værd at bekymre sig om.</p>
+
+<h2>Det folk undervurderer</h2>
+<p><strong>Korte videoer.</strong> TikTok, Reels og Shorts bruger 1,5 GB i timen — og de
+er designet til, at man mister tidsfornemmelsen. Tyve minutter om dagen bliver til 15 GB
+om måneden.</p>
+<p><strong>Videoopkald.</strong> 1,2 GB i timen. Slår du video fra og kun bruger lyd,
+falder det til under 0,1 GB.</p>
+<p><strong>Automatiske opdateringer.</strong> Apps, der opdaterer sig selv over mobildata,
+kan bruge flere gigabyte om måneden uden at du bemærker det. Sæt telefonen til kun at
+opdatere over wi-fi.</p>
+
+<h2>Fra forbrug til abonnement</h2>
+<p>Har du regnet dit forbrug ud, kan du gå direkte til den rigtige størrelse:</p>
+<ul class="pilliste">
+  <li>Under 10 GB → <a href="/mobilabonnement-1-10-gb/">abonnementer med 1-10 GB</a></li>
+  <li>10-30 GB → <a href="/mobilabonnement-10-30-gb/">det mest almindelige interval</a></li>
+  <li>30-50 GB → <a href="/mobilabonnement-30-50-gb/">til dig der ser video på farten</a></li>
+  <li>Over 50 GB → <a href="/mobilabonnement-50-gb/">de store abonnementer</a></li>
+</ul>
+<p>Vil du måle dit eget forbrug frem for at regne efter, viser vi fremgangsmåden i guiden
+til <a href="/guides/hvor-meget-data/">hvor meget data du har brug for</a>.</p>
+</section>""",
+        [{"sp": "Hvor meget data bruger en time Netflix?",
+          "sv": "Omkring 3 GB i HD, 7 GB i 4K og 0,7 GB i standardkvalitet. På en "
+                "telefonskærm er standardkvalitet fuldt brugbart."},
+         {"sp": "Bruger TikTok meget data?",
+          "sv": "Ja — omkring 1,5 GB i timen. Tyve minutter om dagen svarer til cirka "
+                "15 GB om måneden."},
+         {"sp": "Hvor meget data bruger Spotify?",
+          "sv": "0,07 GB i timen i normal kvalitet og 0,15 GB i høj kvalitet. Selv daglig "
+                "brug holder sig under 5 GB om måneden."},
+         {"sp": "Hvad bruger mest data på telefonen?",
+          "sv": "Video. Alle andre kategorier tilsammen fylder mindre end en times "
+                "streaming i HD."}],
+        [("/guides/hvor-meget-data/", "Mål dit eget forbrug"),
+         ("/mobilabonnement-10-30-gb/", "Det mest almindelige interval"),
+         ("/guides/undgaa-hoej-regning/", "Undgå en høj regning")],
+        billede="dataforbrug-apps",
+        altbillede="Kvinde bruger apps på sin telefon på en café")
+
+    # ------------------------------------------------ mobilt bredbånd
+    byg_guide(
+        "/guides/mobilt-bredbaand/", "Mobilt bredbånd",
+        "Mobilt bredbånd — kan det erstatte fiber?",
+        "Mobilt bredbånd — hvornår kan det erstatte fiber?",
+        "Hvad mobilt bredbånd er, hvornår det kan erstatte en fast forbindelse, "
+        "og hvornår det bliver en dyr fejl.",
+        f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> Mobilt bredbånd fungerer godt til en
+til to personer, der streamer og browser. Det er den forkerte løsning til en husstand med
+hjemmearbejde, online spil eller flere samtidige streams i myldretiden.</p></div>
+
+<h2>Hvad mobilt bredbånd er — og ikke er</h2>
+<p>Mobilt bredbånd er en router, der modtager internet via mobilnettet i stedet for via et
+kabel. Du sætter den i stikkontakten, og så virker den. Der er intet gravearbejde, ingen
+tekniker og ingen ventetid.</p>
+<p>Det er noget andet end at bruge telefonen som hotspot. En router har bedre antenne,
+kan holde flere enheder forbundet, og slider ikke på telefonens batteri. Vil du læse om
+hotspot-løsningen i stedet, dækker vi den i guiden til
+<a href="/guides/mobilabonnement-eller-bredbaand/">mobilabonnement eller bredbånd</a>.</p>
+
+<h2>Mobilt bredbånd mod fast forbindelse</h2>
+{tabel_bredbaand_sammenlign()}
+
+<h2>De fem situationer hvor mobilt bredbånd er det rigtige valg</h2>
+<ol class="nummerliste">
+  <li><strong>Lejebolig med kort horisont.</strong> Ingen binding til adressen, og
+  routeren flytter med.</li>
+  <li><strong>Sommerhus.</strong> Fast bredbånd til et hus, der bruges tyve dage om året,
+  er dyrt pr. brugsdag.</li>
+  <li><strong>Adresser uden fiber.</strong> Nogle steder er alternativet et gammelt
+  kobbernet med lavere hastighed end 5G.</li>
+  <li><strong>Overgangsperiode.</strong> Mens du venter på, at fiber bliver gravet ned.</li>
+  <li><strong>Én til to personer med almindeligt forbrug.</strong> Streaming, browsing og
+  mail belaster ikke en 5G-forbindelse nævneværdigt.</li>
+</ol>
+
+<h2>De fire situationer hvor det bliver dyrt</h2>
+<ol class="nummerliste">
+  <li><strong>Hjemmearbejde med videomøder.</strong> Uploadhastigheden er den svage side,
+  og det er upload, der afgør, om andre kan se og høre dig.</li>
+  <li><strong>Online spil.</strong> Svartiden på mobilnettet er fire til ti gange højere
+  end på fiber. Det mærkes.</li>
+  <li><strong>Husstand med flere samtidige streams.</strong> Om aftenen deler du kapacitet
+  med alle andre på masten.</li>
+  <li><strong>Højt forbrug med et dataloft.</strong> En husstand, der streamer video om
+  aftenen, bruger 150-300 GB om måneden. Rammer du loftet den 20. i måneden, er der ti
+  dage tilbage uden internet.</li>
+</ol>
+
+<h2>Datamængden er det, der afgør det</h2>
+<p>Det er her, de fleste bliver overrasket. Et mobilt bredbåndsabonnement med 500 GB lyder
+rigeligt, indtil man regner efter: en aften med to streams i HD koster 6 GB, og en
+systemopdatering til en bærbar kan tage 5 GB alene.</p>
+<p>Skal mobilt bredbånd erstatte en fast forbindelse i en husstand, skal det være uden
+loft. Er der et loft, er det en supplerende forbindelse — ikke en erstatning.</p>
+
+<h2>Tjek dækningen på adressen først</h2>
+<p>Mobilt bredbånd er lige så godt som signalet på netop din adresse. Det nytter ikke at
+kigge på hastighedsløfter, hvis masten er langt væk eller huset har tykke mure.</p>
+<p>Brug <a href="/daekningskort/">vores dækningstjek</a> til at se, hvilket net der dækker
+hos dig, og læs om forskellen mellem de tre net i guiden til
+<a href="/guides/daekning-og-netvaerk/">dækning og netværk</a>.</p>
+
+<h2>Hvad med bare at bruge mobilabonnementet?</h2>
+<p>Har du et abonnement med fri data, kan hotspot dække et beskedent behov uden ekstra
+udgift. Det virker til en enkelt bærbar og et par timer om dagen. Se
+<a href="/mobilabonnement-med-fri-data/">abonnementer med fri data</a>, hvis det er vejen
+for dig.</p>
+</section>""",
+        [{"sp": "Kan mobilt bredbånd erstatte fiber?",
+          "sv": "For en til to personer med almindeligt forbrug, ja. Til hjemmearbejde "
+                "med videomøder, online spil eller flere samtidige streams i myldretiden "
+                "er en fast forbindelse markant bedre."},
+         {"sp": "Hvor hurtigt er mobilt bredbånd?",
+          "sv": "Typisk 50-300 Mbit/s ned og 10-50 Mbit/s op på 5G. Hastigheden svinger "
+                "med afstanden til masten og belastningen i området."},
+         {"sp": "Hvor meget data bruger en husstand?",
+          "sv": "En husstand, der streamer video om aftenen, bruger typisk 150-300 GB om "
+                "måneden. Skal mobilt bredbånd erstatte fast internet, bør det være uden "
+                "dataloft."},
+         {"sp": "Er der binding på mobilt bredbånd?",
+          "sv": "Ofte ikke, og routeren kan flyttes med til en ny adresse. Det er en af "
+                "de væsentligste fordele frem for fast bredbånd."}],
+        [("/guides/mobilabonnement-eller-bredbaand/", "Mobilabonnement eller bredbånd"),
+         ("/daekningskort/", "Tjek dækningen på din adresse"),
+         ("/mobilabonnement-med-fri-data/", "Abonnementer med fri data")],
+        billede="mobilt-bredbaand",
+        altbillede="Mand på videomøde med 5G-router på hjemmekontor på landet")
+
+    # ------------------------------------------------ ringe til udlandet
+    byg_guide(
+        "/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/", "Ringe til udlandet",
+        "Hvad koster det at ringe til udlandet?",
+        "Ringe til udlandet — hvad det koster fra Danmark i 2026",
+        "Hvad opkald til udlandet koster fra Danmark, hvorfor fri tale ikke "
+        "dækker, og de billigste måder at ringe på.",
+        f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> Opkald til EU-lande er gratis og indgår
+i fri tale. Alt andet koster ekstra — fra omkring 1 kr. i minuttet til Storbritannien og
+op til 25 kr. til dele af Afrika.</p></div>
+
+<p>Det her er en anden situation end at bruge telefonen, mens man er i udlandet. Ringer
+du <em>til</em> et udenlandsk nummer <em>fra</em> Danmark, gælder der helt andre regler
+end ved roaming. Er du på rejse, er det
+<a href="/guides/mobilabonnement-i-udlandet/">guiden til mobil i udlandet</a>, du skal
+bruge.</p>
+
+<h2>Fri tale dækker ikke udlandet</h2>
+<p>Det er den hyppigste misforståelse. "Fri tale" betyder fri tale til danske numre. Nogle
+selskaber inkluderer også EU-lande, men uden for EU koster hvert minut ekstra — også når
+abonnementet hedder ubegrænset.</p>
+<p>Reglen er let at huske: EU er gratis, resten koster.</p>
+
+<h2>Priser efter område</h2>
+{tabel_udlandstakster()}
+
+<h2>Hvorfor EU er gratis, og resten ikke er</h2>
+<p>EU har reguleret, hvad selskaberne må tage for opkald mellem medlemslandene. Loftet
+ligger så lavt, at de fleste danske selskaber har valgt at inkludere EU i fri tale frem
+for at fakturere småbeløb.</p>
+<p>Uden for EU findes der ingen regulering. Dit selskab betaler en afgift til
+modtagerlandets selskab, og den afgift varierer voldsomt — fra få øre til flere kroner i
+minuttet. Det er forklaringen på, at Afrika er dyrere end USA, selvom afstanden ikke er
+det afgørende.</p>
+
+<h2>Fem billigere måder at ringe til udlandet</h2>
+<ol class="nummerliste">
+  <li><strong>Ring over internettet.</strong> WhatsApp, Messenger, FaceTime og Signal
+  bruger data i stedet for taletid. På wi-fi er det gratis, og over mobildata koster en
+  times samtale under 0,1 GB uden video.</li>
+  <li><strong>Tjek om dit selskab har en udlandspakke.</strong> Flere selskaber sælger
+  tillæg med et antal minutter til udvalgte lande. Ringer du fast til samme land, er det
+  næsten altid billigere end minuttaksten.</li>
+  <li><strong>Se på selskaber med udlandsminutter inkluderet.</strong> Enkelte
+  abonnementer indeholder timer til en række lande uden tillæg. Se
+  <a href="/mobilabonnement-med-fri-tale/">abonnementer med fri tale</a> og læs
+  vilkårene for udland.</li>
+  <li><strong>Brug et taletidskort til formålet.</strong> Nogle
+  <a href="/taletidskort/">taletidskort</a> har lave udlandstakster og kan bruges som
+  supplement uden binding.</li>
+  <li><strong>Lad modparten ringe op.</strong> Er du i tvivl om taksten, og har den anden
+  et abonnement med billige opkald til Danmark, er det den enkleste løsning.</li>
+</ol>
+
+<h2>Landekoden skal med</h2>
+<p>Et opkald til udlandet kræver landekoden foran nummeret — 0045 eller +45 for Danmark,
+0046 for Sverige, 0049 for Tyskland. Bruger du plus-tegnet frem for de to nuller, virker
+nummeret også, når du selv er i udlandet.</p>
+<p>Vi har samlet alle landekoder med søgefunktion i
+<a href="/landekoder/">oversigten over landekoder</a>.</p>
+
+<h2>Tjek prisen, før du ringer</h2>
+<p>Alle danske selskaber har en prisliste for udland på deres hjemmeside. Den er ikke
+altid let at finde, men den findes, og den er bindende. Ringer du fast til et bestemt
+land, er det tyve minutters arbejde at finde det selskab, der er billigst netop dertil.</p>
+<p>Er udlandsopkald en fast del af dit forbrug, kan det ændre, hvilket abonnement der er
+det rigtige. Se <a href="/billigste-mobilabonnement/">alle abonnementer sammenlignet</a>
+og læs vilkårene for udland hos de selskaber, der ligger øverst.</p>
+</section>""",
+        [{"sp": "Er det gratis at ringe til EU-lande fra Danmark?",
+          "sv": "Ja, hos stort set alle danske selskaber indgår opkald til EU-lande, "
+                "Norge og Island i fri tale til samme takst som danske numre."},
+         {"sp": "Dækker fri tale opkald til udlandet?",
+          "sv": "Kun til EU-lande. Uden for EU koster hvert minut ekstra, også når "
+                "abonnementet hedder fri tale eller ubegrænset."},
+         {"sp": "Hvad koster det at ringe til Storbritannien?",
+          "sv": "Typisk 1-3 kr. i minuttet. Storbritannien er ikke længere omfattet af "
+                "EU-reglerne efter brexit."},
+         {"sp": "Hvordan ringer man billigst til udlandet?",
+          "sv": "Over internettet med WhatsApp, Messenger eller FaceTime. På wi-fi er det "
+                "gratis, og over mobildata bruger en times samtale under 0,1 GB."}],
+        [("/landekoder/", "Alle landekoder"),
+         ("/guides/mobilabonnement-i-udlandet/", "Mobil i udlandet"),
+         ("/mobilabonnement-med-fri-tale/", "Abonnementer med fri tale")],
+        billede="ringe-til-udlandet",
+        altbillede="Kvinde ringer til udlandet fra sit hjem med verdenskort på væggen")
+
+    # ------------------------------------------------ er 5G pengene værd
+    if med5g and uden5g:
+        byg_guide(
+            "/guides/er-5g-pengene-vaerd/", "Er 5G pengene værd?",
+            "Er 5G pengene værd?",
+            f"Er 5G pengene værd? — {len(med5g)} abonnementer med 5G sammenlignet",
+            f"Hvad 5G koster ekstra i praksis, hvornår du mærker forskellen, "
+            f"og hvornår du betaler for noget, du ikke bruger.",
+            f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> {len(med5g)} af {len(ABON)}
+abonnementer har 5G. Billigste med 5G koster {kr(billigst_5g['pris'])} kr. om måneden.
+Til almindelig brug på en telefon mærker de fleste ikke forskellen fra 4G.</p></div>
+
+<h2>Hvad 5G reelt koster ekstra</h2>
+<p>Prisforskellen er ikke en fast sum — den afhænger af, hvor stort et abonnement du har.
+Tabellen viser medianprisen med og uden 5G i hvert dataniveau.</p>
+
+{tabel_5g_prisforskel()}
+
+<p>Bemærk, at forskellen i høj grad skyldes noget andet end 5G i sig selv: abonnementer
+med 5G er typisk også dem med mest data. Sammenligner man to abonnementer med samme
+datamængde, er tillægget som regel mindre end tabellen antyder.</p>
+
+<h2>Mærker du forskellen på telefonen?</h2>
+<p>Til de opgaver, folk faktisk bruger telefonen til, er svaret som regel nej. En video i
+HD kræver omkring 5 Mbit/s. 4G leverer typisk 30-80 Mbit/s. Der er rigelig plads til
+overs, længe før 5G kommer i spil.</p>
+<p>Forskellen mærkes tre steder:</p>
+<ol class="nummerliste">
+  <li><strong>Store filer.</strong> Henter du en spilopdatering på flere gigabyte over
+  mobildata, er 5G mærkbart hurtigere.</li>
+  <li><strong>Steder med mange mennesker.</strong> Til koncerter, fodboldkampe og i
+  myldretiden på stationen har 5G mere kapacitet, og forbindelsen bliver ikke lige så
+  hurtigt overbelastet.</li>
+  <li><strong>Hotspot til en bærbar.</strong> Bruger du telefonen som internetforbindelse
+  for andre enheder, betyder både hastighed og svartid noget.</li>
+</ol>
+
+<h2>Hvem har 5G?</h2>
+{tabel_5g_selskaber()}
+
+<p>{selskaber_5g} af selskaberne har mindst ét abonnement med 5G. Bemærk, at nogle
+selskaber kun har 5G på deres største abonnementer — det billigste hos et selskab er ikke
+nødvendigvis et med 5G.</p>
+
+<h2>Dækning betyder mere end teknologien</h2>
+<p>5G er udbygget i byerne og langs de store veje, men langtfra overalt. Bor du et sted
+med begrænset 5G-dækning, betaler du for en teknologi, telefonen sjældent kobler sig på.</p>
+<p>Tjek dækningen på din egen adresse, før du betaler tillæg. Vi har både et
+<a href="/daekningskort/">dækningstjek</a> og en gennemgang af
+<a href="/guides/daekning-og-netvaerk/">forskellen mellem de tre danske net</a>.</p>
+
+<h2>Så skal du vælge 5G?</h2>
+<p><strong>Ja</strong>, hvis du bruger telefonen som hotspot, henter store filer over
+mobildata, eller ofte er steder med mange mennesker på samme mast.</p>
+<p><strong>Nej</strong>, hvis du bruger telefonen til beskeder, sociale medier, musik,
+kort og video — og har wi-fi hjemme. Så er pengene bedre brugt på mere data.</p>
+<p>Vil du hellere prioritere datamængde end teknologi, kan du filtrere direkte i
+<a href="/billigste-mobilabonnement/">oversigten over alle abonnementer</a> — der er et
+filter for netværk, så du kan se med og uden 5G side om side.</p>
+</section>""",
+            [{"sp": "Hvad koster 5G ekstra?",
+              "sv": f"Det afhænger af abonnementets størrelse. Billigste abonnement med "
+                    f"5G koster {kr(billigst_5g['pris'])} kr. om måneden. Sammenligner du "
+                    f"abonnementer med samme datamængde, er tillægget som regel beskedent."},
+             {"sp": "Mærker man forskel på 4G og 5G?",
+              "sv": "Sjældent til almindelig brug. Video i HD kræver omkring 5 Mbit/s, og "
+                    "4G leverer typisk 30-80. Forskellen mærkes ved store filer, hotspot "
+                    "og steder med mange mennesker."},
+             {"sp": "Hvor mange abonnementer har 5G?",
+              "sv": f"{len(med5g)} af de {len(ABON)} abonnementer, vi følger, har 5G. "
+                    f"De fordeler sig på {selskaber_5g} selskaber."},
+             {"sp": "Er der 5G-dækning i hele Danmark?",
+              "sv": "Nej. 5G er udbygget i byerne og langs de store veje, men ikke "
+                    "overalt. Tjek dækningen på din egen adresse, før du betaler tillæg."}],
+            [("/daekningskort/", "Tjek dækningen på din adresse"),
+             ("/guides/daekning-og-netvaerk/", "De tre danske net"),
+             ("/billigste-mobilabonnement/", "Alle abonnementer sammenlignet")],
+            billede="er-5g-pengene-vaerd",
+            altbillede="Kvinde på videomøde over 5G fra en café i København")
 
 
 def byg_guideoversigt():
@@ -6661,6 +7242,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         byg_udbyder(u)
 
     # Guides
+    byg_nye_guides()
     byg_guideoversigt()
     byg_guide("/guides/skift-mobilselskab/", "Skift mobilselskab",
               "Sådan skifter du mobilselskab",

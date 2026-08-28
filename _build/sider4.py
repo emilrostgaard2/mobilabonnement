@@ -421,6 +421,10 @@ opkald og sms, mens data kører på en lokal pakke.
 </ol>
 
 <h2>Ringer du fast til udlandet fra Danmark?</h2>
+<p class="krydslink">Det er en anden situation end roaming, og priserne er andre. Vi har
+samlet takster pr. område i guiden til
+<a href="/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/">hvad det koster at ringe
+til udlandet</a>.</p>
 
 <p>Så er det ikke roaming, du skal kigge på — det er et abonnement bygget til
 udlandsopkald. Forskellen kan løbe op i hundredvis af kroner om måneden for en familie med
