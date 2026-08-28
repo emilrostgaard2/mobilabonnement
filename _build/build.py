@@ -1217,6 +1217,141 @@ def tabel_bredbaand_sammenlign():
 </div>"""
 
 
+def tabel_dataplan():
+    """Hvad et givet dagligt forbrug bliver til på en måned.
+
+    Det er den regning, folk ikke selv laver — og den er afgørende for,
+    om man vælger rigtigt."""
+    rk = [
+        ("Kun beskeder og opkald", "Under 1 GB", "1-5 GB", "/mobilabonnement-1-10-gb/"),
+        ("Sociale medier 30 min./dag", "9 GB", "10-15 GB", "/mobilabonnement-10-30-gb/"),
+        ("Musik 1 time/dag", "2 GB", "5-10 GB", "/mobilabonnement-1-10-gb/"),
+        ("TikTok 20 min./dag", "15 GB", "20-30 GB", "/mobilabonnement-10-30-gb/"),
+        ("Video 30 min./dag i HD", "45 GB", "50 GB+", "/mobilabonnement-50-gb/"),
+        ("Video 1 time/dag i HD", "90 GB", "100 GB+", "/mobilabonnement-100-gb/"),
+        ("Hotspot til bærbar dagligt", "60-150 GB", "Fri data", "/mobilabonnement-med-fri-data/"),
+    ]
+    krop = ""
+    for brug, maaned, anbefaling, link in rk:
+        krop += f"""<tr>
+  <td><strong>{e(brug)}</strong></td>
+  <td class="tal">{e(maaned)}</td>
+  <td class="tal"><a href="{link}">{e(anbefaling)}</a></td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Dagligt forbrug omregnet til måned, og hvilken abonnementsstørrelse det
+  svarer til. Læg 20 procent til som buffer.</caption>
+  <thead><tr>
+    <th scope="col">Sådan bruger du telefonen</th>
+    <th scope="col">Pr. måned</th><th scope="col">Vælg</th>
+  </tr></thead>
+  <tbody>{krop}</tbody>
+</table>
+</div>"""
+
+
+def tabel_landeopkald():
+    """De lande danskere oftest ringer til, med takst og landekode."""
+    rk = [
+        ("Sverige", "+46", "Gratis", "EU"),
+        ("Tyskland", "+49", "Gratis", "EU"),
+        ("Norge", "+47", "Gratis", "Med i EU-aftalen"),
+        ("Polen", "+48", "Gratis", "EU"),
+        ("Spanien", "+34", "Gratis", "EU"),
+        ("Storbritannien", "+44", "1-3 kr./min.", "Uden for EU efter brexit"),
+        ("USA", "+1", "2-6 kr./min.", "Uden for EU"),
+        ("Tyrkiet", "+90", "4-12 kr./min.", "Uden for EU"),
+        ("Thailand", "+66", "3-12 kr./min.", "Uden for EU"),
+        ("Filippinerne", "+63", "5-15 kr./min.", "Uden for EU"),
+    ]
+    krop = ""
+    for i, (land, kode, pris, note) in enumerate(rk, 1):
+        krop += f"""<tr>
+  <td class="tal">{i}</td>
+  <td><strong>{e(land)}</strong></td>
+  <td class="tal">{e(kode)}</td>
+  <td class="tal">{e(pris)}</td>
+  <td>{e(note)}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>De lande danskere oftest ringer til, med landekode og vejledende minutpris
+  fra Danmark. Se alle koder i vores <a href="/landekoder/">oversigt over
+  landekoder</a>.</caption>
+  <thead><tr>
+    <th scope="col">#</th><th scope="col">Land</th><th scope="col">Kode</th>
+    <th scope="col">Pr. minut</th><th scope="col">Bemærk</th>
+  </tr></thead>
+  <tbody>{krop}</tbody>
+</table>
+</div>"""
+
+
+def tabel_5g_hastighed():
+    """Hvad de enkelte opgaver reelt kræver — kernen i 5G-spørgsmålet."""
+    rk = [
+        ("Beskeder og mail", "0,5 Mbit/s", "Ja", "Ja"),
+        ("Musikstreaming", "1 Mbit/s", "Ja", "Ja"),
+        ("Video i HD", "5 Mbit/s", "Ja", "Ja"),
+        ("Video i 4K", "25 Mbit/s", "Som regel", "Ja"),
+        ("Videomøde", "3 Mbit/s op", "Ja", "Ja"),
+        ("Online spil", "3 Mbit/s + lav svartid", "Svingende", "Bedre"),
+        ("Hente 50 GB spilopdatering", "Så meget som muligt", "1-4 timer", "15-30 min."),
+        ("Hotspot til flere enheder", "20-50 Mbit/s", "Til en enhed", "Til flere"),
+    ]
+    krop = ""
+    for opgave, krav, fireg, femg in rk:
+        krop += f"""<tr>
+  <td><strong>{e(opgave)}</strong></td>
+  <td class="tal">{e(krav)}</td>
+  <td class="tal">{e(fireg)}</td>
+  <td class="tal">{e(femg)}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Hvad hver opgave kræver, og om 4G rækker. 4G leverer typisk 30-80 Mbit/s
+  i Danmark, 5G mellem 100 og 600.</caption>
+  <thead><tr>
+    <th scope="col">Opgave</th><th scope="col">Kræver</th>
+    <th scope="col">Klarer 4G det?</th><th scope="col">5G</th>
+  </tr></thead>
+  <tbody>{krop}</tbody>
+</table>
+</div>"""
+
+
+def tabel_bredbaand_husstand():
+    """Hvor meget data en husstand bruger — det tal der afgør valget."""
+    rk = [
+        ("Enlig, moderat brug", "Mail, web, lidt streaming", "40-80 GB", "Mobilt bredbånd er rigeligt"),
+        ("Enlig, streamer meget", "2-3 timer video dagligt", "150-250 GB", "Kræver stort abonnement eller fri data"),
+        ("Par uden børn", "Streaming om aftenen", "200-350 GB", "Fri data anbefales"),
+        ("Familie med børn", "Flere skærme samtidig", "400-800 GB", "Fast forbindelse anbefales"),
+        ("Hjemmearbejde", "Videomøder dagligt", "+50-100 GB oveni", "Upload er flaskehalsen"),
+        ("Gamer i husstanden", "Spil og opdateringer", "+100-200 GB oveni", "Svartid taler for fiber"),
+        ("Sommerhus", "Weekender og ferier", "20-60 GB", "Mobilt bredbånd er det oplagte"),
+    ]
+    krop = ""
+    for hvem, hvad, forbrug, anbefaling in rk:
+        krop += f"""<tr>
+  <td><strong>{e(hvem)}</strong><br><span class="tabel-under">{e(hvad)}</span></td>
+  <td class="tal">{e(forbrug)}</td>
+  <td>{e(anbefaling)}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Typisk månedligt dataforbrug efter husstandstype. Tallene dækker al
+  internetbrug i hjemmet, ikke kun mobilen.</caption>
+  <thead><tr>
+    <th scope="col">Husstand</th><th scope="col">Pr. måned</th>
+    <th scope="col">Anbefaling</th>
+  </tr></thead>
+  <tbody>{krop}</tbody>
+</table>
+</div>"""
+
+
 def tabel_pr_datamaengde():
     grupper = [("Op til 10 GB", 1, 10), ("11-20 GB", 11, 20), ("21-40 GB", 21, 40),
                ("41-80 GB", 41, 80), ("Over 80 GB", 81, 899), ("Fri data", 900, 9999)]
@@ -4320,12 +4455,18 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
     if sti in GUIDE_FORAELDRE:
         krumme.append(GUIDE_FORAELDRE[sti])
     krumme.append((None, etiket))
+    # Nogle brødtekster indeholder allerede gennemgangslinjen. Indsætter vi den
+    # igen, står "Skrevet af Emil Rostgaard" to gange på siden.
+    gl = gennemgangslinje(OPDATERET)
+    krop_tekst = brodtekst
+    if "gennemgangslinje" not in krop_tekst and "Skrevet af" not in krop_tekst:
+        krop_tekst = krop_tekst.replace(
+            '<section class="sektion baand-smal artikel">',
+            '<section class="sektion baand-smal artikel">' + gl, 1)
+    if ekstra:
+        krop_tekst = krop_tekst.replace('</section>', "".join(ekstra) + '</section>', 1)
     krop = f"""
-{brodtekst.replace('<section class="sektion baand-smal artikel">',
-                    '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1)
-             .replace('</section>', "".join(ekstra or []) + '</section>', 1) if ekstra else
-   brodtekst.replace('<section class="sektion baand-smal artikel">',
-                    '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1)}
+{krop_tekst}
 <section class="sektion baand-smal">
   {laesvidere(links)}
   {forfatterboks()}
@@ -4336,7 +4477,7 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
         sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side(etiket, h1, besk,
                        billede=guidebillede(billede, altbillede or h1, prioritet=True) if billede else None),
-        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
+        efter_hero="", krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk),
                      howtold(sti, h1, besk, brodtekst))],
@@ -4486,6 +4627,54 @@ falder det til under 0,1 GB.</p>
 kan bruge flere gigabyte om måneden uden at du bemærker det. Sæt telefonen til kun at
 opdatere over wi-fi.</p>
 
+<h2>Hvor meget bliver det på en måned?</h2>
+<p>Tallene pr. time siger ikke meget i sig selv. Det, der afgør valget, er, hvad din
+daglige vane bliver til over tredive dage.</p>
+
+{tabel_dataplan()}
+
+<h2>Hvor meget data bruger en time med de mest brugte tjenester?</h2>
+<h3>Netflix, HBO Max og Viaplay</h3>
+<p>Omkring 3 GB i timen i HD. Skifter du til standardkvalitet, falder det til 0,7 GB — en
+firedel. Alle tre tjenester har indstillingen under datasparefunktionen i appen. Vælger du
+4K, ryger det op på 7 GB, og på en telefonskærm er der ingen synlig gevinst.</p>
+<h3>YouTube</h3>
+<p>Afhænger helt af opløsningen. 480p bruger 0,3 GB i timen, 720p omkring 0,9 GB og 1080p
+1,5 GB. YouTube husker din indstilling pr. netværk, så du kan sætte den lavt på mobildata
+og højt på wi-fi.</p>
+<h3>TikTok, Instagram Reels og YouTube Shorts</h3>
+<p>Omkring 1,5 GB i timen. Det er den kategori, folk undervurderer mest, fordi
+sessionerne føles korte. Tyve minutter dagligt bliver til 15 GB om måneden — mere end et
+helt lille abonnement.</p>
+<h3>Spotify og Apple Music</h3>
+<p>0,07 GB i timen i normal kvalitet, 0,15 GB i høj. Selv daglig lytning holder sig under
+5 GB om måneden. Downloader du dine playlister over wi-fi, bliver forbruget nul.</p>
+<h3>Teams, Zoom og FaceTime</h3>
+<p>1,2 GB i timen med video. Slår du kameraet fra, falder det til under 0,1 GB. Det er
+den enkeltste besparelse på listen, hvis du har mange møder på farten.</p>
+
+<h2>Fem indstillinger der halverer dit forbrug</h2>
+<ol class="nummerliste">
+  <li><strong>Sæt videokvalitet til standard</strong> i alle streamingapps. Sparer mest af
+  alt på listen.</li>
+  <li><strong>Slå autoafspilning fra</strong> på Facebook, Instagram og X. Video, der
+  starter af sig selv i feedet, er data, du ikke bad om.</li>
+  <li><strong>Kun opdateringer over wi-fi.</strong> App Store og Google Play kan begge
+  sættes til det, og det fjerner flere gigabyte om måneden.</li>
+  <li><strong>Download frem for stream.</strong> Podcasts, musik og serier hentet hjemme
+  koster nul på farten.</li>
+  <li><strong>Slå datasparefunktionen til</strong> i telefonens indstillinger. Den
+  begrænser baggrundsdata på tværs af alle apps.</li>
+</ol>
+
+<h2>Hvad bruger mest data på iPhone og Android?</h2>
+<p>Der er ingen reel forskel mellem de to styresystemer på selve forbruget — det er
+apperne, der bruger data, ikke telefonen. Forskellen ligger i, hvor du finder tallene.</p>
+<p>På iPhone: Indstillinger → Mobilnet. Rul ned, og du ser forbruget pr. app. Bemærk, at
+tælleren ikke nulstilles automatisk ved månedsskift — du skal selv nulstille den.</p>
+<p>På Android: Indstillinger → Netværk og internet → Dataforbrug. Her nulstilles tælleren
+typisk automatisk ved din faktureringsdato.</p>
+
 <h2>Fra forbrug til abonnement</h2>
 <p>Har du regnet dit forbrug ud, kan du gå direkte til den rigtige størrelse:</p>
 <ul class="pilliste">
@@ -4565,6 +4754,40 @@ hotspot-løsningen i stedet, dækker vi den i guiden til
   dage tilbage uden internet.</li>
 </ol>
 
+<h2>Hvor meget data bruger en husstand?</h2>
+<p>Det er her, de fleste regner forkert. Et mobilt bredbåndsabonnement med 500 GB lyder
+rigeligt, indtil man ser, hvad en almindelig husstand faktisk bruger.</p>
+
+{tabel_bredbaand_husstand()}
+
+<h2>Hvad koster mobilt bredbånd i Danmark?</h2>
+<p>Priserne ligger typisk mellem 150 og 350 kr. om måneden afhængigt af datamængde og
+hastighed. Dertil kommer routeren, som enten indgår, lejes for 25-50 kr. om måneden eller
+købes for 800-2.000 kr.</p>
+<p>Til sammenligning koster fiberbredbånd typisk 250-450 kr. om måneden. Prisforskellen er
+altså mindre, end mange tror — og den forsvinder helt, hvis du skal have et stort
+dataabonnement for at undgå loftet.</p>
+<h3>Regn oprettelsen med</h3>
+<p>Fast bredbånd har ofte et oprettelsesgebyr på 300-500 kr. og seks til tolv måneders
+binding. Mobilt bredbånd har som regel ingen af delene. Bliver du kun boende et år, kan
+det alene vende regnestykket.</p>
+
+<h2>5G eller 4G til mobilt bredbånd?</h2>
+<p>Her betyder forskellen noget — modsat på telefonen. En 4G-router leverer typisk 20-80
+Mbit/s, en 5G-router mellem 100 og 600. Skal forbindelsen deles af flere personer og
+enheder, er 5G det rigtige valg.</p>
+<p>Men det kræver 5G-dækning på adressen. Er der kun 4G, får du 4G-hastighed uanset hvilken
+router du køber. Læs mere om forskellen i vores gennemgang af
+<a href="/guides/er-5g-pengene-vaerd/">om 5G er pengene værd</a>.</p>
+
+<h2>Mobilt bredbånd til sommerhus</h2>
+<p>Det er nok den mest oplagte anvendelse. Fast bredbånd til et hus, der bruges tredive
+dage om året, koster det samme som til en helårsbolig. En router med et abonnement uden
+binding kan slukkes og tændes efter behov, og den kan tages med hjem om vinteren.</p>
+<p>Tjek dækningen på sommerhusadressen specifikt. Sommerhusområder ligger ofte i
+udkanten af dækningen, og et hus med tykke mure eller lavt til taget kan gøre en
+mærkbar forskel.</p>
+
 <h2>Datamængden er det, der afgør det</h2>
 <p>Det er her, de fleste bliver overrasket. Et mobilt bredbåndsabonnement med 500 GB lyder
 rigeligt, indtil man regner efter: en aften med to streams i HD koster 6 GB, og en
@@ -4632,6 +4855,9 @@ abonnementet hedder ubegrænset.</p>
 <h2>Priser efter område</h2>
 {tabel_udlandstakster()}
 
+<h2>De ti lande danskere oftest ringer til</h2>
+{tabel_landeopkald()}
+
 <h2>Hvorfor EU er gratis, og resten ikke er</h2>
 <p>EU har reguleret, hvad selskaberne må tage for opkald mellem medlemslandene. Loftet
 ligger så lavt, at de fleste danske selskaber har valgt at inkludere EU i fri tale frem
@@ -4659,6 +4885,28 @@ det afgørende.</p>
   <li><strong>Lad modparten ringe op.</strong> Er du i tvivl om taksten, og har den anden
   et abonnement med billige opkald til Danmark, er det den enkleste løsning.</li>
 </ol>
+
+<h2>Hvad koster det at sende sms til udlandet?</h2>
+<p>Sms til EU-lande indgår i fri sms hos stort set alle danske selskaber. Uden for EU
+koster en sms typisk mellem 0,50 og 2,50 kr. Mms er dyrere — ofte 3-5 kr.</p>
+<p>Skal du sende billeder eller længere beskeder, er WhatsApp, Messenger eller Signal
+gratis over wi-fi og koster nærmest ingenting over mobildata.</p>
+
+<h2>Hvad hvis nogen ringer til dig fra udlandet?</h2>
+<p>Det er gratis for dig. Modtageren betaler aldrig for et indgående opkald i Danmark —
+det er den, der ringer op, som betaler. Det gælder også, når du selv er i EU.</p>
+<p>Undtagelsen er, hvis du befinder dig uden for EU. Så kan du blive opkrævet for at
+modtage opkald, og taksten kan være høj. Slå viderestilling til telefonsvarer fra, hvis du
+rejser langt — ellers kan du blive opkrævet for opkald, du aldrig tog.</p>
+
+<h2>Pas på servicenumre og betalingsnumre</h2>
+<p>Numre der begynder med 90 i Danmark, og tilsvarende premium-numre i udlandet, er ikke
+omfattet af fri tale — heller ikke inden for EU. De kan koste flere kroner i minuttet
+eller pr. opkald.</p>
+<p>Får du et ubesvaret opkald fra et ukendt udenlandsk nummer, så ring ikke tilbage uden
+at tjekke det først. Det er et kendt svindelmønster, hvor opkaldet går til et dyrt
+betalingsnummer. Du kan slå nummeret op i vores værktøj
+<a href="/hvem-ringer-til-mig/">hvem ringer til mig</a>.</p>
 
 <h2>Landekoden skal med</h2>
 <p>Et opkald til udlandet kræver landekoden foran nummeret — 0045 eller +45 for Danmark,
@@ -4730,6 +4978,35 @@ overs, længe før 5G kommer i spil.</p>
   <li><strong>Hotspot til en bærbar.</strong> Bruger du telefonen som internetforbindelse
   for andre enheder, betyder både hastighed og svartid noget.</li>
 </ol>
+
+<h2>Hvad kræver de enkelte opgaver egentlig?</h2>
+<p>Diskussionen om 5G handler næsten altid om hastighed i megabit. Det interessante er,
+hvad opgaverne faktisk kræver — og der er 4G rigeligt til det meste.</p>
+
+{tabel_5g_hastighed()}
+
+<h2>Hvor hurtigt er 5G i Danmark?</h2>
+<p>I praksis mellem 100 og 600 Mbit/s afhængigt af afstanden til masten og belastningen.
+4G leverer typisk 30-80 Mbit/s. Begge dele svinger markant: samme telefon på samme adresse
+kan måle vidt forskelligt morgen og aften.</p>
+<p>Vil du vide, hvad du faktisk får, kan du måle det med vores
+<a href="/speedtest/">hastighedstest</a>. Mål flere gange på forskellige tidspunkter —
+en enkelt måling siger ikke ret meget.</p>
+
+<h2>Bruger 5G mere batteri?</h2>
+<p>Ja, i praksis. Telefonen skifter mellem 4G og 5G efter dækningen, og selve skiftet
+koster strøm. I områder med svingende 5G-dækning kan det mærkes på batteritiden.</p>
+<p>Både iPhone og Android har en indstilling, der kun bruger 5G, når det giver mening —
+på iPhone hedder den "5G Auto". Er batteritid vigtigere for dig end hastighed, er det den
+indstilling, du skal bruge.</p>
+
+<h2>Kræver 5G en ny telefon?</h2>
+<p>Ja. En 4G-telefon kan ikke bruge 5G, uanset hvilket abonnement du har. Telefoner fra
+omkring 2020 og frem har som regel 5G, men det gælder ikke alle modeller — særligt ikke i
+den billige ende.</p>
+<p>Har du en ældre telefon, er der ingen grund til at betale for 5G i abonnementet. Køber
+du ny, følger 5G med på næsten alle modeller i dag, og så er spørgsmålet kun, om
+abonnementet skal understøtte det.</p>
 
 <h2>Hvem har 5G?</h2>
 {tabel_5g_selskaber()}
