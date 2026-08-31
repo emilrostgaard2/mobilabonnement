@@ -983,9 +983,12 @@ def prisstatistik():
     Medianen står med, fordi gennemsnittet trækkes skævt af enkelte dyre
     abonnementer. Vi regner altid på normalprisen, aldrig på introprisen —
     ellers måler man kampagner frem for prisniveau."""
+    # Samme grænser som prishistorikken i adtraction.py. Står de forskelligt,
+    # viser tabellen og kurven på samme side to forskellige tal for Dukas
+    # 1000 GB-abonnement, som har et loft og altså ikke er fri data.
     grupper = [("1-10 GB", 1, 10), ("11-20 GB", 11, 20), ("21-40 GB", 21, 40),
                ("41-80 GB", 41, 80), ("81-200 GB", 81, 200),
-               ("Over 200 GB", 201, 899), ("Fri data", 900, 9999)]
+               ("Over 200 GB", 201, 9998), ("Fri data", 9999, 9999)]
     raekker = ""
     alle_priser = []
     for navn, lav, hoej in grupper:
@@ -1354,7 +1357,7 @@ def tabel_bredbaand_husstand():
 
 def tabel_pr_datamaengde():
     grupper = [("Op til 10 GB", 1, 10), ("11-20 GB", 11, 20), ("21-40 GB", 21, 40),
-               ("41-80 GB", 41, 80), ("Over 80 GB", 81, 899), ("Fri data", 900, 9999)]
+               ("41-80 GB", 41, 80), ("Over 80 GB", 81, 9998), ("Fri data", 9999, 9999)]
     raekker = ""
     for navn, lav, hoej in grupper:
         kandidater = [a for a in ABON if lav <= a["data_gb"] <= hoej and a["pris"] > 0]
@@ -3179,7 +3182,7 @@ GB_INTERVALLER = [
     ("50-gb", "50 GB og op", 50, 99, "Storforbruger",
      "Til dig der streamer dagligt på farten eller bruger telefonen som hotspot "
      "til en laptop."),
-    ("100-gb", "100 GB og op", 100, 899, "Meget stort forbrug",
+    ("100-gb", "100 GB og op", 100, 9998, "Meget stort forbrug",
      "Til dig hvor mobilen er den primære internetforbindelse, eller hvor flere "
      "enheder deler den."),
 ]
