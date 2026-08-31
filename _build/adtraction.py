@@ -280,9 +280,11 @@ def gem_historik(abonnementer):
     except (FileNotFoundError, ValueError):
         historik = {"maalinger": []}
 
+    # Samme skelnen som resten af sitet: kun UBEGRAENSET er fri data.
+    # Dukas 1000 GB har et loft og hører i "201+", ikke i "fri".
     grupper = [("1-10", 1, 10), ("11-20", 11, 20), ("21-40", 21, 40),
-               ("41-80", 41, 80), ("81-200", 81, 200), ("201+", 201, 899),
-               ("fri", 900, 9999)]
+               ("41-80", 41, 80), ("81-200", 81, 200),
+               ("201+", 201, UBEGRAENSET - 1), ("fri", UBEGRAENSET, UBEGRAENSET)]
     betalte = [a for a in abonnementer if a.get("pris", 0) > 0]
     maaling = {"dato": date.today().isoformat(), "antal": len(betalte),
                "udbydere": len({a["udbyder"] for a in betalte}), "grupper": {}}
