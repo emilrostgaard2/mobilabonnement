@@ -1,0 +1,60 @@
+{
+ "maalinger": [
+  {
+   "dato": "2026-08-31",
+   "antal": 56,
+   "udbydere": 8,
+   "grupper": {
+    "1-10": {
+     "antal": 9,
+     "min": 19,
+     "median": 48,
+     "gns": 47.78,
+     "maks": 79
+    },
+    "11-20": {
+     "antal": 4,
+     "min": 59,
+     "median": 69.0,
+     "gns": 66.5,
+     "maks": 69
+    },
+    "21-40": {
+     "antal": 6,
+     "min": 49,
+     "median": 89.0,
+     "gns": 79.0,
+     "maks": 99
+    },
+    "41-80": {
+     "antal": 11,
+     "min": 59,
+     "median": 99,
+     "gns": 110.82,
+     "maks": 149
+    },
+    "81-200": {
+     "antal": 13,
+     "min": 99,
+     "median": 119,
+     "gns": 122.08,
+     "maks": 159
+    },
+    "201+": {
+     "antal": 2,
+     "min": 179,
+     "median": 239.0,
+     "gns": 239.0,
+     "maks": 299
+    },
+    "fri": {
+     "antal": 11,
+     "min": 144,
+     "median": 219,
+     "gns": 299.45,
+     "maks": 599
+    }
+   }
+  }
+ ]
+}
