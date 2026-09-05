@@ -552,8 +552,13 @@ table.pris tbody tr[hidden]{display:none}
   .nav-menu{position:static;left:auto;width:auto!important;opacity:1;visibility:visible;transform:none!important;
     box-shadow:none;border:none;border-radius:0;padding:0 0 .6rem .6rem;display:none;
     grid-template-columns:1fr}
+  /* På mobil åbnes menuen kun ved klik — ikke ved hover eller fokus, som
+     ellers ville folde alt ud, så snart man rører skærmen */
   .nav-gruppe:hover .nav-menu,.nav-gruppe:focus-within .nav-menu{display:none}
+  .nav-gruppe:hover .nav-menu-enkel,
+  .nav-gruppe:focus-within .nav-menu-enkel{display:none}
   .nav-gruppe .nav-menu.aaben{display:grid}
+  .nav-gruppe .nav-menu-enkel.aaben{display:flex}
   .nav-menu-logoer{grid-template-columns:1fr 1fr}
   .nav a{padding:.7rem .6rem}
   .nav-cta{text-align:center;margin-top:.6rem}
@@ -1762,7 +1767,10 @@ body{overflow-x:clip;max-width:100%;position:relative}
 /* ==========================================================================
    Menu — én kolonne. To kolonner blev til en mur, man lukkede igen.
    ========================================================================== */
-.nav-menu-enkel{width:340px;display:flex;flex-direction:column;gap:.05rem}
+.nav-menu-enkel{width:340px;flex-direction:column;gap:.05rem}
+/* display sættes af .nav-menu, så mobilens display:none ikke overskrives */
+.nav-gruppe:hover .nav-menu-enkel,.nav-menu-enkel.aaben,
+.nav-gruppe:focus-within .nav-menu-enkel{display:flex}
 .nav-menu-enkel a{display:block;padding:.5rem .75rem;border-radius:var(--r-s)}
 .nav-menu-enkel .mp-navn{font-size:.9rem}
 .nav-menu-enkel .mp-under{font-size:.76rem}
