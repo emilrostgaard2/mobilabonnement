@@ -77,13 +77,19 @@ VAERKTOEJER_OEVRIGE = [
 MENU = [
     ("/billigste-mobilabonnement/", "Billigste abonnement"),
     ("/bedste-mobilabonnement/", "Bedste abonnement"),
-    # Bredbånd er et selvstændigt produktområde, ikke en underkategori af
-    # mobilabonnementer. Derfor et punkt for sig i topmenuen.
-    ("/bredbaand/", "Bredbånd"),
     ("/guides/", "Guides"),
     ("/om-os/", "Om os"),
 ]
 
+
+# Bredbåndssektionen har sine egne undersider. Sættes af build.py.
+BREDBAAND_MENU = [
+    ("/bredbaand/", "Alle bredbåndsabonnementer"),
+    ("/bredbaand/fiberbredbaand/", "Fiber"),
+    ("/bredbaand/5g-bredbaand/", "5G-bredbånd"),
+    ("/bredbaand/coax-bredbaand/", "Coax"),
+    ("/guides/mobilt-bredbaand/", "Guide: mobilt bredbånd"),
+]
 
 NAV_UDBYDERE = []
 HURTIGPRIS = ""
@@ -227,6 +233,10 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
         f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span></a>'
         for h, t, _b in VAERKTOEJER
     )
+    bredbaand_punkter = "".join(
+        f'<a href="{h}"{aktiv(h)}><span class="mp-navn">{e(t)}</span></a>'
+        for h, t in BREDBAAND_MENU
+    )
     udbyder_punkter = "".join(
         f'<a href="/udbydere/{u["slug"]}/"{aktiv("/udbydere/" + u["slug"] + "/")}>'
         # Tom alt er korrekt: navnet står i teksten ved siden af, og en
@@ -249,6 +259,12 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
     Værktøjer <span class="pil-ned" aria-hidden="true"></span>
   </button>
   <div class="nav-menu nav-menu-enkel" id="menu-vaerktoej">{vaerktoej_punkter}</div>
+</div>
+<div class="nav-gruppe">
+  <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-bredbaand">
+    Bredbånd <span class="pil-ned" aria-hidden="true"></span>
+  </button>
+  <div class="nav-menu nav-menu-enkel" id="menu-bredbaand">{bredbaand_punkter}</div>
 </div>
 <div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-udbydere">

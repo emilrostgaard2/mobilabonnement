@@ -19,7 +19,7 @@ sys.path.insert(0, STI)
 from skabelon import (  # noqa: E402
     shell, e, kr, gb_tekst, netlabel, gns12, DOMAENE, SITENAVN, FORFATTER,
     afsloering, forfatterboks, gennemgangslinje, faqblok, laesvidere,
-    ctabaand, pristabel, stjerner,
+    ctabaand, pristabel, stjerner, _drop,
 )
 import indhold  # noqa: E402
 import sider  # noqa: E402
@@ -5627,13 +5627,393 @@ def bb_tabel(udvalg, *, titel):
 </div>"""
 
 
+def bb_tabel_udbydere():
+    """Selskaberne stillet op mod hinanden — det format konkurrenterne bruger."""
+    pr = {}
+    for a in BB:
+        pr.setdefault(a["udbyder"], []).append(a)
+    raekker = ""
+    for slug, egne in sorted(pr.items(), key=lambda x: min(bb_aarspris(a) for a in x[1])):
+        b = min(egne, key=bb_aarspris)
+        tek = sorted({TEK_NAVN.get(a["teknologi"], a["teknologi"]) for a in egne})
+        billigst_md = min(a["intro_pris"] or a["pris"] for a in egne)
+        normal = min(a["pris"] for a in egne)
+        binding = "Ingen" if any(not a["binding"] for a in egne) else "6 mdr."
+        raekker += f"""<tr>
+  <td><strong>{e(b['udbyder_navn'])}</strong></td>
+  <td>{e(" · ".join(tek))}</td>
+  <td class="tal">{len(egne)}</td>
+  <td class="tal">{kr(billigst_md)} kr.</td>
+  <td class="tal">{kr(normal)} kr.</td>
+  <td class="tal">{kr(bb_aarspris(b))} kr.</td>
+  <td class="tal">{e(binding)}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Alle {len(pr)} selskaber i vores sammenligning, sorteret efter billigste
+  førsteårspris. Tilbudsprisen er den, du betaler i kampagneperioden — normalprisen
+  er den, du betaler bagefter.</caption>
+  <thead><tr>
+    <th scope="col">Selskab</th><th scope="col">Teknologi</th>
+    <th scope="col">Produkter</th><th scope="col">Tilbud fra</th>
+    <th scope="col">Normalpris fra</th><th scope="col">Første år fra</th>
+    <th scope="col">Binding</th>
+  </tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def bb_tabel_profil():
+    """Hvilken hastighed passer til hvem — med et konkret eksempel fra vores data."""
+    profiler = [
+        ("Enlig, moderat brug", "Mail, web, lidt streaming", 50, 100, "40-80 GB"),
+        ("Enlig eller par, streamer", "2-3 timer video dagligt", 100, 300, "150-250 GB"),
+        ("Familie med børn", "Flere skærme samtidig", 300, 1000, "400-800 GB"),
+        ("Hjemmearbejde", "Videomøder dagligt", 100, 500, "+50-100 GB oveni"),
+        ("Gamer", "Spil og store opdateringer", 300, 1000, "+100-200 GB oveni"),
+        ("Sommerhus", "Weekender og ferier", 50, 100, "20-60 GB"),
+    ]
+    raekker = ""
+    for navn, hvad, lav, hoej, forbrug in profiler:
+        kand = [a for a in BB if lav <= a["ned"] <= hoej] or BB
+        b = min(kand, key=bb_aarspris)
+        raekker += f"""<tr>
+  <td><strong>{e(navn)}</strong><br><span class="tabel-under">{e(hvad)}</span></td>
+  <td class="tal">{lav}–{hoej}<br><span class="tabel-under">Mbit/s</span></td>
+  <td class="tal">{e(forbrug)}</td>
+  <td>{e(b['udbyder_navn'])} {e(b['navn'])}<br>
+      <span class="tabel-under">{kr(bb_aarspris(b))} kr. det første år</span></td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Hvilken hastighed der passer til hvilket forbrug, med det billigste
+  match fra vores sammenligning. Dataforbruget dækker al internetbrug i hjemmet.</caption>
+  <thead><tr>
+    <th scope="col">Profil</th><th scope="col">Hastighed</th>
+    <th scope="col">Forbrug pr. md.</th><th scope="col">Billigste match</th>
+  </tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def bb_tabel_teknologi():
+    """De tre teknologier på det, der faktisk adskiller dem."""
+    rk = [
+        ("Hastighed ned", "300–1000 Mbit/s", "300–1000 Mbit/s", "50–1000 Mbit/s",
+         "Fiber og coax er jævnbyrdige"),
+        ("Hastighed op", "300–1000 Mbit/s", "50–100 Mbit/s", "40–200 Mbit/s",
+         "Her adskiller fiber sig markant"),
+        ("Svartid", "2–10 ms", "10–20 ms", "20–40 ms",
+         "Mærkes ved spil, ikke ved streaming"),
+        ("Stabilitet i myldretid", "Konstant", "Deles i kvarteret", "Deles på masten",
+         "Fiber er den eneste med garanteret kapacitet"),
+        ("Installation", "Gravearbejde", "Tekniker eller selvmontering", "Sæt stikket i",
+         "5G er klar samme dag"),
+        ("Kan flyttes med", "Nej", "Nej", "Ja",
+         "Afgørende for lejebolig og sommerhus"),
+        ("Dataloft", "Nej", "Nej", "Ofte ja", "Tjek vilkårene ved 5G"),
+    ]
+    raekker = "".join(
+        f'<tr><td><strong>{e(h)}</strong></td><td class="tal">{e(f)}</td>'
+        f'<td class="tal">{e(c)}</td><td class="tal">{e(g)}</td><td>{e(n)}</td></tr>'
+        for h, f, c, g, n in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>De tre teknologier sammenlignet. Tallene er typiske intervaller på det
+  danske marked og varierer med adresse og udbyder.</caption>
+  <thead><tr>
+    <th scope="col">Forhold</th><th scope="col">Fiber</th><th scope="col">Coax</th>
+    <th scope="col">5G</th><th scope="col">Betydning</th>
+  </tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def bb_tabel_hastighedskrav():
+    """Hvad de enkelte aktiviteter faktisk kræver."""
+    rk = [
+        ("Web, mail og sociale medier", "5 Mbit/s", "Ja", "Ja", "Ja"),
+        ("Musikstreaming", "1 Mbit/s", "Ja", "Ja", "Ja"),
+        ("Video i HD", "5 Mbit/s", "Ja", "Ja", "Ja"),
+        ("Video i 4K", "25 Mbit/s", "Ja", "Ja", "Ja"),
+        ("Fire samtidige 4K-streams", "100 Mbit/s", "Nej", "Ja", "Ja"),
+        ("Videomøde (upload)", "3 Mbit/s op", "Ja", "Ja", "Ja"),
+        ("Online spil", "3 Mbit/s + lav svartid", "Ja", "Ja", "Bedst på fiber"),
+        ("Backup til skyen", "Så meget upload som muligt", "Nej", "Delvist", "Ja"),
+    ]
+    raekker = "".join(
+        f'<tr><td><strong>{e(a)}</strong></td><td class="tal">{e(k)}</td>'
+        f'<td class="tal">{e(x)}</td><td class="tal">{e(y)}</td><td class="tal">{e(z)}</td></tr>'
+        for a, k, x, y, z in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Hvad hver aktivitet kræver, og om de tre hastighedsniveauer rækker.
+  De fleste husstande har brug for mindre, end de tror.</caption>
+  <thead><tr>
+    <th scope="col">Aktivitet</th><th scope="col">Kræver</th>
+    <th scope="col">50 Mbit/s</th><th scope="col">300 Mbit/s</th>
+    <th scope="col">1000 Mbit/s</th>
+  </tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def bb_aarspris(a):
+    """Hvad abonnementet koster det første år, inklusive oprettelse.
+
+    Konkurrenterne sammenligner på tilbudsprisen. Den er sand i tre måneder.
+    Årsprisen er det tal, der afgør, hvad man reelt betaler — og den vender
+    rækkefølgen om på næsten hele markedet."""
+    mdr = min(a.get("intro_mdr") or 0, 12)
+    intro = a.get("intro_pris") or a["pris"]
+    return intro * mdr + a["pris"] * (12 - mdr) + a.get("oprettelse", 0)
+
+
+def bb_hastighedsgruppe(ned):
+    if ned >= 900:
+        return "gigabit"
+    if ned >= 300:
+        return "hurtig"
+    if ned >= 100:
+        return "mellem"
+    return "basis"
+
+
+def bb_filterbar(udvalg):
+    """Filterlinje i samme design som mobiltabellen."""
+    selskaber = {}
+    tek = {}
+    for a in udvalg:
+        selskaber[a["udbyder"]] = a["udbyder_navn"]
+        tek[a["teknologi"]] = TEK_NAVN.get(a["teknologi"], a["teknologi"])
+
+    fart_valg = [("gigabit", "1000 Mbit/s"), ("hurtig", "300–999 Mbit/s"),
+                 ("mellem", "100–299 Mbit/s"), ("basis", "Under 100 Mbit/s")]
+    pris_valg = [("u200", "Under 200 kr."), ("200-299", "200–299 kr."),
+                 ("300-399", "300–399 kr."), ("o400", "400 kr. og op")]
+    bind_valg = [("0", "Ingen binding"), ("6", "6 mdr.")]
+    ekstra_valg = [("router", "Router inkluderet"), ("gratis-opret", "Gratis oprettelse"),
+                   ("ingen-binding", "Uden binding"), ("symmetrisk", "Samme hastighed op og ned")]
+
+    return f"""<div class="filterbar" role="group" aria-label="Filtrér bredbånd">
+  <div class="fb-venstre">
+    {_drop("Hastighed", "fart", fart_valg)}
+    {_drop("Teknologi", "tek", sorted(tek.items(), key=lambda x: x[1]))}
+    {_drop("Pris", "pris", pris_valg)}
+    {_drop("Binding", "binding", bind_valg)}
+    {_drop("Selskab", "slug", sorted(selskaber.items(), key=lambda x: x[1].lower()))}
+    {_drop("Ekstra", "ekstra", ekstra_valg)}
+    <div class="fb-grp fb-sortgrp">
+      <label class="visuelt-skjult" for="bb-sorter">Sortér efter</label>
+      <select id="bb-sorter" class="fb-sorter" data-bb-sorter>
+        <option value="aar">Første år: lav til høj</option>
+        <option value="pris">Månedspris: lav til høj</option>
+        <option value="normal">Normalpris: lav til høj</option>
+        <option value="ned">Hurtigst først</option>
+        <option value="op">Bedst upload først</option>
+      </select>
+    </div>
+    <button type="button" class="fb-toggle" data-bb-tilbud aria-pressed="false">
+      <span aria-hidden="true">★</span> Tilbud</button>
+    <button type="button" class="fb-nulstil" data-bb-nulstil hidden>Nulstil</button>
+  </div>
+  <span class="fb-antal"><span data-bb-antal>{len(udvalg)}</span></span>
+</div>"""
+
+
+def bb_raekke(a, *, billigst=False, gnsnit_aar=None):
+    """Ét bredbåndsabonnement som rækkekort — samme design som mobilrækkerne."""
+    intro = a.get("intro_pris") and a.get("intro_mdr")
+    vist = a["intro_pris"] if intro else a["pris"]
+    aar = bb_aarspris(a)
+    snit = round(aar / 12)
+    logo_sti = os.path.join(ROD, "assets", "img", "logoer", a["udbyder"] + ".webp")
+
+    if intro:
+        m = min(a["intro_mdr"], 12)
+        formel = f'{a["intro_pris"]}×{m} + {a["pris"]}×{12 - m}'
+    else:
+        formel = f'{a["pris"]}×12'
+    if a.get("oprettelse"):
+        formel += f' + {a["oprettelse"]}'
+    formel += " ÷ 12"
+
+    if a.get("kampagnetekst"):
+        flagtekst, flagklasse = e(a["kampagnetekst"]), "nat"
+    elif not a["binding"]:
+        flagtekst, flagklasse = "Ingen binding", "sol"
+    else:
+        flagtekst, flagklasse = "", ""
+    flag = f'<span class="pk-flag pk-{flagklasse}">{flagtekst}</span>' if flagtekst else ""
+
+    stats = [
+        (f'{a["ned"]}', "Mbit/s ned"),
+        (f'{a["op"]}', "Mbit/s op"),
+        ("Ingen" if not a["binding"] else f'{a["binding"]} mdr.', "binding"),
+        (f'{kr(a.get("oprettelse", 0))} kr.', "oprettelse"),
+    ]
+    statbokse = "".join(f'<div class="pk-stat"><b>{v}</b><span>{t}</span></div>'
+                        for v, t in stats)
+
+    plus = [TEK_NAVN.get(a["teknologi"], a["teknologi"])]
+    if a["ned"] == a["op"]:
+        plus.append("Samme hastighed op og ned")
+    if not a["binding"]:
+        plus.append("Ingen binding")
+    if not a.get("oprettelse"):
+        plus.append("Gratis oprettelse")
+    for f in a.get("fordele", []):
+        if "router" in f.lower() or "modem" in f.lower():
+            plus.append("Router inkluderet")
+            break
+    chips = "".join(f'<span class="pk-chip">{e(t)}</span>' for t in plus[:3])
+
+    advarsler = []
+    if a.get("oprettelse"):
+        advarsler.append(f'Oprettelse på {kr(a["oprettelse"])} kr. betales én gang.')
+    if intro and a["intro_mdr"] < 12:
+        advarsler.append(f'Prisen stiger til {kr(a["pris"])} kr. efter '
+                         f'{a["intro_mdr"]} måneder.')
+    if a["op"] < a["ned"] / 4:
+        advarsler.append("Uploadhastigheden er markant lavere end download. "
+                         "Det mærkes ved videomøder og upload af filer.")
+    advarhtml = ('<ul class="pk-advar">'
+                 + "".join(f"<li>{t}</li>" for t in advarsler) + "</ul>") if advarsler else ""
+
+    fakta = [
+        ("Teknologi", TEK_NAVN.get(a["teknologi"], a["teknologi"])),
+        ("Hastighed ned", f'{a["ned"]} Mbit/s'),
+        ("Hastighed op", f'{a["op"]} Mbit/s'),
+        ("Normalpris", f'{kr(a["pris"])} kr./md.'),
+        ("Oprettelse", f'{kr(a.get("oprettelse", 0))} kr.'),
+        ("Binding", "Ingen" if not a["binding"] else f'{a["binding"]} mdr.'),
+        ("Samlet første år", f'{kr(aar)} kr.'),
+        ("Gns. pr. md. første år", f'{kr(snit)} kr.'),
+    ]
+    if a.get("net"):
+        fakta.append(("Leveres på", e(a["net"])))
+    faktahtml = "".join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in fakta)
+    fordelehtml = ("<ul class=\"pk-plus\">"
+                   + "".join(f"<li>{e(f)}</li>" for f in a.get("fordele", []))
+                   + "</ul>") if a.get("fordele") else ""
+
+    if intro:
+        prisblok = (f'<div class="pk-tal"><b>{kr(a["intro_pris"])}</b><span>kr.</span></div>'
+                    f'<div class="pk-under">Herefter {kr(a["pris"])} kr./md.</div>')
+    else:
+        prisblok = (f'<div class="pk-tal"><b>{kr(a["pris"])}</b><span>kr.</span></div>'
+                    f'<div class="pk-under">Fast pris</div>')
+    prisblok += f'<div class="pk-under">{kr(aar)} kr. det første år</div>'
+
+    spar = ""
+    if gnsnit_aar and aar < gnsnit_aar:
+        spar = (f'<div class="pk-spar">{kr(round((gnsnit_aar - aar) / 12))} '
+                f'kr./md. under snittet</div>')
+
+    ekstra = []
+    for f in a.get("fordele", []):
+        if "router" in f.lower() or "modem" in f.lower():
+            ekstra.append("router")
+            break
+    if not a.get("oprettelse"):
+        ekstra.append("gratis-opret")
+    if not a["binding"]:
+        ekstra.append("ingen-binding")
+    if a["ned"] == a["op"]:
+        ekstra.append("symmetrisk")
+
+    logohtml = (f'<img src="/assets/img/logoer/{a["udbyder"]}.webp" '
+                f'alt="{e(a["udbyder_navn"])} logo" loading="lazy" height="34" '
+                f'decoding="async" style="width:auto">'
+                if os.path.exists(logo_sti) else
+                f'<strong>{e(a["udbyder_navn"])}</strong>')
+
+    panel_id = f'bb-{e(a["id"])}'
+    klasse = " fremhaev" if billigst else ""
+
+    return f"""<article class="plan{klasse}" data-bb-plan
+  data-fart="{bb_hastighedsgruppe(a['ned'])}" data-tek="{e(a['teknologi'])}"
+  data-pris="{vist}" data-normal="{a['pris']}" data-aar="{aar}"
+  data-ned="{a['ned']}" data-op="{a['op']}" data-binding="{a['binding']}"
+  data-slug="{e(a['udbyder'])}" data-tilbud="{1 if intro else 0}"
+  data-ekstra="{' '.join(ekstra)}" data-udbyder="{e(a['udbyder_navn'])}">
+  {flag}
+  <div class="pk-raekke">
+    <div class="pk-ident">
+      {logohtml}
+      <span class="pk-tag">{e(TEK_NAVN.get(a['teknologi'], a['teknologi']))}</span>
+    </div>
+    <div class="pk-midt">
+      <h3 class="pk-navn">{e(a['udbyder_navn'])} – {e(a['navn'])}</h3>
+      <div class="pk-stats">{statbokse}</div>
+      <div class="pk-chips">{chips}</div>
+    </div>
+    <div class="pk-pris">
+      {prisblok}
+      {spar}
+      <button type="button" class="pk-mere" aria-expanded="false"
+        aria-controls="{panel_id}">Se detaljer</button>
+      <a class="knap knap-primaer pk-cta" href="{a['link']}"
+        rel="sponsored nofollow noopener" target="_blank"
+        data-udgaaende="{e(a['udbyder'])}"
+        aria-label="Se tilbud på {e(a['navn'])} hos {e(a['udbyder_navn'])}">Se tilbud</a>
+    </div>
+  </div>
+  <div class="pk-panel" id="{panel_id}" hidden>
+    <dl class="pk-fakta">{faktahtml}</dl>
+    {fordelehtml}
+    <p class="pk-formel"><strong>Første år:</strong> {formel} = {kr(aar)} kr.,
+    altså {kr(snit)} kr. om måneden i gennemsnit.</p>
+    {advarhtml}
+  </div>
+</article>"""
+
+
+def bb_liste(udvalg, *, titel, undertitel, vis=12):
+    """Filtrerbar liste over bredbånd — samme design som mobiltabellen."""
+    if not udvalg:
+        return ""
+    sorteret = sorted(udvalg, key=bb_aarspris)
+    gnsnit = sum(bb_aarspris(a) for a in sorteret) / len(sorteret)
+    billigst_id = sorteret[0]["id"]
+    kort = "".join(
+        bb_raekke(a, billigst=(a["id"] == billigst_id), gnsnit_aar=gnsnit)
+        for a in sorteret)
+    return f"""
+<section class="sektion baand" id="sammenlign" data-bb-liste>
+  <div class="sektion-hoved afslør">
+    <div class="sh-tekst">
+      <span class="etiket">Sammenligning</span>
+      <h2>{e(titel)}</h2>
+      <p class="led">{undertitel}</p>
+    </div>
+    <p class="opdateret-stribe"><i class="prik op-prik"></i>
+      <span><strong>Opdateret {e(BREDBAAND.get('hentet') or OPDATERET)}</strong> ·
+      {len(udvalg)} produkter hentet automatisk fra udbydernes datafeed</span></p>
+  </div>
+  {bb_filterbar(sorteret)}
+  <div class="planliste">{kort}</div>
+  <p class="liste-tom" data-bb-tom hidden>Ingen abonnementer matcher filtrene.
+    Prøv at fjerne et af dem.</p>
+  <div class="vis-flere" data-bb-flere hidden>
+    <button type="button" class="knap knap-linje" data-bb-visflere>
+      Vis alle — <span data-bb-rest></span></button>
+  </div>
+</section>"""
+
+
 def byg_bredbaand():
     """Bredbåndssektionen. Bygges kun, når der er data."""
     if not BB:
         print("  Springer bredbånd over — data/bredbaand.json er tom")
         return
 
-    fra = min(bb_mdr_pris(a) for a in BB)
+    fra = min(round(bb_aarspris(a) / 12) for a in BB)
+    hurtigst = max(BB, key=lambda a: a["ned"])
     selskaber = len({a["udbyder"] for a in BB})
     pr_tek = {}
     for a in BB:
@@ -5645,89 +6025,153 @@ def byg_bredbaand():
         f'{kr(min(bb_mdr_pris(x) for x in pr_tek[n]))} kr./md. i snit. {e(besk)}</li>'
         for n, navn, sti, besk in TEK_SIDER if pr_tek.get(n))
 
-    krop = f"""<section class="sektion baand-smal artikel">
-{gennemgangslinje(OPDATERET, fakta=f"{len(BB)} bredbåndsprodukter fra {selskaber} selskaber")}
+    krop = bb_liste(BB, titel="Bredbånd sammenlignet",
+                    undertitel=f"{len(BB)} abonnementer fra {selskaber} selskaber. "
+                               f"Sorteret efter hvad de koster det første år, ikke "
+                               f"efter tilbudsprisen.") + f"""
+<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"{len(BB)} produkter hentet fra udbydernes datafeed")}
 <div class="udtag"><p><strong>Kort svar:</strong> Billigste bredbånd koster
-{kr(fra)} kr. om måneden i snit over seks måneder, når oprettelse og tilbudsperiode
-regnes med. Fiber er hurtigst, 5G er hurtigst at få installeret.</p></div>
+{kr(fra)} kr. om måneden det første år, når tilbudspris, normalpris og oprettelse
+regnes med. Hurtigste er {hurtigst['ned']} Mbit/s hos {e(hurtigst['udbyder_navn'])}.
+Fiber er den bedste forbindelse, 5G den hurtigste at få installeret.</p></div>
 
-<p>Vi sammenligner {len(BB)} bredbåndsprodukter fra {selskaber} danske selskaber på
-det, der faktisk afgør valget: hastighed op og ned, teknologi, binding og hvad det
-koster, når tilbudsperioden er ovre.</p>
+<h2>Tilbudsprisen fortæller ikke sandheden</h2>
+<p>Fem af de {len(BB)} abonnementer koster 99 kr. om måneden. Det lyder som fem lige
+gode tilbud. Regner man året igennem, spænder de fra {kr(fra)} til
+{kr(round(max(bb_aarspris(a) for a in BB if (a.get("intro_pris") or 0) == 99) / 12))}
+kr. om måneden — fordi tilbudsperioden er tre, fire eller seks måneder, og fordi
+oprettelsen svinger fra 0 til 299 kr.</p>
+<p>Derfor sorterer vi efter førsteårsprisen. Formlen er den samme for alle:
+tilbudspris gange tilbudsmåneder, plus normalpris for resten af året, plus
+oprettelse. Du kan se regnestykket for hvert enkelt abonnement ved at folde
+detaljerne ud i tabellen.</p>
 
-{bb_tabel(BB, titel="Alle bredbåndsabonnementer sammenlignet.")}
+<h2>Selskaberne side om side</h2>
+{bb_tabel_udbydere()}
+<p>Bemærk forskellen mellem kolonnerne "tilbud fra" og "normalpris fra". Det er
+den, der afgør, hvad du betaler fra måned syv og frem — og det er den, de fleste
+sammenligninger udelader.</p>
 
-<h2>Sådan regner vi</h2>
-<p>Månedsprisen på et bredbåndsabonnement siger sjældent sandheden. Næsten alle
-selskaber kører med en tilbudspris de første tre til seks måneder, og flere tager
-oprettelse og fragt oveni.</p>
-<p>Derfor sorterer vi efter gennemsnitsprisen over seks måneder, hvor tilbudspris,
-normalpris og oprettelse indgår. Det er den eneste måde at stille et tilbud på 99 kr.
-i tre måneder op mod en fast pris på 299 kr. — og se hvilket der reelt er billigst.</p>
+<h2>Hvilken hastighed har du brug for?</h2>
+<p>Det er det spørgsmål, folk oftest svarer forkert på. Danske husstande køber
+systematisk mere hastighed, end de bruger, fordi 1000 Mbit/s lyder bedre end 100.</p>
+{bb_tabel_hastighedskrav()}
+<p>Selv fire samtidige 4K-streams kræver omkring 100 Mbit/s. Springet til 1000
+mærkes ved store filer og mange enheder — ikke ved almindelig streaming.</p>
 
-<h2>De tre teknologier</h2>
-<ul class="pilliste">{oversigt}</ul>
+<h2>Find din profil</h2>
+{bb_tabel_profil()}
 
-<h2>Hastighed op er det, folk glemmer</h2>
-<p>Alle taler om downloadhastighed, men uploadhastigheden er den, der afgør, om
-videomøder virker, og om det tager fem minutter eller en time at lægge en video op.</p>
-<p>Fiber giver typisk samme hastighed op og ned — 1000/1000. Coax giver ofte
-1000 ned og 100 op. 5G ligger midt imellem og svinger med masten. Kolonnen
-"ned/op" i tabellen viser begge tal, netop fordi forskellen betyder noget.</p>
+<h2>Fiber, coax eller 5G?</h2>
+{bb_tabel_teknologi()}
+<h3>Uploadhastigheden er den, folk glemmer</h3>
+<p>Alle taler om download. Men det er upload, der afgør, om andre kan se og høre
+dig på et videomøde, og om det tager fem minutter eller en time at lægge en video
+op.</p>
+<p>Fiber giver typisk samme hastighed begge veje. Coax giver ofte 1000 ned og 100
+op. Kolonnen "Mbit/s op" i tabellen øverst viser tallet for hvert abonnement, netop
+fordi forskellen betyder noget for nogle og intet for andre.</p>
 
-<h2>Tjek adressen, før du bestiller</h2>
-<p>Bredbånd er det eneste produkt på sitet, hvor din adresse afgør, hvad du kan få.
-Fiber findes ikke overalt, coax kræver tv-kabel i huset, og 5G afhænger af, hvor
-masten står.</p>
-<p>Alle selskaber har et adressetjek på deres egen side. Brug det, før du regner på
-prisen — der er ingen grund til at sammenligne produkter, du ikke kan få.</p>
+<h2>Tjek adressen, før du regner på prisen</h2>
+<p>Bredbånd er det eneste produkt på sitet, hvor din adresse afgør, hvad du
+overhovedet kan få. Fiber findes ikke overalt, coax kræver tv-kabel i huset, og 5G
+afhænger af, hvor masten står.</p>
+<p>Alle selskaber har et adressetjek på deres egen side. Brug det først — der er
+ingen grund til at sammenligne produkter, du ikke kan få leveret.</p>
 <p>Til 5G kan du starte med vores <a href="/daekningskort/">dækningstjek</a> og se,
 hvilket net der dækker hos dig.</p>
+
+<h2>Fire ting der koster penge uden at stå på skiltet</h2>
+<ol class="nummerliste">
+  <li><strong>Oprettelse.</strong> Svinger fra 0 til 299 kr. Ved seks måneders
+  binding svarer 299 kr. til 50 kr. oveni om måneden.</li>
+  <li><strong>Fragt af router.</strong> Enkelte selskaber tager 99 kr. for at sende
+  udstyret. Det står sjældent sammen med prisen.</li>
+  <li><strong>Routerleje.</strong> Nogle abonnementer inkluderer routeren, andre
+  udlejer den for 25-50 kr. om måneden. Over et år er det op til 600 kr.</li>
+  <li><strong>Prisstigningen efter kampagnen.</strong> Den største af dem alle.
+  Fra 99 til 299 kr. er 2.400 kr. om året, og den sker automatisk.</li>
+</ol>
+
+<h2>Sådan skifter du internetudbyder</h2>
+<p>Modsat mobilabonnementer er der ingen automatisk overflytning. Du skal selv
+opsige det gamle abonnement, og du skal selv sørge for, at der ikke er huller
+imellem.</p>
+<ol class="nummerliste">
+  <li>Tjek dit opsigelsesvarsel. Typisk løbende måned plus 30 dage.</li>
+  <li>Bestil det nye med opstart efter opsigelsesdatoen.</li>
+  <li>Opsig det gamle — de fleste selskaber gør det via selvbetjening.</li>
+  <li>Returnér routeren. Gør du ikke det, opkræves den, ofte 1.000-2.000 kr.</li>
+</ol>
+<p>Er du i tvivl om, hvorvidt det kan betale sig, så regn på førsteårsprisen mod
+det, du betaler nu. Har du haft samme abonnement i over et år, betaler du med stor
+sandsynlighed normalpris, mens markedet tilbyder kampagne.</p>
 
 <h2>Bredbånd eller mobilt internet?</h2>
 <p>Har du et mobilabonnement med fri data, kan hotspot dække et beskedent behov
 uden ekstra udgift. Det holder til én bærbar og et par timer om dagen, men ikke til
-en husstand.</p>
+en husstand med flere skærme.</p>
 <p>Vi har regnet på det i guiden til
 <a href="/guides/mobilt-bredbaand/">mobilt bredbånd</a> og i
 <a href="/guides/mobilabonnement-eller-bredbaand/">mobilabonnement eller
 bredbånd</a>.</p>
+
+<h2>Sådan har vi gjort</h2>
+<p>Priserne hentes automatisk fra udbydernes egne datafeeds to gange i døgnet. Vi
+regner på normalprisen og på førsteårsprisen — aldrig på tilbudsprisen alene.
+Oprettelse indgår, hvor selskabet oplyser den.</p>
+<p>Vi viser kun produkter fra selskaber, vi har et datafeed fra. Det betyder, at
+listen ikke dækker hele det danske marked — der findes lokale fiberselskaber, vi
+ikke har adgang til priser for. Læs mere om
+<a href="/metode/">vores metode</a> og
+<a href="/saadan-tjener-vi-penge/">hvordan vi tjener penge</a>.</p>
+
+{forfatterboks()}
 </section>"""
 
     faq = [
         {"sp": "Hvad er det billigste bredbånd i Danmark?",
-         "sv": f"Billigste ligger på {kr(fra)} kr. om måneden i snit over seks "
-               f"måneder, når tilbudspris, normalpris og oprettelse regnes med. "
-               f"Se hele sammenligningen i tabellen ovenfor."},
+         "sv": f"Billigste ligger på {kr(fra)} kr. om måneden det første år, når "
+               f"tilbudspris, normalpris og oprettelse regnes med. Se hele "
+               f"sammenligningen i tabellen ovenfor."},
+        {"sp": "Hvor hurtigt internet har jeg brug for?",
+         "sv": "100-300 Mbit/s rækker til de fleste husstande. Selv fire samtidige "
+               "4K-streams kræver omkring 100 Mbit/s. Springet til 1000 mærkes ved "
+               "store filer og mange enheder, ikke ved almindelig streaming."},
         {"sp": "Er fiber altid bedre end coax?",
-         "sv": "På uploadhastighed og stabilitet, ja. På downloadhastighed er "
-               "forskellen ofte lille i praksis. Coax giver typisk 1000 ned men "
-               "kun 100 op, hvor fiber giver 1000 begge veje."},
+         "sv": "På uploadhastighed og stabilitet, ja. På download er forskellen ofte "
+               "lille i praksis. Coax giver typisk 1000 ned men kun 100 op, hvor fiber "
+               "giver 1000 begge veje."},
         {"sp": "Kan 5G-bredbånd erstatte fiber?",
-         "sv": "For en til to personer med almindeligt forbrug, ja. Til "
-               "hjemmearbejde med videomøder, online spil eller flere samtidige "
-               "streams er en fast forbindelse markant bedre."},
-        {"sp": "Hvorfor sorterer I ikke efter månedspris?",
-         "sv": "Fordi næsten alle abonnementer har en tilbudspris de første tre "
-               "til seks måneder. Sorterer man efter den, vinder tilbuddet altid — "
-               "også når det bliver dyrere bagefter."},
+         "sv": "For en til to personer med almindeligt forbrug, ja. Til hjemmearbejde "
+               "med videomøder, online spil eller flere samtidige streams er en fast "
+               "forbindelse markant bedre."},
+        {"sp": "Hvorfor sorterer I ikke efter månedsprisen?",
+         "sv": "Fordi næsten alle abonnementer har en tilbudspris de første tre til "
+               "seks måneder. Fem produkter koster 99 kr. om måneden, men spænder fra "
+               f"{kr(fra)} kr. og opefter, når året regnes igennem."},
+        {"sp": "Hvad koster det at skifte internetudbyder?",
+         "sv": "Selve skiftet er gratis, men der er ingen automatisk overflytning som "
+               "ved mobilabonnementer. Du skal selv opsige det gamle og returnere "
+               "routeren — ellers opkræves den, typisk 1.000-2.000 kr."},
         {"sp": "Kan jeg få bredbånd på min adresse?",
-         "sv": "Det afhænger af, hvad der er gravet ned. Fiber findes ikke "
-               "overalt, coax kræver tv-kabel, og 5G afhænger af masten. Brug "
-               "selskabets adressetjek, før du bestiller."},
+         "sv": "Det afhænger af, hvad der er gravet ned. Fiber findes ikke overalt, "
+               "coax kræver tv-kabel, og 5G afhænger af masten. Brug selskabets "
+               "adressetjek, før du bestiller."},
     ]
 
     skriv("/bredbaand/", shell(
         sti="/bredbaand/",
         titel=f"Bredbånd sammenlignet — {len(BB)} abonnementer fra {kr(fra)} kr./md.",
         beskrivelse=(f"Sammenlign {len(BB)} bredbåndsabonnementer fra {selskaber} danske "
-                     f"selskaber på hastighed, teknologi og den reelle pris over seks "
-                     f"måneder."),
+                     f"selskaber på hastighed, teknologi og prisen over hele det "
+                     f"første år."),
         hero=hero_side("Bredbånd", "Bredbånd sammenlignet",
                        f"{len(BB)} abonnementer fra {selskaber} selskaber, sorteret efter "
-                       f"hvad de reelt koster — ikke efter tilbudsprisen."),
+                       f"hvad de koster det første år — ikke efter tilbudsprisen."),
         efter_hero="", krumme=[("/", "Forside"), (None, "Bredbånd")],
-        indhold=krop + faqblok(faq),
+        indhold=krop + faqblok(faq), toc=False,
         jsonld=[graf(ORG, PERSON, WEBSITE,
                      krummeld([("/", "Forside"), ("/bredbaand/", "Bredbånd")]),
                      faqld(faq))],
@@ -5802,30 +6246,70 @@ det sjældent mærkbart på moderne net, men det er forklaringen, hvis din
 forbindelse føles langsommere klokken 20 end klokken 10.</p>""",
     }
 
-    krop = f"""<section class="sektion baand-smal artikel">
-{gennemgangslinje(OPDATERET, fakta=f"{len(udvalg)} produkter kontrolleret mod udbydernes feed")}
-<div class="udtag"><p><strong>Kort svar:</strong> {e(besk)} Billigste
-{navn.lower()}-abonnement koster {kr(fra)} kr. om måneden i snit over seks måneder.
-Hurtigste er {e(hurtigst['udbyder_navn'])} med {hurtigst['ned']} Mbit/s ned.</p></div>
+    billigst = min(udvalg, key=bb_aarspris)
+    dyrest = max(udvalg, key=bb_aarspris)
+    selskaber_her = len({a["udbyder"] for a in udvalg})
+    uden_binding = len([a for a in udvalg if not a["binding"]])
 
-{bb_tabel(udvalg, titel=f"Alle {navn.lower()}-abonnementer i vores sammenligning.")}
+    krop = bb_liste(udvalg, titel=f"{navn} sammenlignet",
+                    undertitel=f"{len(udvalg)} {navn.lower()}-abonnementer fra "
+                               f"{selskaber_her} selskaber, sorteret efter "
+                               f"førsteårsprisen.") + f"""
+<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"{len(udvalg)} produkter hentet fra udbydernes datafeed")}
+<div class="udtag"><p><strong>Kort svar:</strong> {e(besk)} Billigste
+{navn.lower()}-abonnement er {e(billigst['udbyder_navn'])} til {kr(fra)} kr. om
+måneden det første år. Hurtigste er {e(hurtigst['udbyder_navn'])} med
+{hurtigst['ned']} Mbit/s ned.</p></div>
+
 {TEKST.get(noegle, "")}
 
+<h2>Priserne i tal</h2>
+<p>Forskellen mellem billigste og dyreste {navn.lower()}-abonnement er
+{kr(bb_aarspris(dyrest) - bb_aarspris(billigst))} kr. over det første år — for en
+forbindelse, der i praksis gør det samme. Det er dét, en sammenligning skal fange.</p>
+<ul class="pilliste">
+  <li><strong>{len(udvalg)} abonnementer</strong> fra {selskaber_her} selskaber</li>
+  <li><strong>{kr(fra)} kr./md.</strong> billigst det første år
+      ({e(billigst['udbyder_navn'])} {e(billigst['navn'])})</li>
+  <li><strong>{kr(round(bb_aarspris(dyrest) / 12))} kr./md.</strong> dyrest
+      ({e(dyrest['udbyder_navn'])})</li>
+  <li><strong>{uden_binding} af {len(udvalg)}</strong> er uden binding</li>
+  <li><strong>{hurtigst['ned']}/{hurtigst['op']} Mbit/s</strong> er den højeste
+      hastighed i gruppen</li>
+</ul>
+
 <h2>Sådan læser du tabellen</h2>
-<p>Kolonnen "snit 6 mdr." er det tal, der kan sammenlignes. Den lægger
-tilbudsperioden, normalprisen og oprettelsen sammen og deler med seks. Et
-abonnement til 99 kr. i tre måneder og 299 kr. derefter lander på 199 kr. i
-snit — ikke på 99.</p>
-<p>"Ned/op" viser begge hastigheder i megabit pr. sekund. Ser du video, betyder
-kun det første tal noget. Arbejder du hjemmefra, betyder det andet mindst lige
-så meget.</p>
+<p>Prisen med stort er den, du betaler i kampagneperioden. Linjen under viser, hvad
+den stiger til bagefter, og hvad hele det første år koster.</p>
+<p>Fold detaljerne ud, og du får regnestykket: tilbudspris gange tilbudsmåneder,
+plus normalpris for resten af året, plus oprettelse. Et abonnement til 99 kr. i tre
+måneder og 299 kr. derefter lander på 249 kr. i snit — ikke på 99.</p>
+<p>"Mbit/s op" er den kolonne, folk overser. Ser du mest video, betyder kun
+downloadhastigheden noget. Arbejder du hjemmefra, betyder upload mindst lige så
+meget.</p>
+
+<h2>Tjek adressen først</h2>
+<p>{navn} er kun en mulighed, hvis det findes på din adresse. Alle selskaber har et
+adressetjek på deres egen side — brug det, før du regner på prisen.</p>
+<p>Til 5G kan du starte med vores <a href="/daekningskort/">dækningstjek</a>.</p>
 
 <h2>Se de øvrige typer</h2>
 <ul class="pilliste">{"".join(
     f'<li><a href="/bredbaand/{s}/">{e(n)}</a> — {e(b)}</li>'
     for k, n, s, b in TEK_SIDER if k != noegle)}
   <li><a href="/bredbaand/">Alle bredbåndsabonnementer samlet</a></li>
+  <li><a href="/guides/mobilt-bredbaand/">Guide: hvornår kan mobilt bredbånd
+    erstatte fiber?</a></li>
 </ul>
+
+<h2>Sådan har vi gjort</h2>
+<p>Priserne hentes automatisk fra udbydernes egne datafeeds to gange i døgnet. Vi
+regner på førsteårsprisen — tilbudspris, normalpris og oprettelse lagt sammen.
+Vi viser kun produkter fra selskaber, vi har datafeed fra, så listen dækker ikke
+hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
+
+{forfatterboks()}
 </section>"""
 
     faq = [
@@ -5847,10 +6331,10 @@ så meget.</p>
     skriv(f"/bredbaand/{sti}/", shell(
         sti=f"/bredbaand/{sti}/",
         titel=f"{navn} bredbånd — {len(udvalg)} abonnementer fra {kr(fra)} kr./md.",
-        beskrivelse=f"{besk} Sammenlign {len(udvalg)} {navn.lower()}-abonnementer på "
-                    f"hastighed, binding og den reelle pris over seks måneder.",
+        beskrivelse=f"Sammenlign {len(udvalg)} {navn.lower()}-abonnementer på hastighed, "
+                    f"binding og prisen over hele det første år. Fra {kr(fra)} kr./md.",
         hero=hero_side(navn, f"{navn} bredbånd", besk),
-        efter_hero="", krumme=krumme,
+        efter_hero="", krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, f"Spørgsmål om {navn.lower()} bredbånd"),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
     ), prioritet="0.8", hyppighed="daily")

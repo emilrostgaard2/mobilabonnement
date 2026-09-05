@@ -139,7 +139,10 @@
     if (!krop) return;
 
     var planer = Array.prototype.slice.call(krop.querySelectorAll(".plan"));
-    var bar = document.querySelector(".filterbar");
+    // Bredbåndslisten har sin egen filterbar med andre grupper. Uden den her
+    // afgrænsning binder mobilfiltret sig til den og fejler på ukendte grupper.
+    var bar = document.querySelector(".filterbar:not([data-bb-liste] .filterbar)");
+    if (bar && bar.closest("[data-bb-liste]")) bar = null;
     var visFlereBoks = document.querySelector(".vis-flere");
     var visFlereKnap = document.querySelector("[data-vis-flere]");
     var resterendeTekst = document.querySelector("[data-resterende]");
@@ -292,6 +295,7 @@
       Array.prototype.forEach.call(bar.querySelectorAll(".fb-menu input[data-f]"), function (inp) {
         inp.addEventListener("change", function () {
           var n = inp.getAttribute("data-f"), v = inp.value;
+          if (!valgt[n]) return;
           var i = valgt[n].indexOf(v);
           if (inp.checked && i === -1) valgt[n].push(v);
           if (!inp.checked && i > -1) valgt[n].splice(i, 1);
@@ -958,4 +962,154 @@
       });
     });
     if (vaelger) vaelger.addEventListener("change", filtrer);
+  })();
+
+  /* ---- Filtrering af bredbånd ----------------------------------------
+     Egen motor frem for at presse bredbånd ind i mobilfiltrene: kriterierne
+     er andre (hastighed og teknologi frem for datamængde), og en fejl her
+     må ikke kunne vælte prislisten på mobilsiderne. */
+  (function () {
+    var sektion = document.querySelector("[data-bb-liste]");
+    if (!sektion) return;
+    var bar = sektion.querySelector(".filterbar");
+    var krop = sektion.querySelector(".planliste");
+    var planer = Array.prototype.slice.call(sektion.querySelectorAll("[data-bb-plan]"));
+    var antalVist = sektion.querySelector("[data-bb-antal]");
+    var tom = sektion.querySelector("[data-bb-tom]");
+    var flereBoks = sektion.querySelector("[data-bb-flere]");
+    var restTekst = sektion.querySelector("[data-bb-rest]");
+    var graense = 12;
+    var kunTilbud = false;
+    var valgt = { fart: [], tek: [], pris: [], binding: [], slug: [], ekstra: [] };
+
+    function tal(p, n) { return parseFloat(p.getAttribute("data-" + n)) || 0; }
+
+    function iPris(p, v) {
+      var k = tal(p, "pris");
+      if (v === "u200") return k < 200;
+      if (v === "200-299") return k >= 200 && k < 300;
+      if (v === "300-399") return k >= 300 && k < 400;
+      if (v === "o400") return k >= 400;
+      return true;
+    }
+
+    function passer(p) {
+      if (kunTilbud && p.getAttribute("data-tilbud") !== "1") return false;
+      if (valgt.fart.length && valgt.fart.indexOf(p.getAttribute("data-fart")) === -1) return false;
+      if (valgt.tek.length && valgt.tek.indexOf(p.getAttribute("data-tek")) === -1) return false;
+      if (valgt.slug.length && valgt.slug.indexOf(p.getAttribute("data-slug")) === -1) return false;
+      if (valgt.pris.length && !valgt.pris.some(function (v) { return iPris(p, v); })) return false;
+      if (valgt.binding.length &&
+          valgt.binding.indexOf(p.getAttribute("data-binding")) === -1) return false;
+      if (valgt.ekstra.length) {
+        var flag = (p.getAttribute("data-ekstra") || "").split(" ");
+        for (var i = 0; i < valgt.ekstra.length; i++) {
+          if (flag.indexOf(valgt.ekstra[i]) === -1) return false;
+        }
+      }
+      return true;
+    }
+
+    function maerker() {
+      var noget = kunTilbud;
+      Object.keys(valgt).forEach(function (n) {
+        var grp = bar && bar.querySelector('.fb-grp[data-gruppe="' + n + '"]');
+        if (!grp) return;
+        var knap = grp.querySelector(".fb-knap");
+        var antal = valgt[n].length;
+        if (antal) noget = true;
+        var m = knap.querySelector(".fb-tal");
+        if (antal) {
+          knap.setAttribute("data-aktiv", "1");
+          if (!m) {
+            m = document.createElement("span");
+            m.className = "fb-tal";
+            knap.insertBefore(m, knap.querySelector(".fb-pil"));
+          }
+          m.textContent = antal;
+        } else {
+          knap.removeAttribute("data-aktiv");
+          if (m) m.remove();
+        }
+      });
+      var nul = sektion.querySelector("[data-bb-nulstil]");
+      if (nul) nul.hidden = !noget;
+    }
+
+    function opdater() {
+      var n = 0;
+      planer.forEach(function (p) {
+        if (!passer(p)) { p.hidden = true; return; }
+        n++;
+        p.hidden = n > graense;
+      });
+      if (antalVist) antalVist.textContent = n;
+      if (tom) tom.hidden = n !== 0;
+      var rest = Math.max(0, n - graense);
+      if (flereBoks) {
+        flereBoks.hidden = rest === 0;
+        if (restTekst) {
+          restTekst.textContent = rest + " abonnement" + (rest === 1 ? "" : "er") + " tilbage";
+        }
+      }
+      maerker();
+    }
+
+    function sorter(n) {
+      var faldende = n === "ned" || n === "op";
+      planer.sort(function (a, b) {
+        var va = tal(a, n === "normal" ? "normal" : n), vb = tal(b, n === "normal" ? "normal" : n);
+        return faldende ? vb - va : va - vb;
+      });
+      planer.forEach(function (p) { krop.appendChild(p); });
+      opdater();
+    }
+
+    Array.prototype.forEach.call(sektion.querySelectorAll('input[data-f]'), function (inp) {
+      inp.addEventListener("change", function () {
+        var g = inp.getAttribute("data-f");
+        if (!valgt[g]) return;
+        var i = valgt[g].indexOf(inp.value);
+        if (inp.checked && i === -1) valgt[g].push(inp.value);
+        if (!inp.checked && i > -1) valgt[g].splice(i, 1);
+        graense = 12;
+        opdater();
+      });
+    });
+
+    var tilbudKnap = sektion.querySelector("[data-bb-tilbud]");
+    if (tilbudKnap) {
+      tilbudKnap.addEventListener("click", function () {
+        kunTilbud = !kunTilbud;
+        tilbudKnap.setAttribute("aria-pressed", kunTilbud ? "true" : "false");
+        graense = 12;
+        opdater();
+      });
+    }
+
+    var nulstil = sektion.querySelector("[data-bb-nulstil]");
+    if (nulstil) {
+      nulstil.addEventListener("click", function () {
+        Object.keys(valgt).forEach(function (k) { valgt[k] = []; });
+        kunTilbud = false;
+        if (tilbudKnap) tilbudKnap.setAttribute("aria-pressed", "false");
+        Array.prototype.forEach.call(sektion.querySelectorAll('input[data-f]'), function (i) {
+          i.checked = false;
+        });
+        graense = 12;
+        opdater();
+      });
+    }
+
+    var sortVaelger = sektion.querySelector("[data-bb-sorter]");
+    if (sortVaelger) {
+      sortVaelger.addEventListener("change", function () { sorter(sortVaelger.value); });
+    }
+
+    var visFlere = sektion.querySelector("[data-bb-visflere]");
+    if (visFlere) {
+      visFlere.addEventListener("click", function () { graense = 999; opdater(); });
+    }
+
+    opdater();
   })();
