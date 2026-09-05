@@ -135,14 +135,17 @@
 
   /* ---- Abonnementsliste: filtre, sortering, detaljer ---- */
   (function () {
+    // Bredbåndslisten har sin egen motor. Kører mobilmodulet også på den,
+    // rammer to klikhåndteringer samme knap, og detaljepanelet åbner og lukker
+    // i samme klik.
     var krop = document.querySelector(".planliste");
+    if (krop && krop.closest("[data-bb-liste]")) return;
     if (!krop) return;
 
     var planer = Array.prototype.slice.call(krop.querySelectorAll(".plan"));
     // Bredbåndslisten har sin egen filterbar med andre grupper. Uden den her
     // afgrænsning binder mobilfiltret sig til den og fejler på ukendte grupper.
-    var bar = document.querySelector(".filterbar:not([data-bb-liste] .filterbar)");
-    if (bar && bar.closest("[data-bb-liste]")) bar = null;
+    var bar = document.querySelector(".filterbar");
     var visFlereBoks = document.querySelector(".vis-flere");
     var visFlereKnap = document.querySelector("[data-vis-flere]");
     var resterendeTekst = document.querySelector("[data-resterende]");
@@ -1109,6 +1112,21 @@
     var visFlere = sektion.querySelector("[data-bb-visflere]");
     if (visFlere) {
       visFlere.addEventListener("click", function () { graense = 999; opdater(); });
+    }
+
+
+    /* ---- Se detaljer på bredbåndskortene ---- */
+    if (krop) {
+      krop.addEventListener("click", function (ev) {
+        var k = ev.target.closest && ev.target.closest(".pk-detaljer");
+        if (!k) return;
+        var panel = document.getElementById(k.getAttribute("aria-controls"));
+        if (!panel) return;
+        var aaben = k.getAttribute("aria-expanded") === "true";
+        k.setAttribute("aria-expanded", aaben ? "false" : "true");
+        k.textContent = aaben ? "Se detaljer" : "Skjul detaljer";
+        panel.hidden = aaben;
+      });
     }
 
     opdater();

@@ -84,10 +84,10 @@ MENU = [
 
 # Bredbåndssektionen har sine egne undersider. Sættes af build.py.
 BREDBAAND_MENU = [
-    ("/bredbaand/", "Alle bredbåndsabonnementer"),
-    ("/bredbaand/fiberbredbaand/", "Fiber"),
-    ("/bredbaand/5g-bredbaand/", "5G-bredbånd"),
-    ("/bredbaand/coax-bredbaand/", "Coax"),
+    ("/bredbaand/", "Bredbånd sammenlignet"),
+    ("/bredbaand/fibernet/", "Fiber"),
+    ("/bredbaand/5g/", "5G-bredbånd"),
+    ("/bredbaand/coax/", "Coax"),
     ("/guides/mobilt-bredbaand/", "Guide: mobilt bredbånd"),
 ]
 
@@ -203,8 +203,22 @@ def laesetid(html):
     return max(1, round(len(tekst.split()) / 200))
 
 
+# Logobåndet siger "vi sammenligner priser fra". Det giver mening på sider med
+# en prissammenligning. På en guide, et værktøj eller en side om os selv er det
+# bare støj mellem overskriften og indholdet.
+UDEN_LOGOBAAND = (
+    "/guides/", "/om-os/", "/om/", "/metode/", "/saadan-tjener-vi-penge/",
+    "/udbydere/", "/daekningskort/", "/hvem-ringer-til-mig/", "/speedtest/",
+    "/12-maaneders-prisen/", "/kontakt/", "/presse/", "/ordbog/", "/landekoder/",
+    "/cookiepolitik/", "/privatlivspolitik/", "/prisudvikling/", "/netvaerk/",
+    "/bredbaand/", "/kampagner/", "/pin-og-puk-kode/",
+)
+
+
 def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
           hero=None, efter_hero="", opdateret="", ekstra_hoved="", toc=True):
+    if efter_hero and "logobaand" in efter_hero and sti.startswith(UDEN_LOGOBAAND):
+        efter_hero = ""
     indhold, _toc = indholdsfortegnelse(indhold)
     toc = _toc if toc else ""
     if toc:
@@ -427,9 +441,9 @@ def fod(opdateret):
         <div class="fodtitel">Bredbånd</div>
         <ul>
           <li><a href="/bredbaand/">Alle bredbåndsabonnementer</a></li>
-          <li><a href="/bredbaand/fiberbredbaand/">Fiber</a></li>
-          <li><a href="/bredbaand/5g-bredbaand/">5G-bredbånd</a></li>
-          <li><a href="/bredbaand/coax-bredbaand/">Coax</a></li>
+          <li><a href="/bredbaand/fibernet/">Fiber</a></li>
+          <li><a href="/bredbaand/5g/">5G-bredbånd</a></li>
+          <li><a href="/bredbaand/coax/">Coax</a></li>
           <li><a href="/guides/mobilt-bredbaand/">Mobilt bredbånd — guide</a></li>
         </ul>
       </div>

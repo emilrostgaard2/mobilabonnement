@@ -1872,3 +1872,54 @@ body{overflow-x:clip;max-width:100%;position:relative}
 /* Logo og produktnavn hører sammen — ingen ekstra luft imellem */
 .bb-udbyder{vertical-align:middle;line-height:1.3}
 .bb-udbyder .tabel-under{display:block;line-height:1.3}
+
+/* Detaljeknappen — tydeligere at den kan klikkes, uden at stjæle
+   opmærksomhed fra den grønne hovedknap */
+.pk-detaljer{display:inline-flex;align-items:center;gap:.3rem;
+  background:none;border:none;cursor:pointer;font:inherit;font-size:.78rem;
+  color:var(--signal);padding:.3rem 0 .5rem;text-decoration:underline;
+  text-underline-offset:2px;text-decoration-thickness:1px}
+.pk-detaljer::after{content:"▾";font-size:.7rem;transition:transform .15s}
+.pk-detaljer[aria-expanded="true"]::after{transform:rotate(180deg)}
+.pk-detaljer:hover{color:var(--berry)}
+
+/* ==========================================================================
+   Hero-visual på bredbånd — tre kort der skifter med ren CSS.
+   Ingen JavaScript: det koster intet på indlæsningen og virker altid.
+   ========================================================================== */
+.herovisual{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);
+  box-shadow:var(--skygge-blod);padding:1rem 1.1rem;position:relative;overflow:hidden}
+.hv-hoved{display:flex;align-items:center;gap:.45rem;font-family:var(--font-tal);
+  font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--graa);
+  margin-bottom:.8rem;font-weight:600}
+.hv-hoved .prik{width:7px;height:7px;border-radius:50%;background:var(--puls);
+  box-shadow:0 0 0 0 rgba(0,209,143,.6);animation:puls 2.4s infinite}
+.hv-liste{list-style:none;margin:0;padding:0;position:relative;height:158px}
+.hv-kort{position:absolute;inset:0;opacity:0;transform:translateY(8px);
+  animation:hvskift 12s infinite;animation-delay:calc(var(--i) * 4s)}
+@keyframes hvskift{
+  0%{opacity:0;transform:translateY(8px)}
+  4%,29%{opacity:1;transform:translateY(0)}
+  33%,100%{opacity:0;transform:translateY(-8px)}
+}
+.hv-top{display:flex;align-items:center;justify-content:space-between;gap:.6rem;
+  margin-bottom:.7rem;min-height:22px}
+.hv-top img{height:20px;width:auto;max-width:96px;object-fit:contain;object-position:left}
+.hv-tek{font-size:.68rem;font-weight:600;color:var(--signal-dyb);
+  background:rgba(61,90,254,.09);border-radius:999px;padding:.16rem .5rem}
+.hv-fart{font-family:var(--font-tal);font-size:1.5rem;font-weight:600;
+  letter-spacing:-.02em;line-height:1;color:var(--blaek)}
+.hv-fart span{font-size:.78rem;color:var(--graa);font-weight:400}
+.hv-pris{display:flex;align-items:baseline;gap:.3rem;margin-top:.7rem}
+.hv-pris b{font-family:var(--font-tal);font-size:2.1rem;line-height:1;
+  letter-spacing:-.02em;color:var(--puls-dyb)}
+.hv-pris span{font-size:.78rem;color:var(--graa)}
+.hv-aar{font-size:.78rem;color:var(--graa);margin-top:.25rem}
+.hv-fod{margin-top:.9rem;padding-top:.75rem;border-top:1px solid #EEF1FA;
+  font-size:.72rem;color:var(--graa);line-height:1.4}
+@media(prefers-reduced-motion:reduce){
+  /* Respekter systemindstillingen: vis kun det første kort, uden bevægelse */
+  .hv-kort{animation:none;opacity:0}
+  .hv-kort[style*="--i:0"]{opacity:1;transform:none}
+}
+@media(max-width:900px){.hv-liste{height:150px}}
