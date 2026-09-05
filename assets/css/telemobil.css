@@ -1887,39 +1887,76 @@ body{overflow-x:clip;max-width:100%;position:relative}
    Hero-visual på bredbånd — tre kort der skifter med ren CSS.
    Ingen JavaScript: det koster intet på indlæsningen og virker altid.
    ========================================================================== */
-.herovisual{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);
-  box-shadow:var(--skygge-blod);padding:1rem 1.1rem;position:relative;overflow:hidden}
-.hv-hoved{display:flex;align-items:center;gap:.45rem;font-family:var(--font-tal);
-  font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--graa);
-  margin-bottom:.8rem;font-weight:600}
-.hv-hoved .prik{width:7px;height:7px;border-radius:50%;background:var(--puls);
-  box-shadow:0 0 0 0 rgba(0,209,143,.6);animation:puls 2.4s infinite}
-.hv-liste{list-style:none;margin:0;padding:0;position:relative;height:158px}
-.hv-kort{position:absolute;inset:0;opacity:0;transform:translateY(8px);
+.herovisual{background:#fff;border:1px solid #E6EAF5;border-radius:20px;
+  box-shadow:0 1px 2px rgba(11,16,38,.04),0 12px 32px -12px rgba(11,16,38,.16);
+  padding:1.15rem 1.25rem 1rem;position:relative;overflow:hidden}
+.herovisual::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;
+  background:linear-gradient(90deg,var(--signal),var(--berry),var(--puls))}
+
+.hv-hoved{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:.95rem}
+.hv-live{display:inline-flex;align-items:center;gap:.4rem;
+  font-family:var(--font-tal);font-size:.68rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--graa);font-weight:600}
+.hv-live .prik{width:6px;height:6px;border-radius:50%;background:var(--puls);
+  box-shadow:0 0 0 0 rgba(0,209,143,.55);animation:puls 2.4s infinite}
+.hv-prikker{display:inline-flex;gap:5px}
+.hv-prikker i{width:5px;height:5px;border-radius:50%;background:#D7DDEC;
+  animation:hvprik 12s infinite;animation-delay:calc(var(--i) * 4s)}
+@keyframes hvprik{0%,32%{background:var(--signal)}33%,100%{background:#D7DDEC}}
+
+.hv-liste{list-style:none;margin:0;padding:0;position:relative;height:196px}
+.hv-kort{position:absolute;inset:0;opacity:0;transform:translateY(10px);
   animation:hvskift 12s infinite;animation-delay:calc(var(--i) * 4s)}
 @keyframes hvskift{
-  0%{opacity:0;transform:translateY(8px)}
-  4%,29%{opacity:1;transform:translateY(0)}
-  33%,100%{opacity:0;transform:translateY(-8px)}
+  0%{opacity:0;transform:translateY(10px)}
+  3%,30%{opacity:1;transform:translateY(0)}
+  34%,100%{opacity:0;transform:translateY(-10px)}
 }
+
 .hv-top{display:flex;align-items:center;justify-content:space-between;gap:.6rem;
-  margin-bottom:.7rem;min-height:22px}
-.hv-top img{height:20px;width:auto;max-width:96px;object-fit:contain;object-position:left}
-.hv-tek{font-size:.68rem;font-weight:600;color:var(--signal-dyb);
-  background:rgba(61,90,254,.09);border-radius:999px;padding:.16rem .5rem}
-.hv-fart{font-family:var(--font-tal);font-size:1.5rem;font-weight:600;
-  letter-spacing:-.02em;line-height:1;color:var(--blaek)}
-.hv-fart span{font-size:.78rem;color:var(--graa);font-weight:400}
-.hv-pris{display:flex;align-items:baseline;gap:.3rem;margin-top:.7rem}
-.hv-pris b{font-family:var(--font-tal);font-size:2.1rem;line-height:1;
-  letter-spacing:-.02em;color:var(--puls-dyb)}
-.hv-pris span{font-size:.78rem;color:var(--graa)}
-.hv-aar{font-size:.78rem;color:var(--graa);margin-top:.25rem}
-.hv-fod{margin-top:.9rem;padding-top:.75rem;border-top:1px solid #EEF1FA;
-  font-size:.72rem;color:var(--graa);line-height:1.4}
+  min-height:24px}
+.hv-top img{height:22px;width:auto;max-width:104px;object-fit:contain;
+  object-position:left center}
+.hv-navn{font-weight:700;color:var(--blaek);font-size:.95rem}
+.hv-tek{font-size:.66rem;font-weight:600;color:var(--signal-dyb);
+  background:rgba(61,90,254,.08);border:1px solid rgba(61,90,254,.14);
+  border-radius:999px;padding:.18rem .55rem;white-space:nowrap}
+.hv-navnlinje{font-size:.78rem;color:var(--graa);margin:.45rem 0 .6rem}
+
+.hv-bar{height:5px;border-radius:999px;background:#EEF1F9;overflow:hidden}
+.hv-bar span{display:block;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--signal),var(--puls))}
+
+.hv-fart{font-family:var(--font-tal);font-size:1.24rem;font-weight:600;
+  letter-spacing:-.015em;line-height:1;color:var(--blaek);margin-top:.5rem}
+.hv-fart em{font-style:normal;color:var(--graa);font-weight:500}
+.hv-fart span{font-size:.72rem;color:var(--graa);font-weight:400;margin-left:.15rem}
+
+.hv-prisrk{display:flex;align-items:center;justify-content:space-between;
+  gap:.6rem;margin-top:.75rem}
+.hv-pris{display:flex;align-items:baseline;gap:.28rem}
+.hv-pris b{font-family:var(--font-tal);font-size:2.15rem;line-height:1;
+  letter-spacing:-.025em;color:var(--puls-dyb);font-weight:700}
+.hv-pris span{font-size:.76rem;color:var(--graa)}
+.hv-badge{font-size:.68rem;font-weight:600;color:var(--puls-dyb);
+  background:rgba(0,209,143,.1);border-radius:999px;padding:.22rem .55rem;
+  white-space:nowrap}
+.hv-aar{font-size:.75rem;color:var(--graa);margin-top:.3rem}
+
+.hv-fod{display:flex;align-items:center;justify-content:space-between;gap:.6rem;
+  margin-top:.95rem;padding-top:.7rem;border-top:1px solid #EEF1FA;
+  font-size:.7rem;color:var(--graa)}
+.hv-dato{font-family:var(--font-tal);white-space:nowrap}
+
 @media(prefers-reduced-motion:reduce){
   /* Respekter systemindstillingen: vis kun det første kort, uden bevægelse */
   .hv-kort{animation:none;opacity:0}
   .hv-kort[style*="--i:0"]{opacity:1;transform:none}
+  .hv-prikker i{animation:none}
+  .hv-prikker i[style*="--i:0"]{background:var(--signal)}
 }
-@media(max-width:900px){.hv-liste{height:150px}}
+@media(max-width:900px){
+  .hv-liste{height:188px}
+  .hv-pris b{font-size:1.95rem}
+}

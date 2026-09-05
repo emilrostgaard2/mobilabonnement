@@ -2019,17 +2019,18 @@ except (FileNotFoundError, ValueError):
 
 BB = BREDBAAND.get("abonnementer", [])
 
-TEK_NAVN = {"fiber": "Fiber", "coax": "Coax", "5g": "5G", "4g": "4G", "dsl": "DSL"}
+TEK_NAVN = {"fiber": "Fibernet", "coax": "Kabel-internet", "5g": "5G internet",
+            "4g": "4G internet", "dsl": "DSL"}
 TEK_SIDER = [
-    ("fiber", "Fiber", "fibernet",
-     "Fiberbredbånd er den hurtigste og mest stabile forbindelse — hvis den er "
+    ("fiber", "Fibernet", "fibernet",
+     "Fibernet er den hurtigste og mest stabile forbindelse — hvis den er "
      "gravet ned til din adresse."),
-    ("5g", "5G", "5g",
-     "5G-bredbånd er en router, du sætter i stikkontakten. Ingen gravearbejde, "
+    ("5g", "5G internet", "5g",
+     "5G internet er en router, du sætter i stikkontakten. Ingen gravearbejde, "
      "ingen tekniker, klar samme dag."),
-    ("coax", "Coax", "coax",
-     "Coax kører gennem tv-kablet. Hurtigt at få ned, men uploadhastigheden er "
-     "typisk lavere end på fiber."),
+    ("coax", "Kabel-internet", "kabel-internet",
+     "Kabel-internet kører gennem tv-kablet, også kaldet coax eller antennestik. "
+     "Hurtigt at få ned, men uploadhastigheden er typisk lavere end på fiber."),
 ]
 
 
@@ -2086,7 +2087,7 @@ def vejviser(aktuel=""):
          f"fra {kr(min(round(bb_aarspris(a) / 12) for a in BB if a['teknologi'] == 'fiber'))} kr."
          if [a for a in BB if a["teknologi"] == "fiber"] else "hurtigst"),
         ("/bredbaand/5g/", "5G-bredbånd", "klar samme dag"),
-        ("/bredbaand/coax/", "Coax",
+        ("/bredbaand/kabel-internet/", "Kabel-internet",
          f"{len([a for a in BB if a['teknologi'] == 'coax'])} abonnementer"
          if [a for a in BB if a["teknologi"] == "coax"] else "via tv-kablet"),
         ("/kampagner/", "Kampagner", "tilbud lige nu"),
@@ -5988,8 +5989,8 @@ def bb_raekke(a, *, billigst=False, gnsnit_aar=None):
 
 # Samme fire målgrupper, men set fra hver teknologi. Uden det her ville de fire
 # sider få enslydende afsnit og begynde at konkurrere indbyrdes.
-BB_HVAD = {"fiber": "fiber", "5g": "5G-bredbånd",
-           "coax": "coax-bredbånd", "4g": "4G-bredbånd"}
+BB_HVAD = {"fiber": "fibernet", "5g": "5G internet",
+           "coax": "kabel-internet", "4g": "4G internet"}
 
 BB_VINKEL = {
     "fiber": {
@@ -6151,36 +6152,65 @@ op, billigst er {e(a2['udbyder_navn'])} til
 
 
 
+def bb_dato():
+    """Hentedatoen skrevet på dansk. Feedet giver den som tekst, ikke som dato."""
+    raa = BREDBAAND.get("hentet")
+    if not raa:
+        return OPDATERET
+    try:
+        return dansk_dato(date.fromisoformat(raa))
+    except (TypeError, ValueError):
+        return raa
+
+
 def bb_herovisual(udvalg):
     """Visuel blok til højre i bredbånds-heroen.
 
     Tre kort der skifter automatisk med ren CSS — ingen JavaScript, så det
     koster intet på indlæsningstiden og virker også, hvis JS fejler. Formålet
-    er at vise med det samme, at der er rigtige priser på siden."""
+    er at vise med det samme, at der er rigtige, opdaterede priser på siden."""
     top = sorted(udvalg, key=bb_aarspris)[:3]
     if len(top) < 3:
         return ""
+    hurtigste = max(a["ned"] for a in udvalg)
     kort = ""
     for i, a in enumerate(top):
         vist = a.get("intro_pris") or a["pris"]
         aar = bb_aarspris(a)
         logo = os.path.join(ROD, "assets", "img", "logoer", a["udbyder"] + ".webp")
         logohtml = (f'<img src="/assets/img/logoer/{a["udbyder"]}.webp" alt="" '
-                    f'aria-hidden="true" height="20" loading="lazy" decoding="async">'
+                    f'aria-hidden="true" height="22" loading="lazy" decoding="async">'
                     if os.path.exists(logo) else
-                    f'<strong>{e(a["udbyder_navn"])}</strong>')
+                    f'<span class="hv-navn">{e(a["udbyder_navn"])}</span>')
+        # Hastighedsbjælken sætter tallet i forhold til det hurtigste i udvalget
+        pct = max(8, round(a["ned"] / hurtigste * 100))
+        spar = ""
+        if a.get("intro_pris") and a.get("intro_mdr"):
+            spar = (f'<span class="hv-badge">Spar {kr((a["pris"] - a["intro_pris"]) * a["intro_mdr"])}'
+                    f' kr.</span>')
         kort += f"""<li class="hv-kort" style="--i:{i}">
   <div class="hv-top">{logohtml}
     <span class="hv-tek">{e(TEK_NAVN.get(a['teknologi'], a['teknologi']))}</span></div>
-  <div class="hv-fart">{a['ned']}<span>/{a['op']} Mbit/s</span></div>
-  <div class="hv-pris"><b>{kr(vist)}</b><span>kr./md.</span></div>
-  <div class="hv-aar">{kr(aar)} kr. det første år</div>
+  <div class="hv-navnlinje">{e(a['navn'])}</div>
+  <div class="hv-bar"><span style="width:{pct}%"></span></div>
+  <div class="hv-fart">{a['ned']}<em>/{a['op']}</em> <span>Mbit/s</span></div>
+  <div class="hv-prisrk">
+    <div class="hv-pris"><b>{kr(vist)}</b><span>kr./md.</span></div>
+    {spar}
+  </div>
+  <div class="hv-aar">{kr(aar)} kr. samlet det første år</div>
 </li>"""
+    prikker = "".join(f'<i style="--i:{i}"></i>' for i in range(3))
     return f"""<div class="herovisual" aria-hidden="true">
-  <div class="hv-hoved"><i class="prik"></i> Billigst lige nu</div>
+  <div class="hv-hoved">
+    <span class="hv-live"><i class="prik"></i> Billigst lige nu</span>
+    <span class="hv-prikker">{prikker}</span>
+  </div>
   <ul class="hv-liste">{kort}</ul>
-  <div class="hv-fod">Opdateret {e(BREDBAAND.get('hentet') or OPDATERET)} ·
-    {len(udvalg)} abonnementer</div>
+  <div class="hv-fod">
+    <span>{len(udvalg)} abonnementer sammenlignet</span>
+    <span class="hv-dato">Opdateret {e(bb_dato())}</span>
+  </div>
 </div>"""
 
 
@@ -6216,40 +6246,6 @@ def bb_liste(udvalg, *, titel, undertitel, vis=12):
       Vis alle — <span data-bb-rest></span></button>
   </div>
 </section>"""
-
-
-
-def bb_herovisual(udvalg):
-    """Visuel blok til højre i bredbånds-heroen.
-
-    Tre kort der skifter automatisk med ren CSS — ingen JavaScript, så det
-    koster intet på indlæsningstiden og virker også, hvis JS fejler. Formålet
-    er at vise med det samme, at der er rigtige priser på siden."""
-    top = sorted(udvalg, key=bb_aarspris)[:3]
-    if len(top) < 3:
-        return ""
-    kort = ""
-    for i, a in enumerate(top):
-        vist = a.get("intro_pris") or a["pris"]
-        aar = bb_aarspris(a)
-        logo = os.path.join(ROD, "assets", "img", "logoer", a["udbyder"] + ".webp")
-        logohtml = (f'<img src="/assets/img/logoer/{a["udbyder"]}.webp" alt="" '
-                    f'aria-hidden="true" height="20" loading="lazy" decoding="async">'
-                    if os.path.exists(logo) else
-                    f'<strong>{e(a["udbyder_navn"])}</strong>')
-        kort += f"""<li class="hv-kort" style="--i:{i}">
-  <div class="hv-top">{logohtml}
-    <span class="hv-tek">{e(TEK_NAVN.get(a['teknologi'], a['teknologi']))}</span></div>
-  <div class="hv-fart">{a['ned']}<span>/{a['op']} Mbit/s</span></div>
-  <div class="hv-pris"><b>{kr(vist)}</b><span>kr./md.</span></div>
-  <div class="hv-aar">{kr(aar)} kr. det første år</div>
-</li>"""
-    return f"""<div class="herovisual" aria-hidden="true">
-  <div class="hv-hoved"><i class="prik"></i> Billigst lige nu</div>
-  <ul class="hv-liste">{kort}</ul>
-  <div class="hv-fod">Opdateret {e(BREDBAAND.get('hentet') or OPDATERET)} ·
-    {len(udvalg)} abonnementer</div>
-</div>"""
 
 
 
@@ -6756,20 +6752,20 @@ forbindelse føles langsommere klokken 20 end klokken 10.</p>""",
     uden_binding = len([a for a in udvalg if not a["binding"]])
 
     krop = bb_liste(udvalg, titel=f"{navn} sammenlignet",
-                    undertitel=f"{len(udvalg)} {navn.lower()}-abonnementer fra "
+                    undertitel=f"{len(udvalg)} abonnementer med {navn.lower()} fra "
                                f"{selskaber_her} selskaber, sorteret efter "
                                f"førsteårsprisen.") + f"""
 <section class="sektion baand-smal artikel">
 {gennemgangslinje(OPDATERET, fakta=f"{len(udvalg)} produkter hentet fra udbydernes datafeed")}
 <div class="udtag"><p><strong>Kort svar:</strong> {e(besk)} Billigste
-{navn.lower()}-abonnement er {e(billigst['udbyder_navn'])} til {kr(fra)} kr. om
+abonnement med {navn.lower()} er {e(billigst['udbyder_navn'])} til {kr(fra)} kr. om
 måneden det første år. Hurtigste er {e(hurtigst['udbyder_navn'])} med
 {hurtigst['ned']} Mbit/s ned.</p></div>
 
 {TEKST.get(noegle, "")}
 
 <h2>Priserne i tal</h2>
-<p>Forskellen mellem billigste og dyreste {navn.lower()}-abonnement er
+<p>Forskellen mellem billigste og dyreste abonnement med {navn.lower()} er
 {kr(bb_aarspris(dyrest) - bb_aarspris(billigst))} kr. over det første år — for en
 forbindelse, der i praksis gør det samme. Det er dét, en sammenligning skal fange.</p>
 <ul class="pilliste">
@@ -6819,7 +6815,7 @@ hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
 </section>"""
 
     faq = [
-        {"sp": f"Hvad koster {navn.lower()}-bredbånd?",
+        {"sp": f"Hvad koster {navn.lower()}?",
          "sv": f"Fra {kr(fra)} kr. om måneden i snit over seks måneder, når "
                f"tilbudspris, normalpris og oprettelse regnes med."},
         {"sp": f"Hvem har det hurtigste {navn.lower()}?",
@@ -6836,13 +6832,13 @@ hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
 
     skriv(f"/bredbaand/{sti}/", shell(
         sti=f"/bredbaand/{sti}/",
-        titel=f"{navn} bredbånd — {len(udvalg)} abonnementer fra {kr(fra)} kr./md.",
+        titel=f"{navn} — sammenlign {len(udvalg)} abonnementer fra {kr(fra)} kr./md.",
         beskrivelse=f"Sammenlign {len(udvalg)} {navn.lower()}-abonnementer på hastighed, "
                     f"binding og prisen over hele det første år. Fra {kr(fra)} kr./md.",
-        hero=hero_side(navn, f"{navn} bredbånd", besk,
+        hero=hero_side(navn, f"Sammenlign {navn if navn.startswith((chr(53),chr(52))) else navn[0].lower() + navn[1:]}", besk,
                        billede=bb_herovisual(udvalg)),
         efter_hero="", krumme=krumme, toc=False,
-        indhold=krop + faqblok(faq, f"Spørgsmål om {navn} bredbånd"),
+        indhold=krop + faqblok(faq, f"Spørgsmål om {navn.lower()}"),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
     ), prioritet="0.8", hyppighed="daily")
 

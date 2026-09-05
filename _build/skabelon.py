@@ -85,9 +85,9 @@ MENU = [
 # Bredbåndssektionen har sine egne undersider. Sættes af build.py.
 BREDBAAND_MENU = [
     ("/bredbaand/", "Bredbånd sammenlignet"),
-    ("/bredbaand/fibernet/", "Fiber"),
-    ("/bredbaand/5g/", "5G-bredbånd"),
-    ("/bredbaand/coax/", "Coax"),
+    ("/bredbaand/fibernet/", "Fibernet"),
+    ("/bredbaand/5g/", "5G internet"),
+    ("/bredbaand/kabel-internet/", "Kabel-internet"),
     ("/guides/mobilt-bredbaand/", "Guide: mobilt bredbånd"),
 ]
 
@@ -441,9 +441,9 @@ def fod(opdateret):
         <div class="fodtitel">Bredbånd</div>
         <ul>
           <li><a href="/bredbaand/">Alle bredbåndsabonnementer</a></li>
-          <li><a href="/bredbaand/fibernet/">Fiber</a></li>
-          <li><a href="/bredbaand/5g/">5G-bredbånd</a></li>
-          <li><a href="/bredbaand/coax/">Coax</a></li>
+          <li><a href="/bredbaand/fibernet/">Fibernet</a></li>
+          <li><a href="/bredbaand/5g/">5G internet</a></li>
+          <li><a href="/bredbaand/kabel-internet/">Kabel-internet</a></li>
           <li><a href="/guides/mobilt-bredbaand/">Mobilt bredbånd — guide</a></li>
         </ul>
       </div>
