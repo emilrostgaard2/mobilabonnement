@@ -1768,9 +1768,14 @@ body{overflow-x:clip;max-width:100%;position:relative}
    Menu — én kolonne. To kolonner blev til en mur, man lukkede igen.
    ========================================================================== */
 .nav-menu-enkel{width:340px;flex-direction:column;gap:.05rem}
-/* display sættes af .nav-menu, så mobilens display:none ikke overskrives */
-.nav-gruppe:hover .nav-menu-enkel,.nav-menu-enkel.aaben,
-.nav-gruppe:focus-within .nav-menu-enkel{display:flex}
+/* display sættes af .nav-menu, så mobilens display:none ikke overskrives.
+   Hover og fokus gælder KUN enheder med mus — på en touchskærm udløses hover
+   ved berøring, og så folder menuen sig ud, uden at nogen har trykket. */
+.nav-menu-enkel.aaben{display:flex}
+@media(hover:hover) and (pointer:fine){
+  .nav-gruppe:hover .nav-menu-enkel,
+  .nav-gruppe:focus-within .nav-menu-enkel{display:flex}
+}
 .nav-menu-enkel a{display:block;padding:.5rem .75rem;border-radius:var(--r-s)}
 .nav-menu-enkel .mp-navn{font-size:.9rem}
 .nav-menu-enkel .mp-under{font-size:.76rem}
