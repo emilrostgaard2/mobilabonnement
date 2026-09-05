@@ -631,8 +631,15 @@ def hero_forside():
 
 
 def guidebillede(navn, alt, prioritet=False, mappe="guides"):
-    """Responsivt billede med srcset — 640 til mobil, 1280 til desktop."""
+    """Responsivt billede med srcset — 640 til mobil, 1280 til desktop.
+
+    Findes filen ikke, viser vi en neutral flade frem for et brudt billede.
+    Det gør det muligt at oprette en side, før billedet er klar, uden at
+    kortet på oversigten ser ødelagt ud."""
     b = f"/assets/img/{mappe}"
+    if not os.path.exists(os.path.join(ROD, "assets", "img", mappe, f"{navn}-1280.webp")):
+        return '<span class="ak-tom" aria-hidden="true"></span>' 
+
     return (f'<img src="{b}/{navn}-1280.webp"'
             f' srcset="{b}/{navn}-640.webp 640w, {b}/{navn}-1280.webp 1280w"'
             f' sizes="(max-width: 900px) 100vw, 46vw"'
@@ -5083,8 +5090,217 @@ GUIDER = [
      "Hvad 5G koster ekstra i praksis, og hvornår du faktisk mærker forskellen.",
      "er-5g-pengene-vaerd", "Kvinde på videomøde over 5G fra en café i København",
      "Netværk", 5),
+    ("/guides/langsomt-internet/", "Derfor er dit internet langsomt",
+     "Seks årsager i den rækkefølge du bør tjekke dem. De færreste er abonnementet.",
+     "langsomt-internet", "Router på en reol i en dansk stue", "Internet", 7),
+    ("/guides/to-numre-en-telefon/", "To numre på én telefon",
+     "Arbejde og privat på samme enhed med eSIM og dual-SIM.",
+     "to-numre", "Telefon med to aktive simkort i indstillingerne", "eSIM", 7),
+    ("/guides/flyt-internettet/", "Sådan tager du internettet med, når du flytter",
+     "Tidsplan, opsigelsesvarsel og de fejl der koster penge.",
+     "flyt-internettet", "Flyttekasser og en router i en tom stue", "Flytning", 7),
+    ("/guides/ping-og-svartid/", "Ping og svartid — det tal gamere skal kigge på",
+     "Hastighed er ligegyldig til gaming. Svartiden afgør alt.",
+     "ping-og-svartid", "Ung mand spiller online spil på computer", "Gaming", 6),
 ]
 
+
+
+def tabel_esim_udbydere():
+    """Hvilke selskaber understøtter eSIM — grundlaget for to numre på én telefon."""
+    raekker = ""
+    for u in UDBYDERE:
+        egne = [a for a in ABON if a["udbyder"] == u["slug"] and a["pris"] > 0]
+        if not egne:
+            continue
+        med = [a for a in egne if a.get("esim")]
+        billigst = min(med, key=lambda a: a["pris"]) if med else None
+        raekker += f"""<tr>
+  <td><a href="/udbydere/{u['slug']}/"><strong>{e(u['navn'])}</strong></a></td>
+  <td class="tal">{"Ja" if med else "Nej"}</td>
+  <td class="tal">{len(med)} af {len(egne)}</td>
+  <td class="tal">{kr(billigst['pris']) + ' kr.' if billigst else '—'}</td>
+  <td class="tal">{e(netlabel(u))}</td>
+</tr>"""
+    antal = len({a["udbyder"] for a in ABON if a.get("esim") and a["pris"] > 0})
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Hvilke selskaber understøtter eSIM, og hvad det billigste abonnement med
+  eSIM koster. {antal} af selskaberne i vores sammenligning tilbyder det.
+  Opdateret {e(OPDATERET)}.</caption>
+  <thead><tr>
+    <th scope="col">Selskab</th><th scope="col">eSIM</th>
+    <th scope="col">Abonnementer</th><th scope="col">Billigst med eSIM</th>
+    <th scope="col">Netværk</th>
+  </tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def tabel_danmark_tal():
+    """Prisniveauet på det danske marked, regnet på vores egne data."""
+    import statistics as st
+    betalte = [a for a in ABON if a["pris"] > 0]
+    med_5g = [a for a in betalte if a.get("femg")]
+    uden_binding = [a for a in betalte if not a.get("binding")]
+    med_esim = [a for a in betalte if a.get("esim")]
+    fri = [a for a in betalte if a["data_gb"] >= 9999]
+    priser = sorted(a["pris"] for a in betalte)
+    rk = [
+        ("Mobilabonnementer i vores sammenligning", f"{len(betalte)}",
+         f"fra {len({a['udbyder'] for a in betalte})} selskaber"),
+        ("Laveste månedspris", f"{kr(priser[0])} kr.", "normalpris, ikke tilbudspris"),
+        ("Medianpris", f"{kr(round(st.median(priser)))} kr.",
+         "den midterste pris på markedet"),
+        ("Gennemsnitspris", f"{kr(round(st.mean(priser)))} kr.",
+         "trækkes op af få dyre abonnementer"),
+        ("Højeste månedspris", f"{kr(priser[-1])} kr.", "typisk med streaming inkluderet"),
+        ("Uden binding", f"{round(len(uden_binding) / len(betalte) * 100)} %",
+         f"{len(uden_binding)} af {len(betalte)} abonnementer"),
+        ("Med 5G", f"{round(len(med_5g) / len(betalte) * 100)} %",
+         f"{len(med_5g)} af {len(betalte)}"),
+        ("Med eSIM", f"{round(len(med_esim) / len(betalte) * 100)} %",
+         f"{len(med_esim)} af {len(betalte)}"),
+        ("Med fri data", f"{len(fri)}",
+         f"fra {kr(min(a['pris'] for a in fri))} kr./md." if fri else "—"),
+        ("Med kampagnepris", f"{len([a for a in betalte if a.get('intro_pris')])}",
+         "tilbudsprisen gælder typisk 2-12 mdr."),
+    ]
+    raekker = "".join(
+        f'<tr><td><strong>{e(n)}</strong></td><td class="tal">{e(v)}</td>'
+        f'<td>{e(k)}</td></tr>' for n, v, k in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Det danske mobilmarked i tal, regnet på de {len(betalte)} abonnementer i
+  vores database den {e(OPDATERET)}. Alle beløb er normalpriser.</caption>
+  <thead><tr><th scope="col">Nøgletal</th><th scope="col">Værdi</th>
+    <th scope="col">Bemærk</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def tabel_bredbaand_tal():
+    """Bredbåndsmarkedet i tal — samme øvelse for internet."""
+    if not BB:
+        return ""
+    import statistics as st
+    aar = sorted(bb_aarspris(a) for a in BB)
+    pr_tek = {}
+    for a in BB:
+        pr_tek.setdefault(a["teknologi"], []).append(a)
+    rk = [
+        ("Bredbåndsabonnementer", f"{len(BB)}",
+         f"fra {len({a['udbyder'] for a in BB})} selskaber"),
+        ("Laveste pris første år", f"{kr(round(aar[0] / 12))} kr./md.",
+         f"{kr(aar[0])} kr. samlet"),
+        ("Median første år", f"{kr(round(st.median(aar) / 12))} kr./md.",
+         "inklusive oprettelse"),
+        ("Højeste pris første år", f"{kr(round(aar[-1] / 12))} kr./md.",
+         f"{kr(aar[-1])} kr. samlet"),
+        ("Hurtigste forbindelse", f"{max(a['ned'] for a in BB)} Mbit/s",
+         f"op til {max(a['op'] for a in BB)} Mbit/s upload"),
+        ("Uden binding", f"{len([a for a in BB if not a['binding']])} af {len(BB)}",
+         "resten har typisk 6 måneder"),
+        ("Med gratis oprettelse", f"{len([a for a in BB if not a.get('oprettelse')])} af {len(BB)}",
+         "oprettelse koster op til 299 kr."),
+        ("Med kampagnepris", f"{len([a for a in BB if a.get('intro_pris')])} af {len(BB)}",
+         "typisk 3-6 måneder"),
+    ]
+    for t, egne in sorted(pr_tek.items(), key=lambda x: -len(x[1])):
+        rk.append((TEK_NAVN.get(t, t), f"{len(egne)} abonnementer",
+                   f"fra {kr(round(min(bb_aarspris(a) for a in egne) / 12))} kr./md."))
+    raekker = "".join(
+        f'<tr><td><strong>{e(n)}</strong></td><td class="tal">{e(v)}</td>'
+        f'<td>{e(k)}</td></tr>' for n, v, k in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Bredbåndsmarkedet i tal, regnet på {len(BB)} abonnementer. Priserne er
+  gennemsnit over det første år, hvor tilbudspris, normalpris og oprettelse
+  indgår.</caption>
+  <thead><tr><th scope="col">Nøgletal</th><th scope="col">Værdi</th>
+    <th scope="col">Bemærk</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def tabel_wifi_standarder():
+    rk = [
+        ("Wi-Fi 4", "802.11n", "2009", "Op til 150 Mbit/s", "For gammel til fiber"),
+        ("Wi-Fi 5", "802.11ac", "2013", "Op til 800 Mbit/s", "Rækker til de fleste"),
+        ("Wi-Fi 6", "802.11ax", "2019", "Op til 1200 Mbit/s", "Bedst til mange enheder"),
+        ("Wi-Fi 6E", "802.11ax", "2021", "Op til 1800 Mbit/s", "Ekstra frekvensbånd, mindre støj"),
+        ("Wi-Fi 7", "802.11be", "2024", "Over 2000 Mbit/s", "Kræver ny router og ny telefon"),
+    ]
+    raekker = "".join(
+        f'<tr><td><strong>{e(n)}</strong></td><td class="tal">{e(s)}</td>'
+        f'<td class="tal">{e(aa)}</td><td class="tal">{e(f)}</td><td>{e(k)}</td></tr>'
+        for n, s, aa, f, k in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Wi-fi-standarder og hvad de reelt leverer. Hastigheden er den teoretiske
+  maksimale — i praksis får du typisk halvdelen eller mindre.</caption>
+  <thead><tr><th scope="col">Navn</th><th scope="col">Teknisk</th>
+    <th scope="col">Fra</th><th scope="col">Hastighed</th>
+    <th scope="col">Bemærk</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def tabel_ping():
+    rk = [
+        ("Fiber", "2–10 ms", "Fremragende", "Symmetrisk, stabil, ingen deling"),
+        ("Kabel-internet (coax)", "10–20 ms", "God", "Kan svinge om aftenen"),
+        ("5G", "20–40 ms", "Brugbar", "Svinger med masten og belastningen"),
+        ("4G", "35–60 ms", "Mærkbar", "Til turbaserede spil, ikke skydespil"),
+        ("Satellit", "500–700 ms", "Uegnet", "Fysisk afstand kan ikke omgås"),
+    ]
+    raekker = "".join(
+        f'<tr><td><strong>{e(t)}</strong></td><td class="tal">{e(p)}</td>'
+        f'<td class="tal">{e(v)}</td><td>{e(n)}</td></tr>' for t, p, v, n in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Typisk svartid til en dansk server. Tallene er intervaller — din
+  faktiske ping afhænger af afstand til serveren og af dit eget udstyr.</caption>
+  <thead><tr><th scope="col">Teknologi</th><th scope="col">Ping</th>
+    <th scope="col">Til spil</th><th scope="col">Bemærk</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def tabel_flyttetjek():
+    rk = [
+        ("6-8 uger før", "Tjek dit opsigelsesvarsel",
+         "Typisk løbende måned plus 30 dage. Står i dine abonnementsvilkår."),
+        ("6 uger før", "Tjek hvad der kan leveres på den nye adresse",
+         "Fiber findes ikke overalt. Brug selskabets adressetjek."),
+        ("4 uger før", "Bestil forbindelsen til den nye adresse",
+         "Kræver installation, kan der gå 2-6 uger. Bestil før du opsiger."),
+        ("3 uger før", "Opsig den gamle forbindelse",
+         "Med den rigtige slutdato, så der ikke er huller."),
+        ("1 uge før", "Bestil eller planlæg teknikerbesøg",
+         "Ved fiber og coax skal der ofte en tekniker forbi."),
+        ("Flyttedagen", "Tag routeren med — eller lad den blive",
+         "Er den lejet, skal den returneres. Er den købt, tager du den med."),
+        ("Efter flytningen", "Returnér lejet udstyr inden fristen",
+         "Glemmer du det, opkræves routeren, typisk 1.000-2.000 kr."),
+    ]
+    raekker = "".join(
+        f'<tr><td class="tal"><strong>{e(n)}</strong></td><td>{e(h)}</td>'
+        f'<td>{e(k)}</td></tr>' for n, h, k in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Tidsplan for at flytte internettet med. Start otte uger før, hvis du
+  skal have fiber lagt ind på en adresse uden.</caption>
+  <thead><tr><th scope="col">Hvornår</th><th scope="col">Gør dette</th>
+    <th scope="col">Hvorfor</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
 
 
 def byg_nye_guides():
@@ -6841,6 +7057,953 @@ hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
         indhold=krop + faqblok(faq, f"Spørgsmål om {navn.lower()}"),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
     ), prioritet="0.8", hyppighed="daily")
+
+
+def byg_fem_artikler():
+    """Fem artikler der henter trafik på søgninger, de eksisterende sider ikke
+    dækker — og som sender intern linkværdi videre til pris- og bredbåndssiderne.
+
+    Afgrænsningen mod det, der findes i forvejen:
+      /guides/esim/                → hvad eSIM er, og hvordan man aktiverer det
+      /guides/to-numre-en-telefon/ → hvordan man har to numre samtidig
+
+      /guides/daekning-og-netvaerk/ → hvilket net dækker hvor
+      /guides/langsomt-internet/    → hvorfor det er langsomt hos DIG
+
+      /bredbaand/                   → hvilket abonnement skal jeg vælge
+      /guides/flyt-internettet/     → hvordan får jeg det med til ny adresse
+      /guides/ping-og-svartid/      → hvorfor svartid slår hastighed for gamere
+
+      /prisudvikling/               → hvordan priserne flytter sig over tid
+      /danskernes-forbrug/          → hvordan markedet ser ud lige nu, i tal
+    """
+    med_esim = [a for a in ABON if a.get("esim") and a["pris"] > 0]
+    esim_selskaber = len({a["udbyder"] for a in med_esim})
+    billigst_esim = min(med_esim, key=lambda a: a["pris"]) if med_esim else None
+
+    # ------------------------------------------------ 1. To numre på én telefon
+    if billigst_esim:
+        byg_guide(
+            "/guides/to-numre-en-telefon/", "To numre",
+            "To numre på én telefon",
+            "To numre på én telefon — sådan virker eSIM og dual-SIM",
+            f"Sådan får du arbejde og privat på samme telefon. {esim_selskaber} "
+            f"selskaber understøtter eSIM, billigste ekstra abonnement koster "
+            f"{kr(billigst_esim['pris'])} kr./md.",
+            f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> Har du en telefon fra omkring 2020
+eller nyere, kan du have to numre samtidig — ét fysisk simkort og ét eSIM. Du
+skal bruge to abonnementer, og det billigste ekstra koster
+{kr(billigst_esim['pris'])} kr. om måneden.</p></div>
+
+<p>Det er en af de mest oversete muligheder på en moderne telefon. De fleste ved,
+at eSIM findes, men ikke at det betyder, at man kan have arbejde og privat på
+samme enhed — med to numre, der begge ringer, og to regninger, der holdes
+adskilt.</p>
+
+<h2>Hvad forskellen er på dual-SIM og eSIM</h2>
+<p><strong>Dual-SIM</strong> betyder, at telefonen kan håndtere to abonnementer
+samtidig. Det er en egenskab ved telefonen.</p>
+<p><strong>eSIM</strong> er et simkort, der er indbygget i telefonen og programmeres
+digitalt i stedet for at blive sat i. Det er en type simkort.</p>
+<p>De fleste moderne telefoner er dual-SIM ved at kombinere de to: ét fysisk kort i
+bakken og ét eSIM indbygget. Nogle Android-telefoner har to fysiske pladser i
+stedet. Resultatet er det samme — to numre, én telefon.</p>
+
+<h2>Kan din telefon det?</h2>
+<h3>iPhone</h3>
+<p>Alle iPhone fra XS og XR i 2018 og frem har eSIM sammen med den fysiske plads.
+iPhone 14 og nyere solgt i USA har kun eSIM og ingen bakke — europæiske modeller
+har begge dele.</p>
+<p>Tjek det selv: Indstillinger → Generelt → Om. Er der en linje med "Tilgængelig
+SIM" eller "Digitalt SIM", har du eSIM.</p>
+<h3>Android</h3>
+<p>Google Pixel fra 3 og frem, Samsung Galaxy S20 og nyere samt de fleste modeller i
+mellemklassen og opefter. I den billige ende er det stadig ikke standard.</p>
+<p>Tjek det selv: Indstillinger → Netværk og internet → SIM. Er der mulighed for at
+tilføje et eSIM, kan telefonen det.</p>
+
+<h2>Hvilke selskaber tilbyder eSIM?</h2>
+{tabel_esim_udbydere()}
+<p>Bemærk, at det ikke er alle abonnementer hos et selskab, der kan fås med eSIM.
+Tabellen viser, hvor mange af hvert selskabs abonnementer der understøtter det.</p>
+
+<h2>Fire situationer hvor to numre giver mening</h2>
+<ol class="nummerliste">
+  <li><strong>Arbejde og privat adskilt.</strong> Det mest almindelige. Du kan slå
+  arbejdsnummeret fra om aftenen uden at slukke telefonen, og du slipper for at
+  have to enheder i lommen.</li>
+  <li><strong>Rejser uden roamingregning.</strong> Til lande uden for EU kan du
+  købe et lokalt eSIM for få hundrede kroner og beholde dit danske nummer aktivt
+  til opkald og sms.</li>
+  <li><strong>Billigt data plus billig tale.</strong> Har du fundet et abonnement
+  med meget data og et andet med god udlandstale, kan du bruge begge samtidig.</li>
+  <li><strong>Overgang ved selskabsskifte.</strong> Du kan aktivere det nye
+  abonnement på eSIM, teste dækningen i en uge og først derefter flytte dit
+  nummer over.</li>
+</ol>
+
+<h2>Sådan sætter du det op</h2>
+<ol class="nummerliste">
+  <li>Bestil et abonnement med eSIM. Du får en QR-kode på mail — ofte inden for
+  få minutter, da der ikke skal sendes noget fysisk.</li>
+  <li>Scan koden med telefonens kamera under SIM-indstillinger.</li>
+  <li>Navngiv de to linjer, for eksempel "Privat" og "Arbejde".</li>
+  <li>Vælg hvilken linje der bruges til data, til opkald og til sms. Det kan
+  ændres når som helst.</li>
+</ol>
+<p>Hele processen tager typisk under fem minutter. Vil du læse mere om selve
+teknologien, har vi en <a href="/guides/esim/">guide til eSIM</a>.</p>
+
+<h2>Det du skal være opmærksom på</h2>
+<h3>Batteriet</h3>
+<p>To aktive linjer betyder, at telefonen holder forbindelse til to net samtidig.
+Det koster typisk 5-10 procent ekstra batteri om dagen. Bruger du kun det ene
+nummer til opkald, kan du slå data fra på den linje.</p>
+<h3>Data kan kun komme ét sted fra</h3>
+<p>Begge numre kan modtage opkald og sms samtidig, men mobildata bruger kun én
+linje ad gangen. Du vælger hvilken, og du kan skifte manuelt.</p>
+<h3>eSIM kan ikke flyttes til en anden telefon</h3>
+<p>Et fysisk simkort kan du tage ud og sætte i en ny telefon. Et eSIM er bundet
+til enheden. Skifter du telefon, skal du bede selskabet om en ny QR-kode. De
+fleste gør det gratis, men det er et ekstra skridt.</p>
+<h3>Nogle abonnementer koster ekstra for eSIM</h3>
+<p>Hos de fleste selskaber er det gratis. Enkelte tager et engangsgebyr på 25-99
+kr. for at udstede koden. Det står i abonnementsvilkårene.</p>
+
+<h2>Hvad koster det ekstra nummer?</h2>
+<p>Du betaler for to abonnementer. Men det ekstra behøver ikke være stort — bruger
+du kun det til opkald og sms, rækker et lille abonnement.</p>
+<p>Billigste abonnement med eSIM i vores sammenligning er
+{e(UMAP[billigst_esim['udbyder']]['navn'])} til {kr(billigst_esim['pris'])} kr. om
+måneden. Se <a href="/mobilabonnement-med-esim/">alle abonnementer med eSIM</a>
+eller <a href="/mobilabonnement-1-10-gb/">de mindste abonnementer</a>, hvis det
+ekstra nummer kun skal bruges til tale.</p>
+
+<h2>Hvad koster det i praksis at have to numre?</h2>
+<p>Regnestykket afhænger helt af, hvad det ekstra nummer skal bruges til. Her er
+de tre typiske opsætninger.</p>
+<h3>Arbejde og privat</h3>
+<p>Du har et almindeligt abonnement privat og et lille til arbejde — eller
+omvendt. Bruger arbejdsnummeret kun tale og sms, rækker det mindste abonnement på
+markedet. Samlet udgift bliver typisk 60-120 kr. mere om måneden end ét
+abonnement.</p>
+<h3>Data på det ene, tale på det andet</h3>
+<p>Har du fundet et abonnement med meget data til lav pris og et andet med gode
+udlandsvilkår, kan du bruge begge. Data kører på det ene, opkald på det andet. Det
+kræver, at du selv holder styr på indstillingerne, men det kan give et bedre
+samlet produkt end noget enkeltabonnement.</p>
+<h3>Dansk nummer plus lokalt eSIM på rejsen</h3>
+<p>Til lande uden for EU er det ofte billigst. Du beholder dit danske nummer
+aktivt til opkald og sms — vigtigt for MitID og bankbeskeder — og køber data
+lokalt. Et eSIM til en uge i USA koster typisk 100-200 kr. mod flere hundrede i
+roaming.</p>
+<p>Se hvad roaming koster uden for EU i vores
+<a href="/guides/mobilabonnement-i-udlandet/">guide til mobil i udlandet</a>.</p>
+
+<h2>Sådan styrer du, hvilket nummer der bruges</h2>
+<p>Både iPhone og Android lader dig sætte en standard, men også vælge fra gang til
+gang.</p>
+<ul class="pilliste">
+  <li><strong>Standardlinje til opkald.</strong> Vælg den, du ringer mest fra.
+  Ved hvert opkald kan du skifte manuelt.</li>
+  <li><strong>Linje pr. kontakt.</strong> Du kan knytte en bestemt linje til en
+  kontakt, så arbejdskolleger altid ringes op fra arbejdsnummeret.</li>
+  <li><strong>Data på én linje.</strong> Vælg den med mest data eller bedst
+  dækning. Kan skiftes med to tryk.</li>
+  <li><strong>Slå en linje fra.</strong> Arbejdsnummeret kan slukkes om aftenen
+  og i ferier uden at påvirke det private.</li>
+</ul>
+
+<h2>Virker MitID og bankbeskeder på begge numre?</h2>
+<p>Ja, så længe begge er rigtige mobilabonnementer. MitID og banker sender sms til
+det nummer, du har registreret hos dem — det er uafhængigt af, om nummeret sidder
+på et fysisk kort eller et eSIM.</p>
+<p>Det, der ikke virker, er nummre fra internetbaserede apps. De kan ikke modtage
+den type sms, og de kan ikke bruges til at oprette MitID.</p>
+
+<h2>To numre på en gammel telefon</h2>
+<p>Understøtter din telefon ikke eSIM, er der to muligheder. Nogle
+Android-telefoner har to fysiske simpladser — tjek bakken. Ellers findes der
+adaptere, men de er upålidelige og anbefales ikke.</p>
+<p>Er du alligevel ved at skifte telefon, er eSIM værd at kigge efter. Det er
+standard på alt fra mellemklassen og opefter i dag. Se vores
+<a href="/guides/koeb-mobiltelefon/">guide til køb af mobiltelefon</a>.</p>
+
+<h2>Alternativet: ét nummer, to profiler</h2>
+<p>Har din telefon ikke eSIM, findes der apps, der giver et ekstra nummer over
+internettet. De fungerer til opkald og beskeder, men nummeret er ikke et
+almindeligt dansk mobilnummer, og de kan ikke bruges til at modtage sms fra
+banken eller MitID.</p>
+<p>Skal det ekstra nummer bruges til noget officielt, skal det være et rigtigt
+abonnement.</p>
+</section>""",
+            [{"sp": "Kan man have to numre på én telefon?",
+              "sv": "Ja, hvis telefonen understøtter dual-SIM. De fleste telefoner fra "
+                    "2020 og frem kombinerer et fysisk simkort med et indbygget eSIM, "
+                    "så begge numre er aktive samtidig."},
+             {"sp": "Hvad koster et ekstra nummer?",
+              "sv": f"Du betaler for to abonnementer. Billigste abonnement med eSIM i "
+                    f"vores sammenligning koster {kr(billigst_esim['pris'])} kr. om "
+                    f"måneden. Skal nummeret kun bruges til opkald, rækker et lille "
+                    f"abonnement."},
+             {"sp": "Bruger to numre mere batteri?",
+              "sv": "Ja, typisk 5-10 procent ekstra om dagen, fordi telefonen holder "
+                    "forbindelse til to net. Slår du data fra på den ene linje, falder "
+                    "forbruget."},
+             {"sp": "Kan jeg flytte et eSIM til en ny telefon?",
+              "sv": "Ikke direkte. eSIM er bundet til enheden, så du skal bede selskabet "
+                    "om en ny QR-kode. De fleste gør det gratis."},
+             {"sp": "Kan begge numre bruge data samtidig?",
+              "sv": "Nej. Begge kan modtage opkald og sms samtidig, men mobildata kører "
+                    "kun på én linje ad gangen. Du vælger selv hvilken."}],
+            [("/mobilabonnement-med-esim/", "Alle abonnementer med eSIM"),
+             ("/guides/esim/", "Guide til eSIM"),
+             ("/mobilabonnement-1-10-gb/", "Små abonnementer til det ekstra nummer")],
+        billede="to-numre",
+        altbillede="Telefon med to aktive simkort i indstillingerne")
+
+    # ------------------------------------------------ 2. Danskernes forbrug i tal
+    byg_guide(
+        "/danskernes-forbrug/", "Tal og statistik",
+        "Danskernes internet- og mobilforbrug i tal",
+        f"Danskernes mobil- og internetforbrug i tal {IDAG.year}",
+        f"Priser, dataforbrug og udbredelse på det danske marked. Regnet på "
+        f"{len([a for a in ABON if a['pris'] > 0])} mobilabonnementer og "
+        f"{len(BB)} bredbåndsprodukter, opdateret to gange i døgnet.",
+        f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort fortalt:</strong> Vi henter priserne fra
+udbydernes egne datafeeds to gange i døgnet og regner på dem. Her er, hvad tallene
+viser om det danske marked lige nu — og du må gerne citere dem.</p></div>
+
+<p>De fleste tal om det danske telemarked stammer fra branchens egne opgørelser
+eller fra undersøgelser, der er et par år gamle. Vi måler i stedet direkte på
+udbydernes prislister, hver dag. Det giver et billede af markedet, som det ser ud
+i dag — ikke som det så ud, da nogen sidst spurgte.</p>
+
+<h2>Mobilmarkedet i tal</h2>
+{tabel_danmark_tal()}
+
+<h3>Det mest overraskende tal</h3>
+<p>Forskellen mellem gennemsnit og median. Gennemsnittet trækkes op af få dyre
+abonnementer med streaming inkluderet, mens medianen viser, hvad et typisk
+abonnement koster. Ligger du over medianen for din datastørrelse, betaler du mere
+end halvdelen af markedet.</p>
+<p>Se din egen gruppe i <a href="/billigste-mobilabonnement/">oversigten over alle
+mobilabonnementer</a>, hvor du kan filtrere på datamængde.</p>
+
+<h2>Bredbåndsmarkedet i tal</h2>
+{tabel_bredbaand_tal()}
+<p>Bemærk, at bredbåndspriserne er regnet over hele det første år, hvor
+tilbudspris, normalpris og oprettelse indgår. Sammenligner man kun på
+tilbudsprisen, ser markedet markant billigere ud, end det er.</p>
+
+<h2>Hvor meget data bruger danskerne?</h2>
+<p>Det gennemsnitlige forbrug på et dansk mobilabonnement ligger omkring 20
+gigabyte om måneden og har været stigende i flere år. Stigningen skyldes video —
+ikke sociale medier, som mange tror.</p>
+<p>Til sammenligning køber mange danskere abonnementer med 100 gigabyte eller mere.
+Det betyder, at en stor del af markedet betaler for data, der aldrig bliver brugt.</p>
+<ul class="pilliste">
+  <li><strong>En time video i HD:</strong> cirka 3 GB</li>
+  <li><strong>En time musik:</strong> 0,07 GB i normal kvalitet</li>
+  <li><strong>En time sociale medier:</strong> cirka 0,3 GB</li>
+  <li><strong>En time TikTok eller Reels:</strong> cirka 1,5 GB</li>
+</ul>
+<p>Vi har regnet det hele ud i oversigten over
+<a href="/guides/hvor-meget-data/apps/">dataforbrug pr. app</a>.</p>
+
+<h2>De tre danske mobilnet</h2>
+<p>Danmark har tre fysiske mobilnet: TDC NET, Telenor og 3. Alle andre selskaber
+lejer sig ind på et af dem. Det betyder, at et abonnement fra et lille selskab kan
+køre på præcis samme master som et fra et stort — til væsentligt lavere pris.</p>
+<p>Det er den enkeltoplysning, der flytter mest for en forbruger, og den er
+sjældent tydelig i markedsføringen. Vi skriver nettet på hvert abonnement i
+tabellerne og har samlet forskellene i vores gennemgang af
+<a href="/netvaerk/">de tre danske mobilnet</a>.</p>
+
+<h2>Prisspredningen er det største fund</h2>
+<p>Forskellen mellem det billigste og det dyreste mobilabonnement på markedet er
+markant større, end de fleste tror. Og forskellen mellem to abonnementer med
+samme datamængde er ofte hundreder af kroner om året.</p>
+<p>Det skyldes tre ting, som alle er svære at gennemskue i markedsføringen:</p>
+<ol class="nummerliste">
+  <li><strong>Tilbudspriser med forskellig løbetid.</strong> To abonnementer til
+  samme introduktionspris kan koste vidt forskelligt over et år, hvis det ene
+  gælder tre måneder og det andet tolv.</li>
+  <li><strong>Normalprisen efter kampagnen.</strong> Den står med lille skrift og
+  varierer langt mere end tilbudsprisen.</li>
+  <li><strong>Oprettelse og gebyrer.</strong> Fra 0 til 299 kr., og de indgår
+  sjældent i sammenligninger.</li>
+</ol>
+<p>Det er derfor, vi regner på tolv måneder for mobilabonnementer og på det
+første år for bredbånd. Se hvordan i vores gennemgang af
+<a href="/12-maaneders-prisen/">12-måneders-prisen</a>.</p>
+
+<h2>Hvad koster det at have samme abonnement for længe?</h2>
+<p>Det er den mest udbredte og den dyreste vane på det danske telemarked. Har du
+haft samme mobilabonnement i over et år, betaler du med stor sandsynlighed
+normalpris, mens nye kunder får kampagne.</p>
+<p>Forskellen mellem medianprisen og det billigste alternativ i samme
+datastørrelse ligger typisk på 40-80 kr. om måneden. Over et år er det 480-960
+kr. — for præcis det samme produkt.</p>
+<p>Det gælder også bredbånd, hvor forskellen er endnu større, fordi
+kampagneperioderne er kortere og prisstigningen bagefter er større.</p>
+
+<h2>Markedet bevæger sig — men ikke jævnt</h2>
+<p>Mobilpriserne i Danmark falder i perioder med hård konkurrence og stiger, når
+selskaberne justerer efter inflation. Justeringerne sker ofte samlet og med kort
+varsel, typisk i begyndelsen af året.</p>
+<p>Vi gemmer priserne to gange i døgnet, netop for at kunne vise bevægelsen frem
+for et øjebliksbillede. Se udviklingen på
+<a href="/prisudvikling/">prisudvikling på mobilabonnementer</a>, hvor kurven
+opdateres automatisk.</p>
+
+<h2>Tal du kan bruge i en artikel</h2>
+<p>Skriver du om det danske telemarked, er det her de tal, der som regel
+efterspørges — og som sjældent er tilgængelige et samlet sted:</p>
+<ul class="pilliste">
+  <li>Median- og gennemsnitspris fordelt på datastørrelse</li>
+  <li>Andel af markedet uden bindingsperiode</li>
+  <li>Udbredelse af 5G og eSIM på tværs af selskaber</li>
+  <li>Antal abonnementer med kampagnepris, og hvor længe kampagnerne løber</li>
+  <li>Prisudvikling målt dagligt frem for anslået</li>
+</ul>
+<p>Alle tal på denne side genberegnes ved hver opdatering, så de aldrig er ældre
+end et halvt døgn.</p>
+
+<h2>Sådan har vi målt</h2>
+<p>Tallene er regnet på de abonnementer, vi har adgang til gennem udbydernes
+datafeeds. Det dækker en stor del af det danske marked, men ikke det hele — der
+findes lokale fiberselskaber og mindre mobilselskaber, vi ikke har prisdata fra.</p>
+<p>Vi regner altid på normalprisen, aldrig på introprisen. En intropris fortæller,
+hvad en kampagne koster i tre måneder, ikke hvad markedet ligger på. Hvor vi
+angiver en pris over tid, indgår både tilbudspris, normalpris og oprettelse.</p>
+<p>Læs mere om <a href="/metode/">vores metode</a> og se, hvordan priserne har
+flyttet sig, på <a href="/prisudvikling/">prisudvikling</a>.</p>
+
+<h2>Hvad tallene ikke viser</h2>
+<p>Det er lige så vigtigt at vide, hvad en prissammenligning ikke kan sige noget
+om. Tre ting ligger uden for det, vi måler:</p>
+<h3>Dækning på din adresse</h3>
+<p>To abonnementer til samme pris kan give vidt forskellig oplevelse, hvis de
+kører på hvert sit net. Prisen siger intet om, hvorvidt der er signal i din
+kælder. Brug <a href="/daekningskort/">dækningstjekket</a> til den del.</p>
+<h3>Kundeservice</h3>
+<p>Vi viser Trustpilot-scoren, hvor den findes, men den dækker selskabets samlede
+forretning — ikke kun mobilabonnementer. Et selskab med mange tv-kunder kan have
+lav score af grunde, der intet har med mobil at gøre.</p>
+<h3>Hele markedet</h3>
+<p>Vi har datafeed fra en stor del af de danske selskaber, men ikke alle. Særligt
+på bredbånd findes der lokale fiberselskaber, som kun leverer i bestemte områder,
+og som vi ikke har prisdata fra. Tjek altid din adresse hos selskaberne.</p>
+
+<h2>Hvorfor vi offentliggør tallene</h2>
+<p>Fordi de findes i forvejen, og fordi de er svære at finde samlet. Udbyderne
+offentliggør deres egne priser, men ingen stiller dem op på tværs og regner
+gennemsnit ud.</p>
+<p>Vi tjener penge på provision, når nogen bestiller via vores links. Det ændrer
+ikke tallene her — de er beregnet mekanisk på hele datasættet, uanset hvem vi har
+en aftale med. Læs hvordan i
+<a href="/saadan-tjener-vi-penge/">sådan tjener vi penge</a>.</p>
+
+<h2>Må jeg bruge tallene?</h2>
+<p>Ja. Skriver du en artikel, en opgave eller en rapport, må du gerne citere
+tallene herfra. Vi beder blot om, at du angiver Telemobil som kilde med et link
+til denne side og skriver, hvornår tallene er hentet.</p>
+<p>Har du brug for tal, der ikke står her — for eksempel en bestemt datastørrelse
+eller udvikling over tid — så skriv til
+<a href="/kontakt/">redaktionen</a>. Vi hjælper gerne journalister og studerende
+med udtræk.</p>
+</section>""",
+        [{"sp": "Hvad koster et mobilabonnement i gennemsnit i Danmark?",
+          "sv": f"Medianprisen ligger omkring "
+                f"{kr(round(sorted(a['pris'] for a in ABON if a['pris'] > 0)[len([a for a in ABON if a['pris'] > 0]) // 2]))} "
+                f"kr. om måneden i normalpris. Gennemsnittet er højere, fordi få dyre "
+                f"abonnementer med streaming trækker det op."},
+         {"sp": "Hvor meget data bruger danskerne om måneden?",
+          "sv": "Det gennemsnitlige forbrug ligger omkring 20 gigabyte og har været "
+                "stigende i flere år. Stigningen skyldes video, ikke sociale medier."},
+         {"sp": "Hvor mange mobilabonnementer er uden binding?",
+          "sv": f"{round(len([a for a in ABON if not a.get('binding') and a['pris'] > 0]) / max(1, len([a for a in ABON if a['pris'] > 0])) * 100)} "
+                f"procent af abonnementerne i vores sammenligning er uden binding."},
+         {"sp": "Hvor opdaterede er tallene?",
+          "sv": "Vi henter priserne fra udbydernes datafeeds to gange i døgnet og "
+                "regner tallene ud ved hver opdatering."},
+         {"sp": "Må jeg citere tallene?",
+          "sv": "Ja. Angiv Telemobil som kilde med et link til denne side, og skriv "
+                "hvornår tallene er hentet."}],
+        [("/prisudvikling/", "Prisudvikling over tid"),
+         ("/billigste-mobilabonnement/", "Alle mobilabonnementer"),
+         ("/bredbaand/", "Alle bredbåndsabonnementer"),
+         ("/metode/", "Vores metode")])
+
+    # ------------------------------------------------ 3. Langsomt internet
+    byg_guide(
+        "/guides/langsomt-internet/", "Langsomt internet",
+        "Derfor er dit internet langsomt",
+        "Langsomt internet? Sådan finder du årsagen — og løser den",
+        "De seks hyppigste årsager til langsomt internet, i den rækkefølge du bør "
+        "tjekke dem. De fleste problemer sidder i routeren, ikke i forbindelsen.",
+        f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> Er dit internet langsomt, sidder
+problemet oftest i wi-fi'et — ikke i forbindelsen. Test med et kabel først. Får du
+den hastighed, du betaler for, er det routeren eller placeringen, der skal
+løses.</p></div>
+
+<p>Det er den mest almindelige fejlslutning i danske hjem: internettet føles
+langsomt, så man opgraderer til et hurtigere abonnement — og oplever ingen
+forskel. Årsagen er, at flaskehalsen sjældent er forbindelsen ind i huset.</p>
+
+<h2>Test i den her rækkefølge</h2>
+<ol class="nummerliste">
+  <li><strong>Mål med kabel.</strong> Sæt en computer direkte i routeren med et
+  netværkskabel og kør en hastighedstest. Det er den eneste måde at måle selve
+  forbindelsen.</li>
+  <li><strong>Mål på wi-fi samme sted.</strong> Stil dig ved siden af routeren og
+  mål igen. Er der stor forskel, er det wi-fi'et.</li>
+  <li><strong>Mål der hvor du normalt sidder.</strong> Er hastigheden faldet
+  yderligere, er det afstanden eller væggene.</li>
+  <li><strong>Mål på et andet tidspunkt.</strong> Er den kun langsom om aftenen,
+  deler du kapacitet med naboerne.</li>
+</ol>
+<p>Brug vores <a href="/speedtest/">hastighedstest</a> til alle fire målinger, så
+tallene kan sammenlignes.</p>
+
+<h2>De seks årsager, rangeret efter hvor ofte de er skyldige</h2>
+
+<h3>1. Routeren står forkert</h3>
+<p>Den hyppigste årsag af alle. Wi-fi spreder sig i alle retninger, så en router i
+et hjørne sender halvdelen af signalet ud gennem ydervæggen.</p>
+<p>Placer den centralt i boligen, frit og gerne i brysthøjde. Ikke i et skab, ikke
+bag fjernsynet og ikke ved siden af mikroovnen, som støjer på samme frekvens.</p>
+
+<h3>2. Routeren er for gammel</h3>
+<p>En router fra før 2019 kører Wi-Fi 5 eller ældre. Har du en gigabitforbindelse
+og en Wi-Fi 4-router, får du aldrig mere end omkring 100 Mbit/s trådløst — uanset
+hvad du betaler for.</p>
+{tabel_wifi_standarder()}
+<p>De fleste udbydere sender en tidssvarende router med i dag, men har du haft
+samme abonnement i fem år, er den næsten helt sikkert forældet. Mange selskaber
+udskifter den gratis, hvis man beder om det.</p>
+
+<h3>3. For mange enheder på samme bånd</h3>
+<p>De fleste routere sender på to frekvenser: 2,4 GHz rækker langt, men er
+langsommere og mere støjfyldt. 5 GHz er hurtigere, men går dårligere gennem
+vægge.</p>
+<p>Er alle enheder på 2,4 GHz — inklusive robotstøvsuger, termostater og
+overvågningskameraer — bliver båndet overfyldt. Flyt telefoner og computere til
+5 GHz, og lad de små enheder blive på 2,4.</p>
+
+<h3>4. Naboernes wi-fi støjer</h3>
+<p>I en etageejendom kan der være tredive netværk inden for rækkevidde. På 2,4 GHz
+er der kun tre kanaler, der ikke overlapper, så de kolliderer.</p>
+<p>Nogle routere vælger kanal automatisk, andre står fast på den, de fik ved
+opsætningen. Kan du logge ind på routeren, så prøv at skifte kanal manuelt til
+1, 6 eller 11.</p>
+
+<h3>5. Forbindelsen deles i kvarteret</h3>
+<p>Kabel-internet og 5G deler kapacitet med naboerne. Er dit internet kun langsomt
+mellem 19 og 22, er det sandsynligvis dét, du oplever.</p>
+<p>Fiber er den eneste teknologi, hvor kapaciteten er din egen hele døgnet. Er
+belastning om aftenen dit hovedproblem, er det den eneste reelle løsning — se
+<a href="/bredbaand/fibernet/">fibernet sammenlignet</a>.</p>
+
+<h3>6. Abonnementet er for lille</h3>
+<p>Den mindst sandsynlige årsag, og den, folk tjekker først. Fire samtidige
+4K-streams kræver omkring 100 Mbit/s. Har du 300 og oplever problemer, er det ikke
+abonnementet.</p>
+<p>Er du under 100 Mbit/s og flere om at bruge forbindelsen, kan en opgradering
+give mening. Se <a href="/bredbaand/">alle bredbåndsabonnementer</a>.</p>
+
+<h2>Hvad du kan gøre i dag, gratis</h2>
+<ol class="nummerliste">
+  <li>Genstart routeren. Klichéen holder — den rydder hukommelsen og vælger kanal
+  på ny.</li>
+  <li>Flyt den væk fra væggen og op i højden.</li>
+  <li>Del netværket i to, så 5 GHz har sit eget navn, og forbind telefon og
+  computer til det.</li>
+  <li>Slå automatiske opdateringer over til natten.</li>
+  <li>Tjek hvem der er på netværket. Et gæstenetværk med gammelt kodeord kan have
+  flere brugere, end du tror.</li>
+</ol>
+
+<h2>Hvornår hjælper et mesh-system?</h2>
+<p>Bor du i et hus over to etager, i en lang lejlighed eller med tykke mure, når
+signalet ikke ud fra ét punkt. Et mesh-system er to eller tre enheder, der
+sammen dækker hele boligen med ét netværksnavn.</p>
+<p>Det koster typisk 1.000-3.000 kr., og det løser et problem, som ingen
+opgradering af abonnementet kan løse. Er din hastighed god ved routeren og dårlig
+i soveværelset, er det dét, du skal bruge — ikke flere megabit.</p>
+
+<h2>Hvad hastighedstesten faktisk måler</h2>
+<p>En hastighedstest måler forbindelsen mellem din enhed og en server — ikke
+mellem routeren og udbyderen. Det er derfor, resultatet svinger så meget mellem
+kabel og wi-fi, og mellem stuen og soveværelset.</p>
+<p>Tre ting påvirker resultatet, uden at der er noget galt:</p>
+<ul class="pilliste">
+  <li><strong>Enheden.</strong> En ældre telefon kan ikke modtage mere end
+  wi-fi-chippen understøtter, uanset hvor hurtig forbindelsen er.</li>
+  <li><strong>Serveren.</strong> Tester du mod en server i udlandet, måler du
+  også afstanden. Vælg en dansk.</li>
+  <li><strong>Tidspunktet.</strong> Klokken 20 er belastningen højest på delte
+  forbindelser.</li>
+</ul>
+<p>Mål flere gange på forskellige tidspunkter, før du konkluderer noget. En enkelt
+måling siger ikke meget.</p>
+
+<h2>Hvornår skal du kontakte udbyderen?</h2>
+<p>Får du markant mindre end det, du betaler for, målt med kabel direkte i
+routeren, er det udbyderens problem — ikke dit.</p>
+<p>Sådan gør du det målbart:</p>
+<ol class="nummerliste">
+  <li>Mål med kabel tre gange på tre forskellige tidspunkter.</li>
+  <li>Notér tidspunkt og resultat hver gang.</li>
+  <li>Kontakt selskabet med tallene. Det er langt mere effektivt end at sige, at
+  det føles langsomt.</li>
+  <li>Bed om at få udstyret tjekket. Er routeren gammel, udskifter mange
+  selskaber den gratis.</li>
+</ol>
+<p>Får du ikke medhold, kan du klage til Teleankenævnet. Det er gratis at få sagen
+vurderet, hvis selskabet har afvist din klage.</p>
+
+<h2>Er du på det rigtige abonnement?</h2>
+<p>Har du udelukket wi-fi, routeren og placeringen, og får du stadig for lidt, er
+det abonnementet. Men tjek først, hvad du reelt har brug for.</p>
+<ul class="pilliste">
+  <li><strong>1-2 personer, streaming og web:</strong> 50-100 Mbit/s rækker</li>
+  <li><strong>Familie med flere skærme:</strong> 300 Mbit/s og opefter</li>
+  <li><strong>Hjemmearbejde med videomøder:</strong> mindst 100 Mbit/s upload</li>
+  <li><strong>Gaming:</strong> hastigheden er ligegyldig, svartiden afgør alt</li>
+</ul>
+<p>Er svartid dit problem, har vi skrevet særskilt om det i guiden til
+<a href="/guides/ping-og-svartid/">ping og svartid</a>.</p>
+<p>Skal du skifte, så sammenlign på førsteårsprisen frem for tilbudsprisen. Se
+<a href="/bredbaand/">alle bredbåndsabonnementer</a>.</p>
+
+<h2>Sådan finder du ud af, om det er dig eller udbyderen</h2>
+<p>Der findes én test, der afgør spørgsmålet på fem minutter: sæt en computer
+direkte i routeren med kabel og mål tre gange.</p>
+<ul class="pilliste">
+  <li><strong>Får du den lovede hastighed med kabel:</strong> forbindelsen er i
+  orden. Problemet er wi-fi, placering eller udstyr.</li>
+  <li><strong>Får du markant mindre med kabel:</strong> det er udbyderen eller
+  linjen ind i huset. Kontakt selskabet med dine målinger.</li>
+  <li><strong>Svinger det voldsomt mellem målingerne:</strong> forbindelsen er
+  ustabil. Det er også en fejl, selskabet skal se på.</li>
+</ul>
+<p>Har du ikke en computer med netværksstik, kan mange nyere fjernsyn og
+spillekonsoller bruges til det samme — de fleste har en indbygget netværkstest.</p>
+
+<h2>Hvad koster langsomt internet dig?</h2>
+<p>Ud over irritationen er der en konkret udgift: mange opgraderer til et dyrere
+abonnement i håb om at løse et problem, der sidder i routeren.</p>
+<p>Springet fra 300 til 1000 Mbit/s koster typisk 50-100 kr. om måneden — 600-1.200
+kr. om året. Er årsagen en gammel router, har du betalt for noget, der ikke
+virkede. En ny router koster 500-1.500 kr. én gang, og et mesh-system 1.000-3.000.</p>
+<p>Rækkefølgen er altså: mål med kabel, ret det der kan rettes gratis, skift
+udstyr hvis nødvendigt — og opgradér abonnementet til sidst.</p>
+
+<h2>Når det er mobilen, der er langsom</h2>
+<p>Er problemet på mobildata og ikke på wi-fi, er det en anden sag. Så handler det
+om dækning, om du har brugt din datamængde op, eller om nettet er belastet der,
+hvor du er.</p>
+<p>Tjek dækningen på din adresse med vores
+<a href="/daekningskort/">dækningstjek</a>, og læs
+<a href="/guides/mobil-virker-ikke/">hvad du gør, når mobilen ikke virker</a>.</p>
+</section>""",
+        [{"sp": "Hvorfor er mit internet langsomt, når jeg betaler for 1000 Mbit/s?",
+          "sv": "Fordi hastigheden måles ind til routeren, ikke ud til din enhed. "
+                "Test med et netværkskabel direkte i routeren — får du den lovede "
+                "hastighed der, sidder problemet i wi-fi'et."},
+         {"sp": "Hjælper det at genstarte routeren?",
+          "sv": "Ofte, ja. Den rydder hukommelsen og vælger wi-fi-kanal på ny, hvilket "
+                "kan løse problemer med støj fra naboernes netværk."},
+         {"sp": "Hvornår skal jeg have en ny router?",
+          "sv": "Er den fra før 2019, kører den Wi-Fi 5 eller ældre. Med en "
+                "gigabitforbindelse er den flaskehalsen. Mange udbydere udskifter "
+                "gratis, hvis du beder om det."},
+         {"sp": "Hvorfor er internettet kun langsomt om aftenen?",
+          "sv": "Fordi kabel-internet og 5G deler kapacitet med naboerne. Fiber er den "
+                "eneste teknologi, hvor kapaciteten er din egen hele døgnet."},
+         {"sp": "Skal jeg opgradere til et hurtigere abonnement?",
+          "sv": "Sjældent. Fire samtidige 4K-streams kræver omkring 100 Mbit/s. Har du "
+                "mere end det og stadig problemer, er det ikke abonnementet."}],
+        [("/speedtest/", "Mål din hastighed"),
+         ("/bredbaand/fibernet/", "Fibernet sammenlignet"),
+         ("/bredbaand/", "Alle bredbåndsabonnementer")],
+        billede="langsomt-internet",
+        altbillede="Mand venter på at en side indlæses på sin bærbare om aftenen")
+
+    # ------------------------------------------------ 4. Flyt internettet
+    byg_guide(
+        "/guides/flyt-internettet/", "Flytning",
+        "Sådan tager du internettet med, når du flytter",
+        "Flytning: sådan tager du internettet med — uden huller",
+        "Tidsplan, opsigelsesvarsel og de fejl der koster penge, når du flytter "
+        "internet og mobilabonnement til en ny adresse.",
+        f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> Start otte uger før. Bestil den nye
+forbindelse, <em>før</em> du opsiger den gamle, og husk at returnere routeren. Det
+er den glemte router, der koster flest penge — typisk 1.000-2.000 kr.</p></div>
+
+<p>Internet er den eneste ting ved en flytning, hvor rækkefølgen betyder noget.
+Opsiger du for tidligt, står du uden forbindelse. Opsiger du for sent, betaler du
+for to. Og bestiller du for sent, kan der gå uger, før der er internet i den nye
+bolig.</p>
+
+<h2>Tidsplanen</h2>
+{tabel_flyttetjek()}
+
+<h2>Bestil før du opsiger — altid</h2>
+<p>Det er den vigtigste regel. Fiber og kabel-internet kræver ofte et
+teknikerbesøg, og ventetiden svinger fra få dage til seks uger afhængigt af
+adresse og årstid. Omkring 1. maj og 1. oktober er der pres på.</p>
+<p>Ved at bestille først finder du ud af, om den nye adresse overhovedet kan
+leveres til — og hvornår. Først derefter opsiger du med en slutdato, der passer.</p>
+
+<h2>Kan du få det samme på den nye adresse?</h2>
+<p>Ikke nødvendigvis. Bredbånd afhænger fuldstændig af, hvad der er gravet ned.
+Har du fiber i dag, kan den nye adresse have kabel-internet eller ingenting.</p>
+<p>Alle selskaber har et adressetjek på deres egen side. Brug det, før du regner på
+noget. Kan dit nuværende selskab ikke levere, kan du normalt komme ud af en
+bindingsperiode uden gebyr — men du skal selv bede om det og få det skriftligt.</p>
+<p>Er der ikke fiber på den nye adresse, er 5G det oplagte alternativ: ingen
+installation, klar samme dag, og routeren kan flyttes med igen næste gang. Se
+<a href="/bredbaand/5g/">5G internet sammenlignet</a>.</p>
+
+<h2>Fire fejl der koster penge</h2>
+<ol class="nummerliste">
+  <li><strong>Den glemte router.</strong> Er den lejet, skal den returneres inden
+  fristen. Gør du ikke det, opkræves den til fuld pris, typisk 1.000-2.000 kr.
+  Gem forsendelsesbeviset.</li>
+  <li><strong>Dobbelt betaling.</strong> Opsigelsesvarslet løber ofte fra den
+  første i næste måned. Opsiger du den 2., betaler du to måneder mere.</li>
+  <li><strong>Ny binding uden at ville det.</strong> Flytter du abonnementet i
+  stedet for at opsige og bestille nyt, starter bindingsperioden forfra hos nogle
+  selskaber. Spørg, før du accepterer.</li>
+  <li><strong>Oprettelse en gang til.</strong> Nogle selskaber tager fuld
+  oprettelse ved flytning, andre gør det gratis. Det er værd at spørge — og at
+  bruge som forhandlingskort.</li>
+</ol>
+
+<h2>Flytning er det bedste tidspunkt at skifte selskab</h2>
+<p>Du skal alligevel gennem processen, og du er ikke bundet af, hvad der virkede på
+den gamle adresse. Har du haft samme abonnement i over et år, betaler du med stor
+sandsynlighed normalpris, mens markedet tilbyder kampagne til nye kunder.</p>
+<p>Forskellen mellem billigste og dyreste bredbånd i vores sammenligning er over
+1.000 kr. det første år. Se <a href="/bredbaand/">alle bredbåndsabonnementer</a>
+sorteret efter, hvad de reelt koster.</p>
+
+<h2>Mobilabonnementet følger dig — men tjek dækningen</h2>
+<p>Modsat bredbånd følger mobilabonnementet dig automatisk. Der er ingen adresse
+knyttet til det, og du skal ikke gøre noget.</p>
+<p>Men dækningen kan være en anden. Flytter du fra by til land, kan et selskab på
+et andet net give mærkbart bedre forbindelse. Tjek den nye adresse i vores
+<a href="/daekningskort/">dækningstjek</a>, og læs om forskellen mellem
+<a href="/netvaerk/">de tre danske mobilnet</a>.</p>
+<p>Er dit abonnement uden binding, kan du skifte samme dag, du flytter. Se
+<a href="/mobilabonnement-uden-binding/">abonnementer uden binding</a>.</p>
+
+<h2>Hvad med perioden imellem?</h2>
+<p>Er der en uge uden fast internet i den nye bolig, kan du bruge mobilen som
+hotspot. Har du fri data, koster det ingenting ekstra, og det rækker til én
+bærbar og almindelig brug.</p>
+<p>Det holder ikke til en husstand med flere skærme, men det dækker en overgang.
+Læs mere i guiden til <a href="/guides/mobilt-bredbaand/">mobilt bredbånd</a>.</p>
+
+<h2>Hvad hvis du flytter sammen med nogen?</h2>
+<p>Så har I sandsynligvis to abonnementer, og det ene skal opsiges. Regn på begge,
+før I beslutter hvilket.</p>
+<p>Det er ikke nødvendigvis det dyreste, der skal væk. Har det ene abonnement
+kortere binding eller bedre vilkår ved flytning, kan det være billigere at beholde
+det og opsige det andet — selv hvis månedsprisen er højere.</p>
+<p>Tjek også, om nogen af jer er i en bindingsperiode. Skal den brydes, koster det
+typisk de resterende måneder.</p>
+
+<h2>Flytter du til lejebolig eller kollegium?</h2>
+<p>Mange lejeboliger og næsten alle kollegier har internet inkluderet i huslejen.
+Tjek det, før du bestiller noget — du kan ende med at betale for to
+forbindelser.</p>
+<p>Er det inkluderede internet for langsomt eller upålideligt, er 5G det oplagte
+supplement: ingen installation, ingen binding hos flere selskaber, og routeren
+flytter med igen. Se <a href="/bredbaand/5g/">5G internet sammenlignet</a>.</p>
+
+<h2>Flytter du til udlandet?</h2>
+<p>Så skal begge dele opsiges. Danske mobilabonnementer kan ikke bruges permanent
+i udlandet — EU-roaming er beregnet til midlertidige ophold, og selskaberne må
+gribe ind ved varigt forbrug uden for Danmark.</p>
+<p>Vil du beholde dit danske nummer, findes der abonnementer med lav månedspris
+uden data, der kan holde nummeret aktivt. Se
+<a href="/mobilabonnement-uden-data/">abonnementer uden data</a> eller
+<a href="/taletidskort/">taletidskort</a>, som ofte er billigst til formålet.</p>
+
+<h2>Kan du forhandle ved flytning?</h2>
+<p>Ja, og det er et af de bedste tidspunkter. Du er reelt en kunde, der er ved at
+skulle vælge på ny, og det ved selskabet godt.</p>
+<p>Tre ting er værd at bede om:</p>
+<ol class="nummerliste">
+  <li><strong>Gratis oprettelse på den nye adresse.</strong> Mange giver det, hvis
+  man spørger.</li>
+  <li><strong>Kampagnepris som eksisterende kunde.</strong> Sjældnere, men det
+  sker — særligt hvis du nævner et konkret konkurrerende tilbud.</li>
+  <li><strong>Ingen ny bindingsperiode.</strong> Flytter du abonnementet, starter
+  bindingen forfra hos nogle selskaber. Det kan forhandles.</li>
+</ol>
+<p>Har du et konkret alternativ klar, står du stærkere. Find det i
+<a href="/bredbaand/">sammenligningen</a>, før du ringer.</p>
+
+<h2>Hvad koster det at flytte internettet?</h2>
+<p>Det svinger fra nul til flere hundrede kroner afhængigt af selskab og
+situation. Her er de poster, der kan dukke op:</p>
+<ul class="pilliste">
+  <li><strong>Flyttegebyr:</strong> 0-299 kr. Nogle selskaber tager intet, andre
+  fuld oprettelse.</li>
+  <li><strong>Ny oprettelse:</strong> op til 299 kr., hvis abonnementet
+  teknisk set nyoprettes.</li>
+  <li><strong>Teknikerbesøg:</strong> ofte gratis, men 0-500 kr. hvis der skal
+  laves nyt stik.</li>
+  <li><strong>Fremrykket opsigelse:</strong> resterende bindingsmåneder, hvis du
+  bryder en aftale.</li>
+  <li><strong>Ikke-returneret router:</strong> 1.000-2.000 kr. Den dyreste af dem
+  alle, og den letteste at undgå.</li>
+</ul>
+<p>Spørg om alle fem, før du siger ja. Flere af dem kan forhandles væk.</p>
+
+<h2>Skal du opsige eller overflytte?</h2>
+<p>De to muligheder ser ens ud, men de har forskellige konsekvenser.</p>
+<h3>Overflytning</h3>
+<p>Du beholder samme abonnement på ny adresse. Fordelen er, at det er nemt og
+sjældent giver huller. Ulempen er, at bindingsperioden kan starte forfra hos nogle
+selskaber, og at du bliver på din nuværende pris — som efter et år typisk er
+normalpris.</p>
+<h3>Opsigelse og ny bestilling</h3>
+<p>Du opsiger og bestiller på ny, ofte hos et andet selskab. Fordelen er, at du får
+kampagnepris som ny kunde. Ulempen er, at du selv skal styre datoerne, så der ikke
+opstår et hul.</p>
+<p>Har du haft samme abonnement i over et år, er den anden vej næsten altid
+billigst. Forskellen mellem normalpris og kampagnepris ligger typisk på 100-200 kr.
+om måneden på bredbånd.</p>
+
+<h2>Særligt hvis du flytter i sommerhus eller ud på landet</h2>
+<p>Fiber er ikke gravet ned overalt, og i sommerhusområder er dækningen ofte
+tyndere end i byerne. Tjek to ting, før du beslutter noget:</p>
+<ol class="nummerliste">
+  <li><strong>Adressetjek hos flere selskaber.</strong> De leverer ikke de samme
+  steder, og en adresse uden fiber hos ét selskab kan have det hos et andet.</li>
+  <li><strong>Mobildækning på adressen, ikke i området.</strong> Et sommerhus med
+  tykke mure eller lavt til taget kan have markant dårligere signal end vejen
+  udenfor.</li>
+</ol>
+<p>Er der hverken fiber eller coax, er 5G reelt eneste mulighed. Se
+<a href="/bredbaand/5g/">5G internet sammenlignet</a> og tjek dækningen i
+<a href="/daekningskort/">dækningstjekket</a>.</p>
+
+<h2>Tjekliste til flyttedagen</h2>
+<ul class="pilliste">
+  <li>Tag routeren med, hvis du har købt den</li>
+  <li>Notér serienummeret på lejet udstyr, før du sender det retur</li>
+  <li>Gem kvitteringen for returforsendelsen</li>
+  <li>Tjek at den nye forbindelse er aktiveret, før flyttebilen kører</li>
+  <li>Opdater adressen hos selskabet, så regningen ikke sendes forkert</li>
+</ul>
+</section>""",
+        [{"sp": "Hvornår skal jeg opsige mit internet ved flytning?",
+          "sv": "Bestil den nye forbindelse først, og opsig derefter med en slutdato, "
+                "der passer. Opsigelsesvarslet er typisk løbende måned plus 30 dage."},
+         {"sp": "Kan jeg tage mit internet med til den nye adresse?",
+          "sv": "Det afhænger af, hvad der er gravet ned. Kan dit selskab ikke levere "
+                "til den nye adresse, kan du normalt komme ud af en bindingsperiode "
+                "uden gebyr — men bed om det skriftligt."},
+         {"sp": "Hvad sker der, hvis jeg ikke returnerer routeren?",
+          "sv": "Den opkræves til fuld pris, typisk 1.000-2.000 kr. Gem "
+                "forsendelsesbeviset, når du sender den retur."},
+         {"sp": "Følger mobilabonnementet med, når jeg flytter?",
+          "sv": "Ja, automatisk. Der er ingen adresse knyttet til det. Men dækningen "
+                "kan være en anden på den nye adresse, så det er værd at tjekke."},
+         {"sp": "Hvor lang tid tager det at få internet på en ny adresse?",
+          "sv": "Fra få dage til seks uger afhængigt af teknologi og adresse. 5G er "
+                "klar samme dag, fiber kan kræve gravearbejde."}],
+        [("/bredbaand/", "Alle bredbåndsabonnementer"),
+         ("/bredbaand/5g/", "5G internet — klar samme dag"),
+         ("/daekningskort/", "Tjek dækningen på den nye adresse")],
+        billede="flyt-internettet",
+        altbillede="Flyttekasser og en router i en tom stue")
+
+    # ------------------------------------------------ 5. Ping og svartid
+    byg_guide(
+        "/guides/ping-og-svartid/", "Ping og svartid",
+        "Ping og svartid — det tal gamere skal kigge på",
+        "Ping og svartid — derfor er hastighed ikke nok til gaming",
+        "Hvorfor svartid slår hastighed ved online spil, hvad der er en god ping, "
+        "og hvilken forbindelse du skal vælge.",
+        f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> Online spil kræver omkring 3
+Mbit/s — ingenting. Det, der afgør oplevelsen, er svartiden. Under 20 millisekunder
+er godt, over 50 er mærkbart. Fiber ligger på 2-10, 5G på 20-40.</p></div>
+
+<p>Det er den mest udbredte misforståelse om internet og gaming: at man skal have
+hurtigt internet. Et onlinespil sender meget små datapakker meget ofte — omkring 3
+Mbit/s i alt. Selv den langsomste forbindelse i Danmark klarer det.</p>
+<p>Det, der afgør, om du rammer dit skud, er hvor lang tid pakken er om at nå frem
+og tilbage. Det tal hedder ping eller svartid og måles i millisekunder.</p>
+
+<h2>Hvad er en god ping?</h2>
+<ul class="pilliste">
+  <li><strong>Under 20 ms</strong> — fremragende. Du mærker ingen forsinkelse.</li>
+  <li><strong>20-40 ms</strong> — god. Fint til stort set alt.</li>
+  <li><strong>40-70 ms</strong> — mærkbar i skydespil, fin i alt andet.</li>
+  <li><strong>70-120 ms</strong> — generende. Du bliver ramt, før du ser
+  modstanderen.</li>
+  <li><strong>Over 120 ms</strong> — konkurrencespil er reelt ikke muligt.</li>
+</ul>
+
+<h2>Svartid efter teknologi</h2>
+{tabel_ping()}
+<p>Bemærk, at forskellen mellem fiber og 5G er 10-30 millisekunder. Det lyder af
+ingenting, men i et skydespil svarer 30 ms til, at modstanderen ser dig et helt
+billede før dig.</p>
+
+<h2>Jitter er værre end høj ping</h2>
+<p>Jitter er udsving i svartiden. En stabil ping på 40 ms er markant bedre end en,
+der svinger mellem 15 og 90 — for spillet kan kompensere for en fast forsinkelse,
+men ikke for en, der ændrer sig.</p>
+<p>Det er derfor, 5G kan føles værre end tallene antyder. Gennemsnittet ser fint
+ud, men udsvingene er større, fordi kapaciteten deles med alle andre på masten.</p>
+<p>Fiber har både lav ping og lav jitter. Det er den eneste teknologi, hvor begge
+dele er stabile hele døgnet — se <a href="/bredbaand/fibernet/">fibernet
+sammenlignet</a>.</p>
+
+<h2>Fem ting der ødelægger din ping — og hvad du gør</h2>
+<ol class="nummerliste">
+  <li><strong>Wi-fi i stedet for kabel.</strong> Den største enkeltfaktor. Et
+  netværkskabel fjerner 5-20 ms og al jitter. Har du mulighed for at trække et
+  kabel til spillepladsen, gør det.</li>
+  <li><strong>Andre der bruger forbindelsen.</strong> En stor download eller et
+  4K-stream i samme husstand fylder køen op. Mange routere har en indstilling for
+  prioritering, hvor spil kan sættes forrest.</li>
+  <li><strong>Serverens placering.</strong> Spiller du på en amerikansk server, er
+  200 ms fysik, ikke en fejl. Vælg europæiske servere, hvor det er muligt.</li>
+  <li><strong>Baggrundsopdateringer.</strong> Spilklienter og styresystemer
+  opdaterer, når det passer dem. Sæt dem til kun at gøre det om natten.</li>
+  <li><strong>VPN.</strong> Al trafik gennem en ekstra server koster
+  millisekunder. Slå den fra, mens du spiller.</li>
+</ol>
+
+<h2>Hvordan måler du din ping?</h2>
+<p>De fleste spil viser den i hjørnet af skærmen — slå den til i indstillingerne
+under netværk eller HUD. Det er det mest retvisende tal, fordi det måler til den
+server, du faktisk spiller på.</p>
+<p>Vil du måle forbindelsen generelt, kan du bruge vores
+<a href="/speedtest/">hastighedstest</a>, som også viser svartiden. Mål flere
+gange på forskellige tidspunkter — en enkelt måling siger ikke meget.</p>
+
+<h2>Hvorfor føles spillet hakkende, selvom pingen er lav?</h2>
+<p>Ping er ikke det eneste tal. Tre andre kan give en dårlig oplevelse, selv når
+svartiden ser fin ud.</p>
+<h3>Pakketab</h3>
+<p>Når data forsvinder undervejs og skal sendes igen. Selv 1-2 procent pakketab
+opleves som hak, fordi spillet mangler information om, hvor modstanderne er.
+Pakketab skyldes oftest dårligt wi-fi eller et defekt kabel.</p>
+<h3>Bufferbloat</h3>
+<p>Når routeren gemmer for meget data i kø, før den sender det videre. Din ping ser
+fin ud i en tom test, men stiger dramatisk, så snart nogen downloader noget.
+Nyere routere har indstillinger, der begrænser det.</p>
+<h3>Skærmens forsinkelse</h3>
+<p>Din skærm og din controller lægger også millisekunder til. En skærm på 60 Hz
+viser et nyt billede hver 16. millisekund, mens en på 144 Hz gør det hver 7. Det er
+en forsinkelse, der ligger oven i pingen, og som ingen internetforbindelse kan
+fjerne.</p>
+
+<h2>Hvilket abonnement skal en gamer vælge?</h2>
+<p>Prioritér i den her rækkefølge: fiber frem for alt andet, kabel med kabel-internet
+hvis fiber ikke findes, og 5G kun hvis der ikke er andet.</p>
+<p>Hastigheden er sekundær. 300 Mbit/s på fiber er bedre til spil end 1000 Mbit/s
+på 5G, fordi svartiden og stabiliteten er bedre. Betal for teknologien, ikke for
+tallet.</p>
+<p>Se <a href="/bredbaand/fibernet/">fibernet</a> og
+<a href="/bredbaand/">hele sammenligningen</a>, hvor kolonnen "ned/op" viser begge
+hastigheder — upload betyder også noget, når du streamer dit eget spil.</p>
+
+<h2>Hvad betyder upload for en gamer?</h2>
+<p>Til selve spillet: næsten intet. Til alt andet: en hel del.</p>
+<p>Streamer du dit spil til Twitch eller YouTube, skal du bruge 6-10 Mbit/s stabil
+upload til 1080p. Optager du lokalt og lægger op bagefter, er det størrelsen på
+filerne, der afgør, hvor længe du venter.</p>
+<p>Kabel-internet giver typisk 100 Mbit/s op mod fibers 1000. Til streaming er
+begge rigeligt, men skal du lægge en times 4K-optagelse op, tager det otte gange
+så lang tid på coax.</p>
+<p>Kolonnen "ned/op" i vores <a href="/bredbaand/">bredbåndssammenligning</a> viser
+begge tal for hvert abonnement.</p>
+
+<h2>Konsol eller pc — er der forskel?</h2>
+<p>Ikke på forbindelsen. Ping afhænger af nettet, ikke af enheden. Men der er to
+praktiske forskelle.</p>
+<p>Konsoller står typisk ved fjernsynet, ofte langt fra routeren, og bruger derfor
+oftere wi-fi. Det er den enkeltfaktor, der koster mest. Både PlayStation og Xbox
+har netværksstik — brug det, hvis det overhovedet kan lade sig gøre.</p>
+<p>Konsoller downloader også større opdateringer end pc-spil. En opdatering på 50
+GB i baggrunden ødelægger din ping, mens den kører. Sæt automatiske
+opdateringer til natten.</p>
+
+<h2>Hvad kan du ikke løse med et bedre abonnement?</h2>
+<p>Det er værd at vide, hvad der ikke er din forbindelses skyld:</p>
+<ul class="pilliste">
+  <li><strong>Serverens placering.</strong> Spiller du på en server i Californien,
+  er 160 ms fysik. Lyset kan ikke gå hurtigere.</li>
+  <li><strong>Spillets egne servere.</strong> Er alle spillere i lobbyen forsinket
+  samtidig, er det spillet, ikke dig.</li>
+  <li><strong>Modstanderens forbindelse.</strong> Har han 200 ms, opleves det ofte
+  som om han teleporterer — uanset hvor god din egen er.</li>
+  <li><strong>Din skærms opdateringsfrekvens.</strong> En skærm på 60 Hz viser et
+  nyt billede hver 16. millisekund. Det er en forsinkelse, der ligger oven i
+  pingen.</li>
+</ul>
+
+<h2>Router­indstillinger der faktisk hjælper</h2>
+<p>De fleste routere har indstillinger, der kan forbedre spiloplevelsen. Tre er
+værd at kigge på.</p>
+<h3>QoS eller trafikprioritering</h3>
+<p>Lader dig sætte bestemte enheder forrest i køen. Sæt din konsol eller
+spillecomputer øverst, så et 4K-stream i stuen ikke ødelægger din ping.</p>
+<h3>Adskilte wi-fi-bånd</h3>
+<p>Giv 5 GHz sit eget navn, og forbind spilleenheden til det. Det er hurtigere og
+har lavere svartid end 2,4 GHz, som også er mere støjfyldt.</p>
+<h3>Slå strømbesparelse fra</h3>
+<p>Nogle routere sætter wi-fi-styrken ned for at spare strøm. Det giver udsving i
+svartiden. Indstillingen hedder ofte "eco" eller "power saving".</p>
+<p>Kan du ikke logge ind på routeren, er den ofte tilgængelig på 192.168.0.1 eller
+192.168.1.1 i browseren. Kodeordet står typisk på en mærkat på undersiden.</p>
+
+<h2>Hvad med mobilt spil?</h2>
+<p>Spiller du på telefonen over 4G eller 5G, gælder de samme regler. 5G giver
+markant bedre svartid end 4G, og forskellen er mærkbar i realtidsspil.</p>
+<p>Er mobilspil vigtigt for dig, er det en af de få situationer, hvor 5G i
+mobilabonnementet reelt gør en forskel. Vi har regnet på, hvad det koster ekstra,
+i guiden <a href="/guides/er-5g-pengene-vaerd/">er 5G pengene værd?</a></p>
+</section>""",
+        [{"sp": "Hvad er en god ping til gaming?",
+          "sv": "Under 20 millisekunder er fremragende, 20-40 er godt. Over 70 bliver "
+                "det generende i skydespil, og over 120 er konkurrencespil reelt ikke "
+                "muligt."},
+         {"sp": "Hvor hurtigt internet skal man have til gaming?",
+          "sv": "Omkring 3 Mbit/s. Selv den langsomste forbindelse i Danmark klarer "
+                "det. Det er svartiden, ikke hastigheden, der afgør oplevelsen."},
+         {"sp": "Er fiber bedre end 5G til gaming?",
+          "sv": "Ja, markant. Fiber ligger på 2-10 millisekunder mod 5G's 20-40, og "
+                "fiber har langt mindre udsving i svartiden."},
+         {"sp": "Hvad er jitter?",
+          "sv": "Udsving i svartiden. En stabil ping på 40 ms er bedre end en, der "
+                "svinger mellem 15 og 90, fordi spillet kan kompensere for en fast "
+                "forsinkelse, men ikke for en der ændrer sig."},
+         {"sp": "Hjælper et netværkskabel på ping?",
+          "sv": "Ja, det er den største enkeltfaktor. Et kabel fjerner typisk 5-20 "
+                "millisekunder og fjerner al jitter fra wi-fi."}],
+        [("/bredbaand/fibernet/", "Fibernet — lavest svartid"),
+         ("/speedtest/", "Mål din hastighed og ping"),
+         ("/guides/er-5g-pengene-vaerd/", "Er 5G pengene værd?")],
+        billede="ping-og-svartid",
+        altbillede="Ung mand spiller online spil på computer")
 
 
 def byg_guideoversigt():
@@ -9318,6 +10481,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     # Guides
     byg_bredbaand()
     byg_nye_guides()
+    byg_fem_artikler()
     byg_guideoversigt()
     byg_guide("/guides/skift-mobilselskab/", "Skift mobilselskab",
               "Sådan skifter du mobilselskab",

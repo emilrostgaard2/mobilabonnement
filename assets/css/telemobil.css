@@ -1960,3 +1960,8 @@ body{overflow-x:clip;max-width:100%;position:relative}
   .hv-liste{height:188px}
   .hv-pris b{font-size:1.95rem}
 }
+
+/* Pladsholder på guidekort uden billede endnu — en neutral flade i stedet
+   for et brudt billede, så oversigten ser hel ud */
+.ak-tom{display:block;width:100%;aspect-ratio:1280/698;
+  background:linear-gradient(135deg,#EEF1F9,#E3E8F5)}
