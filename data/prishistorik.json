@@ -1,0 +1,177 @@
+{
+ "maalinger": [
+  {
+   "dato": "2026-09-05",
+   "antal": 61,
+   "udbydere": 9,
+   "grupper": {
+    "1-10": {
+     "antal": 10,
+     "min": 19,
+     "median": 53.5,
+     "gns": 52.9,
+     "maks": 99
+    },
+    "11-20": {
+     "antal": 4,
+     "min": 59,
+     "median": 69.0,
+     "gns": 66.5,
+     "maks": 69
+    },
+    "21-40": {
+     "antal": 7,
+     "min": 49,
+     "median": 89,
+     "gns": 93.29,
+     "maks": 179
+    },
+    "41-80": {
+     "antal": 12,
+     "min": 59,
+     "median": 109.0,
+     "gns": 119.83,
+     "maks": 219
+    },
+    "81-200": {
+     "antal": 14,
+     "min": 99,
+     "median": 119.0,
+     "gns": 131.14,
+     "maks": 249
+    },
+    "201+": {
+     "antal": 2,
+     "min": 179,
+     "median": 239.0,
+     "gns": 239.0,
+     "maks": 299
+    },
+    "fri": {
+     "antal": 12,
+     "min": 144,
+     "median": 234.0,
+     "gns": 299.42,
+     "maks": 599
+    }
+   },
+   "pr_udbyder": {
+    "duka": {
+     "antal": 11,
+     "min": 59,
+     "median": 119,
+     "maks": 199
+    },
+    "eesy": {
+     "antal": 3,
+     "min": 129,
+     "median": 149,
+     "maks": 219
+    },
+    "flexii": {
+     "antal": 9,
+     "min": 39,
+     "median": 89,
+     "maks": 149
+    },
+    "greentel": {
+     "antal": 5,
+     "min": 29,
+     "median": 69,
+     "maks": 99
+    },
+    "lebara": {
+     "antal": 6,
+     "min": 19,
+     "median": 79.0,
+     "maks": 159
+    },
+    "lyca-mobile": {
+     "antal": 5,
+     "min": 19,
+     "median": 99,
+     "maks": 299
+    },
+    "oister": {
+     "antal": 9,
+     "min": 69,
+     "median": 99,
+     "maks": 199
+    },
+    "telmore": {
+     "antal": 8,
+     "min": 79,
+     "median": 324.0,
+     "maks": 599
+    },
+    "yousee": {
+     "antal": 5,
+     "min": 99,
+     "median": 219,
+     "maks": 299
+    }
+   },
+   "priser": {
+    "lebara-1": 19,
+    "lyca-mobile-789654": 19,
+    "greentel-9838381": 29,
+    "flexii-563920561244.0": 39,
+    "greentel-983838245": 48,
+    "lebara-435": 49,
+    "lyca-mobile-78965434": 49,
+    "duka-865065": 59,
+    "flexii-563920": 59,
+    "lebara-5": 59,
+    "flexii-583525": 69,
+    "greentel-656203": 69,
+    "oister-500339": 69,
+    "oister-45645645632.0": 69,
+    "oister-4564564563.0": 69,
+    "flexii-56274456": 79,
+    "telmore-818854": 79,
+    "flexii-56374057": 89,
+    "greentel-23423404": 89,
+    "oister-5693953": 89,
+    "duka-262333": 99,
+    "duka-563782": 99,
+    "duka-56377082": 99,
+    "flexii-786043": 99,
+    "greentel-497104": 99,
+    "lebara-2": 99,
+    "lyca-mobile-7896542": 99,
+    "oister-56939539001.0": 99,
+    "yousee-542193": 99,
+    "flexii-987043": 109,
+    "oister-504312": 109,
+    "duka-250943": 119,
+    "duka-824902": 119,
+    "lebara-45495939": 119,
+    "lyca-mobile-7896545": 119,
+    "oister-569395390012.0": 119,
+    "duka-82490221": 129,
+    "eesy-504479": 129,
+    "flexii-51392033": 144,
+    "duka-98765": 149,
+    "flexii-128349": 149,
+    "telmore-163083": 149,
+    "eesy-563391": 149,
+    "lebara-4": 159,
+    "telmore-173889": 159,
+    "duka-8249022": 199,
+    "yousee-833038": 179,
+    "oister-862845": 189,
+    "oister-5693953900123.0": 199,
+    "yousee-835": 219,
+    "eesy-120555": 219,
+    "telmore-979888": 249,
+    "yousee-603858": 249,
+    "lyca-mobile-7896547": 299,
+    "yousee-316451": 299,
+    "telmore-478282": 399,
+    "telmore-987712": 449,
+    "telmore-9877120104.0": 499,
+    "telmore-339900": 599
+   }
+  }
+ ]
+}
