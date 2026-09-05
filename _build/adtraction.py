@@ -287,7 +287,30 @@ def gem_historik(abonnementer):
                ("201+", 201, UBEGRAENSET - 1), ("fri", UBEGRAENSET, UBEGRAENSET)]
     betalte = [a for a in abonnementer if a.get("pris", 0) > 0]
     maaling = {"dato": date.today().isoformat(), "antal": len(betalte),
-               "udbydere": len({a["udbyder"] for a in betalte}), "grupper": {}}
+               "udbydere": len({a["udbyder"] for a in betalte}),
+               "grupper": {}, "pr_udbyder": {}}
+
+    # Prisen på hvert enkelt abonnement. Det er dét, der gør det muligt at
+    # skrive "Duka 10 GB faldt fra 59 til 49 kr. i går" — en oplysning ingen
+    # konkurrent kan give, fordi ingen andre gemmer historik.
+    # 56 heltal pr. måling fylder under 1 KB.
+    maaling["priser"] = {a["id"]: a["pris"] for a in betalte}
+
+    # Pr. udbyder gemmes også. Det gør det muligt at skrive "Telmores priser er
+    # steget 8 % siden august" på selskabssiden — noget ingen konkurrent kan,
+    # fordi ingen andre gemmer historik. Fire tal pr. selskab fylder intet.
+    for slug in sorted({a["udbyder"] for a in betalte}):
+        p_u = sorted(a["pris"] for a in betalte if a["udbyder"] == slug)
+        if not p_u:
+            continue
+        m = len(p_u)
+        maaling["pr_udbyder"][slug] = {
+            "antal": m,
+            "min": p_u[0],
+            "median": round(p_u[m // 2] if m % 2
+                            else (p_u[m // 2 - 1] + p_u[m // 2]) / 2, 2),
+            "maks": p_u[-1],
+        }
     for navn, lav, hoej in grupper:
         priser = sorted(a["pris"] for a in betalte if lav <= a["data_gb"] <= hoej)
         if not priser:

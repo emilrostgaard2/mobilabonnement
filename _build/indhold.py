@@ -345,6 +345,46 @@ ofte nok til, at det kan betale sig. Overskrider du i to måneder om året, er d
 altid billigere at have det store abonnement og acceptere en enkelt ekstra regning eller
 en periode med nedsat hastighed. Overskrider du hver måned, er fri data det rigtige.</p>
 
+<h2>Fri data i Danmark — men aldrig i udlandet</h2>
+<p>Det er den vigtigste forskel mellem abonnementerne, og den står sjældent
+tydeligt: fri data gælder kun i Danmark. Så snart du krydser grænsen, gælder et
+loft, og loftet svinger fra 20 til 50 GB mellem selskaberne.</p>
+
+[[tabel_fri_data_eu]]
+
+<p>Rejser du fast, er EU-loftet vigtigere end alt andet på siden. Læs mere om
+roaming og hvad der gælder uden for EU i
+<a href="/guides/mobilabonnement-i-udlandet/">guiden til mobilabonnement i
+udlandet</a>.</p>
+
+<h2>Fair use — hvad "ubegrænset" faktisk betyder</h2>
+<p>Stort set alle abonnementer med fri data indeholder en klausul om rimeligt
+forbrug. Den er lovlig, den står i vilkårene, og den bliver sjældent brugt — men
+den findes, og det er værd at vide hvorfor.</p>
+<p>Klausulen giver selskabet ret til at gribe ind ved forbrug, der ligger langt
+over det normale. I praksis rammer den to ting: brug af abonnementet som
+erstatning for bredbånd i en husstand, og videresalg eller deling med mange
+personer.</p>
+<h3>Det du skal kigge efter i vilkårene</h3>
+<ol class="nummerliste">
+  <li><strong>Er der et konkret loft nævnt?</strong> Nogle selskaber skriver et
+  tal — for eksempel 1.000 GB — hvorefter hastigheden sættes ned. Andre skriver
+  kun "rimeligt forbrug" uden tal.</li>
+  <li><strong>Hvad sker der, hvis grænsen nås?</strong> Nedsat hastighed er
+  almindeligt. Spærring eller opsigelse er sjældnere, men forekommer.</li>
+  <li><strong>Er hotspot tilladt?</strong> De fleste tillader det. Enkelte
+  begrænser det eller undtager det fra fri data.</li>
+  <li><strong>Er der en hastighedsbegrænsning fra start?</strong> Nogle
+  lavprisabonnementer med fri data har et loft på for eksempel 10 Mbit/s. Det er
+  rigeligt til video, men mærkbart ved store filer.</li>
+</ol>
+<p>Bruger du under 200 GB om måneden, kommer du aldrig i nærheden. Skal
+abonnementet erstatte fast internet i en husstand, er det derimod værd at læse
+vilkårene ord for ord — se
+<a href="/guides/mobilt-bredbaand/">guiden til mobilt bredbånd</a>.</p>
+
+[[gruppe_prisudvikling_fri]]
+
 <h2>Hvad bruger man egentlig data på?</h2>
 
 <p>Det er svært at vurdere sit behov uden at vide, hvad tingene koster. Her er
@@ -564,6 +604,24 @@ henviser vi til dem.</p>
 
 <p>Vi sælger heller ikke dine oplysninger, og vi kræver ikke, at du opretter en bruger for
 at se priser. Der er ingen formular mellem dig og tallene.</p>
+
+<h2>Hvem står bag Telemobil</h2>
+
+<p>Telemobil drives af <strong>Emro Media</strong>, CVR-nummer <strong>46727533</strong>,
+med adresse i Aarhus. Du kan slå selskabet op i
+<a href="https://datacvr.virk.dk/enhed/virksomhed/46727533" rel="noopener nofollow"
+target="_blank">Det Centrale Virksomhedsregister</a> og se stiftelsesdato,
+branchekode og ansvarlig ledelse.</p>
+
+<p>Vi skriver det, fordi det kan efterprøves. Der findes mange
+sammenligningssider, hvor det ikke fremgår, hvem der ejer dem, eller om der
+overhovedet står et registreret selskab bag. Det bør du kunne kontrollere, før
+du bruger tal fra et site til at træffe en beslutning om din egen økonomi.</p>
+
+<p>Redaktionelt ansvar ligger hos Emil Rostgaard, som gennemgår udbydernes
+vilkår og fastlægger metoden bag sammenligningerne. Læs mere om
+<a href="/om/emil-rostgaard/">hvem han er</a> og
+<a href="/metode/">hvordan vi regner</a>.</p>
 
 <h2>Kontakt og rettelser</h2>
 

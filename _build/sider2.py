@@ -82,6 +82,36 @@ kalenderen én gang om året og genberegn. Tjek også vilkårene for, hvad der s
 prisen, hvis en tjeneste fjernes.</p>
 </div>
 
+<h2>Hvad tjenesterne koster, hvis du tegner dem selv</h2>
+<p>Hele regnestykket står og falder med det her tal. Et abonnement med streaming
+er kun en besparelse, hvis det, du får med, er billigere end at købe det
+separat — og hvis du rent faktisk ville have købt det.</p>
+
+[[tabel_streaming_alene]]
+
+<h3>Regnestykket i praksis</h3>
+<p>Koster abonnementet med streaming 150 kr. mere end det uden, og indeholder det
+Netflix til 119 kr., har du sparet 31 kr. — men kun hvis du i forvejen betalte
+for Netflix. Gjorde du ikke det, har du købt noget nyt for 150 kr.</p>
+
+<h2>Hvad sker der med tjenesten, hvis du skifter selskab?</h2>
+<p>Den forsvinder. Streamingtjenesten er knyttet til mobilabonnementet, ikke til
+dig, og opsiger du abonnementet, mister du adgangen samme dag.</p>
+<p>Det betyder to ting. Har du bygget playlister, favoritlister eller set halvdelen
+af en serie, følger det ikke med. Og skal du bruge tjenesten videre, skal du tegne
+den selv til fuld pris — det er den udgift, folk glemmer i regnestykket.</p>
+<p>Modsat: køber du tjenesten selv, kan du skifte mobilselskab frit uden at røre
+den. Det er den reelle værdi ved at holde de to beslutninger adskilt.</p>
+
+<h3>Kan streamingen deles med familien?</h3>
+<p>Det afhænger af tjenestens egne vilkår, ikke af mobilselskabet. Netflix og
+Disney+ tillader flere profiler i samme husstand, men har strammet reglerne for
+deling uden for husstanden. Får du tjenesten via mobilabonnementet, gælder præcis
+de samme regler.</p>
+<p>Nogle tjenester tæller antal samtidige skærme. Er I to om at se på samme tid,
+skal du tjekke, om den pakke, der følger med, tillader det — det er ofte den
+billigste udgave med færrest skærme.</p>
+
 <h2>Fordele og ulemper ved at samle det</h2>
 
 <div class="plusminus">

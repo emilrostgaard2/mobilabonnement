@@ -25,6 +25,13 @@ jobs:
           ADTRACTION_CHANNEL_ID: ${{ secrets.ADTRACTION_CHANNEL_ID }}
         run: python3 _build/adtraction.py
 
+      - name: Hent bredbaandspriser fra Adtraction
+        env:
+          ADTRACTION_CHANNEL_ID: ${{ secrets.ADTRACTION_CHANNEL_ID }}
+        # Faejler bredbaandsfeedet, skal mobilsiderne stadig kunne bygges.
+        continue-on-error: true
+        run: python3 _build/bredbaand.py
+
       - name: Byg siderne
         run: python3 _build/build.py
 
@@ -71,6 +78,14 @@ jobs:
           git add -- data/abonnementer.json
           if [ -f data/prishistorik.json ]; then
             git add -- data/prishistorik.json
+          fi
+          # Fingeraftryk pr. side. Uden den her nulstilles sitemappets lastmod
+          # ved hver koersel, og alle sider ser ud til at aendre sig dagligt.
+          if [ -f data/sidehistorik.json ]; then
+            git add -- data/sidehistorik.json
+          fi
+          if [ -f data/bredbaand.json ]; then
+            git add -- data/bredbaand.json
           fi
 
           if git diff --staged --quiet; then

@@ -119,6 +119,27 @@ takster, og de kan være meget høje. Slå dataroaming fra, tjek minuttaksten fo
 overvej et lokalt eSIM til data, mens du beholder dit danske nummer til opkald.</p>
 </div>
 
+<h2>Hvad fri tale ikke dækker</h2>
+<p>Fri tale betyder fri tale til danske numre. Det er den korte version, og det
+er også dér, misforståelserne opstår. Her er hele billedet.</p>
+
+[[tabel_fritale_undtagelser]]
+
+<h3>Servicenumre er den dyreste fælde</h3>
+<p>Numre der begynder med 90, og tilsvarende betalingsnumre i udlandet, er
+aldrig med i fri tale. De kan koste flere kroner i minuttet eller et fast beløb
+pr. opkald, og det gælder uanset hvilket abonnement du har.</p>
+<p>Får du et ubesvaret opkald fra et ukendt udenlandsk nummer, så ring ikke
+tilbage uden at tjekke nummeret først. Det er et kendt svindelmønster, hvor
+opkaldet går til et dyrt betalingsnummer. Slå det op i
+<a href="/hvem-ringer-til-mig/">hvem ringer til mig</a>.</p>
+
+<h3>Ringer du fast til udlandet?</h3>
+<p>Så er fri tale ikke løsningen — det er en udlandspakke eller et opkald over
+internettet. Vi har samlet takster pr. område i guiden til
+<a href="/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/">hvad det koster
+at ringe til udlandet</a>.</p>
+
 <h2>Hvem har brug for fri tale — og hvem har ikke?</h2>
 
 <div class="kortgitter kg-2" style="margin:1.8rem 0">

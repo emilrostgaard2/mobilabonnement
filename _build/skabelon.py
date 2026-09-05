@@ -8,6 +8,10 @@ import html
 DOMAENE = "https://telemobil.dk"
 SITENAVN = "Telemobil"
 
+# Sættes af build.py fra data/site.json. Står tomt, viser footeren ingenting
+# frem for en tom linje.
+FIRMA = {"navn": None, "cvr": None, "cvr_url": None}
+
 FORFATTER = {
     "navn": "Emil Rostgaard",
     "rolle": "Stifter og redaktør, Telemobil",
@@ -73,6 +77,9 @@ VAERKTOEJER_OEVRIGE = [
 MENU = [
     ("/billigste-mobilabonnement/", "Billigste abonnement"),
     ("/bedste-mobilabonnement/", "Bedste abonnement"),
+    # Bredbånd er et selvstændigt produktområde, ikke en underkategori af
+    # mobilabonnementer. Derfor et punkt for sig i topmenuen.
+    ("/bredbaand/", "Bredbånd"),
     ("/guides/", "Guides"),
     ("/om-os/", "Om os"),
 ]
@@ -222,7 +229,9 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
     )
     udbyder_punkter = "".join(
         f'<a href="/udbydere/{u["slug"]}/"{aktiv("/udbydere/" + u["slug"] + "/")}>'
-        f'<img src="/assets/img/logoer/{u["logo"]}" alt="" loading="lazy"'
+        # Tom alt er korrekt: navnet står i teksten ved siden af, og en
+        # skærmlæser skal ikke læse det to gange.
+        f'<img src="/assets/img/logoer/{u["logo"]}" alt="" aria-hidden="true" loading="lazy"'
         f' width="{round(u.get("logo_w", 240) * 18 / u.get("logo_h", 96))}" height="18" decoding="async">'
         f'<span>{e(u["navn"])}</span></a>'
         for u in NAV_UDBYDERE
@@ -346,6 +355,23 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 """
 
 
+def cvrlinje():
+    """CVR i footeren, med link til det officielle register.
+
+    Et registreret selskab bag sitet er et af de få tillidssignaler, en læser
+    selv kan efterprøve. Vi linker til Virk frem for en aggregator, fordi det
+    er kilden."""
+    if not FIRMA.get("cvr"):
+        return ""
+    navn = e(FIRMA.get("navn") or "")
+    if FIRMA.get("cvr_url"):
+        nr = (f'<a href="{e(FIRMA["cvr_url"])}" rel="noopener nofollow" target="_blank">'
+              f'CVR {e(FIRMA["cvr"])}</a>')
+    else:
+        nr = f'CVR {e(FIRMA["cvr"])}'
+    return f'<br>{navn} · {nr}' if navn else f'<br>{nr}'
+
+
 def fod(opdateret):
     """Kompakt footer. Kategorierne ligger i menuen — her er kun det nødvendige."""
     return f"""<footer class="fod">
@@ -364,6 +390,7 @@ def fod(opdateret):
           Lundbyesgade 13<br>
           8000 Aarhus C<br>
           <a href="mailto:kontakt@telemobil.dk">kontakt@telemobil.dk</a>
+          {cvrlinje()}
         </p>
       </div>
 
@@ -377,6 +404,17 @@ def fod(opdateret):
           <li><a href="/mobilabonnement-til-aeldre/">Til ældre</a></li>
           <li><a href="/taletidskort/">Taletidskort</a></li>
           <li><a href="/prisudvikling/">Prisudvikling</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="fodtitel">Bredbånd</div>
+        <ul>
+          <li><a href="/bredbaand/">Alle bredbåndsabonnementer</a></li>
+          <li><a href="/bredbaand/fiberbredbaand/">Fiber</a></li>
+          <li><a href="/bredbaand/5g-bredbaand/">5G-bredbånd</a></li>
+          <li><a href="/bredbaand/coax-bredbaand/">Coax</a></li>
+          <li><a href="/guides/mobilt-bredbaand/">Mobilt bredbånd — guide</a></li>
         </ul>
       </div>
 

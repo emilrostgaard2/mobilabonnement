@@ -1844,3 +1844,31 @@ body{overflow-x:clip;max-width:100%;position:relative}
   text-align:left;white-space:normal;
   padding:.75rem .9rem;font-size:.8rem;color:var(--graa);line-height:1.5}
 .tabel-under{font-size:.78rem;color:var(--graa)}
+
+/* Prisændring i tabeller — op er ikke godt for forbrugeren, ned er */
+.datatabel td.op{color:#C2410C;font-weight:600}
+.datatabel td.ned{color:var(--puls-dyb);font-weight:600}
+
+/* ==========================================================================
+   Faktaboks på udbydersider — det læseren vil vide på fem sekunder
+   ========================================================================== */
+.faktaboks{background:#F7F9FD;border:1px solid var(--graa-lys);
+  border-radius:var(--r-l);padding:1.2rem 1.3rem;margin:0 0 1.8rem}
+.fb-titel{font-size:.74rem;font-family:var(--font-tal);letter-spacing:.09em;
+  text-transform:uppercase;color:var(--graa);margin:0 0 .9rem;font-weight:600}
+.fb-liste{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:.75rem 1.4rem;margin:0}
+.fb-liste div{min-width:0}
+.fb-liste dt{font-size:.74rem;color:var(--graa);margin-bottom:.15rem}
+.fb-liste dd{margin:0;font-size:.95rem;font-weight:600;color:var(--blaek);
+  line-height:1.3;overflow-wrap:anywhere}
+.fb-note{margin:1rem 0 0;padding-top:.9rem;border-top:1px solid #E4E9F7;
+  font-size:.86rem;color:#3B4260;line-height:1.55}
+
+/* Udbyderlogo i bredbåndstabellen — samme højde uanset bredde, så rækkerne
+   flugter. Bredden får lov at variere med logoets egne proportioner. */
+.bb-logo{height:20px;width:auto;max-width:110px;object-fit:contain;
+  object-position:left center;display:block;margin:0 0 .3rem}
+/* Logo og produktnavn hører sammen — ingen ekstra luft imellem */
+.bb-udbyder{vertical-align:middle;line-height:1.3}
+.bb-udbyder .tabel-under{display:block;line-height:1.3}

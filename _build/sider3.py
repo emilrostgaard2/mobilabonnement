@@ -73,7 +73,31 @@ Lytter du til lydbøger regelmæssigt, er det den enkelttjeneste, hvor et bundle
 betale sig. Se hvilke abonnementer der inkluderer hvad på vores
 <a href="/mobilabonnement-med-streaming/tjenester/">oversigt over streamingtjenester</a>.</p>
 
+<h2>Musiktjenesterne stillet op mod hinanden</h2>
+<p>Får du en musiktjeneste med i abonnementet, er det sjældent dit eget valg,
+hvilken. Her er forskellen på dem, så du kan vurdere, om den, der følger med,
+er den, du ville have valgt.</p>
+
+[[tabel_musiktjenester]]
+
+<h3>Offline er det vigtigste felt i tabellen</h3>
+<p>Alle tjenesterne kan hente indhold ned over wi-fi. Gør du det, bruger du nul
+data på farten, og så er dataforbruget helt uden betydning for valget af
+abonnement. Det er den enkleste måde at gøre et lille abonnement rigeligt.</p>
+
 <h2>Hvor meget data bruger musik egentlig?</h2>
+[[tabel_lyd_dataforbrug]]
+
+<h3>Derfor er lyd den billigste streaming at få med</h3>
+<p>En time musik i normal kvalitet bruger 0,07 GB. En time video i HD bruger 3 GB
+— altså fyrre gange så meget. Selv daglig lytning i høj kvalitet holder sig under
+5 GB om måneden.</p>
+<p>Det betyder, at et abonnement med musik ikke kræver mere data. Hører du
+musik en time om dagen og ellers bruger telefonen normalt, rækker
+<a href="/mobilabonnement-10-30-gb/">10-30 GB</a> fint.</p>
+<p>Undtagelsen er lossless. Streamer du i tabsfri kvalitet uden at hente ned,
+bruger du 15 GB om måneden alene på musik. Det er værd at vide, hvis du har
+gode høretelefoner og et lille abonnement.</p>
 
 <table>
 <thead><tr><th>Kvalitet</th><th>Ca. forbrug pr. time</th><th>10 GB rækker til</th></tr></thead>

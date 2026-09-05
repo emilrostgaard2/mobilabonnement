@@ -1,447 +1,507 @@
 {
-  "_note": "Netværk, ejerforhold og faktuelle detaljer SKAL verificeres mod udbyderens egen side før data_verificeret sættes til true i site.json.",
-  "udbydere": [
+ "_note": "Netværk, ejerforhold og faktuelle detaljer SKAL verificeres mod udbyderens egen side før data_verificeret sættes til true i site.json.",
+ "udbydere": [
+  {
+   "slug": "cbb-mobil",
+   "navn": "CBB Mobil",
+   "logo": "cbb-mobil.webp",
+   "netvaerk": "Telenor",
+   "ejer": "Telenor Danmark",
+   "hjemmeside": "https://www.cbb.dk",
+   "grundlagt": 2000,
+   "tagline": "Lav pris uden binding — og en app der faktisk virker",
+   "kort": "CBB Mobil er Telenors prisbrand og en af de mest stabile spillere i den billige ende. Ingen binding, ingen oprettelse, og en prisstruktur der er til at forstå.",
+   "anmeldelse": "CBB Mobil er for os benchmarken i den billige ende af det danske marked. Selskabet er ejet af Telenor og kører på Telenors netværk, hvilket i praksis betyder, at du får dækning på niveau med et af landets tre store net til en pris, der ligger markant under det, moderselskabet selv tager for tilsvarende abonnementer.\n\nDet, der adskiller CBB fra flere af de rene discountbrands, er, at prisen ikke er en lokketilbudspris. Du finder sjældent den type kampagne, hvor prisen tredobles efter seks måneder. Det gør CBB til et af de få selskaber, hvor den pris, du ser ved bestilling, også er den pris, du betaler om et år. For en almindelig forbruger er det ofte flere hundrede kroner værd over en abonnementsperiode sammenlignet med et kampagneabonnement, man glemmer at genforhandle.\n\nAppen fortjener at blive nævnt, fordi den er et reelt konkurrenceparameter i den billige ende. Du kan se dit forbrug løbende, skifte abonnement uden at ringe nogen steder hen, og slå datastop til. Netop datastop er værd at aktivere fra dag ét, hvis du har børn på abonnementet eller selv har det med at streame video på farten.\n\nSvaghederne er der. Kundeservice er primært digital, og har du brug for at tale med et menneske hurtigt, er ventetiden længere end hos de store. Der følger ingen streamingtjenester eller mobilforsikring med, som man ser hos Telmore og YouSee. Og skal du bruge meget data i udlandet uden for EU, er CBB ikke det stærkeste valg.",
+   "fordele": [
+    "Ingen binding og typisk ingen oprettelsesgebyr",
+    "Kører på Telenors netværk med bred 4G- og 5G-dækning",
+    "Prisen holder — sjældent skjulte prisstigninger efter kampagneperiode",
+    "Velfungerende app med forbrugsoversigt og datastop",
+    "Nemt at skifte abonnement op og ned fra måned til måned"
+   ],
+   "ulemper": [
+    "Ingen streaming eller forsikring med i prisen",
+    "Kundeservice er overvejende digital med længere svartid",
+    "Begrænsede fordele ved brug uden for EU"
+   ],
+   "bedst_til": "Dig der vil have lav fast pris, fri tale og et solidt net — og som ikke har brug for streaming oveni.",
+   "daarligt_til": "Dig der vil samle mobil, tv og streaming ét sted eller har brug for telefonisk kundeservice.",
+   "faq": [
     {
-      "slug": "cbb-mobil",
-      "navn": "CBB Mobil",
-      "logo": "cbb-mobil.webp",
-      "netvaerk": "Telenor",
-      "ejer": "Telenor Danmark",
-      "hjemmeside": "https://www.cbb.dk",
-      "grundlagt": 2000,
-      "tagline": "Lav pris uden binding — og en app der faktisk virker",
-      "kort": "CBB Mobil er Telenors prisbrand og en af de mest stabile spillere i den billige ende. Ingen binding, ingen oprettelse, og en prisstruktur der er til at forstå.",
-      "anmeldelse": "CBB Mobil er for os benchmarken i den billige ende af det danske marked. Selskabet er ejet af Telenor og kører på Telenors netværk, hvilket i praksis betyder, at du får dækning på niveau med et af landets tre store net til en pris, der ligger markant under det, moderselskabet selv tager for tilsvarende abonnementer.\n\nDet, der adskiller CBB fra flere af de rene discountbrands, er, at prisen ikke er en lokketilbudspris. Du finder sjældent den type kampagne, hvor prisen tredobles efter seks måneder. Det gør CBB til et af de få selskaber, hvor den pris, du ser ved bestilling, også er den pris, du betaler om et år. For en almindelig forbruger er det ofte flere hundrede kroner værd over en abonnementsperiode sammenlignet med et kampagneabonnement, man glemmer at genforhandle.\n\nAppen fortjener at blive nævnt, fordi den er et reelt konkurrenceparameter i den billige ende. Du kan se dit forbrug løbende, skifte abonnement uden at ringe nogen steder hen, og slå datastop til. Netop datastop er værd at aktivere fra dag ét, hvis du har børn på abonnementet eller selv har det med at streame video på farten.\n\nSvaghederne er der. Kundeservice er primært digital, og har du brug for at tale med et menneske hurtigt, er ventetiden længere end hos de store. Der følger ingen streamingtjenester eller mobilforsikring med, som man ser hos Telmore og YouSee. Og skal du bruge meget data i udlandet uden for EU, er CBB ikke det stærkeste valg.",
-      "fordele": [
-        "Ingen binding og typisk ingen oprettelsesgebyr",
-        "Kører på Telenors netværk med bred 4G- og 5G-dækning",
-        "Prisen holder — sjældent skjulte prisstigninger efter kampagneperiode",
-        "Velfungerende app med forbrugsoversigt og datastop",
-        "Nemt at skifte abonnement op og ned fra måned til måned"
-      ],
-      "ulemper": [
-        "Ingen streaming eller forsikring med i prisen",
-        "Kundeservice er overvejende digital med længere svartid",
-        "Begrænsede fordele ved brug uden for EU"
-      ],
-      "bedst_til": "Dig der vil have lav fast pris, fri tale og et solidt net — og som ikke har brug for streaming oveni.",
-      "daarligt_til": "Dig der vil samle mobil, tv og streaming ét sted eller har brug for telefonisk kundeservice.",
-      "faq": [
-        {
-          "sp": "Hvilket netværk bruger CBB Mobil?",
-          "sv": "CBB Mobil kører på Telenors netværk. Det betyder, at dækningen svarer til Telenors egen, både på 4G og 5G, selvom prisen er lavere."
-        },
-        {
-          "sp": "Har CBB Mobil binding?",
-          "sv": "CBB Mobil sælger som udgangspunkt abonnementer uden binding. Du kan opsige med løbende måned plus den varslingsperiode, der fremgår af abonnementsvilkårene."
-        },
-        {
-          "sp": "Kan jeg beholde mit nummer hos CBB?",
-          "sv": "Ja. Nummeret følger med, når du bestiller. CBB henter det automatisk fra dit gamle selskab, og du skal ikke selv opsige noget."
-        }
-      ],
-      "trustpilot": {
-        "score": 4.5,
-        "antal": 67000,
-        "hentet": "2026-06-11"
-      }
+     "sp": "Hvilket netværk bruger CBB Mobil?",
+     "sv": "CBB Mobil kører på Telenors netværk. Det betyder, at dækningen svarer til Telenors egen, både på 4G og 5G, selvom prisen er lavere."
     },
     {
-      "slug": "yousee",
-      "navn": "YouSee",
-      "logo": "yousee.webp",
-      "netvaerk": "TDC NET",
-      "ejer": "Nuuday",
-      "hjemmeside": "https://yousee.dk",
-      "grundlagt": 2007,
-      "tagline": "Danmarks bredeste dækning — hvis du vil betale for den",
-      "kort": "YouSee er premium-valget. Landets mest udbyggede net, musik og streaming inkluderet i flere abonnementer, og fysiske butikker du kan gå ind i.",
-      "anmeldelse": "YouSee er det abonnement, folk vælger, når dækning betyder mere end pris. Selskabet er en del af Nuuday og kører på TDC NET, som gennem årtier er blevet udbygget til at være det mest finmaskede mobilnet i Danmark. I byerne mærker du sjældent forskel på de tre net. Det gør du derimod på Vestjyllands sommerhusområder, i toget over Storebælt, på Bornholm og i kældre og parkeringshuse, hvor TDC NET typisk har en fordel.\n\nPrismæssigt ligger YouSee i den dyre ende, og det er der ingen grund til at pakke ind. Til gengæld får du noget for pengene ud over dækningen. Flere abonnementer inkluderer musikstreaming, og YouSee-kunder får adgang til en række fordele, der har reel værdi, hvis du bruger dem. Det er netop pointen: fordelene er kun penge værd, hvis de erstatter noget, du ellers betaler for. Gør de ikke det, betaler du for luft.\n\nYouSee har desuden noget, ingen discountudbyder kan matche — fysiske butikker. Går din telefon i stykker, eller kan du ikke få et eSIM til at virke, kan du gå ind ad en dør og få hjælp af et menneske. For teknisk usikre brugere og for ældre er det ofte den enkeltfaktor, der betyder mest, og den er svær at værdisætte i en pristabel.\n\nUlempen ud over prisen er, at YouSee historisk har haft en tendens til at prisregulere. Har du haft samme abonnement i tre år uden at kigge på det, er der god sandsynlighed for, at du betaler mere end nye kunder for det samme. Tjek din regning mindst en gang om året.",
-      "fordele": [
-        "Danmarks mest udbyggede mobilnet via TDC NET",
-        "Streaming og musik inkluderet i flere abonnementer",
-        "Fysiske butikker med personlig hjælp",
-        "Stærk til dækning i sommerhusområder, tog og landdistrikter",
-        "Samlerabat hvis du også har bredbånd eller tv"
-      ],
-      "ulemper": [
-        "Klart dyrere end discountbrands på ren data og tale",
-        "Fordelspakker giver kun værdi, hvis du rent faktisk bruger dem",
-        "Tendens til prisstigninger på gamle abonnementer"
-      ],
-      "bedst_til": "Dig der bor eller færdes uden for de større byer, rejser meget i Danmark, eller vil kunne gå ind i en butik med sine problemer.",
-      "daarligt_til": "Dig der bor centralt i en større by, bruger under 20 GB og bare vil have den laveste pris.",
-      "faq": [
-        {
-          "sp": "Har YouSee bedre dækning end de billige selskaber?",
-          "sv": "YouSee kører på TDC NET, som er det mest udbyggede mobilnet i Danmark. I byerne er forskellen til Telenor og 3 lille, mens den kan være mærkbar i landdistrikter, sommerhusområder og indendørs i ældre bygninger."
-        },
-        {
-          "sp": "Er YouSee prisen værd?",
-          "sv": "Det afhænger af, hvor du bor, og om du bruger de inkluderede fordele. Bor du centralt og bruger ikke streaming, betaler du typisk et markant tillæg for dækning, du ikke får glæde af."
-        },
-        {
-          "sp": "Hvem ejer YouSee?",
-          "sv": "YouSee er en del af Nuuday, som også står bag Telmore. Netværket drives af TDC NET."
-        }
-      ],
-      "trustpilot": {
-        "score": 2.4,
-        "antal": 69406,
-        "hentet": "2026-07-14"
-      }
+     "sp": "Har CBB Mobil binding?",
+     "sv": "CBB Mobil sælger som udgangspunkt abonnementer uden binding. Du kan opsige med løbende måned plus den varslingsperiode, der fremgår af abonnementsvilkårene."
     },
     {
-      "slug": "telmore",
-      "navn": "Telmore",
-      "logo": "telmore.webp",
-      "netvaerk": "TDC NET",
-      "ejer": "Nuuday",
-      "hjemmeside": "https://telmore.dk",
-      "grundlagt": 2000,
-      "tagline": "Streaming samlet i mobilregningen",
-      "kort": "Telmore kører på TDC NET og har bygget hele sin identitet på at pakke streamingtjenester ind i abonnementet. Regnestykket afhænger helt af, hvad du allerede betaler for.",
-      "anmeldelse": "Telmore er det mest interessante abonnement på det danske marked at regne på, fordi prisen sjældent kan sammenlignes direkte med andres. Selskabet er som YouSee en del af Nuuday og kører på TDC NET, så dækningen er i topklasse. Men den egentlige forskel ligger i Telmore Play-konceptet, hvor streamingtjenester indgår i abonnementsprisen.\n\nRegnestykket er enkelt og bør laves før bestilling, ikke efter. Læg sammen, hvad du i dag betaler for de tjenester, der indgår. Betaler du allerede for tre af dem, og indgår de i pakken, kan et Telmore-abonnement til en tilsyneladende høj månedspris reelt være billigere end et discountabonnement plus separate abonnementer. Betaler du derimod for streamingtjenester, du ikke bruger, eller deler du familieabonnementer med andre, forsvinder fordelen, og så betaler du mest for dækning.\n\nDet er værd at være opmærksom på, at pakker og indhold ændrer sig. En streamingtjeneste kan ryge ud af pakken ved en aftaleudløb, og så står du med et abonnement, du valgte af én grund, som ikke længere gælder. Sæt en påmindelse i kalenderen en gang om året og genberegn.\n\nTelmore er som resten af Nuuday-familien ikke billigst på rå data. Vil du have 50 GB og intet andet, findes der abonnementer til under det halve. Det er ikke en kritik af Telmore — det er bare to forskellige produkter, der tilfældigvis begge hedder mobilabonnement.",
-      "fordele": [
-        "Kører på TDC NET med meget stærk dækning",
-        "Streamingtjenester inkluderet kan give reel besparelse",
-        "Én samlet regning i stedet for fem forskellige abonnementer",
-        "Ingen lang binding på de fleste produkter"
-      ],
-      "ulemper": [
-        "Svært at prissammenligne direkte med rene mobilabonnementer",
-        "Indholdet i pakkerne kan ændre sig over tid",
-        "Dyrt hvis du ikke bruger de inkluderede tjenester"
-      ],
-      "bedst_til": "Dig der allerede betaler for flere streamingtjenester og gerne vil samle det hele ét sted.",
-      "daarligt_til": "Dig der kun vil have data og tale til laveste pris, eller deler streaming med familien i forvejen.",
-      "faq": [
-        {
-          "sp": "Kan det betale sig med streaming i mobilabonnementet?",
-          "sv": "Det afhænger af, hvad du betaler i dag. Læg dine nuværende streamingudgifter sammen med prisen på et billigt mobilabonnement, og sammenlign med Telmores samlede pris. Bruger du to eller flere af de inkluderede tjenester, falder regnestykket ofte ud til Telmores fordel."
-        },
-        {
-          "sp": "Hvilket net bruger Telmore?",
-          "sv": "Telmore kører på TDC NET, samme netværk som YouSee. Dækningen er dermed blandt de bedste i Danmark."
-        },
-        {
-          "sp": "Er Telmore og YouSee det samme?",
-          "sv": "De er søsterselskaber under Nuuday og deler netværk, men de er separate brands med forskellige abonnementer, priser og kundeservice."
-        }
-      ],
-      "trustpilot": {
-        "score": 4.1,
-        "antal": 61354,
-        "hentet": "2026-08-01"
-      }
-    },
-    {
-      "slug": "oister",
-      "navn": "Oister",
-      "logo": "oister.webp",
-      "netvaerk": "3",
-      "ejer": "Hi3G Denmark",
-      "hjemmeside": "https://oister.dk",
-      "grundlagt": 2005,
-      "tagline": "Meget data for pengene",
-      "kort": "Oister er 3's prisbrand og har historisk været stedet, hvor man fik flest gigabyte pr. krone. Stærk i byerne, mere blandet i tyndt befolkede områder.",
-      "anmeldelse": "Oister er ejet af Hi3G og kører på 3's netværk. Det er vigtigt at forstå, fordi 3's net har en anden profil end de to andre. I byer og tætbefolkede områder leverer 3 høje hastigheder og god kapacitet, og 3 var tidligt ude med både 4G og 5G. Til gengæld er nettet historisk mindre finmasket i landdistrikter, langs kysten og i visse indendørsmiljøer.\n\nDet betyder i praksis, at Oister ofte er et rigtig godt køb for storbybrugere og et mere tvivlsomt køb for dem, der bor på landet eller pendler gennem områder med svag dækning. Vores anbefaling er entydig: tjek dækningskortet på din faktiske adresse og på din arbejdsplads, før du bestiller. Det tager to minutter og er den eneste måde at undgå fortrydelse.\n\nDer, hvor Oister virkelig er stærk, er på datamængde pr. krone. Selskabet har gennem årene presset markedet i den mellemhøje datakategori, hvor man får rigeligt med gigabyte uden at betale premium-pris. Bruger du 30-50 GB om måneden — altså streamer video på farten, bruger telefonen som hotspot til laptop, eller har børn på abonnementet — er Oister typisk blandt de billigste veje til det.\n\nSom hos de fleste discountbrands er kundeservice digital først. Der er ingen butikker at gå ind i, og hjælp foregår via chat, telefon og selvbetjening.",
-      "fordele": [
-        "Ofte flest gigabyte for pengene i mellem- og højdatakategorien",
-        "Høje hastigheder i byer og tætbefolkede områder",
-        "Ingen binding på hovedparten af abonnementerne",
-        "Enkel prisstruktur uden mange tillæg"
-      ],
-      "ulemper": [
-        "3's net er svagere i landdistrikter og visse kystområder",
-        "Ingen fysiske butikker",
-        "Færre fordele og tillægsydelser end premiumbrands"
-      ],
-      "bedst_til": "Storbybrugere med højt dataforbrug, der vil have mange gigabyte til lav pris.",
-      "daarligt_til": "Dig der bor eller pendler i tyndt befolkede områder, hvor 3's dækning er svagere.",
-      "faq": [
-        {
-          "sp": "Hvilket netværk bruger Oister?",
-          "sv": "Oister kører på 3's netværk, da selskabet er ejet af Hi3G Denmark. Dækningen er stærk i byerne og mere varierende i landdistrikter."
-        },
-        {
-          "sp": "Er Oister godt til meget data?",
-          "sv": "Ja, Oister er typisk blandt de billigste på abonnementer med 30 GB og opefter. Tjek dog dækningen på din adresse først, hvis du bor uden for en større by."
-        },
-        {
-          "sp": "Har Oister 5G?",
-          "sv": "Ja, 5G er tilgængeligt på flere af Oisters abonnementer, men det fremgår af det enkelte abonnement, om det er inkluderet."
-        }
-      ],
-      "trustpilot": {
-        "score": 4.1,
-        "antal": 29000,
-        "hentet": "2026-06-11"
-      }
-    },
-    {
-      "slug": "lebara",
-      "navn": "Lebara",
-      "logo": "lebara.webp",
-      "netvaerk": "Telenor",
-      "ejer": "Lebara Group",
-      "hjemmeside": "https://www.lebara.dk",
-      "grundlagt": 2001,
-      "tagline": "Bygget til opkald til udlandet",
-      "kort": "Lebara har specialiseret sig i internationale opkald og er ofte det klart billigste valg, hvis du ringer meget til familie uden for Danmark.",
-      "anmeldelse": "Lebara er en international MVNO, der har bygget hele sin forretning på ét behov, som de fleste danske selskaber behandler stedmoderligt: opkald til udlandet. Ringer du fast til familie i Tyrkiet, Polen, Pakistan, Filippinerne eller Rumænien, er Lebara som regel det billigste og enkleste valg på markedet, og forskellen til et almindeligt dansk abonnement kan løbe op i flere hundrede kroner om måneden.\n\nDet er værd at forstå forskellen mellem de to ting, folk blander sammen. EU-roaming — altså at bruge dit danske abonnement, mens du selv er i EU — er reguleret og indgår i stort set alle danske abonnementer. At ringe fra Danmark til et nummer i udlandet er noget helt andet, og det er her, priserne varierer voldsomt fra selskab til selskab. Det er den anden ting, Lebara er bygget til.\n\nUden for den specialisering er Lebara et fornuftigt, men ikke exceptionelt, discountabonnement. Priserne på ren data er konkurrencedygtige uden at være markedets laveste, og du får en enkel struktur uden binding.\n\nVær opmærksom på, at inkluderede minutter til udlandet ofte gælder specifikke lande og specifikke nummertyper. Opkald til mobilnumre og fastnetnumre prissættes forskelligt i mange lande, og et abonnement der ser perfekt ud, kan vise sig kun at dække fastnet. Tjek altid landelisten for netop de numre, du rent faktisk ringer til.",
-      "fordele": [
-        "Markedets stærkeste priser på opkald til mange lande",
-        "Ingen binding og enkel prisstruktur",
-        "Fornuftige datamængder til lav pris",
-        "Flersproget kundeservice"
-      ],
-      "ulemper": [
-        "Inkluderede udlandsminutter dækker kun udvalgte lande og nummertyper",
-        "Ikke billigst på rene datamængder",
-        "Færre tillægsydelser end de store selskaber"
-      ],
-      "bedst_til": "Dig der ringer fast til familie eller venner i udlandet fra Danmark.",
-      "daarligt_til": "Dig der kun bruger telefonen i Danmark og udelukkende jagter flest gigabyte pr. krone.",
-      "faq": [
-        {
-          "sp": "Er Lebara billigst til opkald til udlandet?",
-          "sv": "Lebara er ofte blandt de billigste på opkald fra Danmark til udlandet, men det afhænger af landet. Tjek altid, om netop dit land og nummertype — mobil eller fastnet — er dækket af de inkluderede minutter."
-        },
-        {
-          "sp": "Hvad er forskellen på roaming og opkald til udlandet?",
-          "sv": "Roaming er, når du selv befinder dig i udlandet og bruger dit danske abonnement. Opkald til udlandet er, når du ringer fra Danmark til et udenlandsk nummer. De to ting prissættes helt forskelligt."
-        },
-        {
-          "sp": "Hvilket net bruger Lebara i Danmark?",
-          "sv": "Lebara er en MVNO, der lejer sig ind på et af de danske netværk. Se den aktuelle netværksangivelse på Lebaras egen side, da MVNO-aftaler kan ændre sig over tid."
-        }
-      ],
-      "trustpilot": {
-        "score": 4.9,
-        "antal": 15000,
-        "hentet": "2026-06-11"
-      }
-    },
-    {
-      "slug": "greentel",
-      "navn": "Greentel",
-      "logo": "greentel.webp",
-      "netvaerk": "Telenor",
-      "ejer": "Greentel",
-      "hjemmeside": "https://greentel.dk",
-      "grundlagt": 2010,
-      "tagline": "Dansk discount uden fis",
-      "kort": "Greentel er et dansk discountselskab med skarpe priser og en gennemført enkel produktpalette. Ingen pakker, ingen bundling, bare abonnement.",
-      "anmeldelse": "Greentel hører til den gruppe af danske MVNO'er, der har valgt den enkle vej: få abonnementer, lave priser, ingen binding og ingen forsøg på at sælge dig streaming, forsikring eller tv oveni. For en overraskende stor gruppe forbrugere er det præcis det rigtige produkt, fordi de fleste af de fordele, de store selskaber tager sig betalt for, aldrig bliver brugt.\n\nStyrken ved den type selskab er gennemsigtighed. Prislisten er kort nok til, at du kan overskue den på et halvt minut, og du behøver ikke regne på, hvad en pakke er værd. Svagheden er, at der ikke er nogen buffer, hvis noget går galt. Kundeservice er digital og lille, og du kan ikke gå ind i en butik. Skal din telefon sættes op af en anden, eller er du utryg ved selv at håndtere et simkort, er en discountudbyder sjældent det rigtige valg uanset prisen.\n\nSom ved alle MVNO'er er det centrale spørgsmål, hvilket net selskabet lejer sig ind på, og under hvilke vilkår. Nogle MVNO-aftaler giver adgang til fuld hastighed og 5G, andre begrænser til 4G eller nedprioriterer trafikken i myldretiden. Det står sjældent med store bogstaver, men det er den vigtigste enkeltoplysning, når man vælger discount. Tjek altid netværk og eventuel hastighedsbegrænsning på udbyderens egen produktside, før du bestiller.",
-      "fordele": [
-        "Meget lave priser på simple abonnementer",
-        "Overskuelig prisliste uden pakker og tillæg",
-        "Ingen binding",
-        "Dansk selskab med dansksproget kundeservice"
-      ],
-      "ulemper": [
-        "Ingen fysiske butikker og begrænset kundeservice",
-        "Ingen streaming, forsikring eller andre fordele",
-        "Netværksvilkår og eventuelle hastighedsbegrænsninger bør tjekkes"
-      ],
-      "bedst_til": "Dig der ved præcis, hvad du har brug for, og ikke vil betale for noget andet.",
-      "daarligt_til": "Dig der har brug for hjælp til opsætning eller vil have fordele ud over selve abonnementet.",
-      "faq": [
-        {
-          "sp": "Er billige selskaber som Greentel dårligere?",
-          "sv": "Ikke nødvendigvis. Discountselskaber lejer sig ind på de samme master som de store. Forskellen ligger typisk i kundeservice, tillægsydelser og i nogle tilfælde prioritering af trafik i myldretiden."
-        },
-        {
-          "sp": "Hvad er en MVNO?",
-          "sv": "En MVNO er et selskab uden eget mobilnet, der lejer kapacitet hos en netværksejer. I Danmark er netværksejerne TDC NET, Telenor og 3. Din dækning bestemmes af det net, din udbyder lejer sig ind på."
-        },
-        {
-          "sp": "Kan jeg beholde mit nummer?",
-          "sv": "Ja. Nummerportering er en rettighed i Danmark, og din nye udbyder klarer flytningen for dig."
-        }
-      ],
-      "trustpilot": {
-        "score": 4.3,
-        "antal": 959,
-        "hentet": "2026-06-11"
-      }
-    },
-    {
-      "slug": "duka",
-      "navn": "Duka",
-      "logo": "duka.webp",
-      "netvaerk": "Telenor",
-      "ejer": "Duka",
-      "hjemmeside": "https://duka.dk",
-      "grundlagt": 2015,
-      "tagline": "Enkelt abonnement, enkel pris",
-      "kort": "Duka satser på en stram produktpalette og lave priser. Et solidt valg hvis du vil have et abonnement, du aldrig behøver tænke over igen.",
-      "anmeldelse": "Duka tilhører den kategori af danske udbydere, der har droppet ambitionen om at være alt for alle. Der er ikke mange abonnementer at vælge imellem, og det er en fordel snarere end en mangel. Undersøgelser af forbrugeradfærd peger konsekvent på, at for mange valgmuligheder fører til dårligere beslutninger, og på et marked med flere hundrede abonnementer er en kort liste en reel service.\n\nProduktet er, hvad det ser ud til at være: data, tale og sms til en lav fast pris uden binding. Der er ingen streamingpakke, ingen fordelsklub og ingen forsikring. Til gengæld er der heller ingen ubehagelige overraskelser på regningen, forudsat at du holder dig inden for det inkluderede.\n\nDet punkt er værd at dvæle ved, fordi det er her, discountabonnementer koster folk penge. Overskrider du din datamængde, kan overforbrug være dyrt, og hos selskaber uden automatisk datastop løber det hurtigt. Slå datastop til med det samme, uanset hvilken udbyder du vælger. Det er den enkeltindstilling, der sparer flest danskere for flest penge, og den tager tredive sekunder at aktivere.\n\nEr du i tvivl om, hvor meget data du reelt bruger, kan du finde det i din telefons indstillinger under dataforbrug. Kig på de seneste tre måneder, ikke den seneste uge, og læg lidt til.",
-      "fordele": [
-        "Lav fast pris uden binding",
-        "Kort og overskuelig produktpalette",
-        "Ingen skjulte pakker eller tillægssalg",
-        "Nem selvbetjening"
-      ],
-      "ulemper": [
-        "Ingen tillægsydelser eller fordele",
-        "Begrænset kundeservice sammenlignet med de store",
-        "Færre valgmuligheder hvis du har særlige behov"
-      ],
-      "bedst_til": "Dig der vil have et billigt abonnement, du kan glemme alt om.",
-      "daarligt_til": "Dig med særlige behov som meget udlandsbrug, familieabonnementer eller streaming.",
-      "faq": [
-        {
-          "sp": "Hvad sker der, hvis jeg bruger mere data end inkluderet?",
-          "sv": "Det afhænger af udbyderen. Nogle stopper forbindelsen, andre sætter hastigheden ned, og andre igen opkræver pr. påbegyndt megabyte. Slå datastop til i selvbetjeningen for at undgå overraskelser."
-        },
-        {
-          "sp": "Hvor meget data har jeg brug for?",
-          "sv": "De fleste danskere klarer sig med 10-30 GB. Streamer du meget video på farten eller bruger telefonen som hotspot, skal du typisk op i 50 GB eller fri data."
-        },
-        {
-          "sp": "Er der binding hos Duka?",
-          "sv": "Duka markedsfører sig på abonnementer uden binding. Tjek de aktuelle vilkår ved bestilling, da det kan variere fra produkt til produkt."
-        }
-      ],
-      "trustpilot": {
-        "score": 4.7,
-        "antal": 3979,
-        "hentet": "2026-07-01"
-      }
-    },
-    {
-      "slug": "lyca-mobile",
-      "navn": "Lyca Mobile",
-      "logo": "lyca-mobile.webp",
-      "netvaerk": "Telenor",
-      "ejer": "Lycamobile Group",
-      "hjemmeside": "https://www.lycamobile.dk",
-      "grundlagt": 2006,
-      "tagline": "International specialist med taletidsarv",
-      "kort": "Lyca Mobile er som Lebara bygget til brugere med stærke bånd til udlandet, og selskabet er stort i taletidssegmentet.",
-      "anmeldelse": "Lyca Mobile opererer i mere end tyve lande og har i Danmark en profil, der minder om Lebaras: konkurrencedygtige priser på opkald til udlandet, enkle abonnementer og en betydelig position i taletidssegmentet.\n\nTaletid fortjener en bemærkning, fordi det er den løsning, mange overser. Med taletid betaler du forud og kan ikke overskride, hvilket gør det til et af de sikreste valg til børn, til pårørende der ikke skal kunne få en overraskelsesregning, og til dig der kun bruger telefonen sporadisk. Ulempen er, at pris pr. gigabyte typisk er højere end på et abonnement, og at du selv skal huske at fylde op.\n\nPå abonnementssiden er Lyca et fornuftigt discountvalg med de forbehold, der gælder for alle MVNO'er: netværksadgang og eventuelle hastighedsvilkår er den afgørende oplysning, og den skal findes på udbyderens egen produktside.\n\nRinger du meget til udlandet, gælder samme råd som ved Lebara. Sammenlign ikke på antal minutter alene, men på om netop dine lande og nummertyper er med. To abonnementer med 1.000 udlandsminutter kan være vidt forskellige produkter, hvis det ene kun dækker fastnet i ti lande, og det andet dækker mobil i halvtreds.",
-      "fordele": [
-        "Skarpe priser på internationale opkald",
-        "Stærkt udvalg af taletidsløsninger uden risiko for overforbrug",
-        "Ingen binding på abonnementer",
-        "Flersproget kundeservice"
-      ],
-      "ulemper": [
-        "Højere pris pr. gigabyte på taletid end på abonnement",
-        "Landelister for inkluderede minutter kræver nærlæsning",
-        "Begrænsede tillægsydelser"
-      ],
-      "bedst_til": "Dig der ringer til udlandet, eller som vil have taletid uden risiko for overforbrug.",
-      "daarligt_til": "Dig der bruger meget data og vil have lavest mulig pris pr. gigabyte.",
-      "faq": [
-        {
-          "sp": "Er taletid billigere end abonnement?",
-          "sv": "Sjældent pr. gigabyte, men taletid fjerner risikoen for overforbrug helt. Det gør det til et godt valg til børn og til dig, der bruger telefonen meget lidt."
-        },
-        {
-          "sp": "Kan jeg skifte fra taletid til abonnement?",
-          "sv": "Ja, og du kan beholde dit nummer. Kontakt udbyderen, eller bestil abonnementet med nummerflytning."
-        },
-        {
-          "sp": "Dækker udlandsminutter alle lande?",
-          "sv": "Nej. Inkluderede minutter gælder typisk en bestemt liste af lande og skelner ofte mellem opkald til mobilnumre og fastnetnumre. Tjek listen for netop dine numre."
-        }
-      ],
-      "trustpilot": {
-        "score": 2.5,
-        "antal": 2000,
-        "hentet": "2025-10-06"
-      }
-    },
-    {
-      "slug": "eesy",
-      "navn": "eesy",
-      "logo": "eesy.webp",
-      "netvaerk": "TDC NET",
-      "ejer": "eesy",
-      "hjemmeside": "https://eesy.dk",
-      "grundlagt": 2018,
-      "tagline": "Digitalt først, billigt hele vejen",
-      "kort": "eesy er bygget digitalt fra bunden. Alt foregår i app og selvbetjening, og prisen afspejler, at der ikke er butikker og callcentre at betale for.",
-      "anmeldelse": "eesy er et eksempel på den nyere generation af danske mobiludbydere, hvor hele forretningen er digital. Der er ingen butikker, minimal telefonisk kundeservice og en app, der er tænkt som det primære kontaktpunkt. Den model gør produktet billigere, og for digitalt trygge brugere er der ingen reel ulempe.\n\nDet er værd at være ærlig om, hvem modellen ikke passer til. Har du brug for at ringe til et menneske, når noget driller, eller er du utryg ved at aktivere et eSIM selv, så vælg et selskab med rigtig kundeservice, selvom det koster mere. Prisforskellen på et år er sjældent stor nok til at retfærdiggøre en uge uden telefon.\n\nFor alle andre er den digitale model faktisk en fordel og ikke kun en besparelse. At kunne skifte abonnement, slå datastop til, bestille et eSIM og se sit forbrug i en app uden at tale med nogen er hurtigere end enhver telefonkø. Det er også den model, der gør det nemt at optimere løbende — og den største enkeltbesparelse på mobilabonnement er stadig at flytte ned i datamængde, når man opdager, at man aldrig bruger den, man betaler for.\n\nSom ved alle MVNO'er bør du tjekke netværk og eventuelle hastighedsvilkår på udbyderens egen side før bestilling.",
-      "fordele": [
-        "Lave priser drevet af en ren digital model",
-        "Alt kan klares i app uden ventetid i telefonkø",
-        "Ingen binding",
-        "Hurtig oprettelse med eSIM"
-      ],
-      "ulemper": [
-        "Begrænset telefonisk kundeservice",
-        "Ingen fysiske butikker",
-        "Kræver at du er tryg ved selvbetjening"
-      ],
-      "bedst_til": "Digitalt trygge brugere der vil have lav pris og klare alt selv i en app.",
-      "daarligt_til": "Dig der foretrækker at ringe til nogen, eller vil have hjælp til opsætning.",
-      "faq": [
-        {
-          "sp": "Hvad er eSIM, og skal jeg vælge det?",
-          "sv": "eSIM er et digitalt simkort, der aktiveres med en kode i stedet for et fysisk kort. Det betyder, at du kan være oppe at køre få minutter efter bestilling. De fleste telefoner fra de senere år understøtter det."
-        },
-        {
-          "sp": "Hvordan får jeg hjælp, hvis der opstår problemer?",
-          "sv": "Hos digitale udbydere foregår support typisk via chat og e-mail i appen. Har du brug for hurtig telefonisk hjælp, bør du overveje en udbyder med bemandet kundeservice."
-        },
-        {
-          "sp": "Er billige abonnementer langsommere?",
-          "sv": "Ikke automatisk. Nogle MVNO-aftaler indeholder dog hastighedsloft eller lavere prioritet i myldretiden. Det fremgår af abonnementsvilkårene."
-        }
-      ],
-      "trustpilot": {
-        "score": 4.0,
-        "antal": 9000,
-        "hentet": "2026-07-01"
-      }
-    },
-    {
-      "slug": "flexii",
-      "navn": "Flexii",
-      "logo": "flexii.webp",
-      "netvaerk": "3",
-      "ejer": "Flexii",
-      "hjemmeside": "https://flexii.dk",
-      "grundlagt": 2019,
-      "tagline": "Byg abonnementet som du vil have det",
-      "kort": "Flexii lader dig sammensætte data, tale og ekstra selv, i stedet for at vælge en fast pakke. Godt hvis dit forbrug ikke passer i en standardkasse.",
-      "anmeldelse": "Flexii bygger på en idé, der giver god mening på et marked, hvor de fleste betaler for noget, de ikke bruger: i stedet for at vælge en færdig pakke sætter du selv de enkelte dele sammen. For brugere med skæve behov er det reelt værdifuldt. Har du eksempelvis brug for meget data og næsten ingen taletid, eller omvendt, betaler du hos de fleste andre selskaber for begge dele.\n\nModellen har også en indbygget fælde, som er værd at kende. Når man selv sammensætter, har man en tendens til at vælge for meget af sikkerhedshensyn, og så ender totalprisen over en færdig pakke. Den disciplinerede fremgangsmåde er at kigge på dit faktiske forbrug de seneste tre måneder — det står i din telefons indstillinger — og vælge derefter, ikke efter hvad du forestiller dig, du måske kunne komme til at bruge.\n\nFleksibiliteten betyder også, at Flexii er svær at sammenligne direkte i en pristabel, fordi der ikke findes én pris. Den pris, vi viser i vores tabeller, tager udgangspunkt i en typisk sammensætning. Din egen kan blive både billigere og dyrere.\n\nUd over konfigurationen er Flexii et almindeligt dansk discountabonnement uden binding, uden butikker og med digital kundeservice.",
-      "fordele": [
-        "Du betaler kun for det, du rent faktisk bruger",
-        "God til skæve forbrugsmønstre",
-        "Ingen binding",
-        "Nem justering hvis behovet ændrer sig"
-      ],
-      "ulemper": [
-        "Fristende at vælge for meget og ende dyrere end en fast pakke",
-        "Sværere at sammenligne direkte med andre udbydere",
-        "Digital kundeservice uden butikker"
-      ],
-      "bedst_til": "Dig hvis forbrug ikke passer i en standardpakke — for eksempel meget data og lidt tale.",
-      "daarligt_til": "Dig der bare vil vælge hurtigt og ikke gider tage stilling til enkeltdele.",
-      "faq": [
-        {
-          "sp": "Hvordan finder jeg ud af, hvor meget data jeg bruger?",
-          "sv": "På iPhone under Indstillinger og Mobildata, på Android under Indstillinger og Netværk og internet. Kig på de seneste tre måneder for at få et retvisende billede."
-        },
-        {
-          "sp": "Kan jeg ændre sammensætningen løbende?",
-          "sv": "Ja, det er hele pointen med modellen. Justér når dit forbrug ændrer sig, for eksempel hvis du får wi-fi på arbejdet eller begynder at pendle."
-        },
-        {
-          "sp": "Er det billigere end en fast pakke?",
-          "sv": "Kun hvis du vælger efter dit faktiske forbrug. Vælger du rigeligt af alt for en sikkerheds skyld, ender du typisk dyrere end en færdig pakke."
-        }
-      ],
-      "trustpilot": {
-        "score": 4.1,
-        "antal": 2000,
-        "hentet": "2026-06-11"
-      }
+     "sp": "Kan jeg beholde mit nummer hos CBB?",
+     "sv": "Ja. Nummeret følger med, når du bestiller. CBB henter det automatisk fra dit gamle selskab, og du skal ikke selv opsige noget."
     }
-  ]
+   ],
+   "trustpilot": {
+    "score": 4.5,
+    "antal": 67000,
+    "hentet": "2026-06-11"
+   },
+   "ejer_note": "CBB Mobil ejes af Telenor og kører på Telenors net.",
+   "kundeservice": {
+    "url": null,
+    "tlf": null,
+    "tider": null
+   }
+  },
+  {
+   "slug": "yousee",
+   "navn": "YouSee",
+   "logo": "yousee.webp",
+   "netvaerk": "TDC NET",
+   "ejer": "Nuuday (TDC Group)",
+   "hjemmeside": "https://yousee.dk",
+   "grundlagt": 2007,
+   "tagline": "Danmarks bredeste dækning — hvis du vil betale for den",
+   "kort": "YouSee er premium-valget. Landets mest udbyggede net, musik og streaming inkluderet i flere abonnementer, og fysiske butikker du kan gå ind i.",
+   "anmeldelse": "YouSee er det abonnement, folk vælger, når dækning betyder mere end pris. Selskabet er en del af Nuuday og kører på TDC NET, som gennem årtier er blevet udbygget til at være det mest finmaskede mobilnet i Danmark. I byerne mærker du sjældent forskel på de tre net. Det gør du derimod på Vestjyllands sommerhusområder, i toget over Storebælt, på Bornholm og i kældre og parkeringshuse, hvor TDC NET typisk har en fordel.\n\nPrismæssigt ligger YouSee i den dyre ende, og det er der ingen grund til at pakke ind. Til gengæld får du noget for pengene ud over dækningen. Flere abonnementer inkluderer musikstreaming, og YouSee-kunder får adgang til en række fordele, der har reel værdi, hvis du bruger dem. Det er netop pointen: fordelene er kun penge værd, hvis de erstatter noget, du ellers betaler for. Gør de ikke det, betaler du for luft.\n\nYouSee har desuden noget, ingen discountudbyder kan matche — fysiske butikker. Går din telefon i stykker, eller kan du ikke få et eSIM til at virke, kan du gå ind ad en dør og få hjælp af et menneske. For teknisk usikre brugere og for ældre er det ofte den enkeltfaktor, der betyder mest, og den er svær at værdisætte i en pristabel.\n\nUlempen ud over prisen er, at YouSee historisk har haft en tendens til at prisregulere. Har du haft samme abonnement i tre år uden at kigge på det, er der god sandsynlighed for, at du betaler mere end nye kunder for det samme. Tjek din regning mindst en gang om året.",
+   "fordele": [
+    "Danmarks mest udbyggede mobilnet via TDC NET",
+    "Streaming og musik inkluderet i flere abonnementer",
+    "Fysiske butikker med personlig hjælp",
+    "Stærk til dækning i sommerhusområder, tog og landdistrikter",
+    "Samlerabat hvis du også har bredbånd eller tv"
+   ],
+   "ulemper": [
+    "Klart dyrere end discountbrands på ren data og tale",
+    "Fordelspakker giver kun værdi, hvis du rent faktisk bruger dem",
+    "Tendens til prisstigninger på gamle abonnementer"
+   ],
+   "bedst_til": "Dig der bor eller færdes uden for de større byer, rejser meget i Danmark, eller vil kunne gå ind i en butik med sine problemer.",
+   "daarligt_til": "Dig der bor centralt i en større by, bruger under 20 GB og bare vil have den laveste pris.",
+   "faq": [
+    {
+     "sp": "Har YouSee bedre dækning end de billige selskaber?",
+     "sv": "YouSee kører på TDC NET, som er det mest udbyggede mobilnet i Danmark. I byerne er forskellen til Telenor og 3 lille, mens den kan være mærkbar i landdistrikter, sommerhusområder og indendørs i ældre bygninger."
+    },
+    {
+     "sp": "Er YouSee prisen værd?",
+     "sv": "Det afhænger af, hvor du bor, og om du bruger de inkluderede fordele. Bor du centralt og bruger ikke streaming, betaler du typisk et markant tillæg for dækning, du ikke får glæde af."
+    },
+    {
+     "sp": "Hvem ejer YouSee?",
+     "sv": "YouSee er en del af Nuuday, som også står bag Telmore. Netværket drives af TDC NET."
+    }
+   ],
+   "trustpilot": {
+    "score": 2.4,
+    "antal": 69406,
+    "hentet": "2026-07-14"
+   },
+   "ejer_note": "YouSee er en del af Nuuday, TDC Groups kundevendte selskab. Samme koncern ejer Telmore og eesy — de tre kører alle på TDC NET.",
+   "kundeservice": {
+    "url": null,
+    "tlf": null,
+    "tider": null
+   }
+  },
+  {
+   "slug": "telmore",
+   "navn": "Telmore",
+   "logo": "telmore.webp",
+   "netvaerk": "TDC NET",
+   "ejer": "Nuuday (TDC Group)",
+   "hjemmeside": "https://telmore.dk",
+   "grundlagt": 2000,
+   "tagline": "Streaming samlet i mobilregningen",
+   "kort": "Telmore kører på TDC NET og har bygget hele sin identitet på at pakke streamingtjenester ind i abonnementet. Regnestykket afhænger helt af, hvad du allerede betaler for.",
+   "anmeldelse": "Telmore er det mest interessante abonnement på det danske marked at regne på, fordi prisen sjældent kan sammenlignes direkte med andres. Selskabet er som YouSee en del af Nuuday og kører på TDC NET, så dækningen er i topklasse. Men den egentlige forskel ligger i Telmore Play-konceptet, hvor streamingtjenester indgår i abonnementsprisen.\n\nRegnestykket er enkelt og bør laves før bestilling, ikke efter. Læg sammen, hvad du i dag betaler for de tjenester, der indgår. Betaler du allerede for tre af dem, og indgår de i pakken, kan et Telmore-abonnement til en tilsyneladende høj månedspris reelt være billigere end et discountabonnement plus separate abonnementer. Betaler du derimod for streamingtjenester, du ikke bruger, eller deler du familieabonnementer med andre, forsvinder fordelen, og så betaler du mest for dækning.\n\nDet er værd at være opmærksom på, at pakker og indhold ændrer sig. En streamingtjeneste kan ryge ud af pakken ved en aftaleudløb, og så står du med et abonnement, du valgte af én grund, som ikke længere gælder. Sæt en påmindelse i kalenderen en gang om året og genberegn.\n\nTelmore er som resten af Nuuday-familien ikke billigst på rå data. Vil du have 50 GB og intet andet, findes der abonnementer til under det halve. Det er ikke en kritik af Telmore — det er bare to forskellige produkter, der tilfældigvis begge hedder mobilabonnement.",
+   "fordele": [
+    "Kører på TDC NET med meget stærk dækning",
+    "Streamingtjenester inkluderet kan give reel besparelse",
+    "Én samlet regning i stedet for fem forskellige abonnementer",
+    "Ingen lang binding på de fleste produkter"
+   ],
+   "ulemper": [
+    "Svært at prissammenligne direkte med rene mobilabonnementer",
+    "Indholdet i pakkerne kan ændre sig over tid",
+    "Dyrt hvis du ikke bruger de inkluderede tjenester"
+   ],
+   "bedst_til": "Dig der allerede betaler for flere streamingtjenester og gerne vil samle det hele ét sted.",
+   "daarligt_til": "Dig der kun vil have data og tale til laveste pris, eller deler streaming med familien i forvejen.",
+   "faq": [
+    {
+     "sp": "Kan det betale sig med streaming i mobilabonnementet?",
+     "sv": "Det afhænger af, hvad du betaler i dag. Læg dine nuværende streamingudgifter sammen med prisen på et billigt mobilabonnement, og sammenlign med Telmores samlede pris. Bruger du to eller flere af de inkluderede tjenester, falder regnestykket ofte ud til Telmores fordel."
+    },
+    {
+     "sp": "Hvilket net bruger Telmore?",
+     "sv": "Telmore kører på TDC NET, samme netværk som YouSee. Dækningen er dermed blandt de bedste i Danmark."
+    },
+    {
+     "sp": "Er Telmore og YouSee det samme?",
+     "sv": "De er søsterselskaber under Nuuday og deler netværk, men de er separate brands med forskellige abonnementer, priser og kundeservice."
+    }
+   ],
+   "trustpilot": {
+    "score": 4.1,
+    "antal": 61354,
+    "hentet": "2026-08-01"
+   },
+   "ejer_note": "Telmore blev grundlagt i 2000 som Danmarks første rent onlinebaserede mobilselskab og opkøbt af TDC i 2003. I dag ejet af Nuuday sammen med YouSee og eesy.",
+   "kundeservice": {
+    "url": null,
+    "tlf": null,
+    "tider": null
+   }
+  },
+  {
+   "slug": "oister",
+   "navn": "Oister",
+   "logo": "oister.webp",
+   "netvaerk": "3",
+   "ejer": "Hi3G Denmark",
+   "hjemmeside": "https://oister.dk",
+   "grundlagt": 2005,
+   "tagline": "Meget data for pengene",
+   "kort": "Oister er 3's prisbrand og har historisk været stedet, hvor man fik flest gigabyte pr. krone. Stærk i byerne, mere blandet i tyndt befolkede områder.",
+   "anmeldelse": "Oister er ejet af Hi3G og kører på 3's netværk. Det er vigtigt at forstå, fordi 3's net har en anden profil end de to andre. I byer og tætbefolkede områder leverer 3 høje hastigheder og god kapacitet, og 3 var tidligt ude med både 4G og 5G. Til gengæld er nettet historisk mindre finmasket i landdistrikter, langs kysten og i visse indendørsmiljøer.\n\nDet betyder i praksis, at Oister ofte er et rigtig godt køb for storbybrugere og et mere tvivlsomt køb for dem, der bor på landet eller pendler gennem områder med svag dækning. Vores anbefaling er entydig: tjek dækningskortet på din faktiske adresse og på din arbejdsplads, før du bestiller. Det tager to minutter og er den eneste måde at undgå fortrydelse.\n\nDer, hvor Oister virkelig er stærk, er på datamængde pr. krone. Selskabet har gennem årene presset markedet i den mellemhøje datakategori, hvor man får rigeligt med gigabyte uden at betale premium-pris. Bruger du 30-50 GB om måneden — altså streamer video på farten, bruger telefonen som hotspot til laptop, eller har børn på abonnementet — er Oister typisk blandt de billigste veje til det.\n\nSom hos de fleste discountbrands er kundeservice digital først. Der er ingen butikker at gå ind i, og hjælp foregår via chat, telefon og selvbetjening.",
+   "fordele": [
+    "Ofte flest gigabyte for pengene i mellem- og højdatakategorien",
+    "Høje hastigheder i byer og tætbefolkede områder",
+    "Ingen binding på hovedparten af abonnementerne",
+    "Enkel prisstruktur uden mange tillæg"
+   ],
+   "ulemper": [
+    "3's net er svagere i landdistrikter og visse kystområder",
+    "Ingen fysiske butikker",
+    "Færre fordele og tillægsydelser end premiumbrands"
+   ],
+   "bedst_til": "Storbybrugere med højt dataforbrug, der vil have mange gigabyte til lav pris.",
+   "daarligt_til": "Dig der bor eller pendler i tyndt befolkede områder, hvor 3's dækning er svagere.",
+   "faq": [
+    {
+     "sp": "Hvilket netværk bruger Oister?",
+     "sv": "Oister kører på 3's netværk, da selskabet er ejet af Hi3G Denmark. Dækningen er stærk i byerne og mere varierende i landdistrikter."
+    },
+    {
+     "sp": "Er Oister godt til meget data?",
+     "sv": "Ja, Oister er typisk blandt de billigste på abonnementer med 30 GB og opefter. Tjek dog dækningen på din adresse først, hvis du bor uden for en større by."
+    },
+    {
+     "sp": "Har Oister 5G?",
+     "sv": "Ja, 5G er tilgængeligt på flere af Oisters abonnementer, men det fremgår af det enkelte abonnement, om det er inkluderet."
+    }
+   ],
+   "trustpilot": {
+    "score": 4.1,
+    "antal": 29000,
+    "hentet": "2026-06-11"
+   },
+   "ejer_note": "Oister ejes af Hi3G, samme selskab som står bag 3, og kører på 3's net.",
+   "kundeservice": {
+    "url": null,
+    "tlf": null,
+    "tider": null
+   }
+  },
+  {
+   "slug": "lebara",
+   "navn": "Lebara",
+   "logo": "lebara.webp",
+   "netvaerk": "Telenor",
+   "ejer": "Lebara Group",
+   "hjemmeside": "https://www.lebara.dk",
+   "grundlagt": 2001,
+   "tagline": "Bygget til opkald til udlandet",
+   "kort": "Lebara har specialiseret sig i internationale opkald og er ofte det klart billigste valg, hvis du ringer meget til familie uden for Danmark.",
+   "anmeldelse": "Lebara er en international MVNO, der har bygget hele sin forretning på ét behov, som de fleste danske selskaber behandler stedmoderligt: opkald til udlandet. Ringer du fast til familie i Tyrkiet, Polen, Pakistan, Filippinerne eller Rumænien, er Lebara som regel det billigste og enkleste valg på markedet, og forskellen til et almindeligt dansk abonnement kan løbe op i flere hundrede kroner om måneden.\n\nDet er værd at forstå forskellen mellem de to ting, folk blander sammen. EU-roaming — altså at bruge dit danske abonnement, mens du selv er i EU — er reguleret og indgår i stort set alle danske abonnementer. At ringe fra Danmark til et nummer i udlandet er noget helt andet, og det er her, priserne varierer voldsomt fra selskab til selskab. Det er den anden ting, Lebara er bygget til.\n\nUden for den specialisering er Lebara et fornuftigt, men ikke exceptionelt, discountabonnement. Priserne på ren data er konkurrencedygtige uden at være markedets laveste, og du får en enkel struktur uden binding.\n\nVær opmærksom på, at inkluderede minutter til udlandet ofte gælder specifikke lande og specifikke nummertyper. Opkald til mobilnumre og fastnetnumre prissættes forskelligt i mange lande, og et abonnement der ser perfekt ud, kan vise sig kun at dække fastnet. Tjek altid landelisten for netop de numre, du rent faktisk ringer til.",
+   "fordele": [
+    "Markedets stærkeste priser på opkald til mange lande",
+    "Ingen binding og enkel prisstruktur",
+    "Fornuftige datamængder til lav pris",
+    "Flersproget kundeservice"
+   ],
+   "ulemper": [
+    "Inkluderede udlandsminutter dækker kun udvalgte lande og nummertyper",
+    "Ikke billigst på rene datamængder",
+    "Færre tillægsydelser end de store selskaber"
+   ],
+   "bedst_til": "Dig der ringer fast til familie eller venner i udlandet fra Danmark.",
+   "daarligt_til": "Dig der kun bruger telefonen i Danmark og udelukkende jagter flest gigabyte pr. krone.",
+   "faq": [
+    {
+     "sp": "Er Lebara billigst til opkald til udlandet?",
+     "sv": "Lebara er ofte blandt de billigste på opkald fra Danmark til udlandet, men det afhænger af landet. Tjek altid, om netop dit land og nummertype — mobil eller fastnet — er dækket af de inkluderede minutter."
+    },
+    {
+     "sp": "Hvad er forskellen på roaming og opkald til udlandet?",
+     "sv": "Roaming er, når du selv befinder dig i udlandet og bruger dit danske abonnement. Opkald til udlandet er, når du ringer fra Danmark til et udenlandsk nummer. De to ting prissættes helt forskelligt."
+    },
+    {
+     "sp": "Hvilket net bruger Lebara i Danmark?",
+     "sv": "Lebara er en MVNO, der lejer sig ind på et af de danske netværk. Se den aktuelle netværksangivelse på Lebaras egen side, da MVNO-aftaler kan ændre sig over tid."
+    }
+   ],
+   "trustpilot": {
+    "score": 4.9,
+    "antal": 15000,
+    "hentet": "2026-06-11"
+   },
+   "ejer_note": null,
+   "kundeservice": {
+    "url": null,
+    "tlf": null,
+    "tider": null
+   }
+  },
+  {
+   "slug": "greentel",
+   "navn": "Greentel",
+   "logo": "greentel.webp",
+   "netvaerk": "Telenor",
+   "ejer": "Greentel",
+   "hjemmeside": "https://greentel.dk",
+   "grundlagt": 2010,
+   "tagline": "Dansk discount uden fis",
+   "kort": "Greentel er et dansk discountselskab med skarpe priser og en gennemført enkel produktpalette. Ingen pakker, ingen bundling, bare abonnement.",
+   "anmeldelse": "Greentel hører til den gruppe af danske MVNO'er, der har valgt den enkle vej: få abonnementer, lave priser, ingen binding og ingen forsøg på at sælge dig streaming, forsikring eller tv oveni. For en overraskende stor gruppe forbrugere er det præcis det rigtige produkt, fordi de fleste af de fordele, de store selskaber tager sig betalt for, aldrig bliver brugt.\n\nStyrken ved den type selskab er gennemsigtighed. Prislisten er kort nok til, at du kan overskue den på et halvt minut, og du behøver ikke regne på, hvad en pakke er værd. Svagheden er, at der ikke er nogen buffer, hvis noget går galt. Kundeservice er digital og lille, og du kan ikke gå ind i en butik. Skal din telefon sættes op af en anden, eller er du utryg ved selv at håndtere et simkort, er en discountudbyder sjældent det rigtige valg uanset prisen.\n\nSom ved alle MVNO'er er det centrale spørgsmål, hvilket net selskabet lejer sig ind på, og under hvilke vilkår. Nogle MVNO-aftaler giver adgang til fuld hastighed og 5G, andre begrænser til 4G eller nedprioriterer trafikken i myldretiden. Det står sjældent med store bogstaver, men det er den vigtigste enkeltoplysning, når man vælger discount. Tjek altid netværk og eventuel hastighedsbegrænsning på udbyderens egen produktside, før du bestiller.",
+   "fordele": [
+    "Meget lave priser på simple abonnementer",
+    "Overskuelig prisliste uden pakker og tillæg",
+    "Ingen binding",
+    "Dansk selskab med dansksproget kundeservice"
+   ],
+   "ulemper": [
+    "Ingen fysiske butikker og begrænset kundeservice",
+    "Ingen streaming, forsikring eller andre fordele",
+    "Netværksvilkår og eventuelle hastighedsbegrænsninger bør tjekkes"
+   ],
+   "bedst_til": "Dig der ved præcis, hvad du har brug for, og ikke vil betale for noget andet.",
+   "daarligt_til": "Dig der har brug for hjælp til opsætning eller vil have fordele ud over selve abonnementet.",
+   "faq": [
+    {
+     "sp": "Er billige selskaber som Greentel dårligere?",
+     "sv": "Ikke nødvendigvis. Discountselskaber lejer sig ind på de samme master som de store. Forskellen ligger typisk i kundeservice, tillægsydelser og i nogle tilfælde prioritering af trafik i myldretiden."
+    },
+    {
+     "sp": "Hvad er en MVNO?",
+     "sv": "En MVNO er et selskab uden eget mobilnet, der lejer kapacitet hos en netværksejer. I Danmark er netværksejerne TDC NET, Telenor og 3. Din dækning bestemmes af det net, din udbyder lejer sig ind på."
+    },
+    {
+     "sp": "Kan jeg beholde mit nummer?",
+     "sv": "Ja. Nummerportering er en rettighed i Danmark, og din nye udbyder klarer flytningen for dig."
+    }
+   ],
+   "trustpilot": {
+    "score": 4.3,
+    "antal": 959,
+    "hentet": "2026-06-11"
+   },
+   "ejer_note": null,
+   "kundeservice": {
+    "url": null,
+    "tlf": null,
+    "tider": null
+   }
+  },
+  {
+   "slug": "duka",
+   "navn": "Duka",
+   "logo": "duka.webp",
+   "netvaerk": "MVNO",
+   "ejer": "Duka",
+   "hjemmeside": "https://duka.dk",
+   "grundlagt": 2015,
+   "tagline": "Enkelt abonnement, enkel pris",
+   "kort": "Duka satser på en stram produktpalette og lave priser. Et solidt valg hvis du vil have et abonnement, du aldrig behøver tænke over igen.",
+   "anmeldelse": "Duka tilhører den kategori af danske udbydere, der har droppet ambitionen om at være alt for alle. Der er ikke mange abonnementer at vælge imellem, og det er en fordel snarere end en mangel. Undersøgelser af forbrugeradfærd peger konsekvent på, at for mange valgmuligheder fører til dårligere beslutninger, og på et marked med flere hundrede abonnementer er en kort liste en reel service.\n\nProduktet er, hvad det ser ud til at være: data, tale og sms til en lav fast pris uden binding. Der er ingen streamingpakke, ingen fordelsklub og ingen forsikring. Til gengæld er der heller ingen ubehagelige overraskelser på regningen, forudsat at du holder dig inden for det inkluderede.\n\nDet punkt er værd at dvæle ved, fordi det er her, discountabonnementer koster folk penge. Overskrider du din datamængde, kan overforbrug være dyrt, og hos selskaber uden automatisk datastop løber det hurtigt. Slå datastop til med det samme, uanset hvilken udbyder du vælger. Det er den enkeltindstilling, der sparer flest danskere for flest penge, og den tager tredive sekunder at aktivere.\n\nEr du i tvivl om, hvor meget data du reelt bruger, kan du finde det i din telefons indstillinger under dataforbrug. Kig på de seneste tre måneder, ikke den seneste uge, og læg lidt til.",
+   "fordele": [
+    "Lav fast pris uden binding",
+    "Kort og overskuelig produktpalette",
+    "Ingen skjulte pakker eller tillægssalg",
+    "Nem selvbetjening"
+   ],
+   "ulemper": [
+    "Ingen tillægsydelser eller fordele",
+    "Begrænset kundeservice sammenlignet med de store",
+    "Færre valgmuligheder hvis du har særlige behov"
+   ],
+   "bedst_til": "Dig der vil have et billigt abonnement, du kan glemme alt om.",
+   "daarligt_til": "Dig med særlige behov som meget udlandsbrug, familieabonnementer eller streaming.",
+   "faq": [
+    {
+     "sp": "Hvad sker der, hvis jeg bruger mere data end inkluderet?",
+     "sv": "Det afhænger af udbyderen. Nogle stopper forbindelsen, andre sætter hastigheden ned, og andre igen opkræver pr. påbegyndt megabyte. Slå datastop til i selvbetjeningen for at undgå overraskelser."
+    },
+    {
+     "sp": "Hvor meget data har jeg brug for?",
+     "sv": "De fleste danskere klarer sig med 10-30 GB. Streamer du meget video på farten eller bruger telefonen som hotspot, skal du typisk op i 50 GB eller fri data."
+    },
+    {
+     "sp": "Er der binding hos Duka?",
+     "sv": "Duka markedsfører sig på abonnementer uden binding. Tjek de aktuelle vilkår ved bestilling, da det kan variere fra produkt til produkt."
+    }
+   ],
+   "trustpilot": {
+    "score": 4.7,
+    "antal": 3979,
+    "hentet": "2026-07-01"
+   },
+   "ejer_note": null,
+   "kundeservice": {
+    "url": null,
+    "tlf": null,
+    "tider": null
+   }
+  },
+  {
+   "slug": "lyca-mobile",
+   "navn": "Lyca Mobile",
+   "logo": "lyca-mobile.webp",
+   "netvaerk": "MVNO",
+   "ejer": "Lycamobile Group",
+   "hjemmeside": "https://www.lycamobile.dk",
+   "grundlagt": 2006,
+   "tagline": "International specialist med taletidsarv",
+   "kort": "Lyca Mobile er som Lebara bygget til brugere med stærke bånd til udlandet, og selskabet er stort i taletidssegmentet.",
+   "anmeldelse": "Lyca Mobile opererer i mere end tyve lande og har i Danmark en profil, der minder om Lebaras: konkurrencedygtige priser på opkald til udlandet, enkle abonnementer og en betydelig position i taletidssegmentet.\n\nTaletid fortjener en bemærkning, fordi det er den løsning, mange overser. Med taletid betaler du forud og kan ikke overskride, hvilket gør det til et af de sikreste valg til børn, til pårørende der ikke skal kunne få en overraskelsesregning, og til dig der kun bruger telefonen sporadisk. Ulempen er, at pris pr. gigabyte typisk er højere end på et abonnement, og at du selv skal huske at fylde op.\n\nPå abonnementssiden er Lyca et fornuftigt discountvalg med de forbehold, der gælder for alle MVNO'er: netværksadgang og eventuelle hastighedsvilkår er den afgørende oplysning, og den skal findes på udbyderens egen produktside.\n\nRinger du meget til udlandet, gælder samme råd som ved Lebara. Sammenlign ikke på antal minutter alene, men på om netop dine lande og nummertyper er med. To abonnementer med 1.000 udlandsminutter kan være vidt forskellige produkter, hvis det ene kun dækker fastnet i ti lande, og det andet dækker mobil i halvtreds.",
+   "fordele": [
+    "Skarpe priser på internationale opkald",
+    "Stærkt udvalg af taletidsløsninger uden risiko for overforbrug",
+    "Ingen binding på abonnementer",
+    "Flersproget kundeservice"
+   ],
+   "ulemper": [
+    "Højere pris pr. gigabyte på taletid end på abonnement",
+    "Landelister for inkluderede minutter kræver nærlæsning",
+    "Begrænsede tillægsydelser"
+   ],
+   "bedst_til": "Dig der ringer til udlandet, eller som vil have taletid uden risiko for overforbrug.",
+   "daarligt_til": "Dig der bruger meget data og vil have lavest mulig pris pr. gigabyte.",
+   "faq": [
+    {
+     "sp": "Er taletid billigere end abonnement?",
+     "sv": "Sjældent pr. gigabyte, men taletid fjerner risikoen for overforbrug helt. Det gør det til et godt valg til børn og til dig, der bruger telefonen meget lidt."
+    },
+    {
+     "sp": "Kan jeg skifte fra taletid til abonnement?",
+     "sv": "Ja, og du kan beholde dit nummer. Kontakt udbyderen, eller bestil abonnementet med nummerflytning."
+    },
+    {
+     "sp": "Dækker udlandsminutter alle lande?",
+     "sv": "Nej. Inkluderede minutter gælder typisk en bestemt liste af lande og skelner ofte mellem opkald til mobilnumre og fastnetnumre. Tjek listen for netop dine numre."
+    }
+   ],
+   "trustpilot": {
+    "score": 2.5,
+    "antal": 2000,
+    "hentet": "2025-10-06"
+   },
+   "ejer_note": null,
+   "kundeservice": {
+    "url": null,
+    "tlf": null,
+    "tider": null
+   }
+  },
+  {
+   "slug": "eesy",
+   "navn": "eesy",
+   "logo": "eesy.webp",
+   "netvaerk": "TDC NET",
+   "ejer": "Nuuday (TDC Group)",
+   "hjemmeside": "https://eesy.dk",
+   "grundlagt": 2018,
+   "tagline": "Digitalt først, billigt hele vejen",
+   "kort": "eesy er bygget digitalt fra bunden. Alt foregår i app og selvbetjening, og prisen afspejler, at der ikke er butikker og callcentre at betale for.",
+   "anmeldelse": "eesy er et eksempel på den nyere generation af danske mobiludbydere, hvor hele forretningen er digital. Der er ingen butikker, minimal telefonisk kundeservice og en app, der er tænkt som det primære kontaktpunkt. Den model gør produktet billigere, og for digitalt trygge brugere er der ingen reel ulempe.\n\nDet er værd at være ærlig om, hvem modellen ikke passer til. Har du brug for at ringe til et menneske, når noget driller, eller er du utryg ved at aktivere et eSIM selv, så vælg et selskab med rigtig kundeservice, selvom det koster mere. Prisforskellen på et år er sjældent stor nok til at retfærdiggøre en uge uden telefon.\n\nFor alle andre er den digitale model faktisk en fordel og ikke kun en besparelse. At kunne skifte abonnement, slå datastop til, bestille et eSIM og se sit forbrug i en app uden at tale med nogen er hurtigere end enhver telefonkø. Det er også den model, der gør det nemt at optimere løbende — og den største enkeltbesparelse på mobilabonnement er stadig at flytte ned i datamængde, når man opdager, at man aldrig bruger den, man betaler for.\n\nSom ved alle MVNO'er bør du tjekke netværk og eventuelle hastighedsvilkår på udbyderens egen side før bestilling.",
+   "fordele": [
+    "Lave priser drevet af en ren digital model",
+    "Alt kan klares i app uden ventetid i telefonkø",
+    "Ingen binding",
+    "Hurtig oprettelse med eSIM"
+   ],
+   "ulemper": [
+    "Begrænset telefonisk kundeservice",
+    "Ingen fysiske butikker",
+    "Kræver at du er tryg ved selvbetjening"
+   ],
+   "bedst_til": "Digitalt trygge brugere der vil have lav pris og klare alt selv i en app.",
+   "daarligt_til": "Dig der foretrækker at ringe til nogen, eller vil have hjælp til opsætning.",
+   "faq": [
+    {
+     "sp": "Hvad er eSIM, og skal jeg vælge det?",
+     "sv": "eSIM er et digitalt simkort, der aktiveres med en kode i stedet for et fysisk kort. Det betyder, at du kan være oppe at køre få minutter efter bestilling. De fleste telefoner fra de senere år understøtter det."
+    },
+    {
+     "sp": "Hvordan får jeg hjælp, hvis der opstår problemer?",
+     "sv": "Hos digitale udbydere foregår support typisk via chat og e-mail i appen. Har du brug for hurtig telefonisk hjælp, bør du overveje en udbyder med bemandet kundeservice."
+    },
+    {
+     "sp": "Er billige abonnementer langsommere?",
+     "sv": "Ikke automatisk. Nogle MVNO-aftaler indeholder dog hastighedsloft eller lavere prioritet i myldretiden. Det fremgår af abonnementsvilkårene."
+    }
+   ],
+   "trustpilot": {
+    "score": 4.0,
+    "antal": 9000,
+    "hentet": "2026-07-01"
+   },
+   "ejer_note": "eesy blev stiftet af Nuuday i september 2020 som koncernens lavprisselskab. Samme ejer som YouSee og Telmore, samme net.",
+   "kundeservice": {
+    "url": null,
+    "tlf": null,
+    "tider": null
+   }
+  },
+  {
+   "slug": "flexii",
+   "navn": "Flexii",
+   "logo": "flexii.webp",
+   "netvaerk": "3",
+   "ejer": "Flexii",
+   "hjemmeside": "https://flexii.dk",
+   "grundlagt": 2019,
+   "tagline": "Byg abonnementet som du vil have det",
+   "kort": "Flexii lader dig sammensætte data, tale og ekstra selv, i stedet for at vælge en fast pakke. Godt hvis dit forbrug ikke passer i en standardkasse.",
+   "anmeldelse": "Flexii bygger på en idé, der giver god mening på et marked, hvor de fleste betaler for noget, de ikke bruger: i stedet for at vælge en færdig pakke sætter du selv de enkelte dele sammen. For brugere med skæve behov er det reelt værdifuldt. Har du eksempelvis brug for meget data og næsten ingen taletid, eller omvendt, betaler du hos de fleste andre selskaber for begge dele.\n\nModellen har også en indbygget fælde, som er værd at kende. Når man selv sammensætter, har man en tendens til at vælge for meget af sikkerhedshensyn, og så ender totalprisen over en færdig pakke. Den disciplinerede fremgangsmåde er at kigge på dit faktiske forbrug de seneste tre måneder — det står i din telefons indstillinger — og vælge derefter, ikke efter hvad du forestiller dig, du måske kunne komme til at bruge.\n\nFleksibiliteten betyder også, at Flexii er svær at sammenligne direkte i en pristabel, fordi der ikke findes én pris. Den pris, vi viser i vores tabeller, tager udgangspunkt i en typisk sammensætning. Din egen kan blive både billigere og dyrere.\n\nUd over konfigurationen er Flexii et almindeligt dansk discountabonnement uden binding, uden butikker og med digital kundeservice.",
+   "fordele": [
+    "Du betaler kun for det, du rent faktisk bruger",
+    "God til skæve forbrugsmønstre",
+    "Ingen binding",
+    "Nem justering hvis behovet ændrer sig"
+   ],
+   "ulemper": [
+    "Fristende at vælge for meget og ende dyrere end en fast pakke",
+    "Sværere at sammenligne direkte med andre udbydere",
+    "Digital kundeservice uden butikker"
+   ],
+   "bedst_til": "Dig hvis forbrug ikke passer i en standardpakke — for eksempel meget data og lidt tale.",
+   "daarligt_til": "Dig der bare vil vælge hurtigt og ikke gider tage stilling til enkeltdele.",
+   "faq": [
+    {
+     "sp": "Hvordan finder jeg ud af, hvor meget data jeg bruger?",
+     "sv": "På iPhone under Indstillinger og Mobildata, på Android under Indstillinger og Netværk og internet. Kig på de seneste tre måneder for at få et retvisende billede."
+    },
+    {
+     "sp": "Kan jeg ændre sammensætningen løbende?",
+     "sv": "Ja, det er hele pointen med modellen. Justér når dit forbrug ændrer sig, for eksempel hvis du får wi-fi på arbejdet eller begynder at pendle."
+    },
+    {
+     "sp": "Er det billigere end en fast pakke?",
+     "sv": "Kun hvis du vælger efter dit faktiske forbrug. Vælger du rigeligt af alt for en sikkerheds skyld, ender du typisk dyrere end en færdig pakke."
+    }
+   ],
+   "trustpilot": {
+    "score": 4.1,
+    "antal": 2000,
+    "hentet": "2026-06-11"
+   },
+   "ejer_note": null,
+   "kundeservice": {
+    "url": null,
+    "tlf": null,
+    "tider": null
+   }
+  }
+ ]
 }

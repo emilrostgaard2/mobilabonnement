@@ -3,5 +3,10 @@
   "navn": "Telemobil",
   "udgivet": "2026-08-13",
   "data_verificeret": true,
-  "priskilde": "Adtraction data feed"
+  "priskilde": "Adtraction data feed",
+  "firma": {
+    "navn": "Emro Media",
+    "cvr": "46727533",
+    "cvr_url": "https://datacvr.virk.dk/enhed/virksomhed/46727533"
+  }
 }
