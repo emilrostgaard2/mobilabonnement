@@ -1998,3 +1998,27 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .score-god b{background:var(--signal)}     .score-god span{color:var(--signal-dyb)}
 .score-ok  b{background:#B07A1E}           .score-ok span{color:#8A5F14}
 .score-lav b{background:#9AA3B8}           .score-lav span{color:var(--graa)}
+
+/* Forfatternavnet i gennemgangslinjen skal se klikbart ud uden at støje */
+.gennemgang a[rel="author"]{color:inherit;text-decoration:underline;
+  text-decoration-color:var(--graa-lys);text-underline-offset:2px}
+.gennemgang a[rel="author"]:hover{text-decoration-color:var(--signal);
+  color:var(--signal-dyb)}
+
+/* ==========================================================================
+   Driftskort i heroen — bekræfter på et halvt sekund, at man er rigtigt sted
+   ========================================================================== */
+.driftkort{background:#fff;border:1px solid #E6EAF5;border-radius:20px;
+  box-shadow:0 1px 2px rgba(11,16,38,.04),0 12px 32px -12px rgba(11,16,38,.16);
+  padding:1.4rem;text-align:center}
+.dk-logo{height:40px;width:auto;max-width:170px;object-fit:contain;
+  margin:0 auto .9rem;display:block}
+.dk-net{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;
+  color:var(--graa);background:#F5F8FF;border-radius:999px;padding:.3rem .8rem;
+  margin-bottom:1rem}
+.dk-net b{color:var(--blaek);font-family:var(--font-tal);font-size:.82rem}
+.dk-knap{display:block;background:var(--signal);color:#fff;text-decoration:none;
+  border-radius:var(--r-m);padding:.7rem 1rem;font-weight:600;font-size:.9rem;
+  transition:background .15s}
+.dk-knap:hover{background:var(--signal-dyb)}
+.dk-note{margin:.7rem 0 0;font-size:.74rem;color:var(--graa)}

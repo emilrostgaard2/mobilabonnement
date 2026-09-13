@@ -572,8 +572,10 @@ def forfatterboks(gennemgået=None):
 
 
 def gennemgangslinje(opdateret, fakta="Alle priser kontrolleret mod udbydernes egne sider"):
+    """Forfatternavnet linker til profilsiden. Et navn uden link kan ikke
+    efterprøves — og så er det ikke et tillidssignal, bare en påstand."""
     return f"""<div class="gennemgang">
-  <span>Skrevet af <b>{e(FORFATTER['navn'])}</b></span>
+  <span>Skrevet af <a href="/om/emil-rostgaard/" rel="author"><b>{e(FORFATTER['navn'])}</b></a></span>
   <span>Opdateret <b>{e(opdateret)}</b></span>
   <span>{e(fakta)}</span>
 </div>"""

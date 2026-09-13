@@ -6738,7 +6738,8 @@ Læs mere om <a href="/metode/">vores metode</a>.</p>
                        billede=bb_herovisual(udvalg)),
         efter_hero="", krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, f"Spørgsmål om {d['h1'].lower()}"),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, titel, besk))],
     ), prioritet="0.8", hyppighed="daily")
 
 
@@ -6913,7 +6914,11 @@ ikke har adgang til priser for. Læs mere om
         indhold=krop + faqblok(faq), toc=False,
         jsonld=[graf(ORG, PERSON, WEBSITE,
                      krummeld([("/", "Forside"), ("/bredbaand/", "Bredbånd")]),
-                     faqld(faq))],
+                     faqld(faq),
+                     artikelld("/bredbaand/", "Bredbånd sammenlignet",
+                               "Sammenligning af danske bredbåndsabonnementer på "
+                               "hastighed, teknologi og prisen over hele det "
+                               "første år."))],
     ), prioritet="0.9", hyppighed="daily")
 
     for noegle, navn, sti, besk in TEK_SIDER:
@@ -7079,7 +7084,9 @@ hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
                        billede=bb_herovisual(udvalg)),
         efter_hero="", krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, f"Spørgsmål om {navn.lower()}"),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(f"/bredbaand/{sti}/", f"Sammenlign {navn.lower()}",
+                               besk))],
     ), prioritet="0.8", hyppighed="daily")
 
 
@@ -8302,7 +8309,11 @@ for hvert enkelt abonnement kan foldes ud i tabellerne.</p>
                        "kundetilfredshed. Beregnet maskinelt, ikke redigeret."),
         efter_hero="", krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, "Spørgsmål om Telemobil-scoren"),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld("/telemobil-score/",
+                               "Telemobil-scoren — sådan vurderer vi mobilabonnementer",
+                               "Metoden bag rangeringen af mobilabonnementer på "
+                               "Telemobil, med vægtning og beregningsgrundlag."))],
     ), prioritet="0.7", hyppighed="monthly")
 
 # ============================================================ DRIFTSSTATUS
@@ -8348,14 +8359,39 @@ DRIFT_TJEK = [
 ]
 
 
+def drift_logo(u):
+    """Selskabets logo som visuelt element i heroen på driftssiden.
+
+    Folk lander her i panik, fordi mobilen ikke virker. Et logo bekræfter på
+    et halvt sekund, at de er landet det rigtige sted."""
+    sti = os.path.join(ROD, "assets", "img", "logoer", u["slug"] + ".webp")
+    if not os.path.exists(sti):
+        return ""
+    net = DRIFT_SIDER.get(u["slug"], ("", ""))[1]
+    return f"""<div class="driftkort">
+  <img src="/assets/img/logoer/{u['slug']}.webp" alt="{e(u['navn'])} logo"
+       height="40" loading="eager" decoding="async" class="dk-logo">
+  <div class="dk-net"><span>Kører på</span><b>{e(net)}</b></div>
+  <a class="dk-knap" href="{e(DRIFT_SIDER[u['slug']][0])}"
+     rel="nofollow noopener" target="_blank">Åbn officiel driftsinfo →</a>
+  <p class="dk-note">Opdateres i realtid af {e(u['navn'])}</p>
+</div>"""
+
+
 def drifttabel():
     raekker = ""
     for u in UDBYDERE:
         if u["slug"] not in DRIFT_SIDER:
             continue
         url, net = DRIFT_SIDER[u["slug"]]
+        logo = os.path.join(ROD, "assets", "img", "logoer", u["slug"] + ".webp")
+        logohtml = (f'<img src="/assets/img/logoer/{u["slug"]}.webp" '
+                    f'alt="{e(u["navn"])} logo" loading="lazy" height="20" '
+                    f'decoding="async" class="bb-logo">'
+                    if os.path.exists(logo) else "")
         raekker += f"""<tr>
-  <td><a href="/driftsstatus/{u['slug']}/"><strong>{e(u['navn'])}</strong></a></td>
+  <td class="bb-udbyder"><a href="/driftsstatus/{u['slug']}/">{logohtml}
+      <span class="tabel-under">{e(u['navn'])}</span></a></td>
   <td>{e(net)}</td>
   <td><a href="{e(url)}" rel="nofollow noopener" target="_blank">Officiel
       driftsinfo</a></td>
@@ -8479,12 +8515,52 @@ virker</a>.</p>
                        "ting, du selv kan tjekke på to minutter."),
         efter_hero="", krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, "Spørgsmål om driftsforstyrrelser"),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld("/driftsstatus/", "Driftsstatus mobilnetværk",
+                               "Sådan tjekker du, om der er nedbrud på dit "
+                               "mobilnet — og hvad du selv kan gøre først."))],
     ), prioritet="0.8", hyppighed="daily")
 
     for u in UDBYDERE:
         if u["slug"] in DRIFT_SIDER:
             byg_driftsstatus_selskab(u)
+
+
+def symptomtabel(navn):
+    """Symptom, sandsynlig årsag og hvad man gør. Det er dét, folk søger efter,
+    når de lander på en driftsside — ikke en generel forklaring."""
+    rk = [
+        ("Ingen dækning overhovedet", "Nedbrud eller telefonen hænger fast",
+         "Slå flytilstand til og fra. Hjælper det ikke, genstart telefonen."),
+        ("Kun én bjælke, men ingen data", "Registreret på nettet uden dataforbindelse",
+         "Tjek om du har brugt din datamængde. Slå mobildata fra og til."),
+        ("Opkald virker, data gør ikke", "Datastop eller opbrugt forbrug",
+         "Tjek forbruget i selskabets app. Nogle spærrer i stedet for at "
+         "sætte hastigheden ned."),
+        ("Data virker, opkald gør ikke", "VoLTE-indstilling eller spærring",
+         "Tjek at opkald over 4G er slået til i indstillingerne."),
+        ("Kun problemer ét bestemt sted", "Dækning, ikke drift",
+         "Det løses ikke ved at vente. Tjek adressen i dækningstjekket."),
+        ("Kun problemer om aftenen", "Belastning på masten",
+         "Almindeligt i tætbefolkede områder. Et andet net kan hjælpe."),
+        ("Virker hos dig, ikke hos partneren", "Telefonen eller simkortet",
+         "Tag simkortet ud og sæt det i igen. Prøv det i en anden telefon."),
+        ("Sms virker, intet andet", "Delvist nedbrud på nettet",
+         "Sms bruger et andet lag end tale og data. Tjek driftssiden."),
+    ]
+    raekker = "".join(
+        f'<tr><td><strong>{e(sym)}</strong></td><td>{e(aar)}</td><td>{e(gor)}</td></tr>'
+        for sym, aar, gor in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Symptom, sandsynlig årsag og hvad du gør. Halvdelen af alle
+  "{e(navn)} virker ikke"-oplevelser skyldes telefonen, ikke nettet.</caption>
+  <thead><tr><th scope="col">Det du oplever</th><th scope="col">Sandsynlig årsag</th>
+    <th scope="col">Gør dette</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
 
 
 def byg_driftsstatus_selskab(u):
@@ -8516,6 +8592,9 @@ driftsinfo</a>, som er den eneste kilde opdateret i realtid.</p></div>
 <p>Mellem en tredjedel og halvdelen af alle nedbrudsoplevelser skyldes telefonen,
 ikke nettet. Det tager to minutter at udelukke.</p>
 {drift_tjekliste()}
+
+<h2>Hvad betyder symptomet?</h2>
+{symptomtabel(navn)}
 
 <h2>{e(navn)} kører på {e(net)}</h2>
 {andre}
@@ -8549,6 +8628,27 @@ skal selv bede om det og kunne dokumentere varigheden.</p>
 <p>Notér dato, tidspunkt og varighed, og gem skærmbilleder. Afviser selskabet din
 klage, kan du indbringe sagen for Teleankenævnet, hvor det er gratis at få den
 vurderet.</p>
+
+<h2>Hvor længe varer et typisk nedbrud?</h2>
+<p>De fleste driftsforstyrrelser på danske mobilnet varer under to timer.
+Planlagt vedligeholdelse ligger som regel om natten og varsles på selskabets
+driftsside dagen før.</p>
+<p>Varer det længere end en halv dag, er det som regel et større teknisk problem
+eller et gravearbejde, der har ramt en fiberforbindelse til en mast. Så plejer
+selskabet at melde ud på driftssiden med en forventet løsningstid.</p>
+
+<h2>Hvad gør du imens?</h2>
+<ul class="pilliste">
+  <li><strong>Slå wi-fi-opkald til.</strong> Har du wi-fi, kan du ringe og sende
+  sms over det i stedet. Funktionen findes under opkaldsindstillinger og virker
+  hos alle danske selskaber.</li>
+  <li><strong>Brug beskedtjenester over wi-fi.</strong> WhatsApp, Messenger og
+  FaceTime fungerer, så længe du har internet.</li>
+  <li><strong>Har du et ekstra simkort?</strong> Et gammelt taletidskort fra et
+  andet selskab kan bruges midlertidigt, hvis telefonen har dual-SIM.</li>
+  <li><strong>Nødopkald virker altid.</strong> 112 kan ringes op via ethvert net
+  med dækning, uanset hvem du er kunde hos, og selv uden simkort.</li>
+</ul>
 
 <h2>Er det dækning frem for drift?</h2>
 <p>Sker det samme sted hver gang, er det dækning. Det løses ikke ved at vente.
@@ -8591,10 +8691,14 @@ du beholder dit nummer, når du skifter.</p>
                     f"på ved længere nedbrud.",
         hero=hero_side("Driftsstatus", f"Er der nedbrud hos {navn}?",
                        f"{navn} kører på {net}. Tjek officiel driftsinfo, og se hvad "
-                       f"du selv kan gøre først."),
+                       f"du selv kan gøre først.",
+                       billede=drift_logo(u)),
         efter_hero="", krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, f"Spørgsmål om driftsforstyrrelser hos {navn}"),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, f"{navn} driftsstatus",
+                               f"Er der nedbrud hos {navn}? Tjek officiel "
+                               f"driftsinfo og se, hvad du selv kan gøre."))],
     ), prioritet="0.7", hyppighed="daily")
 
 
@@ -8754,8 +8858,63 @@ før du vælger efter pris alene.</p>
                        f"netværk og kundetilfredshed."),
         efter_hero="", krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, "Spørgsmål om anmeldelserne"),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld("/anmeldelser/", "Anmeldelser af mobilselskaber",
+                               "Uafhængig vurdering af danske mobilselskaber på "
+                               "pris, vilkår, netværk og kundetilfredshed."))],
     ), prioritet="0.8", hyppighed="weekly")
+
+
+def tabel_lydbog_selskaber():
+    """Hvilke selskaber tilbyder lydbøger — og hvad koster det billigste hos hver.
+
+    Konkurrenten skriver om emnet uden at vise, hvor man rent faktisk får det.
+    Tabellen her svarer på spørgsmålet direkte."""
+    raekker = ""
+    med_lyd = 0
+    for u in UDBYDERE:
+        egne = [a for a in ABON if a["udbyder"] == u["slug"] and a["pris"] > 0]
+        if not egne:
+            continue
+        lyd = [a for a in egne
+               if any(k in t.lower() for t in a.get("streaming", [])
+                      for k in ("lydbog", "podimo", "mofibo", "podcast"))]
+        if lyd:
+            med_lyd += 1
+            b = min(lyd, key=lambda a: a["pris"])
+            svar = f'{len(lyd)} af {len(egne)}'
+            pris = f'{kr(b["pris"])} kr.'
+            hvad = ", ".join(sorted({t for a in lyd for t in a.get("streaming", [])}))
+        else:
+            svar, pris = "Nej", "—"
+            hvad = "Kan tilvælges separat hos tjenesten"
+        logo = os.path.join(ROD, "assets", "img", "logoer", u["slug"] + ".webp")
+        logohtml = (f'<img src="/assets/img/logoer/{u["slug"]}.webp" '
+                    f'alt="{e(u["navn"])} logo" loading="lazy" height="20" '
+                    f'decoding="async" class="bb-logo">'
+                    if os.path.exists(logo) else "")
+        raekker += f"""<tr>
+  <td class="bb-udbyder"><a href="/udbydere/{u['slug']}/">{logohtml}
+      <span class="tabel-under">{e(u['navn'])}</span></a></td>
+  <td class="tal">{e(svar)}</td>
+  <td>{e(hvad)}</td>
+  <td class="tal">{e(pris)}</td>
+  <td class="tal">{e(netlabel(u))}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Alle selskaber i vores sammenligning, og om lydbøger eller podcast
+  indgår i abonnementet. {med_lyd} af dem tilbyder det lige nu. Opdateret
+  {e(OPDATERET)}.</caption>
+  <thead><tr>
+    <th scope="col">Selskab</th><th scope="col">Lydbog inkluderet</th>
+    <th scope="col">Hvad indgår</th><th scope="col">Billigst med lyd</th>
+    <th scope="col">Netværk</th>
+  </tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
 
 
 # ============================================================ LYDBOG
@@ -8800,6 +8959,12 @@ time video. Du behøver ikke et stort abonnement for at lytte.</p></div>
 <p>Lydbøger og podcast bliver ofte nævnt sammen med streaming, som om det er samme
 sag. Det er det ikke. Video kræver et stort abonnement. Lyd gør ikke, og forskellen
 er større, end de fleste regner med.</p>
+
+<h2>Hvilke selskaber tilbyder lydbøger?</h2>
+{tabel_lydbog_selskaber()}
+<p>Bemærk kolonnen længst til højre. Danmark har tre fysiske mobilnet, og et
+selskab uden lydbog kan sagtens køre på samme master som et med — forskellen
+ligger i pakken, ikke i dækningen.</p>
 
 <h2>Abonnementer med lydbog inkluderet</h2>
 {tabel}
@@ -8887,7 +9052,11 @@ sparer flere hundrede kroner om året i forhold til en stor pakke.</p>
                        "ikke et stort abonnement for at lytte."),
         efter_hero="", krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, "Spørgsmål om lydbøger og mobilabonnement"),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld("/mobilabonnement-med-lydbog/",
+                               "Mobilabonnement med lydbog",
+                               "Hvor lidt data lydbøger fylder, og hvilke selskaber "
+                               "der har dem med i abonnementet."))],
     ), prioritet="0.7", hyppighed="weekly")
 
 
