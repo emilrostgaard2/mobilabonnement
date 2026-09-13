@@ -167,6 +167,16 @@ def main():
                     rel = a.get("rel", "")
                     if "nofollow" not in rel and "sponsored" not in rel:
                         advarsler.append(f"{url}: eksternt link uden rel-attribut: {href}")
+                    # Dybe links til andres sider dør, når de omlægger deres site.
+                    # Forsiden gør ikke. Stabile identifikatorer er undtaget.
+                    STABILE = ("datacvr.virk.dk", "linkedin.com", "teleanke.dk",
+                               "naevneneshus.dk", "/t/t?a=", "fonts.g",
+                               "example.com")
+                    if not any(x in href for x in STABILE):
+                        efter = href.split("//", 1)[-1]
+                        if "/" in efter and efter.split("/", 1)[1].strip("/"):
+                            advarsler.append(
+                                f"{url}: dybt link til andres side, kan dø — {href}")
                 continue
             maal = href.split("#")[0].split("?")[0]
             if maal and maal not in kendte and not maal.startswith("/assets/"):

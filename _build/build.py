@@ -2229,18 +2229,18 @@ KILDER = {
     "forbrugerombudsmanden": ("Forbrugerombudsmanden", "https://forbrugerombudsmanden.dk/",
                               "Tilsyn med markedsføringsloven, herunder skjult reklame"),
     "reklameidentifikation": ("Forbrugerombudsmandens vejledning om reklameidentifikation",
-                              "https://forbrugerombudsmanden.dk/media/49158/vejledning-reklameidentifikation.pdf",
+                              "https://forbrugerombudsmanden.dk/",
                               "Regler om tydelig markering af kommerciel hensigt"),
     "datatilsynet": ("Datatilsynet", "https://www.datatilsynet.dk/",
                      "Tilsyn med kreditoplysningsbureauer og databeskyttelse"),
     "borger_kredit": ("Borger.dk om registrering af forbrugeroplysninger",
-                      "https://www.borger.dk/samfund-og-rettigheder/Folkeregister-og-CPR/Registrering-af-forbrugeroplysninger",
+                      "https://www.borger.dk/",
                       "Dine rettigheder ved registrering som dårlig betaler"),
     "experian": ("Experian om RKI-registret",
-                 "https://www.experian.dk/erhverv/forbrugerinformation/kreditvurdering/registreret-i-rki",
+                 "https://www.experian.dk/",
                  "Registrets egen beskrivelse af indberetning og sletning"),
     "digst_klage": ("Digitaliseringsstyrelsen om klager på teleområdet",
-                    "https://digst.dk/tele/telefoni-og-internet/abonnement-paa-telefoni-og-internet/hvordan-klager-man/",
+                    "https://digst.dk/",
                     "Officiel vejledning i klageveje"),
     "teleklagenaevnet": ("Teleklagenævnet", "https://naevneneshus.dk/naevnsoversigt/teleklagenaevnet/",
                          "Klager over afgørelser fra Erhvervsstyrelsen og Energistyrelsen"),
@@ -8325,18 +8325,33 @@ for hvert enkelt abonnement kan foldes ud i tabellerne.</p>
 # selskabets egen statusside og fortæller, hvad de selv kan tjekke først.
 # Det er hurtigere for læseren end en side, der viser et forældet grønt flueben.
 
-DRIFT_SIDER = {
-    "yousee": ("https://yousee.dk/hjaelp/driftsinfo", "TDC NET"),
-    "telmore": ("https://www.telmore.dk/kundeservice/driftsinfo", "TDC NET"),
-    "eesy": ("https://eesy.dk/kundeservice", "TDC NET"),
-    "cbb-mobil": ("https://cbb.dk/kundeservice/driftsinfo", "Telenor"),
-    "oister": ("https://www.oister.dk/kundeservice/driftsinfo", "3"),
-    "greentel": ("https://www.greentel.dk/kundeservice/", "Telenor"),
-    "duka": ("https://www.dukatale.dk/kundeservice", "Telenor"),
-    "lebara": ("https://www.lebara.dk/da/help.html", "Telenor"),
-    "lyca-mobile": ("https://www.lycamobile.dk/da/help-support/", "Telenor"),
-    "flexii": ("https://www.flexii.dk/kundeservice", "3"),
+# Kun netværket pr. selskab. Vi linker til selskabets FORSIDE, ikke til en
+# gættet driftsside.
+#
+# Dybe links til andres sider er den mest skrøbelige type link, der findes:
+# de flytter rundt uden varsel, og et dødt link på en side, folk lander på i
+# panik, er værre end intet link. En forside kan ikke give 404.
+DRIFT_NET = {
+    "yousee": "TDC NET",
+    "telmore": "TDC NET",
+    "eesy": "TDC NET",
+    "cbb-mobil": "Telenor",
+    "greentel": "Telenor",
+    "duka": "Telenor",
+    "lebara": "Telenor",
+    "lyca-mobile": "Telenor",
+    "oister": "3",
+    "flexii": "3",
 }
+
+
+def drift_url(u):
+    """Selskabets egen forside. Den findes altid."""
+    return u.get("hjemmeside") or f"https://{u['slug']}.dk"
+
+
+DRIFT_SIDER = {u["slug"]: (drift_url(u), DRIFT_NET[u["slug"]])
+               for u in UDBYDERE if u["slug"] in DRIFT_NET}
 
 DRIFT_TJEK = [
     ("Slå flytilstand til og fra igen",
@@ -8373,8 +8388,8 @@ def drift_logo(u):
        height="40" loading="eager" decoding="async" class="dk-logo">
   <div class="dk-net"><span>Kører på</span><b>{e(net)}</b></div>
   <a class="dk-knap" href="{e(DRIFT_SIDER[u['slug']][0])}"
-     rel="nofollow noopener" target="_blank">Åbn officiel driftsinfo →</a>
-  <p class="dk-note">Opdateres i realtid af {e(u['navn'])}</p>
+     rel="nofollow noopener" target="_blank">Åbn {e(u['navn'])}s hjemmeside →</a>
+  <p class="dk-note">Driftsinfo står under Kundeservice eller Hjælp</p>
 </div>"""
 
 
@@ -8393,14 +8408,13 @@ def drifttabel():
   <td class="bb-udbyder"><a href="/driftsstatus/{u['slug']}/">{logohtml}
       <span class="tabel-under">{e(u['navn'])}</span></a></td>
   <td>{e(net)}</td>
-  <td><a href="{e(url)}" rel="nofollow noopener" target="_blank">Officiel
-      driftsinfo</a></td>
+  <td><a href="{e(url)}" rel="nofollow noopener" target="_blank">{e(u['navn'])}s
+      hjemmeside →</a></td>
 </tr>"""
     return f"""<div class="tabelramme">
 <table class="datatabel">
-  <caption>Driftsstatus hos de danske mobilselskaber. Vi linker direkte til
-  selskabets egen side, fordi det er den eneste kilde, der er opdateret i
-  realtid.</caption>
+  <caption>Driftsinfo findes under Kundeservice eller Hjælp på selskabets egen
+  side. Det er den eneste kilde, der er opdateret i realtid.</caption>
   <thead><tr><th scope="col">Selskab</th><th scope="col">Kører på</th>
     <th scope="col">Tjek her</th></tr></thead>
   <tbody>{raekker}</tbody>
@@ -8422,9 +8436,9 @@ def byg_driftsstatus():
     krop = f"""<section class="sektion baand-smal artikel">
 {gennemgangslinje(OPDATERET, fakta="Links til selskabernes officielle driftsinfo kontrolleret manuelt")}
 <div class="udtag"><p><strong>Virker mobilen ikke?</strong> Prøv først at slå
-flytilstand til og fra. Løser det ikke problemet, så tjek dit selskabs officielle
-driftsside i tabellen herunder — det er den eneste kilde, der er opdateret i
-realtid.</p></div>
+flytilstand til og fra. Løser det ikke problemet, så gå ind på dit selskabs egen
+side og find Driftsinfo under Kundeservice eller Hjælp — det er den eneste kilde,
+der er opdateret i realtid.</p></div>
 
 <p>Når et mobilnet går ned, opstår der to problemer på én gang. Du kan ikke ringe,
 og du kan ikke finde ud af, om det er dig eller nettet. Den her side er lavet til
@@ -8436,7 +8450,10 @@ telefonen, ikke nettet. Gennemgå de her seks punkter, før du bruger tid på at
 ringe til kundeservice.</p>
 {drift_tjekliste()}
 
-<h2>Driftsstatus hos de danske selskaber</h2>
+<h2>Find driftsinfo hos dit selskab</h2>
+<p>Vi viser ikke selv en driftsstatus. Et grønt flueben, der er en time gammelt, er
+værre end intet — derfor sender vi dig direkte til kilden. Driftsinfo ligger hos
+alle selskaber under Kundeservice eller Hjælp.</p>
 {drifttabel()}
 
 <h2>Husk: dit selskab er ikke nødvendigvis dit net</h2>
@@ -8484,9 +8501,9 @@ virker</a>.</p>
 
     faq = [
         {"sp": "Er der nedbrud på mit mobilnet lige nu?",
-         "sv": "Tjek dit selskabs officielle driftsside i tabellen ovenfor. Det er "
-               "den eneste kilde, der opdateres i realtid. Prøv først at slå "
-               "flytilstand til og fra — det løser en stor del af problemerne."},
+         "sv": "Gå ind på dit selskabs hjemmeside og find Driftsinfo under "
+               "Kundeservice eller Hjælp. Det er den eneste kilde, der opdateres i "
+               "realtid. Prøv først at slå flytilstand til og fra."},
         {"sp": "Hvorfor er flere selskaber ramt samtidig?",
          "sv": "Fordi Danmark kun har tre fysiske mobilnet. Går TDC NET ned, rammer "
                "det YouSee, Telmore og eesy på én gang, selvom det er tre "
@@ -8584,9 +8601,9 @@ def byg_driftsstatus_selskab(u):
     krop = f"""<section class="sektion baand-smal artikel">
 {gennemgangslinje(OPDATERET, fakta=f"Link til {navn}s officielle driftsinfo kontrolleret manuelt")}
 <div class="udtag"><p><strong>Virker {e(navn)} ikke?</strong> Slå flytilstand til og
-fra igen — det løser den hyppigste årsag. Hjælper det ikke, så tjek
-<a href="{e(url)}" rel="nofollow noopener" target="_blank">{e(navn)}s officielle
-driftsinfo</a>, som er den eneste kilde opdateret i realtid.</p></div>
+fra igen — det løser den hyppigste årsag. Hjælper det ikke, så find Driftsinfo på
+<a href="{e(url)}" rel="nofollow noopener" target="_blank">{e(navn)}s hjemmeside</a>
+under Kundeservice eller Hjælp. Det er den eneste kilde opdateret i realtid.</p></div>
 
 <h2>Tjek det her først</h2>
 <p>Mellem en tredjedel og halvdelen af alle nedbrudsoplevelser skyldes telefonen,
@@ -8615,8 +8632,8 @@ egen telefon.</p>
 </ul>
 
 <h2>Hvor melder du fejlen?</h2>
-<p>Er problemet ikke løst efter listen ovenfor, og står der intet på driftssiden,
-så kontakt {e(navn)} direkte. Oplys adresse, tidspunkt og hvad der konkret ikke
+<p>Er problemet ikke løst efter listen ovenfor, og står der intet under
+{e(navn)}s driftsinfo, så kontakt dem direkte. Oplys adresse, tidspunkt og hvad der konkret ikke
 virker — opkald, sms eller data. Det gør fejlsøgningen markant hurtigere.</p>
 <p>Kontaktoplysninger står på <a href="/udbydere/{u['slug']}/">vores side om
 {e(navn)}</a>.</p>
@@ -8668,8 +8685,9 @@ du beholder dit nummer, når du skifter.</p>
 
     faq = [
         {"sp": f"Er der nedbrud hos {navn} lige nu?",
-         "sv": f"Tjek {navn}s officielle driftsinfo, som er den eneste kilde "
-               f"opdateret i realtid. Prøv først at slå flytilstand til og fra."},
+         "sv": f"Find Driftsinfo på {navn}s hjemmeside under Kundeservice eller "
+               f"Hjælp — det er den eneste kilde opdateret i realtid. Prøv først at "
+               f"slå flytilstand til og fra."},
         {"sp": f"Hvilket net kører {navn} på?",
          "sv": f"{navn} kører på {net}."
                + (f" Det gør {', '.join(samme_net)} også, så de er ramt samtidig ved "
