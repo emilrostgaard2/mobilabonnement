@@ -165,6 +165,24 @@ skabelon.SAMMENLIGN = [x for x in skabelon.SAMMENLIGN if _MULIGE.get(x[0], True)
 skabelon.VAERKTOEJER = [x for x in skabelon.VAERKTOEJER if _MULIGE.get(x[0], True)]
 
 IDAG = date.today()
+
+# Måned og år i titlen. Konkurrenterne skriver "(september, 2026)", selvom
+# deres lister er otte måneder gamle. Vi kan gøre det ærligt: priserne hentes
+# to gange i døgnet, og prishistorikken kan bevise det.
+MAANED_AAR = f"{MAANEDER[IDAG.month - 1]} {IDAG.year}"
+
+
+def med_maaned(titel, maks=65):
+    """Sætter måned og år på en titel, hvis der er plads.
+
+    Titler over 65 tegn bliver afkortet i søgeresultatet, og så er tilføjelsen
+    værre end ingenting. Vi prøver den lange form først, så den korte."""
+    for suffiks in (f" ({MAANED_AAR})", f" {IDAG.year}"):
+        if len(titel) + len(suffiks) <= maks:
+            return titel + suffiks
+    return titel
+
+
 OPDATERET = dansk_dato(IDAG)
 skabelon.OPDATERET_GLOBAL = OPDATERET
 ISO = IDAG.isoformat()
@@ -1349,6 +1367,100 @@ def indsaet_kattabeller(html):
 
 
 
+def topliste(udvalg, *, titel, antal=10, sorter=None, beskriv=None, indledning=None):
+    """Nummereret liste i brødteksten — ikke en tabel.
+
+    Google trækker nummererede lister ud til featured snippets og AI-oversigter.
+    En tabel er pænere for læseren, men formatet "1. Lebara | 19 kr./md."
+    er dét, der bliver citeret. Vi har begge dele: listen til maskinen,
+    tabellen til mennesket."""
+    if not udvalg:
+        return ""
+    n = sorter or (lambda a: a["pris"])
+    top = sorted(udvalg, key=n)[:antal]
+    b = beskriv or (lambda a: f"{gb_tekst(a['data_gb'])} data, "
+                              f"{'fri tale' if a.get('tale') == 'fri' else 'begrænset tale'}")
+    punkter = ""
+    for i, a in enumerate(top, 1):
+        u = UMAP[a["udbyder"]]
+        punkter += (f'<li><strong>{i}. {e(u["navn"])} | {kr(a["pris"])} kr./md.</strong>'
+                    f' — {e(b(a))}</li>')
+    ind = f"<p>{indledning}</p>" if indledning else ""
+    return f"""
+<h3>{e(titel)}</h3>
+{ind}
+<ol class="topliste">{punkter}</ol>
+<p class="tabel-under">Normalpriser uden kampagnerabat, så tallene kan
+sammenlignes. Opdateret {e(OPDATERET)} — priserne hentes to gange i døgnet.</p>"""
+
+
+def toplister_billigste():
+    """De fire nummererede lister, konkurrenten vinder featured snippets på."""
+    betalte = [a for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")]
+    fritale = [a for a in betalte if a.get("tale") == "fri"]
+    fridata = [a for a in betalte if a["data_gb"] >= 9999]
+    ud = '<h2 id="toplister">De billigste abonnementer, nummereret</h2>'
+    ud += ('<p>Her er listerne i kort form. Alle priser er normalpriser uden '
+           'kampagnerabat — det er dem, du betaler, når tilbuddet udløber.</p>')
+
+    ud += topliste(betalte, antal=10,
+        titel=f"De 10 billigste mobilabonnementer i Danmark",
+        indledning="Sorteret efter normalpris. Datamængden varierer, så læs "
+                   "beskrivelsen med.")
+
+    if len(fritale) >= 5:
+        ud += topliste(fritale, antal=7,
+            titel="De 7 billigste med fri tale",
+            beskriv=lambda a: f"fri tale, {gb_tekst(a['data_gb'])} data",
+            indledning="Fri tale følger med de fleste abonnementer i dag. Her er "
+                       "de billigste, der har det.")
+
+    if len(fridata) >= 3:
+        ud += topliste(fridata, antal=5,
+            titel="De 5 billigste med fri data",
+            beskriv=lambda a: f"fri data, "
+                              f"{('fri tale' if a.get('tale') == 'fri' else 'begrænset tale')}"
+                              f"{', 5G' if a.get('femg') else ''}",
+            indledning="Fri data uden loft. Bemærk, at prisen springer markant "
+                       "op i forhold til de store abonnementer med loft.")
+
+    # Bedst bedømte — den liste konkurrenten også har, men uden krydsanalyse
+    tp = [(u, u["trustpilot"]) for u in UDBYDERE
+          if (u.get("trustpilot") or {}).get("score")
+          and any(a["udbyder"] == u["slug"] and a["pris"] > 0 for a in ABON)]
+    tp.sort(key=lambda x: -x[1]["score"])
+    if tp:
+        punkter = "".join(
+            f'<li><strong>{i}. <a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> | '
+            f'{t["score"]:.1f}'.replace(".", ",") +
+            f' af 5</strong> — {kr(t["antal"])} anmeldelser, '
+            f'{e(netlabel(u))}</li>'
+            for i, (u, t) in enumerate(tp[:10], 1))
+        ud += f"""
+<h3>De {min(10, len(tp))} bedst bedømte mobilselskaber på Trustpilot</h3>
+<p>Bemærk, at scoren dækker selskabets samlede forretning — ikke kun
+mobilabonnementer. Antallet af anmeldelser betyder mere end selve tallet.</p>
+<ol class="topliste">{punkter}</ol>"""
+
+        # Krydsanalysen: hvem er både billig og godt bedømt
+        billigste_selskaber = {a["udbyder"] for a in sorted(betalte, key=lambda x: x["pris"])[:10]}
+        gode = {u["slug"] for u, t in tp[:6]}
+        begge = [u for u, t in tp if u["slug"] in billigste_selskaber and u["slug"] in gode]
+        if begge:
+            navne = ", ".join(e(u["navn"]) for u in begge[:-1])
+            sidste = e(begge[-1]["navn"])
+            ud += f"""
+<h3>Både billig og godt bedømt</h3>
+<p>Det interessante er overlappet. {navne + " og " + sidste if len(begge) > 1 else sidste}
+optræder både blandt de billigste abonnementer og blandt de bedst bedømte
+selskaber. Det er dér, du finder den bedste kombination af pris og
+kundetilfredshed.</p>
+<p>Se hele vurderingen i vores <a href="/anmeldelser/">anmeldelser af
+mobilselskaber</a> og beregningen bag i <a href="/telemobil-score/">Telemobil-scoren</a>.</p>"""
+    return ud
+
+
+
 def prisstatistik():
     """Gennemsnit, median og laveste normalpris pr. datastørrelse.
 
@@ -2104,6 +2216,9 @@ def vejviser(aktuel=""):
          f"{len([a for a in ABON if 100 <= a['data_gb'] < 9999])} planer"),
         ("/prisudvikling/", "Prisudvikling", "stiger priserne?"),
         ("/mobilabonnement-med-lydbog/", "Med lydbog", "podcast og lydbøger"),
+        ("/mobilabonnement-med-musik/", "Med musik", "Spotify og musiktjenester"),
+        ("/danskernes-forbrug/", "Markedet i tal", "priser og forbrug"),
+        ("/guides/", "Alle guides", f"{len(GUIDER)} gennemgange"),
         ("/anmeldelser/", "Anmeldelser",
          f"{len({a['udbyder'] for a in ABON if a['pris'] > 0})} selskaber vurderet"),
         ("/driftsstatus/", "Driftsstatus", "er nettet nede?"),
@@ -2335,7 +2450,7 @@ forskellen mellem markedets normalpris og det, mange faktisk betaler.</p>"""
 
 def byg_forside():
     sti = "/"
-    titel = f"Sammenlign mobilabonnementer — priser fra {D['min_normalpris']} kr./md."
+    titel = med_maaned(f"Sammenlign mobilabonnementer — fra {D['min_normalpris']} kr./md.")
     besk = (f"Sammenlign {D['antal']} mobilabonnementer fra {D['antal_udbydere']} udbydere på ét sted. "
             f"Priser fra {D['min_pris']} kr./md., fri tale og ingen binding. Opdateret {OPDATERET}.")
 
@@ -2487,7 +2602,7 @@ def udbyderkort(u):
 
 def byg_billigste():
     sti = "/billigste-mobilabonnement/"
-    titel = f"Billigste mobilabonnement — priser fra {D['min_normalpris']} kr./md."
+    titel = med_maaned(f"Billigste mobilabonnement — fra {D['min_normalpris']} kr./md.")
     besk = (f"Se det billigste mobilabonnement i Danmark lige nu. {D['antal']} abonnementer "
             f"sammenlignet på pris, data og pris pr. GB. Opdateret {OPDATERET}.")
     krumme = [("/", "Forside"), (None, "Billigste mobilabonnement")]
@@ -2532,7 +2647,8 @@ def byg_billigste():
     '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1
 ).replace(
     '<h2>De skjulte omkostninger, folk overser</h2>',
-    erfaring('billigste') + redaktionens_valg() + prisaendringer() + prisstatistik()
+    erfaring('billigste') + toplister_billigste() + redaktionens_valg()
+    + prisaendringer() + prisstatistik()
     + prisfordeling() + tabel_billigst_pr_udbyder()
     + tabel_prgb_rangliste() + tabel_aarsomkostning() + overforbrug() + '<h2>De skjulte omkostninger, folk overser</h2>', 1
 ).replace(
@@ -2572,7 +2688,7 @@ def byg_billigste():
 
 def byg_fridata():
     sti = "/mobilabonnement-med-fri-data/"
-    titel = f"Mobilabonnement med fri data{fra(D['pris_fri'], ' — priser fra ')}"
+    titel = med_maaned(f"Mobilabonnement med fri data{fra(D['pris_fri'], ' — fra ')}")
     besk = ("Sammenlign mobilabonnementer med fri data." + fra(D['pris_fri'], " Priser fra ") + " "
             "Se hvad fri data reelt dækker, og om du overhovedet har brug for det.")
     krumme = [("/", "Forside"), (None, "Fri data")]
@@ -4569,7 +4685,7 @@ def byg_speedtest():
 
 def byg_udbyderoversigt():
     sti = "/udbydere/"
-    titel = f"Mobilselskaber i Danmark — alle {D['antal_udbydere']} udbydere sammenlignet"
+    titel = med_maaned(f"Mobilselskaber i Danmark — {D['antal_udbydere']} udbydere sammenlignet")
     besk = ("Uafhængig gennemgang af alle danske mobilselskaber. Se netværk, priser, "
             "ejerforhold og hvem der passer til hvad — med fordele og ulemper.")
     krumme = [("/", "Forside"), (None, "Udbydere")]
@@ -4729,6 +4845,8 @@ def udbyder_faktaboks(u, egne):
     binding_fri = len([a for a in egne if a.get("binding", 0) == 0])
     rk = [
         ("Ejes af", e(u["ejer"]) if u.get("ejer") else None),
+        ("Grundlagt", str(u["grundlagt"]) if u.get("grundlagt") else None),
+        ("Hovedkontor", e(u["adresse"]) if u.get("adresse") else None),
         ("Netværk", e(netlabel(u))),
         ("Abonnementer", f"{len(egne)}" if egne else None),
         ("Priser fra", f"{kr(min(priser))} kr./md." if priser else None),
@@ -8374,6 +8492,66 @@ DRIFT_TJEK = [
 ]
 
 
+# Hvert selskab har sin egen historie om, hvorfor nettet svigter netop dér.
+# Uden det her ville de ti driftssider være 99 % ens tekst.
+DRIFT_VINKEL = {
+    "yousee": (
+        "YouSee er Danmarks største mobilselskab, og et nedbrud på TDC NET rammer "
+        "derfor flest mennesker på én gang. Det betyder også, at driftssiden ofte "
+        "er overbelastet i de første minutter — prøv igen efter et kvarter, hvis "
+        "den ikke svarer. YouSee sælger både mobil, bredbånd og tv, så tjek at "
+        "driftsmeldingen faktisk handler om mobilnettet og ikke om tv-signalet."),
+    "telmore": (
+        "Telmore er rent digitalt uden fysiske butikker, så al fejlmelding sker "
+        "gennem app eller selvbetjening. Til gengæld er svartiden i chatten "
+        "typisk kortere end hos de store. Telmore kører på samme net som YouSee "
+        "og eesy — er alle tre nede, er det TDC NET og ikke Telmore."),
+    "eesy": (
+        "eesy er Nuudays lavprisselskab og har hverken butikker eller telefonisk "
+        "support i traditionel forstand. Al kontakt går gennem app og "
+        "selvbetjening. Da eesy kører på TDC NET, er dækningen den samme som hos "
+        "YouSee — oplever du problemer, andre på TDC NET ikke har, er det din "
+        "telefon eller dit simkort."),
+    "cbb-mobil": (
+        "CBB Mobil kører på Telenors net og har gennem flere år ligget i toppen "
+        "af danske kundetilfredshedsmålinger. Det betyder i praksis, at "
+        "driftsmeldinger som regel kommer hurtigt, og at supporten er "
+        "tilgængelig. Bemærk at Telenor og Telia deler net i Danmark — et "
+        "nedbrud kan derfor ramme kunder hos begge."),
+    "oister": (
+        "Oister ejes af Hi3G og kører på 3's net, som historisk har haft den "
+        "tætteste dækning i byerne og den tyndeste i landdistrikterne. Oplever "
+        "du problemer uden for byerne, er det oftere dækning end drift. 3's net "
+        "bruges også af Flexii, så tjek om de er ramt samtidig."),
+    "flexii": (
+        "Flexii er et mindre selskab på 3's net med selvbetjening som primær "
+        "kanal. Ved nedbrud melder de typisk ud i app og på Facebook før på "
+        "hjemmesiden. Da Flexii deler net med Oister, kan du bruge deres status "
+        "som indikation, hvis Flexiis egen side ikke er opdateret endnu."),
+    "greentel": (
+        "Greentel er et mindre dansk selskab på Telenors net med fokus på "
+        "enkle abonnementer uden binding. De har ikke døgnbemandet support, så "
+        "driftsmeldinger uden for åbningstid kan være forsinkede. Er du i tvivl, "
+        "så tjek om andre Telenor-kunder oplever det samme."),
+    "duka": (
+        "Duka henvender sig blandt andet til ældre og mindre teknisk erfarne "
+        "brugere, og deres support er kendt for at tage sig tid. Er du i tvivl "
+        "om, hvorvidt det er telefonen eller nettet, er de et af de selskaber, "
+        "hvor det giver mening at ringe frem for at søge selv."),
+    "lebara": (
+        "Lebara er en del af den britiske Lebara Group og har mange kunder, der "
+        "ringer til udlandet. Oplever du problemer specifikt med udenlandske "
+        "opkald, mens alt andet virker, er det sjældent et nedbrud — det er "
+        "oftere en spærring eller en manglende udlandspakke på abonnementet."),
+    "lyca-mobile": (
+        "Lyca Mobile er international og har mange kunder med udlandstale i "
+        "abonnementet. Ligesom hos Lebara gælder det, at problemer med "
+        "udenlandske opkald sjældent skyldes nedbrud på det danske net. Tjek "
+        "først, om almindelige danske opkald virker."),
+}
+
+
+
 def drift_logo(u):
     """Selskabets logo som visuelt element i heroen på driftssiden.
 
@@ -8444,17 +8622,41 @@ der er opdateret i realtid.</p></div>
 og du kan ikke finde ud af, om det er dig eller nettet. Den her side er lavet til
 at besvare det andet spørgsmål på tredive sekunder.</p>
 
-<h2>Tjek det her først — det tager to minutter</h2>
+<h2 id="tjek">Tjek det her først — det tager to minutter</h2>
 <p>Mellem en tredjedel og halvdelen af alle "nettet er nede"-oplevelser skyldes
 telefonen, ikke nettet. Gennemgå de her seks punkter, før du bruger tid på at
 ringe til kundeservice.</p>
 {drift_tjekliste()}
+
+<h2>Hvad betyder symptomet?</h2>
+{symptomtabel("dit selskab")}
 
 <h2>Find driftsinfo hos dit selskab</h2>
 <p>Vi viser ikke selv en driftsstatus. Et grønt flueben, der er en time gammelt, er
 værre end intet — derfor sender vi dig direkte til kilden. Driftsinfo ligger hos
 alle selskaber under Kundeservice eller Hjælp.</p>
 {drifttabel()}
+
+<h2>Hvor længe varer et typisk nedbrud?</h2>
+<p>De fleste driftsforstyrrelser på danske mobilnet varer under to timer.
+Planlagt vedligeholdelse ligger som regel om natten og varsles på selskabets
+driftsside dagen før.</p>
+<p>Varer det længere end en halv dag, er det som regel et større teknisk problem
+eller et gravearbejde, der har ramt en fiberforbindelse til en mast. Så plejer
+selskabet at melde ud med en forventet løsningstid.</p>
+
+<h2>Hvad gør du imens?</h2>
+<ul class="pilliste">
+  <li><strong>Slå wi-fi-opkald til.</strong> Har du wi-fi, kan du ringe og sende
+  sms over det i stedet. Funktionen findes under opkaldsindstillinger og virker
+  hos alle danske selskaber.</li>
+  <li><strong>Brug beskedtjenester over wi-fi.</strong> WhatsApp, Messenger og
+  FaceTime fungerer, så længe du har internet.</li>
+  <li><strong>Har du et ekstra simkort?</strong> Et gammelt taletidskort fra et
+  andet selskab kan bruges midlertidigt, hvis telefonen har dual-SIM.</li>
+  <li><strong>Nødopkald virker altid.</strong> 112 kan ringes op via ethvert net
+  med dækning, uanset hvem du er kunde hos, og selv uden simkort.</li>
+</ul>
 
 <h2>Husk: dit selskab er ikke nødvendigvis dit net</h2>
 <p>Danmark har tre fysiske mobilnet — TDC NET, Telenor og 3. Alle andre selskaber
@@ -8466,7 +8668,7 @@ andet selskab gør det også, er det med stor sandsynlighed nettet under jer beg
 om forskellene i vores gennemgang af <a href="/netvaerk/">de tre danske
 mobilnet</a>.</p>
 
-<h2>Hvad du har krav på ved et nedbrud</h2>
+<h2 id="rettigheder">Hvad du har krav på ved et nedbrud</h2>
 <p>Der er ingen automatisk kompensation ved kortvarige forstyrrelser. Men står
 nettet ned i længere tid, har du rettigheder.</p>
 <ul class="pilliste">
@@ -8607,11 +8809,11 @@ under Kundeservice eller Hjælp. Det er den eneste kilde opdateret i realtid.</p
 
 <h2>Tjek det her først</h2>
 <p>Mellem en tredjedel og halvdelen af alle nedbrudsoplevelser skyldes telefonen,
-ikke nettet. Det tager to minutter at udelukke.</p>
-{drift_tjekliste()}
+ikke nettet. Slå flytilstand til og fra, genstart telefonen, og tag simkortet ud
+og sæt det i igen. Virker det stadig ikke, så gennemgå
+<a href="/driftsstatus/#tjek">hele tjeklisten på seks punkter</a>.</p>
 
-<h2>Hvad betyder symptomet?</h2>
-{symptomtabel(navn)}
+{f'<h2>Hvad du særligt skal vide om {e(navn)}</h2><p>' + DRIFT_VINKEL[u["slug"]] + '</p>' if u["slug"] in DRIFT_VINKEL else ""}
 
 <h2>{e(navn)} kører på {e(net)}</h2>
 {andre}
@@ -8639,33 +8841,9 @@ virker — opkald, sms eller data. Det gør fejlsøgningen markant hurtigere.</p
 {e(navn)}</a>.</p>
 
 <h2>Hvad du har krav på</h2>
-<p>Der er ingen automatisk kompensation ved kortvarige forstyrrelser. Står nettet
-ned i længere tid, kan du kræve forholdsmæssigt afslag i abonnementsprisen — men du
-skal selv bede om det og kunne dokumentere varigheden.</p>
-<p>Notér dato, tidspunkt og varighed, og gem skærmbilleder. Afviser selskabet din
-klage, kan du indbringe sagen for Teleankenævnet, hvor det er gratis at få den
-vurderet.</p>
-
-<h2>Hvor længe varer et typisk nedbrud?</h2>
-<p>De fleste driftsforstyrrelser på danske mobilnet varer under to timer.
-Planlagt vedligeholdelse ligger som regel om natten og varsles på selskabets
-driftsside dagen før.</p>
-<p>Varer det længere end en halv dag, er det som regel et større teknisk problem
-eller et gravearbejde, der har ramt en fiberforbindelse til en mast. Så plejer
-selskabet at melde ud på driftssiden med en forventet løsningstid.</p>
-
-<h2>Hvad gør du imens?</h2>
-<ul class="pilliste">
-  <li><strong>Slå wi-fi-opkald til.</strong> Har du wi-fi, kan du ringe og sende
-  sms over det i stedet. Funktionen findes under opkaldsindstillinger og virker
-  hos alle danske selskaber.</li>
-  <li><strong>Brug beskedtjenester over wi-fi.</strong> WhatsApp, Messenger og
-  FaceTime fungerer, så længe du har internet.</li>
-  <li><strong>Har du et ekstra simkort?</strong> Et gammelt taletidskort fra et
-  andet selskab kan bruges midlertidigt, hvis telefonen har dual-SIM.</li>
-  <li><strong>Nødopkald virker altid.</strong> 112 kan ringes op via ethvert net
-  med dækning, uanset hvem du er kunde hos, og selv uden simkort.</li>
-</ul>
+<p>Ved længerevarende nedbrud kan du kræve forholdsmæssigt afslag i prisen. Notér
+dato, tidspunkt og varighed — det er dokumentationen, der afgør en sag. Se
+<a href="/driftsstatus/#rettigheder">dine rettigheder ved nedbrud</a>.</p>
 
 <h2>Er det dækning frem for drift?</h2>
 <p>Sker det samme sted hver gang, er det dækning. Det løses ikke ved at vente.
@@ -9506,11 +9684,19 @@ skal kigge efter, før du siger ja.</p>
     f"{e(KAMPAGNE_KATEGORIER[n]['intro'])}</li>"
     for n in KAMPAGNE_AKTIVE_KAT)}</ul>''' if KAMPAGNE_AKTIVE_KAT else ""}"""
     else:
-        gavedel = """<h2 id="gaver">Kampagner med gave eller hardware</h2>
+        gavedel = f"""<h2 id="gaver">Kampagner med gave eller hardware</h2>
 <p>Vi har ingen aktuelle gavekampagner på listen lige nu. Tilbud med AirPods,
 tablets og højttalere kommer og går, og vi lægger dem kun op, når vi har
 kontrolleret vilkårene. Kig forbi igen — eller se intropriserne herunder, som
-opdateres automatisk to gange i døgnet.</p>"""
+opdateres automatisk to gange i døgnet.</p>
+
+{f'''<h2 id="efter-produkt">Kampagner efter produkt</h2>
+<p>Leder du efter noget bestemt, er der en side pr. produkttype med det, du
+skal kigge efter, før du siger ja.</p>
+<ul class="trin">{"".join(
+    f"<li><a href='/kampagner/{n}/'><strong>{e(KAMPAGNE_KATEGORIER[n]['h1'])}</strong></a> "
+    f"{e(KAMPAGNE_KATEGORIER[n]['intro'])}</li>"
+    for n in KAMPAGNE_AKTIVE_KAT)}</ul>''' if KAMPAGNE_AKTIVE_KAT else ""}"""
 
     if intro:
         billigst = intro[0]
@@ -10531,7 +10717,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         forvalg={"ekstra": ["fritale"]},
         billede="med-fri-tale", spejlvend=False,
         h1="Billigste mobilabonnement med fri tale",
-        titel=f"Mobilabonnement med fri tale{fra(D['pris_fritale'], ' — priser fra ')}",
+        titel=med_maaned(f"Mobilabonnement med fri tale{fra(D['pris_fritale'], ' — fra ')}"),
         besk=("Sammenlign mobilabonnementer med fri tale og fri sms."
               + fra(D['pris_fritale'], " Priser fra ")
               + " Se hvad fri tale dækker — og hvad det ikke gør."),
@@ -10570,7 +10756,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         sti="/bedste-mobilabonnement/", etiket="Bedste abonnement",
         billede="bedste", spejlvend=True,
         h1="Bedste mobilabonnement — sådan finder du dit",
-        titel=f"Bedste mobilabonnement {IDAG.year} — pris, data og netværk",
+        titel=med_maaned("Bedste mobilabonnement — pris, data og netværk"),
         besk=("Der findes ikke ét bedste mobilabonnement. Se vores kriterier, og find det "
               "bedste abonnement til netop din situation, dit forbrug og din adresse."),
         intro=("Rangeret efter pris pr. gigabyte — det tal der gør abonnementer af forskellig "
@@ -10646,7 +10832,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         forvalg={"ekstra": ["streaming"]},
         billede="med-streaming", spejlvend=False,
         h1="Mobilabonnement med streaming inkluderet",
-        titel=f"Mobilabonnement med streaming{fra(D['pris_streaming'])}",
+        titel=med_maaned(f"Mobilabonnement med streaming{fra(D['pris_streaming'])}"),
         besk=("Sammenlign mobilabonnementer med streaming inkluderet." + fra(D['pris_streaming'], " Fra ", "") + " "
               "kr./md. Se regnestykket, der afgør om det kan betale sig for dig."),
         intro=("Abonnementer hvor streamingtjenester indgår i prisen. Regn efter, hvad du "

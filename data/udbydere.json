@@ -50,7 +50,8 @@
     "url": null,
     "tlf": null,
     "tider": null
-   }
+   },
+   "adresse": "Frederikskaj 8, 2450 København SV"
   },
   {
    "slug": "yousee",
@@ -101,7 +102,8 @@
     "url": null,
     "tlf": null,
     "tider": null
-   }
+   },
+   "adresse": "Teglholmsgade 1, 2450 København SV"
   },
   {
    "slug": "telmore",
@@ -151,7 +153,8 @@
     "url": null,
     "tlf": null,
     "tider": null
-   }
+   },
+   "adresse": "Teglholmsgade 1, 2450 København SV"
   },
   {
    "slug": "oister",
@@ -201,7 +204,8 @@
     "url": null,
     "tlf": null,
     "tider": null
-   }
+   },
+   "adresse": "Scandiagade 8, 2450 København SV"
   },
   {
    "slug": "lebara",
@@ -251,7 +255,8 @@
     "url": null,
     "tlf": null,
     "tider": null
-   }
+   },
+   "adresse": "Bomhusvej 13, 2100 København Ø"
   },
   {
    "slug": "greentel",
@@ -301,7 +306,8 @@
     "url": null,
     "tlf": null,
     "tider": null
-   }
+   },
+   "adresse": null
   },
   {
    "slug": "duka",
@@ -351,7 +357,8 @@
     "url": null,
     "tlf": null,
     "tider": null
-   }
+   },
+   "adresse": null
   },
   {
    "slug": "lyca-mobile",
@@ -401,7 +408,8 @@
     "url": null,
     "tlf": null,
     "tider": null
-   }
+   },
+   "adresse": null
   },
   {
    "slug": "eesy",
@@ -451,7 +459,8 @@
     "url": null,
     "tlf": null,
     "tider": null
-   }
+   },
+   "adresse": "Teglholmsgade 1, 2450 København SV"
   },
   {
    "slug": "flexii",
@@ -501,7 +510,8 @@
     "url": null,
     "tlf": null,
     "tider": null
-   }
+   },
+   "adresse": null
   }
  ]
 }

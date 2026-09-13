@@ -2022,3 +2022,10 @@ body{overflow-x:clip;max-width:100%;position:relative}
   transition:background .15s}
 .dk-knap:hover{background:var(--signal-dyb)}
 .dk-note{margin:.7rem 0 0;font-size:.74rem;color:var(--graa)}
+
+/* Nummererede toplister — formatet Google trækker ud til featured snippets */
+.topliste{list-style:none;counter-reset:none;margin:0 0 1.2rem;padding:0}
+.topliste li{padding:.55rem 0;border-bottom:1px solid #EEF1FA;line-height:1.55}
+.topliste li:last-child{border-bottom:none}
+.topliste strong{color:var(--blaek)}
+.topliste a{color:var(--signal-dyb)}
