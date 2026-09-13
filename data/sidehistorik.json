@@ -5,7 +5,7 @@
  },
  "/12-maaneders-prisen/": {
   "dato": "2026-09-13",
-  "hash": "a82487a599490df6"
+  "hash": "906cc7e57f8a7171"
  },
  "/anmeldelser/": {
   "dato": "2026-09-13",
@@ -49,47 +49,47 @@
  },
  "/driftsstatus/": {
   "dato": "2026-09-13",
-  "hash": "d5386f968ab73ddb"
+  "hash": "deb04eb87828f5b0"
  },
  "/driftsstatus/cbb-mobil/": {
   "dato": "2026-09-13",
-  "hash": "1720d836ac25f831"
+  "hash": "51f62a840060cc6e"
  },
  "/driftsstatus/duka/": {
   "dato": "2026-09-13",
-  "hash": "f6c8f2826b6633f3"
+  "hash": "fceab74a3d57abd9"
  },
  "/driftsstatus/eesy/": {
   "dato": "2026-09-13",
-  "hash": "dcb2d960823139be"
+  "hash": "8909200cf63dc7ec"
  },
  "/driftsstatus/flexii/": {
   "dato": "2026-09-13",
-  "hash": "494cf98dad04b6a9"
+  "hash": "a4937c566762356c"
  },
  "/driftsstatus/greentel/": {
   "dato": "2026-09-13",
-  "hash": "e2ea1006ef110f4e"
+  "hash": "837838a302fd997a"
  },
  "/driftsstatus/lebara/": {
   "dato": "2026-09-13",
-  "hash": "9a9fe1f05331824a"
+  "hash": "b4bf75fa5240aa26"
  },
  "/driftsstatus/lyca-mobile/": {
   "dato": "2026-09-13",
-  "hash": "e1f9a8f958132ebc"
+  "hash": "44fce919f50d607c"
  },
  "/driftsstatus/oister/": {
   "dato": "2026-09-13",
-  "hash": "147125332fa4eeec"
+  "hash": "5cc53250b4cbaa19"
  },
  "/driftsstatus/telmore/": {
   "dato": "2026-09-13",
-  "hash": "76d5bf8d2d996b88"
+  "hash": "c0fee2162d644e2d"
  },
  "/driftsstatus/yousee/": {
   "dato": "2026-09-13",
-  "hash": "003d58ac085ef2d3"
+  "hash": "e26a00d080772f23"
  },
  "/guides/": {
   "dato": "2026-09-13",
@@ -97,7 +97,7 @@
  },
  "/guides/daekning-og-netvaerk/": {
   "dato": "2026-09-13",
-  "hash": "b7e3dcd4bfdb121c"
+  "hash": "e1beb644ab647d94"
  },
  "/guides/er-5g-pengene-vaerd/": {
   "dato": "2026-09-13",
@@ -129,15 +129,15 @@
  },
  "/guides/mobil-virker-ikke/": {
   "dato": "2026-09-13",
-  "hash": "d39853cb0e8c854c"
+  "hash": "74f7b06798f38ec5"
  },
  "/guides/mobilabonnement-eller-bredbaand/": {
   "dato": "2026-09-13",
-  "hash": "1392a7a36e54494a"
+  "hash": "eac950e640583f0a"
  },
  "/guides/mobilabonnement-i-udlandet/": {
   "dato": "2026-09-13",
-  "hash": "baa2d2146faed6d9"
+  "hash": "f043374b1200b072"
  },
  "/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/": {
   "dato": "2026-09-13",
@@ -145,11 +145,11 @@
  },
  "/guides/mobilabonnement-trods-rki/": {
   "dato": "2026-09-13",
-  "hash": "f0504df4925faab8"
+  "hash": "9d88ff031f8887c5"
  },
  "/guides/mobilabonnement-uden-kreditvurdering/": {
   "dato": "2026-09-13",
-  "hash": "a263ccf43f0d0fbe"
+  "hash": "be927b317cb58ec7"
  },
  "/guides/mobilt-bredbaand/": {
   "dato": "2026-09-13",
@@ -157,7 +157,7 @@
  },
  "/guides/opsig-mobilabonnement/": {
   "dato": "2026-09-13",
-  "hash": "48e2cade06d6b1b7"
+  "hash": "e8e51a6f85dacbbd"
  },
  "/guides/ping-og-svartid/": {
   "dato": "2026-09-13",
@@ -165,7 +165,7 @@
  },
  "/guides/prisstigning-mobilabonnement/": {
   "dato": "2026-09-13",
-  "hash": "1e37d2a75fc1299c"
+  "hash": "5320f0c95a10b98f"
  },
  "/guides/simkort/": {
   "dato": "2026-09-13",
@@ -173,7 +173,7 @@
  },
  "/guides/skift-mobilselskab/": {
   "dato": "2026-09-13",
-  "hash": "bf7fe7dffde1f524"
+  "hash": "e5421814479a9e4f"
  },
  "/guides/to-numre-en-telefon/": {
   "dato": "2026-09-13",
@@ -185,7 +185,7 @@
  },
  "/hvad-koster-et-mobilabonnement/": {
   "dato": "2026-09-13",
-  "hash": "f39892b3b549c798"
+  "hash": "782a89232d2c4edf"
  },
  "/hvem-ringer-til-mig/": {
   "dato": "2026-09-13",
@@ -317,7 +317,7 @@
  },
  "/mobilabonnement-under-100-kr/": {
   "dato": "2026-09-13",
-  "hash": "64dc9ea1ca8715e3"
+  "hash": "aaee5a4308e85da2"
  },
  "/mobilabonnementer-black-friday/": {
   "dato": "2026-09-13",
@@ -325,7 +325,7 @@
  },
  "/netvaerk/": {
   "dato": "2026-09-13",
-  "hash": "9f526da066e363b7"
+  "hash": "5bfef7650fa92873"
  },
  "/netvaerk/3/": {
   "dato": "2026-09-13",
@@ -437,7 +437,7 @@
  },
  "/udbydere/": {
   "dato": "2026-09-13",
-  "hash": "2958bd1caa7292fb"
+  "hash": "05be5c9f4a0bdd4d"
  },
  "/udbydere/cbb-mobil/": {
   "dato": "2026-09-13",
