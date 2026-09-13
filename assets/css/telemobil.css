@@ -1978,3 +1978,23 @@ body{overflow-x:clip;max-width:100%;position:relative}
    for et brudt billede, så oversigten ser hel ud */
 .ak-tom{display:block;width:100%;aspect-ratio:1280/698;
   background:linear-gradient(135deg,#EEF1F9,#E3E8F5)}
+
+/* Selskabsoplysning i forfatterboksen — det efterprøvelige tillidssignal */
+.fb-selskab{margin:.7rem 0 0;padding-top:.7rem;border-top:1px solid #E9EDF7;
+  font-size:.83rem;color:var(--graa);line-height:1.55}
+
+/* ==========================================================================
+   Telemobil-scoren på abonnementskortet
+   ========================================================================== */
+.tmscore{display:inline-flex;align-items:center;gap:.4rem;text-decoration:none;
+  border-radius:999px;padding:.2rem .6rem .2rem .3rem;margin:.15rem 0 .5rem;
+  border:1px solid transparent;transition:border-color .15s}
+.tmscore b{font-family:var(--font-tal);font-size:.95rem;font-weight:700;
+  line-height:1;min-width:1.9rem;height:1.55rem;display:inline-flex;
+  align-items:center;justify-content:center;border-radius:999px;color:#fff}
+.tmscore span{font-size:.7rem;font-weight:600;letter-spacing:.02em}
+.tmscore:hover{border-color:currentColor}
+.score-top b{background:var(--puls-dyb)}   .score-top span{color:var(--puls-dyb)}
+.score-god b{background:var(--signal)}     .score-god span{color:var(--signal-dyb)}
+.score-ok  b{background:#B07A1E}           .score-ok span{color:#8A5F14}
+.score-lav b{background:#9AA3B8}           .score-lav span{color:var(--graa)}

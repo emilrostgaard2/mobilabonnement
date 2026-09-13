@@ -251,7 +251,7 @@
     }
 
     function sorter(noegle) {
-      var faldende = noegle === "gb" || noegle === "tp";
+      var faldende = noegle === "gb" || noegle === "tp" || noegle === "score";
       planer.sort(function (a, b) {
         var va = tal(a, noegle), vb = tal(b, noegle);
         if (isNaN(va)) va = faldende ? -Infinity : Infinity;

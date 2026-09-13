@@ -62,6 +62,21 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     return filsti
 
 
+def sidst_aendret(sti):
+    """Hvornår sidens indhold sidst ændrede sig — ikke dagens dato.
+
+    Skriver man dagens dato på alt, står der "opdateret i dag" på en guide,
+    der ikke er rørt i en måned. Det er hverken sandt over for læseren eller
+    troværdigt over for Google. Fingeraftrykkene ligger allerede i
+    sidehistorik.json, som sitemappet også bruger."""
+    post = SIDEHISTORIK.get(sti)
+    raa = (post or {}).get("dato") or ISO
+    try:
+        return raa, dansk_dato(date.fromisoformat(raa))
+    except (TypeError, ValueError):
+        return ISO, dansk_dato(IDAG)
+
+
 def sidedato(sti, html):
     """Datoen hvor sidens indhold sidst ændrede sig — ikke datoen for sidste build.
 
@@ -2088,6 +2103,11 @@ def vejviser(aktuel=""):
         ("/mobilabonnement-100-gb/", "100 GB og op",
          f"{len([a for a in ABON if 100 <= a['data_gb'] < 9999])} planer"),
         ("/prisudvikling/", "Prisudvikling", "stiger priserne?"),
+        ("/mobilabonnement-med-lydbog/", "Med lydbog", "podcast og lydbøger"),
+        ("/anmeldelser/", "Anmeldelser",
+         f"{len({a['udbyder'] for a in ABON if a['pris'] > 0})} selskaber vurderet"),
+        ("/driftsstatus/", "Driftsstatus", "er nettet nede?"),
+        ("/telemobil-score/", "Telemobil-scoren", "sådan rangerer vi"),
         ("/bredbaand/", "Bredbånd",
          f"{len(BB)} abonnementer" if BB else "til hjemmet"),
         ("/bredbaand/fibernet/", "Fibernet",
@@ -4921,6 +4941,10 @@ def byg_udbyder(u):
   billigste mobilabonnement</a>.</p>
 
   {udbyder_kundeservice(u)}
+
+  <p class="krydslink">Virker {e(u['navn'])} ikke lige nu? Se
+  <a href="/driftsstatus/{u['slug']}/">driftsstatus hos {e(u['navn'])}</a> og de
+  seks ting, du selv kan tjekke først.</p>
 
   <h2>{e(uq.get("h2_skift", f"Sådan skifter du til {u['navn']}"))}</h2>
   {f"<p>{skiftnote}</p>" if skiftnote else ""}
@@ -8006,6 +8030,867 @@ i guiden <a href="/guides/er-5g-pengene-vaerd/">er 5G pengene værd?</a></p>
         altbillede="Ung mand spiller online spil på computer")
 
 
+def telemobil_score(a):
+    """Telemobil-scoren: ét tal fra 0 til 100 pr. abonnement.
+
+    Vægtningen står beskrevet på /telemobil-score/ og skal holdes i sync med
+    SCORE_VÆGTE dér. Beregningen sker maskinelt på hele datasættet ved hver
+    kørsel — der er ingen manuel justering af enkeltabonnementer, og provision
+    indgår ikke.
+
+    Point gives relativt inden for abonnementets egen datagruppe. Ellers ville
+    et lille billigt abonnement altid slå et stort, uanset hvad man får for
+    pengene.
+    """
+    if a.get("pris", 0) <= 0 or a.get("forbrugsafregnet"):
+        return None
+
+    gruppe = [x for x in ABON
+              if x["pris"] > 0 and not x.get("forbrugsafregnet")
+              and _score_gruppe(x) == _score_gruppe(a)]
+    if len(gruppe) < 2:
+        gruppe = [x for x in ABON if x["pris"] > 0 and not x.get("forbrugsafregnet")]
+
+    # --- Pris over 12 måneder, 40 point ---------------------------------
+    aar = [gns12(x) for x in gruppe if gns12(x)]
+    mit_aar = gns12(a)
+    p_pris = _relativ(mit_aar, aar, lavt_er_bedst=True) * 40 if mit_aar and aar else 20
+
+    # --- Pris pr. gigabyte, 20 point ------------------------------------
+    def prgb(x):
+        gb = x["data_gb"]
+        if gb <= 0:
+            return None
+        if gb >= 9999:          # fri data sammenlignes indbyrdes på pris alene
+            return x["pris"] / 200
+        return x["pris"] / gb
+    alle_prgb = [prgb(x) for x in gruppe if prgb(x)]
+    mit_prgb = prgb(a)
+    p_prgb = (_relativ(mit_prgb, alle_prgb, lavt_er_bedst=True) * 20
+              if mit_prgb and alle_prgb else 10)
+
+    # --- Vilkår, 20 point ------------------------------------------------
+    v = 0.0
+    v += 7 if not a.get("binding") else (4 if a["binding"] <= 6 else 0)
+    opret = a.get("oprettelse", 0)
+    v += 5 if not opret else (3 if opret <= 99 else 0)
+    v += 2 if a.get("esim") else 0
+    v += 2 if a.get("femg") else 0
+    # Inkluderede tjenester er reel værdi. Uden det her scorer et abonnement
+    # med ni streamingtjenester lavest, alene fordi det er dyrest.
+    inkl = len(a.get("streaming") or [])
+    v += min(4, inkl * 1.5)
+    p_vilkaar = min(20.0, v)
+
+    # --- Kundetilfredshed, 10 point --------------------------------------
+    tp = (UMAP.get(a["udbyder"], {}).get("trustpilot") or {})
+    if tp.get("score"):
+        # Vægtes efter antal anmeldelser: 4,9 med 200 anmeldelser vejer mindre
+        # end 4,7 med 4.000. Under 1.000 anmeldelser trækkes scoren mod midten.
+        vaegt = min(1.0, (tp.get("antal") or 0) / 1000)
+        justeret = tp["score"] * vaegt + 3.5 * (1 - vaegt)
+        p_tp = max(0.0, min(10.0, (justeret - 2.0) / 3.0 * 10))
+    else:
+        p_tp = 5.0
+
+    # --- Gennemsigtighed, 10 point ---------------------------------------
+    g = 10.0
+    if a.get("intro_pris") and a.get("intro_mdr"):
+        # En kampagne er ikke i sig selv utydelig, men jo kortere den er i
+        # forhold til prisstigningen, jo mere skjuler skiltprisen.
+        spring = (a["pris"] - a["intro_pris"]) / max(1, a["pris"])
+        if a["intro_mdr"] <= 3 and spring > 0.5:
+            g -= 4
+        elif a["intro_mdr"] <= 6 and spring > 0.5:
+            g -= 2
+        elif spring > 0.3:
+            g -= 1
+    if opret > 99:
+        g -= 2
+    if a.get("binding", 0) > 6:
+        g -= 2
+    p_gennem = max(0.0, g)
+
+    return round(p_pris + p_prgb + p_vilkaar + p_tp + p_gennem)
+
+
+def _score_gruppe(a):
+    """Datagruppen et abonnement sammenlignes indenfor."""
+    gb = a["data_gb"]
+    if gb >= 9999:
+        return "fri"
+    if gb >= 100:
+        return "xl"
+    if gb >= 50:
+        return "stor"
+    if gb >= 20:
+        return "mellem"
+    return "lille"
+
+
+def _relativ(vaerdi, alle, *, lavt_er_bedst):
+    """Placerer en værdi mellem bedst og dårligst i feltet, som 0 til 1."""
+    lav, hoej = min(alle), max(alle)
+    if hoej == lav:
+        return 1.0
+    andel = (vaerdi - lav) / (hoej - lav)
+    return 1 - andel if lavt_er_bedst else andel
+
+
+def scoremaerkat(a):
+    """Scoren som lille mærkat på abonnementskortet."""
+    s = telemobil_score(a)
+    if s is None:
+        return ""
+    if s >= 80:
+        klasse, ord_ = "score-top", "Fremragende"
+    elif s >= 65:
+        klasse, ord_ = "score-god", "God"
+    elif s >= 50:
+        klasse, ord_ = "score-ok", "Middel"
+    else:
+        klasse, ord_ = "score-lav", "Under middel"
+    return (f'<a class="tmscore {klasse}" href="/telemobil-score/" '
+            f'title="{ord_} — se hvordan Telemobil-scoren beregnes">'
+            f'<b>{s}</b><span>Telemobil-score</span></a>')
+
+# ============================================================ TELEMOBIL-SCORE
+# En navngiven metode bliver citeret. En metodeside gør ikke. Scoren er den
+# samme beregning, vi altid har brugt — den har bare fået et navn og en side,
+# man kan linke til.
+
+SCORE_VÆGTE = [
+    ("Pris over 12 måneder", 40,
+     "Tilbudspris, normalpris og oprettelse lagt sammen og delt med tolv. "
+     "Det vejer tungest, fordi det er den eneste pris, der kan sammenlignes."),
+    ("Pris pr. gigabyte", 20,
+     "Hvad du får for pengene. To abonnementer til samme pris kan give vidt "
+     "forskellige datamængder."),
+    ("Vilkår", 20,
+     "Binding, oprettelse og opsigelsesvarsel. Et abonnement uden binding er "
+     "mere værd end et med, alt andet lige."),
+    ("Kundetilfredshed", 10,
+     "Trustpilot-score vægtet efter antal anmeldelser. Få anmeldelser gør "
+     "scoren følsom over for enkeltsager."),
+    ("Gennemsigtighed", 10,
+     "Om prisen er til at gennemskue: står normalprisen tydeligt, er der "
+     "skjulte gebyrer, hvor let er det at opsige."),
+]
+
+
+def scoretabel():
+    raekker = "".join(
+        f'<tr><td><strong>{e(n)}</strong></td><td class="tal">{v} %</td>'
+        f'<td>{e(b)}</td></tr>' for n, v, b in SCORE_VÆGTE)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Sådan vægter Telemobil-scoren. Summen er 100, og beregningen er den
+  samme for alle abonnementer uanset udbyder.</caption>
+  <thead><tr><th scope="col">Parameter</th><th scope="col">Vægt</th>
+    <th scope="col">Hvad det dækker</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def byg_score():
+    krumme = [("/", "Forside"), (None, "Telemobil-scoren")]
+    krop = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta="Beregnes automatisk på alle abonnementer to gange i døgnet")}
+<div class="udtag"><p><strong>Kort fortalt:</strong> Telemobil-scoren er et tal fra
+0 til 100, der samler pris, datamængde, vilkår og kundetilfredshed i ét. Den
+beregnes maskinelt på alle {len([a for a in ABON if a["pris"] > 0])} abonnementer og
+kan ikke påvirkes af udbyderne.</p></div>
+
+<p>Jeg har bygget scoren, fordi den oplagte måde at rangere abonnementer på —
+efter månedsprisen — er den forkerte. Det billigste tilbud på skiltet er sjældent
+det billigste over et år, og prisen siger intet om, hvad du får for pengene.</p>
+
+<h2>De fem parametre</h2>
+{scoretabel()}
+
+<h2>Hvorfor prisen kun vejer 40 procent</h2>
+<p>Fordi et abonnement, der er ti kroner billigere, men har seks måneders binding
+og halvt så meget data, ikke er et bedre køb. Prisen er det vigtigste, men den er
+ikke det eneste.</p>
+<p>Vægtningen er valgt, så et abonnement ikke kan komme i toppen alene ved at være
+billigt. Det skal også levere noget for pengene og have vilkår, man kan leve med.</p>
+
+<h2>Sådan beregnes de enkelte dele</h2>
+<h3>Pris over 12 måneder</h3>
+<p>Intropris gange antal kampagnemåneder, plus normalpris for de resterende
+måneder, plus oprettelse. Divideret med tolv. Det er det samme regnestykke, du
+kan se udfoldet på hvert enkelt abonnement i tabellerne.</p>
+<p>Abonnementet med den laveste 12-måneders-pris i sin datagruppe får fuldt point.
+Resten får point i forhold til afstanden op til det.</p>
+<h3>Pris pr. gigabyte</h3>
+<p>Månedspris divideret med datamængde. Abonnementer med fri data behandles
+særskilt, fordi tallet ellers bliver meningsløst.</p>
+<h3>Vilkår</h3>
+<p>Point for ingen binding, gratis oprettelse og eSIM. Fradrag for
+bindingsperioder over seks måneder og for oprettelsesgebyrer over 99 kr.</p>
+<h3>Kundetilfredshed</h3>
+<p>Trustpilot-score vægtet efter antal anmeldelser. Et selskab med 4,7 og 3.979
+anmeldelser vejer tungere end et med 4,9 og 200. Vi noterer også, hvis Trustpilot
+har markeret selskabets indsamlingsmetoder.</p>
+<h3>Gennemsigtighed</h3>
+<p>Den eneste parameter med et element af vurdering. Den dækker, om normalprisen
+fremgår tydeligt, om der er gebyrer, der først dukker op ved bestilling, og hvor
+let abonnementet er at opsige.</p>
+
+<h2>Hvad scoren ikke måler</h2>
+<p>Det er lige så vigtigt at vide, hvad tallet ikke siger noget om.</p>
+<ul class="pilliste">
+  <li><strong>Dækning på din adresse.</strong> To abonnementer med samme score kan
+  give vidt forskellig oplevelse, hvis de kører på hvert sit net. Brug
+  <a href="/daekningskort/">dækningstjekket</a> til den del.</li>
+  <li><strong>Dit personlige behov.</strong> Et abonnement med 100 GB kan have høj
+  score og stadig være forkert for dig, hvis du bruger 8 GB.</li>
+  <li><strong>Kundeservice i praksis.</strong> Trustpilot dækker selskabets samlede
+  forretning, ikke kun mobilabonnementer.</li>
+</ul>
+
+<h2>Kan udbyderne påvirke scoren?</h2>
+<p>Nej. Beregningen kører automatisk på hele datasættet to gange i døgnet, og der
+er ingen manuel justering af enkeltabonnementer. Vi modtager provision fra
+udvalgte udbydere, når nogen bestiller via vores links — det ændrer hverken
+scoren eller rækkefølgen i tabellerne.</p>
+<p>Læs hvordan forretningsmodellen fungerer i
+<a href="/saadan-tjener-vi-penge/">sådan tjener vi penge</a>.</p>
+
+<h2>Må du bruge scoren?</h2>
+<p>Ja. Skriver du en artikel, en opgave eller en rapport, må du gerne henvise til
+Telemobil-scoren. Angiv Telemobil som kilde med et link til denne side, og skriv
+hvornår tallet er hentet — scoren ændrer sig, når priserne gør.</p>
+
+<h2>Hvor kan du se den?</h2>
+<p>Scoren indgår i rangeringen på
+<a href="/bedste-mobilabonnement/">bedste mobilabonnement</a> og i sorteringen på
+<a href="/billigste-mobilabonnement/">alle abonnementer</a>. Beregningsgrundlaget
+for hvert enkelt abonnement kan foldes ud i tabellerne.</p>
+
+{forfatterboks()}
+</section>"""
+
+    faq = [
+        {"sp": "Hvad er Telemobil-scoren?",
+         "sv": "Et tal fra 0 til 100, der samler pris over 12 måneder, pris pr. "
+               "gigabyte, vilkår, kundetilfredshed og gennemsigtighed i ét. Den "
+               "beregnes maskinelt på alle abonnementer to gange i døgnet."},
+        {"sp": "Kan udbyderne betale sig til en bedre score?",
+         "sv": "Nej. Beregningen kører automatisk på hele datasættet uden manuel "
+               "justering. Provision påvirker hverken scoren eller rækkefølgen."},
+        {"sp": "Hvorfor vejer prisen kun 40 procent?",
+         "sv": "Fordi et abonnement, der er ti kroner billigere, men har seks "
+               "måneders binding og halvt så meget data, ikke er et bedre køb."},
+        {"sp": "Måler scoren dækningen?",
+         "sv": "Nej. Dækning afhænger af din adresse og af hvilket net abonnementet "
+               "kører på. Brug dækningstjekket til den del."},
+        {"sp": "Må jeg citere scoren?",
+         "sv": "Ja. Angiv Telemobil som kilde med et link til denne side, og skriv "
+               "hvornår tallet er hentet."},
+    ]
+
+    skriv("/telemobil-score/", shell(
+        sti="/telemobil-score/",
+        titel="Telemobil-scoren — sådan vurderer vi mobilabonnementer",
+        beskrivelse="Telemobil-scoren samler pris over 12 måneder, pris pr. gigabyte, "
+                    "vilkår og kundetilfredshed i ét tal fra 0 til 100. Se hele "
+                    "beregningen og vægtningen.",
+        hero=hero_side("Metode", "Telemobil-scoren",
+                       "Ét tal fra 0 til 100, der samler pris, data, vilkår og "
+                       "kundetilfredshed. Beregnet maskinelt, ikke redigeret."),
+        efter_hero="", krumme=krumme, toc=False,
+        indhold=krop + faqblok(faq, "Spørgsmål om Telemobil-scoren"),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+    ), prioritet="0.7", hyppighed="monthly")
+
+# ============================================================ DRIFTSSTATUS
+# Når et net går ned, søger tusindvis samtidig. Konkurrenten har én samlet
+# side. Vi laver en pr. selskab, fordi folk søger på "yousee nede", ikke på
+# "driftsstatus mobilnetværk" — plus en hovedside, der samler dem.
+#
+# Vi hverken hoster eller gætter på driftsdata. Vi sender folk direkte til
+# selskabets egen statusside og fortæller, hvad de selv kan tjekke først.
+# Det er hurtigere for læseren end en side, der viser et forældet grønt flueben.
+
+DRIFT_SIDER = {
+    "yousee": ("https://yousee.dk/hjaelp/driftsinfo", "TDC NET"),
+    "telmore": ("https://www.telmore.dk/kundeservice/driftsinfo", "TDC NET"),
+    "eesy": ("https://eesy.dk/kundeservice", "TDC NET"),
+    "cbb-mobil": ("https://cbb.dk/kundeservice/driftsinfo", "Telenor"),
+    "oister": ("https://www.oister.dk/kundeservice/driftsinfo", "3"),
+    "greentel": ("https://www.greentel.dk/kundeservice/", "Telenor"),
+    "duka": ("https://www.dukatale.dk/kundeservice", "Telenor"),
+    "lebara": ("https://www.lebara.dk/da/help.html", "Telenor"),
+    "lyca-mobile": ("https://www.lycamobile.dk/da/help-support/", "Telenor"),
+    "flexii": ("https://www.flexii.dk/kundeservice", "3"),
+}
+
+DRIFT_TJEK = [
+    ("Slå flytilstand til og fra igen",
+     "Telefonen søger net på ny. Løser det mest almindelige problem, hvor "
+     "telefonen hænger fast på en mast, der ikke svarer."),
+    ("Genstart telefonen",
+     "Rydder netværksforbindelsen helt. Tager to minutter og løser overraskende "
+     "meget."),
+    ("Tjek om andre i husstanden har samme problem",
+     "Virker det hos én og ikke hos en anden på samme net, er det telefonen — "
+     "ikke nettet."),
+    ("Prøv at ringe frem for at bruge data",
+     "Virker opkald, men ikke data, er det ofte en indstilling eller et opbrugt "
+     "dataforbrug — ikke en driftsforstyrrelse."),
+    ("Tjek om du har brugt din datamængde",
+     "Nogle selskaber spærrer i stedet for at sætte hastigheden ned. Det ligner "
+     "et nedbrud, men er det ikke."),
+    ("Tag simkortet ud og sæt det i igen",
+     "Et dårligt siddende simkort giver de samme symptomer som et nedbrud."),
+]
+
+
+def drifttabel():
+    raekker = ""
+    for u in UDBYDERE:
+        if u["slug"] not in DRIFT_SIDER:
+            continue
+        url, net = DRIFT_SIDER[u["slug"]]
+        raekker += f"""<tr>
+  <td><a href="/driftsstatus/{u['slug']}/"><strong>{e(u['navn'])}</strong></a></td>
+  <td>{e(net)}</td>
+  <td><a href="{e(url)}" rel="nofollow noopener" target="_blank">Officiel
+      driftsinfo</a></td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Driftsstatus hos de danske mobilselskaber. Vi linker direkte til
+  selskabets egen side, fordi det er den eneste kilde, der er opdateret i
+  realtid.</caption>
+  <thead><tr><th scope="col">Selskab</th><th scope="col">Kører på</th>
+    <th scope="col">Tjek her</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def drift_tjekliste():
+    punkter = "".join(
+        f'<li><strong>{e(h)}.</strong> {e(b)}</li>' for h, b in DRIFT_TJEK)
+    return f'<ol class="nummerliste">{punkter}</ol>'
+
+
+def byg_driftsstatus():
+    """Hovedside plus én side pr. selskab."""
+    krumme = [("/", "Forside"), (None, "Driftsstatus")]
+    antal = len([u for u in UDBYDERE if u["slug"] in DRIFT_SIDER])
+
+    krop = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta="Links til selskabernes officielle driftsinfo kontrolleret manuelt")}
+<div class="udtag"><p><strong>Virker mobilen ikke?</strong> Prøv først at slå
+flytilstand til og fra. Løser det ikke problemet, så tjek dit selskabs officielle
+driftsside i tabellen herunder — det er den eneste kilde, der er opdateret i
+realtid.</p></div>
+
+<p>Når et mobilnet går ned, opstår der to problemer på én gang. Du kan ikke ringe,
+og du kan ikke finde ud af, om det er dig eller nettet. Den her side er lavet til
+at besvare det andet spørgsmål på tredive sekunder.</p>
+
+<h2>Tjek det her først — det tager to minutter</h2>
+<p>Mellem en tredjedel og halvdelen af alle "nettet er nede"-oplevelser skyldes
+telefonen, ikke nettet. Gennemgå de her seks punkter, før du bruger tid på at
+ringe til kundeservice.</p>
+{drift_tjekliste()}
+
+<h2>Driftsstatus hos de danske selskaber</h2>
+{drifttabel()}
+
+<h2>Husk: dit selskab er ikke nødvendigvis dit net</h2>
+<p>Danmark har tre fysiske mobilnet — TDC NET, Telenor og 3. Alle andre selskaber
+lejer sig ind på et af dem.</p>
+<p>Det betyder, at et nedbrud sjældent rammer ét selskab alene. Går TDC NET ned,
+er YouSee, Telmore og eesy ramt samtidig. Oplever du problemer, og din nabo med et
+andet selskab gør det også, er det med stor sandsynlighed nettet under jer begge.</p>
+<p>Kolonnen "kører på" i tabellen viser, hvilket net hvert selskab bruger. Læs mere
+om forskellene i vores gennemgang af <a href="/netvaerk/">de tre danske
+mobilnet</a>.</p>
+
+<h2>Hvad du har krav på ved et nedbrud</h2>
+<p>Der er ingen automatisk kompensation ved kortvarige forstyrrelser. Men står
+nettet ned i længere tid, har du rettigheder.</p>
+<ul class="pilliste">
+  <li><strong>Væsentlige mangler.</strong> Er tjenesten utilgængelig i længere tid,
+  kan du kræve forholdsmæssigt afslag i abonnementsprisen. Det skal du selv bede
+  om — det sker ikke automatisk.</li>
+  <li><strong>Gentagne problemer.</strong> Er nettet ustabilt over længere tid, kan
+  det udgøre en væsentlig mangel, der giver ret til at ophæve aftalen uden at
+  betale resten af bindingsperioden.</li>
+  <li><strong>Klageadgang.</strong> Afviser selskabet din klage, kan du indbringe
+  sagen for Teleankenævnet. Det er gratis at få vurderet.</li>
+</ul>
+<p>Dokumentér det. Notér dato, tidspunkt og varighed, og gem skærmbilleder. Det er
+det, der afgør en klagesag.</p>
+
+<h2>Hvornår er det dækningen og ikke et nedbrud?</h2>
+<p>Er problemet det samme sted hver gang — i kælderen, på arbejdet, i sommerhuset —
+er det dækning, ikke drift. Det løses ikke ved at vente.</p>
+<p>Tjek dækningen på den konkrete adresse i vores
+<a href="/daekningskort/">dækningstjek</a>. Er dækningen dårlig hos dit selskab,
+kan et andet net gøre en mærkbar forskel — og du kan skifte uden at miste dit
+nummer.</p>
+
+<h2>Er det telefonen?</h2>
+<p>Har du gennemgået listen øverst og stadig problemer, mens andre på samme net
+ikke har det, er det telefonen eller simkortet. Vi har samlet fejlsøgningen i
+guiden til <a href="/guides/mobil-virker-ikke/">hvad du gør, når mobilen ikke
+virker</a>.</p>
+
+{forfatterboks()}
+</section>"""
+
+    faq = [
+        {"sp": "Er der nedbrud på mit mobilnet lige nu?",
+         "sv": "Tjek dit selskabs officielle driftsside i tabellen ovenfor. Det er "
+               "den eneste kilde, der opdateres i realtid. Prøv først at slå "
+               "flytilstand til og fra — det løser en stor del af problemerne."},
+        {"sp": "Hvorfor er flere selskaber ramt samtidig?",
+         "sv": "Fordi Danmark kun har tre fysiske mobilnet. Går TDC NET ned, rammer "
+               "det YouSee, Telmore og eesy på én gang, selvom det er tre "
+               "forskellige selskaber."},
+        {"sp": "Får jeg penge tilbage ved et nedbrud?",
+         "sv": "Ikke automatisk. Er tjenesten utilgængelig i længere tid, kan du "
+               "kræve forholdsmæssigt afslag — men du skal selv bede om det og "
+               "kunne dokumentere varigheden."},
+        {"sp": "Hvordan ved jeg, om det er nettet eller min telefon?",
+         "sv": "Virker det hos andre i husstanden på samme net, er det din telefon. "
+               "Er alle ramt, er det nettet."},
+        {"sp": "Kan jeg komme ud af mit abonnement, hvis nettet er ustabilt?",
+         "sv": "Vedvarende problemer kan udgøre en væsentlig mangel, der giver ret "
+               "til at ophæve aftalen. Dokumentér datoer og varighed, og klag "
+               "skriftligt først."},
+    ]
+
+    skriv("/driftsstatus/", shell(
+        sti="/driftsstatus/",
+        titel=f"Driftsstatus mobilnetværk — er der nedbrud hos dit selskab?",
+        beskrivelse=f"Tjek om der er nedbrud på dit mobilnet. Direkte links til "
+                    f"driftsinfo hos {antal} danske selskaber, plus seks ting du selv "
+                    f"kan tjekke først.",
+        hero=hero_side("Driftsstatus", "Er der nedbrud på mobilnettet?",
+                       "Tjek dit selskabs officielle driftsinfo — og se de seks "
+                       "ting, du selv kan tjekke på to minutter."),
+        efter_hero="", krumme=krumme, toc=False,
+        indhold=krop + faqblok(faq, "Spørgsmål om driftsforstyrrelser"),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+    ), prioritet="0.8", hyppighed="daily")
+
+    for u in UDBYDERE:
+        if u["slug"] in DRIFT_SIDER:
+            byg_driftsstatus_selskab(u)
+
+
+def byg_driftsstatus_selskab(u):
+    """Én side pr. selskab. Folk søger "yousee nede", ikke "driftsstatus"."""
+    url, net = DRIFT_SIDER[u["slug"]]
+    navn = u["navn"]
+    samme_net = [x["navn"] for x in UDBYDERE
+                 if x["slug"] in DRIFT_SIDER and x["slug"] != u["slug"]
+                 and DRIFT_SIDER[x["slug"]][1] == net]
+    sti = f"/driftsstatus/{u['slug']}/"
+    krumme = [("/", "Forside"), ("/driftsstatus/", "Driftsstatus"), (None, navn)]
+
+    andre = ""
+    if samme_net:
+        andre = (f"<p>{e(navn)} kører på {e(net)}. Det gør "
+                 f"{e(', '.join(samme_net[:-1]))}"
+                 f"{' og ' + e(samme_net[-1]) if len(samme_net) > 1 else ''} også. "
+                 f"Er der nedbrud på nettet, er alle ramt samtidig — og så er det "
+                 f"ikke {e(navn)}, der er problemet.</p>")
+
+    krop = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"Link til {navn}s officielle driftsinfo kontrolleret manuelt")}
+<div class="udtag"><p><strong>Virker {e(navn)} ikke?</strong> Slå flytilstand til og
+fra igen — det løser den hyppigste årsag. Hjælper det ikke, så tjek
+<a href="{e(url)}" rel="nofollow noopener" target="_blank">{e(navn)}s officielle
+driftsinfo</a>, som er den eneste kilde opdateret i realtid.</p></div>
+
+<h2>Tjek det her først</h2>
+<p>Mellem en tredjedel og halvdelen af alle nedbrudsoplevelser skyldes telefonen,
+ikke nettet. Det tager to minutter at udelukke.</p>
+{drift_tjekliste()}
+
+<h2>{e(navn)} kører på {e(net)}</h2>
+{andre}
+<p>Det er derfor værd at spørge en nabo eller kollega med et andet selskab på samme
+net. Har de samme problem, er det nettet. Har de ikke, er det {e(navn)} eller din
+egen telefon.</p>
+<p>Se hvilke selskaber der kører på hvilket net i vores oversigt over
+<a href="/netvaerk/">de tre danske mobilnet</a>.</p>
+
+<h2>Tjek et andet selskab på samme net</h2>
+<ul class="pilliste">{"".join(
+  f'<li><a href="/driftsstatus/{x["slug"]}/">Driftsstatus hos {e(x["navn"])}</a>'
+  f' — kører også på {e(net)}</li>'
+  for x in UDBYDERE
+  if x["slug"] in DRIFT_SIDER and x["slug"] != u["slug"]
+  and DRIFT_SIDER[x["slug"]][1] == net)}
+  <li><a href="/driftsstatus/">Se alle selskaber</a></li>
+</ul>
+
+<h2>Hvor melder du fejlen?</h2>
+<p>Er problemet ikke løst efter listen ovenfor, og står der intet på driftssiden,
+så kontakt {e(navn)} direkte. Oplys adresse, tidspunkt og hvad der konkret ikke
+virker — opkald, sms eller data. Det gør fejlsøgningen markant hurtigere.</p>
+<p>Kontaktoplysninger står på <a href="/udbydere/{u['slug']}/">vores side om
+{e(navn)}</a>.</p>
+
+<h2>Hvad du har krav på</h2>
+<p>Der er ingen automatisk kompensation ved kortvarige forstyrrelser. Står nettet
+ned i længere tid, kan du kræve forholdsmæssigt afslag i abonnementsprisen — men du
+skal selv bede om det og kunne dokumentere varigheden.</p>
+<p>Notér dato, tidspunkt og varighed, og gem skærmbilleder. Afviser selskabet din
+klage, kan du indbringe sagen for Teleankenævnet, hvor det er gratis at få den
+vurderet.</p>
+
+<h2>Er det dækning frem for drift?</h2>
+<p>Sker det samme sted hver gang, er det dækning. Det løses ikke ved at vente.
+Tjek adressen i vores <a href="/daekningskort/">dækningstjek</a> — er dækningen
+dårlig hos {e(navn)}, kan et selskab på et andet net gøre en mærkbar forskel, og
+du beholder dit nummer, når du skifter.</p>
+
+<h2>Se også</h2>
+<ul class="pilliste">
+  <li><a href="/driftsstatus/">Driftsstatus hos alle selskaber</a></li>
+  <li><a href="/guides/mobil-virker-ikke/">Mobilen virker ikke — fejlsøgning</a></li>
+  <li><a href="/udbydere/{u['slug']}/">Alt om {e(navn)}</a></li>
+</ul>
+
+{forfatterboks()}
+</section>"""
+
+    faq = [
+        {"sp": f"Er der nedbrud hos {navn} lige nu?",
+         "sv": f"Tjek {navn}s officielle driftsinfo, som er den eneste kilde "
+               f"opdateret i realtid. Prøv først at slå flytilstand til og fra."},
+        {"sp": f"Hvilket net kører {navn} på?",
+         "sv": f"{navn} kører på {net}."
+               + (f" Det gør {', '.join(samme_net)} også, så de er ramt samtidig ved "
+                  f"nedbrud på nettet." if samme_net else "")},
+        {"sp": f"Hvorfor virker {navn} ikke hos mig, men hos andre?",
+         "sv": "Så er det sandsynligvis din telefon eller dit simkort. Genstart "
+               "telefonen, og prøv at tage simkortet ud og sætte det i igen."},
+        {"sp": f"Får jeg kompensation, hvis {navn} er nede?",
+         "sv": "Ikke automatisk. Ved længerevarende nedbrud kan du kræve "
+               "forholdsmæssigt afslag, men du skal selv bede om det og "
+               "dokumentere varigheden."},
+    ]
+
+    skriv(sti, shell(
+        sti=sti,
+        titel=f"{navn} driftsstatus — er der nedbrud lige nu?",
+        beskrivelse=f"Tjek om der er nedbrud hos {navn}. Direkte link til officiel "
+                    f"driftsinfo, seks ting du selv kan tjekke, og hvad du har krav "
+                    f"på ved længere nedbrud.",
+        hero=hero_side("Driftsstatus", f"Er der nedbrud hos {navn}?",
+                       f"{navn} kører på {net}. Tjek officiel driftsinfo, og se hvad "
+                       f"du selv kan gøre først."),
+        efter_hero="", krumme=krumme, toc=False,
+        indhold=krop + faqblok(faq, f"Spørgsmål om driftsforstyrrelser hos {navn}"),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+    ), prioritet="0.7", hyppighed="daily")
+
+
+# ============================================================ ANMELDELSER
+# Konkurrenten har en anmeldelsessektion, vi ikke har. Vores udbydersider
+# indeholder vurderingen i forvejen — det her er indgangen, der samler dem
+# og gør dem sammenlignelige.
+
+def anmeldelsestabel():
+    med = []
+    for u in UDBYDERE:
+        egne = [a for a in ABON if a["udbyder"] == u["slug"] and a["pris"] > 0]
+        if not egne:
+            continue
+        tp = (u.get("trustpilot") or {})
+        med.append((u, egne, tp))
+    med.sort(key=lambda x: -(x[2].get("score") or 0))
+    raekker = ""
+    for u, egne, tp in med:
+        score = (f'{tp["score"]:.1f}'.replace(".", ",") if tp.get("score") else "—")
+        antal = kr(tp["antal"]) if tp.get("antal") else "—"
+        uden_binding = len([a for a in egne if not a.get("binding")])
+        raekker += f"""<tr>
+  <td><a href="/udbydere/{u['slug']}/"><strong>{e(u['navn'])}</strong></a></td>
+  <td class="tal">{score}</td>
+  <td class="tal">{antal}</td>
+  <td>{e(netlabel(u))}</td>
+  <td class="tal">{len(egne)}</td>
+  <td class="tal">{kr(min(a['pris'] for a in egne))} kr.</td>
+  <td class="tal">{uden_binding} af {len(egne)}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Alle {len(med)} selskaber i vores sammenligning, rangeret efter
+  Trustpilot-score. Scoren dækker selskabets samlede forretning, ikke kun
+  mobilabonnementer. Opdateret {e(OPDATERET)}.</caption>
+  <thead><tr>
+    <th scope="col">Selskab</th><th scope="col">Trustpilot</th>
+    <th scope="col">Anmeldelser</th><th scope="col">Netværk</th>
+    <th scope="col">Abonnementer</th><th scope="col">Fra</th>
+    <th scope="col">Uden binding</th>
+  </tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def byg_anmeldelser():
+    med_data = [u for u in UDBYDERE
+                if any(a["udbyder"] == u["slug"] and a["pris"] > 0 for a in ABON)]
+    if not med_data:
+        return
+    tp = [u for u in med_data if (u.get("trustpilot") or {}).get("score")]
+    tp.sort(key=lambda u: -u["trustpilot"]["score"])
+    krumme = [("/", "Forside"), (None, "Anmeldelser")]
+
+    kort = "".join(
+        f'<li><a href="/udbydere/{u["slug"]}/"><strong>{e(u["navn"])}</strong></a>'
+        f' — {e(u["tagline"])}</li>'
+        for u in med_data)
+
+    krop = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"Vilkår for {len(med_data)} selskaber gennemgået manuelt")}
+<div class="udtag"><p><strong>Kort fortalt:</strong> Jeg har gennemgået
+{len(med_data)} danske mobilselskaber på pris, vilkår, netværk og
+kundetilfredshed. Bedst bedømt på Trustpilot er
+{e(tp[0]["navn"]) if tp else "—"}
+{f'med {tp[0]["trustpilot"]["score"]:.1f}'.replace(".", ",") + " af 5" if tp else ""}.</p></div>
+
+<p>En anmeldelse af et mobilselskab er ikke en anmeldelse af én pris. Priserne
+ændrer sig hver måned, og et selskab, der er billigst i dag, er det sjældent om et
+halvt år. Det, der holder, er vilkårene: hvordan de behandler kunder, hvor tydelige
+de er om priser, og hvad der sker, når noget går galt.</p>
+
+<h2>Alle selskaber side om side</h2>
+{anmeldelsestabel()}
+
+<h2>Sådan læser du Trustpilot-scoren</h2>
+<p>Den er nyttig, men den fortæller ikke det, folk tror. Tre ting er værd at have
+med.</p>
+<h3>Scoren dækker hele forretningen</h3>
+<p>Selskaber som YouSee og Telmore sælger også tv og bredbånd. En lav score kan i
+høj grad handle om kabel-tv og fakturering på helt andre produkter end
+mobilabonnementer.</p>
+<h3>Antallet betyder mere end tallet</h3>
+<p>Et selskab med 4,3 og 959 anmeldelser og et med 4,9 og 15.000 er ikke
+sammenlignelige på samme måde. Få anmeldelser gør scoren følsom over for
+enkeltsager, både gode og dårlige.</p>
+<h3>Indsamlingsmetoden varierer</h3>
+<p>Nogle selskaber beder aktivt kunder om at anmelde umiddelbart efter et køb, hvor
+tilfredsheden er højest. Trustpilot markerer selv de profiler, hvor
+indsamlingsmetoderne kan give et skævt billede — det er værd at kigge efter på den
+enkelte profil.</p>
+
+<h2>Det jeg vurderer selskaberne på</h2>
+<p>Trustpilot er ét af fem punkter. De øvrige er noget, jeg selv kan efterprøve i
+vilkårene:</p>
+<ul class="pilliste">
+  <li><strong>Prisen over tolv måneder</strong> — ikke tilbudsprisen alene</li>
+  <li><strong>Bindingsperiode og opsigelsesvarsel</strong></li>
+  <li><strong>Gennemsigtighed</strong> — står normalprisen tydeligt, er der gebyrer,
+  der først dukker op ved bestilling</li>
+  <li><strong>Netværk</strong> — hvilket af de tre danske net selskabet lejer sig
+  ind på</li>
+  <li><strong>Kundetilfredshed</strong> — Trustpilot, vægtet efter antal
+  anmeldelser</li>
+</ul>
+<p>Vægtningen står beskrevet i <a href="/telemobil-score/">Telemobil-scoren</a>.</p>
+
+<h2>Hvorfor et lille selskab kan være bedre end et stort</h2>
+<p>Danmark har tre fysiske mobilnet. Alle andre selskaber lejer sig ind på et af
+dem. Det betyder, at et lille selskab kan køre på præcis samme master som et
+stort — til væsentligt lavere pris.</p>
+<p>Forskellen ligger i kundeservice, i om der er fysiske butikker, og i hvor mange
+tilvalg der presses på ved bestilling. Ikke i dækningen. Læs mere om
+<a href="/netvaerk/">de tre danske mobilnet</a>.</p>
+
+<h2>Læs anmeldelsen af hvert selskab</h2>
+<ul class="pilliste">{kort}</ul>
+
+<h2>Hvad jeg ikke kan vurdere</h2>
+<p>Dækningen på din adresse. To selskaber med samme vurdering kan give vidt
+forskellig oplevelse, hvis de kører på hvert sit net, og dækningen afhænger af
+huset, ikke af postnummeret.</p>
+<p>Tjek altid den konkrete adresse i <a href="/daekningskort/">dækningstjekket</a>,
+før du vælger efter pris alene.</p>
+
+{forfatterboks()}
+</section>"""
+
+    faq = [
+        {"sp": "Hvilket mobilselskab er bedst?",
+         "sv": f"Det afhænger af, hvad du vægter. På Trustpilot er "
+               f"{tp[0]['navn'] if tp else '—'} bedst bedømt. På pris og vilkår "
+               f"rangerer jeg selskaberne efter Telemobil-scoren."},
+        {"sp": "Kan man stole på Trustpilot-scoren?",
+         "sv": "Delvist. Den dækker selskabets samlede forretning, ikke kun "
+               "mobilabonnementer, og antallet af anmeldelser betyder mere end "
+               "selve tallet."},
+        {"sp": "Har billige mobilselskaber dårligere dækning?",
+         "sv": "Nej. Danmark har tre fysiske mobilnet, og alle andre selskaber "
+               "lejer sig ind på et af dem. Et lille selskab kan køre på præcis "
+               "samme master som et stort."},
+        {"sp": "Modtager I betaling for anmeldelserne?",
+         "sv": "Vi modtager provision, når nogen bestiller via vores links, men det "
+               "påvirker hverken vurderingen eller rækkefølgen. Udbydere kan ikke "
+               "betale sig til en bedre placering."},
+    ]
+
+    skriv("/anmeldelser/", shell(
+        sti="/anmeldelser/",
+        titel=f"Anmeldelser af mobilselskaber — {len(med_data)} selskaber vurderet",
+        beskrivelse=f"Uafhængige anmeldelser af {len(med_data)} danske mobilselskaber. "
+                    f"Pris, vilkår, netværk og Trustpilot-score side om side.",
+        hero=hero_side("Anmeldelser", "Anmeldelser af mobilselskaber",
+                       f"{len(med_data)} danske selskaber vurderet på pris, vilkår, "
+                       f"netværk og kundetilfredshed."),
+        efter_hero="", krumme=krumme, toc=False,
+        indhold=krop + faqblok(faq, "Spørgsmål om anmeldelserne"),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+    ), prioritet="0.8", hyppighed="weekly")
+
+
+# ============================================================ LYDBOG
+def byg_lydbog():
+    med = [a for a in ABON if a["pris"] > 0
+           and any("lydbog" in t.lower() or "podimo" in t.lower()
+                   or "mofibo" in t.lower() for t in a.get("streaming", []))]
+    krumme = [("/", "Forside"), (None, "Med lydbog")]
+    fra = min((a["pris"] for a in med), default=0)
+
+    tabel = ""
+    if med:
+        raekker = ""
+        for a in sorted(med, key=lambda x: x["pris"]):
+            u = UMAP[a["udbyder"]]
+            raekker += f"""<tr>
+  <td><a href="/udbydere/{u['slug']}/"><strong>{e(u['navn'])}</strong></a><br>
+      <span class="tabel-under">{e(a['navn'])}</span></td>
+  <td>{e(", ".join(a.get("streaming", [])))}</td>
+  <td class="tal">{gb_tekst(a['data_gb'])}</td>
+  <td class="tal">{kr(a['pris'])} kr.</td>
+</tr>"""
+        tabel = f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Abonnementer hvor lydbøger eller podcast indgår. Opdateret
+  {e(OPDATERET)}.</caption>
+  <thead><tr><th scope="col">Abonnement</th><th scope="col">Indhold</th>
+    <th scope="col">Data</th><th scope="col">Pris</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+    else:
+        tabel = ('<p class="krydslink">Der er ingen abonnementer med lydbøger i vores '
+                 'datasæt lige nu. Tabellen udfyldes automatisk, når der kommer et.</p>')
+
+    krop = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta="Dataforbrug beregnet ud fra tjenesternes egne bitrates")}
+<div class="udtag"><p><strong>Kort svar:</strong> Lydbøger er den letteste form for
+streaming, der findes. En time fylder 0,03 gigabyte — omkring en hundrededel af en
+time video. Du behøver ikke et stort abonnement for at lytte.</p></div>
+
+<p>Lydbøger og podcast bliver ofte nævnt sammen med streaming, som om det er samme
+sag. Det er det ikke. Video kræver et stort abonnement. Lyd gør ikke, og forskellen
+er større, end de fleste regner med.</p>
+
+<h2>Abonnementer med lydbog inkluderet</h2>
+{tabel}
+
+<h2>Hvor lidt fylder en lydbog?</h2>
+{tabel_lyd_dataforbrug()}
+<p>En time lydbog fylder 0,03 gigabyte. Lytter du en time hver dag hele måneden,
+bruger du under ét gigabyte. Selv et af de mindste abonnementer på markedet rækker
+til det med god margin.</p>
+<p>Til sammenligning fylder en time video i HD tre gigabyte — hundrede gange så
+meget. Se hele opgørelsen i vores oversigt over
+<a href="/guides/hvor-meget-data/apps/">dataforbrug pr. app</a>.</p>
+
+<h2>Download frem for stream — så bruger du nul data</h2>
+<p>Alle de store lydbogstjenester kan hente bøger ned over wi-fi. Gør du det, bruger
+du ingen mobildata overhovedet, og så er datamængden helt uden betydning for dit
+valg af abonnement.</p>
+<p>Det er den enkleste måde at gøre et lille abonnement rigeligt. Hent bogen hjemme
+om aftenen, og lyt på farten dagen efter.</p>
+
+<h2>Skal du tage lydbogen med i abonnementet?</h2>
+<p>Regnestykket er det samme som ved streaming. Får du en tjeneste med, er det kun
+en besparelse, hvis du i forvejen betalte for den — og hvis den, du får, er den, du
+ville have valgt.</p>
+<p>Mofibo koster typisk 129-179 kr. om måneden alene, Podimo omkring 99 kr. Koster
+abonnementet med lydbog mere end det, betaler du overpris for bekvemmeligheden.</p>
+<p>Og husk: tjenesten er knyttet til abonnementet. Skifter du mobilselskab, mister
+du adgangen samme dag — også halvt gennemlyttede bøger og din biblioteksliste.</p>
+
+<h2>De danske lydbogstjenester</h2>
+{tabel_musiktjenester()}
+
+<h2>Hvad du skal kigge efter</h2>
+<ul class="pilliste">
+  <li><strong>Er der en lyttegrænse?</strong> Nogle abonnementer har et loft på
+  antal timer om måneden. Det står sjældent i markedsføringen.</li>
+  <li><strong>Hvor mange profiler?</strong> Skal flere i husstanden lytte, skal
+  tjenesten tillade det.</li>
+  <li><strong>Hvad koster den alene?</strong> Sammenlign med prisforskellen på
+  abonnementet.</li>
+  <li><strong>Kan du hente ned?</strong> Alle store tjenester kan, men tjek det —
+  det afgør, om datamængden overhovedet betyder noget.</li>
+</ul>
+
+<h2>Hvilket abonnement passer, hvis du kun lytter?</h2>
+<p>Bruger du telefonen til lydbøger, podcast, beskeder og kort — og ellers ikke
+meget — ligger dit forbrug typisk under fem gigabyte om måneden. Så er
+<a href="/mobilabonnement-1-10-gb/">et abonnement med 1-10 GB</a> rigeligt, og du
+sparer flere hundrede kroner om året i forhold til en stor pakke.</p>
+<p>Streamer du samtidig video på farten, er billedet et andet. Se
+<a href="/mobilabonnement-10-30-gb/">10-30 GB</a>, som dækker langt de fleste.</p>
+
+{forfatterboks()}
+</section>"""
+
+    faq = [
+        {"sp": "Hvor meget data bruger en lydbog?",
+         "sv": "Cirka 0,03 gigabyte i timen. Lytter du en time hver dag hele "
+               "måneden, bruger du under ét gigabyte."},
+        {"sp": "Kan jeg lytte til lydbøger uden at bruge data?",
+         "sv": "Ja. Alle de store tjenester kan hente bøger ned over wi-fi. Gør du "
+               "det, bruger du ingen mobildata overhovedet."},
+        {"sp": "Er det billigst at få lydbogen med i mobilabonnementet?",
+         "sv": "Kun hvis du i forvejen betalte for tjenesten. Mofibo koster typisk "
+               "129-179 kr. alene og Podimo omkring 99 kr. Koster abonnementet mere "
+               "end det oveni, betaler du overpris."},
+        {"sp": "Hvad sker der med lydbogen, hvis jeg skifter selskab?",
+         "sv": "Du mister adgangen samme dag, inklusive halvt gennemlyttede bøger og "
+               "din biblioteksliste. Tjenesten er knyttet til abonnementet, ikke "
+               "til dig."},
+        {"sp": "Hvor stort et abonnement skal jeg have?",
+         "sv": "Lytter du primært til lyd og bruger telefonen normalt derudover, "
+               "rækker et abonnement med 1-10 GB fint."},
+    ]
+
+    skriv("/mobilabonnement-med-lydbog/", shell(
+        sti="/mobilabonnement-med-lydbog/",
+        titel=("Mobilabonnement med lydbog"
+               + (f" — fra {kr(fra)} kr./md." if med else " — sådan lytter du billigst")),
+        beskrivelse="Lydbøger fylder 0,03 GB i timen — hundrede gange mindre end video. "
+                    "Se hvilke abonnementer der har lydbog med, og hvor lidt data du "
+                    "reelt har brug for.",
+        hero=hero_side("Med lydbog", "Mobilabonnement med lydbog",
+                       "Lydbøger er den letteste streaming, der findes. Du behøver "
+                       "ikke et stort abonnement for at lytte."),
+        efter_hero="", krumme=krumme, toc=False,
+        indhold=krop + faqblok(faq, "Spørgsmål om lydbøger og mobilabonnement"),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+    ), prioritet="0.7", hyppighed="weekly")
+
+
 def byg_guideoversigt():
     sti = "/guides/"
     krumme = [("/", "Forside"), (None, "Guides")]
@@ -8018,8 +8903,10 @@ def byg_guideoversigt():
     <span class="ak-maerkat">{e(maerkat)}</span>
     <span class="ak-titel">{e(t)}</span>
     <span class="ak-besk">{e(besk)}</span>
-    <span class="ak-fod"><span class="ak-tid">{min} min. læsning</span>
-    <span class="ak-laes">Læs <span aria-hidden="true">→</span></span></span>
+    <span class="ak-fod">
+      <span class="ak-tid"><time datetime="{sidst_aendret(h)[0]}">{e(sidst_aendret(h)[1])}</time>
+        · {min} min. læsning</span>
+      <span class="ak-laes">Læs <span aria-hidden="true">→</span></span></span>
   </span>
 </a>"""
 
@@ -9340,6 +10227,8 @@ def byg_404():
 def main():
     # Popup'en ligger på hver side, så den skal bygges før noget andet
     skabelon.FIRMA = site.get("firma", {})
+    skabelon.SCOREMAERKAT = scoremaerkat
+    skabelon.SCORETAL = lambda a: telemobil_score(a) or 0
     skabelon.HURTIGPRIS = hurtigpris_dialog()
     skabelon.CSS_INLINE = minificer_css(
         open(os.path.join(ROD, "assets", "css", "telemobil.css"), encoding="utf-8").read())
@@ -10482,6 +11371,10 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_bredbaand()
     byg_nye_guides()
     byg_fem_artikler()
+    byg_score()
+    byg_driftsstatus()
+    byg_anmeldelser()
+    byg_lydbog()
     byg_guideoversigt()
     byg_guide("/guides/skift-mobilselskab/", "Skift mobilselskab",
               "Sådan skifter du mobilselskab",

@@ -12,15 +12,18 @@ SITENAVN = "Telemobil"
 # frem for en tom linje.
 FIRMA = {"navn": None, "cvr": None, "cvr_url": None}
 
+# Skrevet i første person. En navngiven person, der siger "jeg", vejer mere end
+# en redaktion, der siger "vi" — både for læseren og i Googles vurdering af,
+# hvem der står bag indholdet.
 FORFATTER = {
     "navn": "Emil Rostgaard",
     "rolle": "Stifter og redaktør, Telemobil",
     "linkedin": "https://www.linkedin.com/in/emil-rostgaard-702809195/",
     "billede": "/assets/img/emil-rostgaard.webp",
-    "bio": ("Emil Rostgaard har arbejdet med digitale sammenligningstjenester og "
-            "forbrugerøkonomi siden 2018 og står bag flere danske prisportaler. Han "
-            "gennemgår selv udbydernes produktvilkår og står bag den metode, "
-            "Telemobils tabeller bygger på."),
+    "bio": ("Jeg har arbejdet med digitale sammenligningstjenester og "
+            "forbrugerøkonomi siden 2018 og står bag flere danske prisportaler. "
+            "Jeg læser selv udbydernes abonnementsvilkår igennem, og jeg har "
+            "skrevet den metode, alle tal på Telemobil bygger på."),
 }
 
 # Menuen viser kun de sider, folk faktisk leder efter. Resten står i footeren.
@@ -33,6 +36,7 @@ SAMMENLIGN_MENU = [
     ("/mobilabonnement-med-fri-tale/", "Fri tale", "Ubegrænsede opkald og sms"),
     ("/mobilabonnement-uden-binding/", "Uden binding", "Opsig når du vil"),
     ("/mobilabonnement-med-streaming/", "Med streaming", "Streamingtjenester i prisen"),
+    ("/mobilabonnement-med-lydbog/", "Med lydbog", "Podcast og lydbøger inkluderet"),
     ("/mobilabonnement-med-musik/", "Med musik", "Musik, podcast og lydbøger"),
     ("/mobilabonnement-med-esim/", "Med eSIM", "Klar samme dag"),
     ("/mobilabonnement-til-boern/", "Til børn", "Trygt og uden overraskelser"),
@@ -60,6 +64,7 @@ SAMMENLIGN = SAMMENLIGN_MENU + SAMMENLIGN_OEVRIGE
 VAERKTOEJER = [
     ("/daekningskort/", "Dækningstjek", "Se hvilket net der dækker hos dig"),
     ("/sammenlign/", "Udbyder mod udbyder", "To selskaber side om side"),
+    ("/driftsstatus/", "Driftsstatus", "Er der nedbrud på nettet?"),
     ("/hvem-ringer-til-mig/", "Hvem ringer til mig?", "Slå et ukendt nummer op"),
     ("/speedtest/", "Hastighedstest", "Mål din forbindelse"),
     ("/12-maaneders-prisen/", "12-måneders-prisen", "Sådan regner vi"),
@@ -90,6 +95,11 @@ BREDBAAND_MENU = [
     ("/bredbaand/kabel-internet/", "Kabel-internet"),
     ("/guides/mobilt-bredbaand/", "Guide: mobilt bredbånd"),
 ]
+
+# Sættes af build.py til scoremaerkat(). Uden den vises intet — skabelonen
+# kender ikke til scoren, og beregningen bliver hvor dataene er.
+SCOREMAERKAT = None
+SCORETAL = None
 
 NAV_UDBYDERE = []
 HURTIGPRIS = ""
@@ -489,6 +499,8 @@ def fod(opdateret):
           <li><a href="/om-os/">Om os</a></li>
           <li><a href="/om/emil-rostgaard/">{e(FORFATTER['navn'])}</a></li>
           <li><a href="/metode/">Vores metode</a></li>
+          <li><a href="/telemobil-score/">Telemobil-scoren</a></li>
+          <li><a href="/anmeldelser/">Anmeldelser af selskaber</a></li>
           <li><a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></li>
           <li><a href="/kontakt/">Kontakt</a></li>
           <li><a href="/presse/">Presse</a></li>
@@ -529,17 +541,31 @@ def afsloering(kort=False):
 
 
 def forfatterboks(gennemgået=None):
+    """Forfatterboksen. Navngiven person, førstepersonsbio og et efterprøveligt
+    selskab bag — det er de tre ting, en læser kan kontrollere."""
     f = FORFATTER
+    cvr = ""
+    if FIRMA.get("cvr"):
+        navn = e(FIRMA.get("navn") or "")
+        url = FIRMA.get("cvr_url")
+        nr = (f'<a href="{e(url)}" rel="noopener nofollow" target="_blank">'
+              f'CVR {e(FIRMA["cvr"])}</a>' if url else f'CVR {e(FIRMA["cvr"])}')
+        cvr = (f'<p class="fb-selskab">Telemobil drives af <strong>{navn}</strong>, '
+               f'{nr}. Du kan slå selskabet op i Det Centrale '
+               f'Virksomhedsregister.</p>')
     return f"""<aside class="forfatter">
-  <img src="{f['billede']}" width="88" height="88" alt="{e(f['navn'])}, stifter af Telemobil" loading="lazy">
+  <img src="{f['billede']}" width="88" height="88"
+       alt="{e(f['navn'])}, stifter af Telemobil" loading="lazy">
   <div>
     <h3>{e(f['navn'])}</h3>
     <div class="rolle">{e(f['rolle'])}</div>
     <p>{e(f['bio'])}</p>
+    {cvr}
     <div class="links">
-      <a href="/om/emil-rostgaard/">Om forfatteren</a>
+      <a href="/om/emil-rostgaard/">Om mig</a>
       <a href="{f['linkedin']}" rel="me noopener nofollow" target="_blank">LinkedIn</a>
-      <a href="/metode/">Sådan tester vi</a>
+      <a href="/telemobil-score/">Telemobil-scoren</a>
+      <a href="/metode/">Sådan tester jeg</a>
     </div>
   </div>
 </aside>"""
@@ -655,7 +681,8 @@ def stjerner(u, *, kompakt=False):
             f'<span><strong>{tal} af 5</strong> på Trustpilot{an}.{da}</span></p>')
 
 
-def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
+def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
+              score=""):
     """Ét abonnement som kompakt rækkekort med foldbare detaljer."""
     logo = f"/assets/img/logoer/{u['logo']}"
     forbrug = a.get("forbrugsafregnet")
@@ -782,6 +809,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
   data-binding="{a['binding']}" data-net="{e(_netgruppe(u))}" data-slug="{e(u['slug'])}"
   data-tilbud="{1 if intro else 0}" data-ekstra="{' '.join(ekstra)}"
   data-tp="{(u.get('trustpilot') or {}).get('score') or 0}"
+  data-score="{SCORETAL(a) if SCORETAL else 0}"
   data-udbyder="{e(u['navn'])}">
   {flag}
   <div class="pk-raekke">
@@ -793,6 +821,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None):
     </div>
     <div class="pk-midt">
       <h3 class="pk-navn">{e(u['navn'])} – {e(a['navn'])}</h3>
+      {score}
       <div class="pk-stats">{statbokse}</div>
       <div class="pk-chips">{chips}</div>
     </div>
@@ -865,6 +894,7 @@ def filterbar(abonnementer, udbydere_map, forvalg=None):
         <option value="aar">Gns. 12 mdr.: lav til høj</option>
         <option value="prgb">Pris pr. GB: lav til høj</option>
         <option value="gb">Mest data først</option>
+        <option value="score">Telemobil-score: høj til lav</option>
         <option value="tp">Bedst bedømt først</option>
       </select>
     </div>
@@ -890,7 +920,8 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     for i, a in enumerate(abonnementer):
         u = udbydere_map[a["udbyder"]]
         r = prisrække(a, u, billigst_pr_gb=(a["id"] == billigst_id),
-                      gnsnit_aar=gnsnit_aar, dyn=dyn)
+                      gnsnit_aar=gnsnit_aar, dyn=dyn,
+                      score=SCOREMAERKAT(a) if SCOREMAERKAT else "")
         if vis and i >= vis:
             r = r.replace('<article class="plan', '<article hidden class="plan', 1)
         kort += r
