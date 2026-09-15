@@ -1,5 +1,5 @@
 {
- "hentet": "2026-09-14",
+ "hentet": "2026-09-15",
  "abonnementer": [
   {
    "id": "bb-566679",
@@ -46,31 +46,6 @@
    "kampagnetekst": "Fra 99 kr/md i 6 mdr",
    "logo_url": "https://adtraction.com/image.htm?imgId=1697235821",
    "link": "https://go.adt242.com/t/t?a=1697235826&as=2102885611&t=2&tk=1&url=https://www.hiper.dk/bredbaand"
-  },
-  {
-   "id": "bb-125052",
-   "udbyder": "oister",
-   "udbyder_navn": "Oister",
-   "navn": "5G internet",
-   "teknologi": "5g",
-   "ned": 950,
-   "op": 90,
-   "pris": 279,
-   "intro_pris": 99,
-   "intro_mdr": 3,
-   "oprettelse": 0,
-   "binding": 6,
-   "seks_maaneder": 1674,
-   "seks_maaneder_tilbud": 1134,
-   "net": "Oister",
-   "fordele": [
-    "Adgang til fordelsklubben OiSTER+",
-    "Fri data",
-    "Inkl. gratis router"
-   ],
-   "kampagnetekst": "99 kr/md første 3 mdr",
-   "logo_url": "https://adtraction.com/image.htm?imgId=1666103636",
-   "link": "https://go.adt284.net/t/t?a=1666103641&as=2102885611&t=2&tk=1&url=https://www.oister.dk/internet/5g/"
   },
   {
    "id": "bb-319728",
@@ -169,6 +144,31 @@
    "link": "https://on.eesy.dk/t/t?a=1700040947&as=2102885611&t=2&tk=1&url=https://eesy.dk/rabat/5g-internet"
   },
   {
+   "id": "bb-125052",
+   "udbyder": "oister",
+   "udbyder_navn": "Oister",
+   "navn": "5G internet",
+   "teknologi": "5g",
+   "ned": 950,
+   "op": 90,
+   "pris": 279,
+   "intro_pris": 139,
+   "intro_mdr": 6,
+   "oprettelse": 0,
+   "binding": 6,
+   "seks_maaneder": 1674,
+   "seks_maaneder_tilbud": 834,
+   "net": "Oister",
+   "fordele": [
+    "Adgang til fordelsklubben OiSTER+",
+    "Fri data",
+    "Inkl. gratis router"
+   ],
+   "kampagnetekst": "139 kr/md første 6 mdr",
+   "logo_url": "https://adtraction.com/image.htm?imgId=1666103636",
+   "link": "https://go.adt284.net/t/t?a=1666103641&as=2102885611&t=2&tk=1&url=https://www.oister.dk/internet/5g/"
+  },
+  {
    "id": "bb-370680",
    "udbyder": "yousee",
    "udbyder_navn": "YouSee",
@@ -214,31 +214,6 @@
    "kampagnetekst": "169 kr/md første 3 mdr - spar 510 kr",
    "logo_url": "https://adtraction.com/image.htm?imgId=1693093220",
    "link": "https://go.ewii.dk/t/t?a=1693093225&as=2102885611&t=2&tk=1&url=https://www.ewii.dk/privat/internet/"
-  },
-  {
-   "id": "bb-12505201",
-   "udbyder": "oister",
-   "udbyder_navn": "Oister",
-   "navn": "5G internet - 25 % rabat",
-   "teknologi": "5g",
-   "ned": 950,
-   "op": 90,
-   "pris": 259,
-   "intro_pris": 194,
-   "intro_mdr": 6,
-   "oprettelse": 0,
-   "binding": 6,
-   "seks_maaneder": 1554,
-   "seks_maaneder_tilbud": 1164,
-   "net": "Oister",
-   "fordele": [
-    "Adgang til fordelsklubben OiSTER+",
-    "Fri data",
-    "Inkl. gratis router"
-   ],
-   "kampagnetekst": "25 % rabat i 6 mdr",
-   "logo_url": "https://adtraction.com/image.htm?imgId=1666103636",
-   "link": "https://go.adt284.net/t/t?a=1666103641&as=2102885611&t=2&tk=1&url=https://www.oister.dk/rabat/oister-internet/"
   },
   {
    "id": "bb-219501",
