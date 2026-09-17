@@ -2045,3 +2045,56 @@ body{overflow-x:clip;max-width:100%;position:relative}
   .ti-punkt b{font-size:1.3rem}
 }
 @media(max-width:420px){.ti-punkt em{display:none}}
+
+/* ================= Signe — maskotten =================
+   Hun står, hvor læseren skal videre eller er i tvivl. Alt er inline SVG med
+   faste mål, så der hverken er netværkskald eller layoutskift. */
+.signe{display:block;max-width:100%;height:auto;overflow:visible}
+.signe .sg-oje,.signe .sg-vink,.signe .sg-bue{transform-box:fill-box}
+
+/* Hero: sidder bag regningstjekket med hænderne over kanten */
+.hl-vaerktoej{position:relative;min-width:0}
+.signe-paa-kant,.signe-haender{display:flex;justify-content:flex-end;padding-right:1.6rem;
+  pointer-events:none}
+.signe-haender{position:absolute;top:0;left:0;right:0;z-index:2;
+  animation:sg-op .7s cubic-bezier(.2,.9,.3,1.2) .25s both}
+.signe-paa-kant{margin-bottom:-14px;position:relative;z-index:0;
+  animation:sg-op .7s cubic-bezier(.2,.9,.3,1.2) .25s both}
+.hl-vaerktoej .regningstjek{position:relative;z-index:1}
+@keyframes sg-op{from{transform:translateY(46%);opacity:0}to{transform:none;opacity:1}}
+@media(max-width:900px){.signe-paa-kant,.signe-haender{padding-right:1rem}
+  .signe-paa-kant{margin-bottom:-10px}
+  .signe-paa-kant .signe,.signe-haender .signe{width:108px;height:auto}}
+
+/* Hun blinker, og signalet pulserer — langsomt nok til ikke at distrahere */
+.signe .sg-oje{transform-origin:center;animation:sg-blink 5.5s infinite}
+@keyframes sg-blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+.signe .sg-bue{animation:sg-puls 2.8s ease-in-out infinite}
+.signe .sg-bue1{animation-delay:.25s}.signe .sg-bue2{animation-delay:.5s}
+@keyframes sg-puls{0%,100%{opacity:.25}50%{opacity:1}}
+.signe .sg-vink{transform-origin:85% 95%;animation:sg-vink 1.1s ease-in-out 3}
+@keyframes sg-vink{0%,100%{transform:rotate(0)}50%{transform:rotate(-14deg)}}
+
+/* CTA sidst i guiderne: Signe peger på knappen */
+.signe-cta{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:1.4rem;
+  background:#F5F8FF;border:1px solid var(--graa-lys);border-radius:var(--r-xl);
+  padding:1.3rem 1.6rem;margin:0 0 2.4rem}
+.signe-cta-titel{font-family:var(--font-display,inherit);font-weight:700;font-size:1.25rem;
+  color:var(--blaek);margin:0 0 .3rem;line-height:1.25}
+.signe-cta-tekst p{margin:0 0 .9rem;color:#3B4260;font-size:.95rem}
+.signe-cta-tekst .knap{margin:0}
+@media(max-width:560px){.signe-cta{grid-template-columns:1fr;text-align:center;gap:.6rem;padding:1.2rem}
+  .signe-cta-figur{display:flex;justify-content:center}.signe-cta-figur .signe{width:104px;height:auto}}
+
+/* Tommel op på det første anbefalede kort */
+.valgkort{position:relative}
+.valg-signe{position:absolute;top:-55px;right:14px;pointer-events:none;z-index:2}
+.valg-signe .signe{width:56px;height:auto}
+
+/* Tom filtertilstand og 404 */
+.pk-tom p{margin:0;max-width:34ch;line-height:1.5}
+.pk-tom strong{color:var(--blaek)}
+.signe-404{display:flex;justify-content:center;margin-bottom:1rem}
+
+@media(prefers-reduced-motion:reduce){
+  .signe *,.signe-paa-kant,.signe-haender{animation:none!important}}

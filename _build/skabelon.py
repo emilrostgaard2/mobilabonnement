@@ -4,6 +4,7 @@ import re
 
 import json
 import html
+from maskot import signe
 
 DOMAENE = "https://telemobil.dk"
 SITENAVN = "Telemobil"
@@ -954,8 +955,12 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
   {filterhtml}
   <div class="listeramme afslør">
     <div class="planliste">{kort}</div>
-    <p class="pk-tom" data-tom hidden>Ingen abonnementer matcher filtrene.
-      <button type="button" class="knap knap-linje knap-lille" data-nulstil>Nulstil filtre</button></p>
+    <div class="pk-tom" data-tom hidden>
+      {signe("leder", 120)}
+      <p><strong>Signe fandt ingen abonnementer, der matcher.</strong><br>
+      Prøv at hæve prisloftet eller fjerne et filter.</p>
+      <button type="button" class="knap knap-linje knap-lille" data-nulstil>Nulstil filtre</button>
+    </div>
     {visflere}
     <div class="listefod">
       <span>Klik <strong>Se detaljer</strong> for EU-data, pris pr. GB og den reelle

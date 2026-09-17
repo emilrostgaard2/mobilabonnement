@@ -31,6 +31,7 @@ import sider5  # noqa: E402
 import sider6  # noqa: E402
 from udbyder_unik import UNIK  # noqa: E402
 import skabelon  # noqa: E402
+from maskot import signe  # noqa: E402
 
 MAANEDER = ["januar", "februar", "marts", "april", "maj", "juni", "juli",
             "august", "september", "oktober", "november", "december"]
@@ -694,7 +695,11 @@ def hero_forside():
         </div>
         {tillidsbaand()}
       </div>
-      {regningstjek()}
+      <div class="hl-vaerktoej">
+        <div class="signe-paa-kant">{signe("kigger-krop", 150)}</div>
+        {regningstjek()}
+        <div class="signe-haender">{signe("kigger-haender", 150)}</div>
+      </div>
     </div>
   </div>
 </section>"""
@@ -1048,7 +1053,9 @@ def hurtigvalg():
         binding = "Ingen binding" if a["binding"] == 0 else f'{a["binding"]} mdr. binding'
         stjerne = stjerner(u, kompakt=True)
 
-        kort += f"""<div class="valgkort v{i}">
+        # Signe giver tommel op på det første kort — hendes anbefaling, ikke pynt på alle fire
+        figur = f'<span class="valg-signe">{signe("tommel", 70)}</span>' if i == 0 else ""
+        kort += f"""<div class="valgkort v{i}">{figur}
   <span class="valg-badge">{e(kat)}</span>
   <div class="valg-top">
     <span class="valg-logo"><img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}"
@@ -2215,6 +2222,25 @@ def bb_aarspris(a):
     intro = a.get("intro_pris") or a["pris"]
     return intro * mdr + a["pris"] * (12 - mdr) + a.get("oprettelse", 0)
 
+
+
+def signe_cta(titel=None, tekst=None, knap="Se de billigste abonnementer", href="/billigste-mobilabonnement/"):
+    """Afsluttende opfordring, hvor Signe peger på knappen.
+
+    Guiderne sluttede uden nogen vej videre til sammenligningen. Læseren har
+    lige fået svar på sit spørgsmål — det er dér, et klik til prislisten giver
+    mening."""
+    titel = titel or "Klar til at se, hvad det koster?"
+    tekst = tekst or (f"Vi har {D['antal']} abonnementer fra {D['antal_udbydere']} selskaber, "
+                      f"opdateret to gange i døgnet. Ingen formular, ingen oprettelse.")
+    return f"""<aside class="signe-cta afslør">
+  <div class="signe-cta-figur">{signe("peger", 132)}</div>
+  <div class="signe-cta-tekst">
+    <p class="signe-cta-titel">{e(titel)}</p>
+    <p>{e(tekst)}</p>
+    <a href="{href}" class="knap knap-primaer">{e(knap)}</a>
+  </div>
+</aside>"""
 
 
 def vejviser(aktuel=""):
@@ -5185,6 +5211,7 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
     krop = f"""
 {krop_tekst}
 <section class="sektion baand-smal">
+  {signe_cta()}
   {laesvidere(links)}
   {forfatterboks()}
   {afsloering()}
@@ -10617,7 +10644,8 @@ ErrorDocument 404 /404.html
 
 def byg_404():
     krop = """<section class="sektion baand-smal artikel" style="text-align:center">
-  <h2>Siden findes ikke</h2>
+  <div class="signe-404">""" + signe("leder", 190, alt="Signe, Telemobils maskot, leder efter siden med et forstørrelsesglas") + """</div>
+  <h2>Signe har ledt — siden findes ikke</h2>
   <p>Linket er enten forældet, eller også har vi flyttet siden. Prøv en af disse i stedet:</p>
   <p style="margin-top:2rem">
     <a href="/billigste-mobilabonnement/" class="knap knap-primaer">Se billigste abonnementer</a>
