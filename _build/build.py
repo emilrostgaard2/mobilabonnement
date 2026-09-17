@@ -516,6 +516,47 @@ def logobaand(titel="Vi sammenligner priser fra"):
 </div>"""
 
 
+def tillidsbaand():
+    """Tillidsmarkører med tal, der kan efterprøves.
+
+    Konkurrenten skriver "+36.000 danskere sammenlignet". Det kan vi ikke sige
+    sandt — sitet er nyt. Til gengæld kan vi sige noget, de ikke kan: hvor
+    mange målinger vi har gemt, og hvor længe vi har målt. Det er en stærkere
+    påstand, fordi den kan kontrolleres.
+    """
+    betalte = [a for a in ABON if a["pris"] > 0]
+    maalinger = dage = 0
+    try:
+        with open(os.path.join(ROD, "data", "prishistorik.json"), encoding="utf-8") as f:
+            m = json.load(f).get("maalinger", [])
+        maalinger = len(m)
+        if len(m) >= 2:
+            dage = (date.fromisoformat(m[-1]["dato"]) - date.fromisoformat(m[0]["dato"])).days
+    except (FileNotFoundError, ValueError, KeyError):
+        pass
+
+    punkter = [
+        (f"{len(betalte)}", "abonnementer sammenlignet",
+         # Samme kilde som underoverskriften — ellers står der to forskellige
+         # tal på samme skærm.
+         f"fra {D['antal_udbydere']} danske selskaber"),
+        ("2×", "opdateret dagligt", "priserne hentes direkte fra udbydernes feed"),
+    ]
+    if maalinger >= 2 and dage >= 7:
+        punkter.append((f"{kr(maalinger)}", "prismålinger gemt",
+                        f"vi har målt markedet i {dage} dage"))
+    else:
+        punkter.append(("0 kr.", "og ingen formular",
+                        "vi beder aldrig om dine oplysninger"))
+    punkter.append(("100 %", "uafhængig",
+                    "udbydere kan ikke betale sig til en placering"))
+
+    return f"""<div class="tillid">{"".join(
+        f'<div class="ti-punkt"><b>{t}</b><span>{e(n)}</span>'
+        f'<em>{e(u)}</em></div>' for t, n, u in punkter)}</div>"""
+
+
+
 def regningstjek():
     """Hero-værktøj: indtast din regning, få tre konkrete forslag med det samme.
     Ingen gigabyte, ingen filtre, ingen viderestilling."""
@@ -651,11 +692,7 @@ def hero_forside():
           <a href="#sammenlign" class="knap knap-primaer">Se alle priser</a>
           <a href="/guides/hvor-meget-data/" class="knap knap-linje">Hvor meget data har jeg brug for?</a>
         </div>
-        <div class="hl-loefter">
-          <span class="hl-loefte">Gratis at bruge</span>
-          <span class="hl-loefte">Ingen oplysninger om dig</span>
-          <span class="hl-loefte">Opdateret to gange dagligt</span>
-        </div>
+        {tillidsbaand()}
       </div>
       {regningstjek()}
     </div>
