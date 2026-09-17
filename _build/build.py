@@ -33,6 +33,7 @@ from udbyder_unik import UNIK  # noqa: E402
 import skabelon  # noqa: E402
 from maskot import signe  # noqa: E402
 import opsigelse as ops  # noqa: E402
+import prisindeks as pi  # noqa: E402
 
 MAANEDER = ["januar", "februar", "marts", "april", "maj", "juni", "juli",
             "august", "september", "oktober", "november", "december"]
@@ -9807,119 +9808,212 @@ def _pu_citer(maalinger):
 </aside>"""
 
 
+PI_CSS = """<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/source-serif-4.woff2" crossorigin>
+<style>@font-face{font-family:"Source Serif 4";font-weight:400 800;font-display:swap;src:url("/assets/fonts/source-serif-4.woff2") format("woff2")}
+body{background:#fff}.pi{--s:#1A1A1A;--g:#666;--l:#DCDCDC;--op:#B3261E;--ned:#1B7F4B;color:var(--s);width:min(100% - 2.5rem,1180px);margin:0 auto;padding-bottom:3rem}
+.pi h1,.pi h2,.pi .pi-stor,.pi .pi-kr{font-family:"Source Serif 4",Georgia,"Times New Roman",serif;letter-spacing:-.01em;color:var(--s)}
+.pi p{margin:0 0 1em}.pi a{color:var(--s);text-decoration-color:#999}.pi a:hover{color:var(--signal-dyb)}
+.pi-mast{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:baseline;border-bottom:2px solid var(--s);padding:1.6rem 0 .6rem;font-size:.86rem;color:var(--g)}
+.pi-mast b{color:var(--s)}.pi-navn{font-weight:700;color:var(--s);font-size:.95rem}.pi-navn span{font-weight:400;color:var(--g);margin-left:.5rem}
+.pi-hero{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:3.5rem;padding:2rem 0 2.2rem;align-items:start}
+.pi h1{font-size:clamp(2rem,4.4vw,3.2rem);line-height:1.08;font-weight:700;margin:0 0 1rem;max-width:18ch}
+.pi-dek{font-size:1.2rem;line-height:1.5;color:#333;max-width:42ch;margin:0}
+.pi-citat{border-top:2px solid var(--s);border-bottom:1px solid var(--l);padding:.9rem 0 1rem}
+.pi-citat h2{font-family:var(--font-brod);font-size:.8rem;font-weight:700;margin:0 0 .5rem;color:var(--g);letter-spacing:0}
+.pi-citat blockquote{margin:0 0 .9rem;font-family:"Source Serif 4",Georgia,serif;font-size:1.06rem;line-height:1.5}
+.pi-citat p{font-size:.8rem;color:var(--g);margin:.8rem 0 0}
+.pi-knap{display:inline-block;font:600 .84rem var(--font-brod);border:1px solid var(--s);border-radius:2px;padding:.45rem .8rem;background:#fff;color:var(--s);cursor:pointer;text-decoration:none;margin:0 .4rem .4rem 0}
+.pi-knap.m{background:var(--s);color:#fff}.pi-knap:hover{background:#F2F2F2;color:var(--s)}.pi-knap.m:hover{background:#000;color:#fff}
+.pi-tal{display:grid;grid-template-columns:260px 240px minmax(0,1fr);border-top:1px solid var(--l);border-bottom:1px solid var(--l)}
+.pi-tal>div{padding:1.1rem 1.6rem 1.1rem 0;margin-right:1.6rem;border-right:1px solid var(--l)}.pi-tal>div:last-child{border:0;margin:0;padding-right:0}
+.pi-lab{font-size:.82rem;color:var(--g);margin:0!important}.pi-und{font-size:.84rem;color:var(--g);margin:0!important}
+.pi-stor{font-size:2.7rem;font-weight:700;line-height:1.1;margin:.1rem 0!important;white-space:nowrap}
+.pi-stor small{font:500 1rem var(--font-brod);color:var(--g)}.pi-stor em{font:700 1.05rem var(--font-brod);margin-left:.4rem;vertical-align:.5rem}
+.pi-op{color:var(--op)}.pi-ned{color:var(--ned)}.pi-flad{color:var(--g)}
+.pi-felter{display:grid;grid-template-columns:repeat(auto-fill,minmax(16px,1fr));gap:3px;margin:.6rem 0 .7rem;max-width:620px}
+.pi-felter i{aspect-ratio:1;display:block;background:#D6D6D6}.pi-felter .op{background:var(--op)}.pi-felter .ned{background:var(--ned)}
+.pi-leg{display:flex;gap:1.3rem;flex-wrap:wrap;font-size:.88rem}.pi-leg span::before{content:"";display:inline-block;width:10px;height:10px;margin-right:.4rem;background:var(--c)}.pi-leg b{margin-right:.25rem}
+.pi-fig{margin:2.4rem 0 0}.pi-fig h2{font-size:1.35rem;margin:0 0 .15rem;font-weight:700}.pi-fig>p{font-size:.92rem;color:var(--g);margin:0 0 .4rem}
+.pi-fig svg{display:block;width:100%;height:auto}
+.pi-noter{list-style:none;padding:0;margin:.3rem 0 0;display:flex;gap:.4rem 1.6rem;flex-wrap:wrap;font-size:.88rem;color:#333}
+.pi-noter span{display:inline-grid;place-items:center;width:19px;height:19px;border:1px solid var(--s);border-radius:50%;font-size:.72rem;font-weight:700;margin-right:.4rem}
+.pi-fod{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;border-top:1px solid var(--l);margin-top:.9rem;padding-top:.8rem;font-size:.84rem;color:var(--g)}
+.pi-fod p{margin:0;max-width:60ch}
+.pi-embed{display:none;margin-top:.8rem;border:1px solid var(--l);padding:.9rem 1rem;background:#FAFAFA}.pi-embed:target{display:block}
+.pi-embed code{display:block;font:12.5px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;color:#333;margin:.4rem 0 .7rem}
+.pi-kroner{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;border-top:2px solid var(--s);border-bottom:1px solid var(--l);margin:3rem 0 0}
+.pi-kroner>div{padding:1.2rem 1.6rem 1.2rem 0;margin-right:1.6rem;border-right:1px solid var(--l)}.pi-kroner>div:last-child{border:0;margin:0}
+.pi-kroner h2{font-size:1.35rem;margin:0 0 .3rem}.pi-kroner p{font-size:.9rem;color:var(--g);margin:0}.pi-kr{font-size:2rem!important;font-weight:700;line-height:1.15;margin:.1rem 0!important}
+.pi-sek{margin-top:3.2rem}.pi-sek h2{font-size:1.7rem;font-weight:700;margin:0 0 .3rem}.pi-sek>p{color:#333;max-width:70ch;margin:0 0 1rem;font-size:.98rem}
+.pi-tabel{width:100%;border-collapse:collapse;font-size:.95rem;background:none;box-shadow:none;border:0;border-radius:0}
+.pi-tabel th{background:none;color:var(--g);font-size:.78rem;font-weight:600;text-align:left;padding:.5rem .8rem .5rem 0;border-bottom:2px solid var(--s);text-transform:none;letter-spacing:0}
+.pi-tabel td{padding:.7rem .8rem .7rem 0;border-bottom:1px solid var(--l);vertical-align:middle;background:none}
+.pi-tabel tr:hover td{background:#FAFAFA}.pi-tabel .t{text-align:right;white-space:nowrap}.pi-tabel s{color:#888}
+.pi-dato{color:var(--g);white-space:nowrap;font-size:.88rem}.pi-sel{width:96px}.pi-sel img{display:block;max-width:84px;height:auto;max-height:24px;object-fit:contain;object-position:left}
+.pi-u{display:block;font-size:.84rem;color:var(--g)}.pi-note{font-size:.84rem;color:var(--g);margin-top:.6rem}
+.pi-div{width:30%;min-width:180px}.pi-div div{position:relative;height:18px}.pi-div div::before{content:"";position:absolute;left:50%;top:-6px;bottom:-6px;width:1px;background:var(--s)}
+.pi-bar{position:absolute;top:2px;height:14px;display:block}.pi-bar.op{background:var(--op)}.pi-bar.ned{background:var(--ned)}
+.pi-divh{text-align:center!important}.pi-aend{font-weight:700;width:110px}
+.pi-sh,.pi-sr{display:grid;grid-template-columns:150px minmax(0,1fr) 110px;align-items:center}
+.pi-sh{font-size:.78rem;color:var(--g);font-weight:600;border-bottom:2px solid var(--s);padding-bottom:.5rem}.pi-sh span:last-child{text-align:right}
+.pi-sr{height:52px;border-bottom:1px solid var(--l);font-size:.95rem}.pi-sr b span{display:block;font-weight:400;font-size:.8rem;color:var(--g)}
+.pi-sl{position:relative;height:100%;margin:0 4.2rem 0 3.6rem}.pi-sb{position:absolute;top:23px;height:6px;background:#CFCFCF;display:block}
+.pi-sm{position:absolute;top:16px;width:3px;height:20px;background:var(--s);margin-left:-1px;display:block}
+.pi-sl em{position:absolute;top:16px;font-style:normal;font-size:.8rem;color:var(--g);white-space:nowrap}.pi-sl em.l{transform:translateX(-100%);padding-right:.5rem}.pi-sl em.r{padding-left:.5rem}
+.pi-sd{text-align:right;font-weight:700;color:var(--op)}
+.pi-presse{display:grid;grid-template-columns:1.2fr 1fr 1fr;margin-top:3.4rem;border-top:2px solid var(--s);border-bottom:1px solid var(--l)}
+.pi-presse>div{padding:1.4rem 1.8rem 1.4rem 0;margin-right:1.8rem;border-right:1px solid var(--l);font-size:.94rem;color:#333}.pi-presse>div:last-child{border:0;margin:0}
+.pi-presse h2{font-size:1.15rem;margin:0 0 .5rem}.pi-presse h2+h2,.pi-presse .pi-h2b{margin-top:1.2rem}
+.pi-emil{display:flex;gap:.8rem;align-items:center;margin-bottom:.8rem}.pi-emil img{width:56px;height:56px;border-radius:50%;object-fit:cover}.pi-emil b{display:block;color:var(--s)}.pi-emil span{font-size:.84rem;color:var(--g)}
+.pi-presse blockquote{margin:0 0 .8rem;font-family:"Source Serif 4",Georgia,serif;font-size:1.05rem;line-height:1.5;color:var(--s);border-left:2px solid var(--s);padding-left:.9rem}
+.pi-ikke{list-style:none;padding:0;margin:0}.pi-ikke li{padding:.35rem 0;border-bottom:1px solid var(--l)}.pi-ikke li::before{content:"–";margin-right:.5rem;color:var(--g)}
+.pi-artikel{max-width:760px;margin-top:3.2rem}.pi-artikel h2{font-size:1.5rem;margin:2rem 0 .4rem}
+@media(max-width:900px){.pi-hero{grid-template-columns:1fr;gap:1.6rem}.pi-tal,.pi-kroner,.pi-presse{grid-template-columns:minmax(0,1fr)}
+ .pi-rul{overflow-x:auto}.pi-rul svg{min-width:660px}
+ .pi-tal>div,.pi-kroner>div,.pi-presse>div{border-right:0;border-bottom:1px solid var(--l);margin:0;padding-right:0}
+ .pi-div,.pi-divh{display:none}.pi-sh,.pi-sr{grid-template-columns:96px minmax(0,1fr) 84px}.pi-sl{margin:0 3.4rem 0 3rem}.pi-sel{width:64px}.pi-sel img{max-width:56px}}
+</style>"""
+
+
 def byg_prisudvikling():
     sti = "/prisudvikling/"
     maalinger = _historik()
-    titel = "Prisudvikling på mobilabonnementer i Danmark"
-    besk = ("Se hvordan priserne på mobilabonnementer har udviklet sig. Vi måler "
-            "median- og gennemsnitspris pr. datastørrelse to gange dagligt og "
-            "gemmer hver måling.")
+    R = pi.beregn(maalinger, ABON, UMAP)
     krumme = [("/", "Forside"), (None, "Prisudvikling")]
+    nu_md = f"{MAANEDER[IDAG.month - 1].capitalize()} {IDAG.year}"
 
-    if len(maalinger) < 2:
-        # Én måling er stadig et svar: hvad koster et typisk abonnement i dag.
-        # Siden må aldrig stå tom, bare fordi kurven ikke kan tegnes endnu.
-        if maalinger:
-            m = maalinger[-1]
-            kort = "".join(
-                f'''<div class="pu-lille"><p class="pu-lille-navn">{e(navn)}</p>
-<p class="pu-lille-pris">{kr(m["grupper"][g]["median"])} kr.<span>/md.</span></p>
-<p class="pu-lille-aendring pu-flad">fra {kr(m["grupper"][g]["min"])} til {kr(m["grupper"][g]["maks"])} kr.</p></div>'''
-                for g, navn in GRUPPENAVNE.items() if g in m.get("grupper", {}))
-            indhold_midt = f"""<div class="pu-top" id="udvikling">
-  <div class="pu-dom">
-    <p class="pu-dom-titel">Prisniveauet {e(_kort_dato(m["dato"], True))}</p>
-    <p class="pu-dom-tal">{kr(round(_samlet_median(m)))} kr.<span> pr. måned koster et typisk mobilabonnement i dag</span></p>
-    <p class="pu-dom-under">Kurven begynder, når vi har to dages målinger.</p>
-  </div>
-  <dl class="pu-noegletal">
-    <div><dt>Abonnementer målt</dt><dd>{m["antal"]}</dd></div>
-    <div><dt>Selskaber</dt><dd>{m["udbydere"]}</dd></div>
-  </dl>
-</div>
-<h2 id="datastoerrelse">Hvad koster det pr. datastørrelse?</h2>
-<p>Medianprisen i dag og spændet fra billigste til dyreste. Fra i morgen viser
-hver boks også, hvilken vej prisen bevæger sig.</p>
-<div class="pu-gitter">{kort}</div>"""
+    snapshot = {}
+    for slug in UMAP:
+        egne = [a for a in ABON if a["udbyder"] == slug and a["pris"] > 0]
+        if egne:
+            snapshot[slug] = {"antal": len(egne), "billigst": min(a["pris"] for a in egne),
+                              "median": pi.median([a["pris"] for a in egne])}
+    betalte = [a["pris"] for a in ABON if a["pris"] > 0]
+
+    if R:
+        pi.skriv_filer(R, ROD, DOMAENE)
+        r = pi.retning(R["pct"])
+        pil = {"op": f'<em class="pi-op">▲ {pi.tal(abs(R["pct"]))} %</em>',
+               "ned": f'<em class="pi-ned">▼ {pi.tal(abs(R["pct"]))} %</em>', "flad": ""}[r]
+        h1 = pi.rubrik(R)
+        dek = pi.underrubrik(R)
+        titel = f"Prisudvikling på mobilabonnementer — Telemobil Prisindeks {nu_md.lower()}"
+        besk = (f"{h1.replace('&nbsp;', ' ')}. Telemobil Prisindeks følger {R['antal']} "
+                f"mobilabonnementer to gange dagligt: se prisændringer pr. selskab, hent data og grafer.")
+        embedkode = (f'<iframe src="{DOMAENE}/prisudvikling/embed.html" width="100%" height="520" '
+                     f'style="border:0" loading="lazy" title="Telemobil Prisindeks"></iframe>\n'
+                     f'<p>Kilde: <a href="{DOMAENE}/prisudvikling/">Telemobil Prisindeks</a></p>')
+        top = f"""<div class="pi-hero"><div><h1>{h1}</h1><p class="pi-dek">{e(dek)}</p></div>
+<aside class="pi-citat"><h2>Lige til at citere</h2><blockquote id="pi-citat">»{e(pi.citat(R))}«</blockquote>
+<button type="button" class="pi-knap m" data-kopier="#pi-citat">Kopiér tekst</button>
+<button type="button" class="pi-knap" data-kopier="{DOMAENE}{sti}">Kopiér link</button>
+<p>Kilde: Telemobil Prisindeks · telemobil.dk/prisudvikling</p></aside></div>
+<div class="pi-tal"><div><p class="pi-lab">Prisindeks</p><p class="pi-stor">{pi.tal(R["indeks"])}{pil}</p>
+<p class="pi-und">{pi.d_lang(R["start"])} = 100</p></div>
+<div><p class="pi-lab">Typisk pris i dag</p><p class="pi-stor">{kr(R["median"])} <small>kr./md.</small></p>
+<p class="pi-und">median af normalpriser</p></div>
+<div><p class="pi-lab">De {R["dyrere"] + R["billigere"] + R["uaendret"]} abonnementer, vi har fulgt hele perioden — ét felt pr. abonnement</p>
+<div class="pi-felter">{pi.felter(R)}</div><div class="pi-leg"><span style="--c:var(--op)"><b>{R["dyrere"]}</b>dyrere</span>
+<span style="--c:var(--ned)"><b>{R["billigere"]}</b>billigere</span><span style="--c:#D6D6D6"><b>{R["uaendret"]}</b>uændret</span></div></div></div>
+<figure class="pi-fig" id="udvikling"><h2>Prisindeks for mobilabonnementer</h2>
+<p>De samme abonnementer fulgt over tid. Hvert punkt er en måledag, hvert trin en prisændring.</p>
+<div class="pi-rul">{pi.graf_svg(R)}</div>{pi._noter(R, UMAP, e)}
+<div class="pi-fod"><p>Kilde: Telemobil Prisindeks · {R["maaledage"]} måledage. Nye ({R["nye"]}) og udgåede
+({R["udgaaet"]}) abonnementer indgår ikke, så kun reelle prisændringer flytter tallet.</p>
+<div><a class="pi-knap m" href="#indsaet">&lt;/&gt; Indsæt grafen på din side</a><a class="pi-knap"
+href="/prisudvikling/telemobil-prisindeks.svg" download>Hent grafen (SVG)</a><a class="pi-knap"
+href="/prisudvikling/telemobil-prisindeks.csv" download>Hent data (CSV)</a></div></div>
+<div class="pi-embed" id="indsaet"><b>Kopiér koden ind på din side.</b> Grafen opdaterer sig selv.
+<code id="pi-embedkode">{e(embedkode)}</code><button type="button" class="pi-knap m" data-kopier="#pi-embedkode">Kopiér kode</button></div>
+</figure>
+{pi.sek_kroner(R)}
+<section class="pi-sek">{pi.sek_log(R, UMAP, e)}</section>
+<section class="pi-sek">{pi.sek_selskaber(R, UMAP, e)}</section>"""
+        _haevet = len([1 for d in R["pr_selskab"].values() if d["op"]])
+        if r == "op" and _haevet > len(R["pr_selskab"]) / 2:
+            kommentar = (f"Stigningen er bred. {_haevet} af {len(R['pr_selskab'])} selskaber har hævet "
+                         f"prisen på mindst ét abonnement, og det er normalpriserne, der flytter sig — "
+                         f"ikke kampagnerne.")
+        elif r == "op":
+            kommentar = ("Det er ikke hele markedet, der bliver dyrere. Stigningen kommer fra få selskaber, "
+                         "der har hævet enkelte abonnementer, mens resten står stille.")
+        elif r == "ned":
+            kommentar = ("Priserne falder ikke af sig selv. Det er enkelte selskaber, der sænker for at "
+                         "vinde kunder, og det er dem, det kan betale sig at holde øje med.")
         else:
-            indhold_midt = """<h2 id="udvikling">Første måling er på vej</h2>
-<p>Vi gemmer et øjebliksbillede af markedet to gange i døgnet. Det første kommer ved
-næste opdatering. Se det aktuelle prisniveau på
-<a href="/billigste-mobilabonnement/#prisniveau">billigste mobilabonnement</a>.</p>"""
+            kommentar = ("Normalpriserne ligger stille. Bevægelsen lige nu ligger i introtilbud og gaver, "
+                         "og de ændrer ikke på, hvad abonnementet koster på lang sigt.")
     else:
-        først, sidst = maalinger[0], maalinger[-1]
-        dage = len(maalinger)
-        indhold_midt = f"""{_pu_overblik(maalinger)}
-{_pu_grupper(maalinger)}
-{_pu_selskaber(maalinger)}
-{_pu_citer(maalinger)}"""
+        h1 = "Hvad koster et mobilabonnement lige nu?"
+        titel = "Prisudvikling på mobilabonnementer — Telemobil Prisindeks"
+        besk = ("Telemobil Prisindeks følger priserne på danske mobilabonnementer to gange dagligt. "
+                "Se prisniveauet pr. selskab og datastørrelse.")
+        top = f"""<div class="pi-hero"><div><h1>{h1}</h1><p class="pi-dek">Et typisk mobilabonnement koster
+{kr(pi.median(betalte))} kr. om måneden. Indekset begynder, så snart vi har to dages målinger — herfra følger
+vi de samme abonnementer dag for dag.</p></div></div>
+<section class="pi-sek">{pi.sek_selskaber(None, UMAP, e, snapshot)}</section>"""
+        kommentar = ("Alle viser, hvad et abonnement koster i dag. Vi gemmer, hvad det kostede i går — "
+                     "så man kan se, hvem der hæver prisen, og hvornår.")
 
-    brod = f"""<section class="sektion baand-smal artikel">
-{gennemgangslinje(OPDATERET, fakta="Målingerne gemmes automatisk ved hvert build")}
-<p class="led">Alle sammenligningssider viser, hvad et abonnement koster i dag.
-Ingen viser, hvad det kostede for tre måneder siden. Vi gemmer hver eneste
-måling, så du kan se, om priserne rent faktisk falder — eller om det bare er
-kampagnerne, der skifter navn.</p>
+    krop = f"""<div class="pi">
+<div class="pi-mast"><span class="pi-navn">Telemobil Prisindeks<span>{nu_md}</span></span>
+<span>Opdateret <b>{e(OPDATERET)}</b> · måles to gange i døgnet</span></div>
+{top}
+<section class="pi-sek">{pi.sek_spaend(ABON, gb_tekst)}</section>
+<div class="pi-presse"><div><h2>Kommentar til pressen</h2>
+<div class="pi-emil"><img src="/assets/img/emil-rostgaard.webp" alt="Emil Rostgaard" width="56" height="56" loading="lazy">
+<div><b>Emil Rostgaard</b><span>Stifter af Telemobil</span></div></div>
+<blockquote>»{e(kommentar)}«</blockquote>
+<p><a href="mailto:kontakt@telemobil.dk?subject=Telemobil%20Prisindeks">kontakt@telemobil.dk</a> ·
+<a href="/presse/">Pressemateriale</a></p></div>
+<div><h2>Sådan måler vi</h2><p>Priserne hentes to gange i døgnet direkte fra selskabernes datafeed. Indekset
+regnes på normalprisen og følger de samme abonnementer fra måling til måling, kædet sammen med geometrisk
+gennemsnit. <a href="/metode/">Hele metoden</a> · <a href="/data/">Rådata</a></p>
+<h2 class="pi-h2b">Det viser indekset ikke</h2><ul class="pi-ikke"><li>Introtilbud, gaver og oprettelsesgebyr</li>
+<li>Selskaber uden for vores datafeed</li><li>Erhvervsabonnementer</li></ul></div>
+<div><h2>Brug tallene frit</h2><p>Tekst, tal og grafer må gengives mod kildeangivelse med link til
+Telemobil Prisindeks (<a href="https://creativecommons.org/licenses/by/4.0/deed.da" rel="noopener license"
+target="_blank">CC BY 4.0</a>).</p>
+<h2 class="pi-h2b">Få tallene på mail</h2><p>Vil du have indekset den 1. i hver måned, så
+<a href="mailto:kontakt@telemobil.dk?subject=Presseliste%20%E2%80%94%20Telemobil%20Prisindeks">skriv
+»presseliste« til os</a>.</p></div></div>
 
-{indhold_midt}
-
-<h2 id="metode">Sådan måler vi</h2>
-<p>To gange i døgnet henter vi priserne og gemmer fire tal for hver
-datastørrelse: laveste pris, median, gennemsnit og højeste pris. Vi regner
-altid på <strong>normalprisen</strong>, aldrig på introprisen. En intropris
-siger noget om en kampagne, ikke om prisniveauet.</p>
-<p>Medianen er det vigtigste tal. Gennemsnittet trækkes op af enkelte dyre
-abonnementer, mens medianen viser den midterste pris — altså hvad et typisk
-abonnement i den gruppe koster.</p>
-
-{prisstatistik()}
-
-  {prisaendringer()}
-
+<div class="pi-artikel artikel">
+{gennemgangslinje(OPDATERET, fakta="Målingerne gemmes automatisk to gange i døgnet")}
+<h2>Hvorfor et indeks og ikke bare en gennemsnitspris?</h2>
+<p>En gennemsnitspris flytter sig, hver gang et selskab tilføjer eller fjerner et abonnement — også selv om ingen
+har ændret en eneste pris. Indekset sammenligner derfor kun abonnementer, der findes både før og efter. Det er
+samme princip, som ligger bag forbrugerprisindekset.</p>
 <h2>Hvorfor det er værd at holde øje med</h2>
-<p>Mobilpriserne i Danmark bevæger sig ikke jævnt. De falder i perioder med hård
-konkurrence og stiger, når selskaberne justerer efter inflation — ofte samlet og
-med kort varsel. Har du et abonnement, der er mere end et år gammelt, betaler du
-med stor sandsynlighed over medianen for din datastørrelse.</p>
-<p>Det er også derfor, prisen alene er et dårligt beslutningsgrundlag. Et
-abonnement, der er billigt i dag, kan være dyrt om et halvt år, hvis udbyderen
-lever af introtilbud. Vores <a href="/12-maaneders-prisen/">12-måneders-pris</a>
-tager højde for det.</p>
-</section>
-<section class="sektion baand-smal">
-  {laesvidere([("/billigste-mobilabonnement/", "Billigste mobilabonnement lige nu"),
-               ("/12-maaneders-prisen/", "Sådan regner vi 12-måneders-prisen"),
-               ("/metode/", "Vores metode"),
-               ("/guides/prisstigning-mobilabonnement/", "Hvad gør du ved en prisstigning?")])}
-  {forfatterboks()}
-  {afsloering()}
-</section>"""
+<p>Mobilpriserne i Danmark bevæger sig ikke jævnt. De falder i perioder med hård konkurrence og stiger, når
+selskaberne justerer — ofte samlet og med kort varsel. Har du et abonnement, der er mere end et år gammelt,
+betaler du med stor sandsynlighed mere end den typiske pris for din datastørrelse. Se de
+<a href="/billigste-mobilabonnement/">billigste mobilabonnementer lige nu</a>, eller læs om
+<a href="/guides/prisstigning-mobilabonnement/">dine rettigheder ved en prisstigning</a>.</p>
+{prisaendringer()}
+</div></div>{pi.KOPI_JS}"""
 
     faq = [
         {"sp": "Stiger priserne på mobilabonnementer?",
-         "sv": "Det svinger. Vi måler median- og gennemsnitsprisen pr. datastørrelse to "
-               "gange dagligt og viser udviklingen på denne side, så du kan se det "
-               "faktiske forløb frem for at gætte."},
-        {"sp": "Hvorfor bruger I medianprisen?",
-         "sv": "Fordi gennemsnittet trækkes skævt af enkelte dyre abonnementer. Medianen "
-               "er den midterste pris og viser bedre, hvad et typisk abonnement koster."},
+         "sv": (f"{h1.replace('&nbsp;', ' ')}. Telemobil Prisindeks står i {pi.tal(R['indeks'])} mod 100 den "
+                f"{pi.d_lang(R['start'])}. {R['dyrere']} abonnementer er blevet dyrere og {R['billigere']} billigere."
+                if R else "Vi måler priserne to gange dagligt. Indekset begynder, når der er to dages målinger.")},
+        {"sp": "Hvordan beregnes Telemobil Prisindeks?",
+         "sv": "Vi følger de samme abonnementer fra måling til måling og kæder ændringerne sammen med "
+               "geometrisk gennemsnit. Nye og udgåede abonnementer indgår ikke, så kun reelle "
+               "prisændringer flytter indekset."},
         {"sp": "Regner I med introprisen?",
-         "sv": "Nej. Vi bruger altid normalprisen. En intropris måler en kampagne, ikke "
-               "prisniveauet på markedet."},
-        {"sp": "Hvor ofte opdateres tallene?",
-         "sv": "To gange i døgnet. Hver måling gemmes, så historikken vokser dag for dag."},
+         "sv": "Nej. Vi bruger altid normalprisen. En intropris måler en kampagne, ikke prisniveauet."},
+        {"sp": "Må jeg bruge tallene og grafen?",
+         "sv": "Ja. Tekst, tal og grafer må gengives frit mod kildeangivelse med link til Telemobil "
+               "Prisindeks. Grafen kan indsættes direkte på din egen side, og data kan hentes som CSV."},
     ]
-
-    return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk,
-        hero=hero_side("Prisudvikling", titel,
-                       "Vi gemmer priserne to gange i døgnet, så du kan se, hvordan "
-                       "markedet flytter sig — ikke bare hvad det koster i dag.",
-                       '<a href="#udvikling" class="knap knap-primaer">Se udviklingen</a>'),
-        efter_hero=logobaand(), krumme=krumme, indhold=brod + faqblok(faq),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
-                     artikelld(sti, titel, besk))],
-    ), prioritet="0.8", hyppighed="daily")
+    ld = [graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq), artikelld(sti, titel, besk),
+               *([pi.dataset_ld(R, DOMAENE, besk)] if R else []))]
+    return skriv(sti, shell(sti=sti, titel=titel, beskrivelse=besk, hero=None, efter_hero="",
+                            krumme=krumme, toc=False, ekstra_hoved=PI_CSS,
+                            indhold=krop + faqblok(faq), jsonld=ld),
+                 prioritet="0.8", hyppighed="daily")
 
 
 # ---------------------------------------------------------------- KAMPAGNER
