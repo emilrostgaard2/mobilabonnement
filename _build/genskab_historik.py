@@ -24,6 +24,14 @@ def git(*args):
 
 
 def main():
+    # Et standard-checkout på GitHub henter kun den seneste commit. Så er der
+    # ingen gamle udgaver at læse. Hent resten — checkout-trinnet har allerede
+    # lagt adgangen på plads, så det kræver ingen ekstra opsætning.
+    if git("rev-parse", "--is-shallow-repository").stdout.strip() == "true":
+        r = git("fetch", "--unshallow", "--quiet")
+        print("Prishistorik: hentede hele git-historikken."
+              if r.returncode == 0 else
+              f"Prishistorik: kunne ikke hente historikken ({r.stderr.strip()[:120]}).")
     samlet = {}
     commits = git("log", "--format=%H", "--", FIL).stdout.split()
     # Ældste først, så nyere udgaver af samme dato vinder
