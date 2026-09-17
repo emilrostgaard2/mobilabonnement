@@ -9817,11 +9817,34 @@ def byg_prisudvikling():
     krumme = [("/", "Forside"), (None, "Prisudvikling")]
 
     if len(maalinger) < 2:
-        indhold_midt = f"""<h2>Målingerne er lige begyndt</h2>
-<p>Vi gemmer et øjebliksbillede af markedet to gange i døgnet. Der er
-{len(maalinger)} måling{"er" if len(maalinger) != 1 else ""} indtil videre, og
-kurven kræver mindst to. Kom tilbage om en uge — så er der noget at se.</p>
-<p>Indtil da kan du se det aktuelle prisniveau på
+        # Én måling er stadig et svar: hvad koster et typisk abonnement i dag.
+        # Siden må aldrig stå tom, bare fordi kurven ikke kan tegnes endnu.
+        if maalinger:
+            m = maalinger[-1]
+            kort = "".join(
+                f'''<div class="pu-lille"><p class="pu-lille-navn">{e(navn)}</p>
+<p class="pu-lille-pris">{kr(m["grupper"][g]["median"])} kr.<span>/md.</span></p>
+<p class="pu-lille-aendring pu-flad">fra {kr(m["grupper"][g]["min"])} til {kr(m["grupper"][g]["maks"])} kr.</p></div>'''
+                for g, navn in GRUPPENAVNE.items() if g in m.get("grupper", {}))
+            indhold_midt = f"""<div class="pu-top" id="udvikling">
+  <div class="pu-dom">
+    <p class="pu-dom-titel">Prisniveauet {e(_kort_dato(m["dato"], True))}</p>
+    <p class="pu-dom-tal">{kr(round(_samlet_median(m)))} kr.<span> pr. måned koster et typisk mobilabonnement i dag</span></p>
+    <p class="pu-dom-under">Kurven begynder, når vi har to dages målinger.</p>
+  </div>
+  <dl class="pu-noegletal">
+    <div><dt>Abonnementer målt</dt><dd>{m["antal"]}</dd></div>
+    <div><dt>Selskaber</dt><dd>{m["udbydere"]}</dd></div>
+  </dl>
+</div>
+<h2 id="datastoerrelse">Hvad koster det pr. datastørrelse?</h2>
+<p>Medianprisen i dag og spændet fra billigste til dyreste. Fra i morgen viser
+hver boks også, hvilken vej prisen bevæger sig.</p>
+<div class="pu-gitter">{kort}</div>"""
+        else:
+            indhold_midt = """<h2 id="udvikling">Første måling er på vej</h2>
+<p>Vi gemmer et øjebliksbillede af markedet to gange i døgnet. Det første kommer ved
+næste opdatering. Se det aktuelle prisniveau på
 <a href="/billigste-mobilabonnement/#prisniveau">billigste mobilabonnement</a>.</p>"""
     else:
         først, sidst = maalinger[0], maalinger[-1]
