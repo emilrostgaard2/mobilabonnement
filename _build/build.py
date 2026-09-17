@@ -536,25 +536,28 @@ def tillidsbaand():
     except (FileNotFoundError, ValueError, KeyError):
         pass
 
+    # Hele sætninger frem for store tal med små etiketter. En skeptisk læser
+    # skal kunne forstå hvert løfte uden at afkode det.
     punkter = [
-        (f"{len(betalte)}", "abonnementer sammenlignet",
-         # Samme kilde som underoverskriften — ellers står der to forskellige
-         # tal på samme skærm.
-         f"fra {D['antal_udbydere']} danske selskaber"),
-        ("2×", "opdateret dagligt", "priserne hentes direkte fra udbydernes feed"),
+        (f"{len(betalte)} abonnementer fra {D['antal_udbydere']} selskaber",
+         "samlet ét sted og sorteret efter pris"),
+        ("Priserne opdateres to gange dagligt", "hentet direkte fra selskaberne"),
     ]
     if maalinger >= 2 and dage >= 7:
-        punkter.append((f"{kr(maalinger)}", "prismålinger gemt",
-                        f"vi har målt markedet i {dage} dage"))
+        punkter.append((f"{kr(maalinger)} prismålinger gemt",
+                        f"vi har fulgt markedet i {dage} dage"))
     else:
-        punkter.append(("0 kr.", "og ingen formular",
-                        "vi beder aldrig om dine oplysninger"))
-    punkter.append(("100 %", "uafhængig",
-                    "udbydere kan ikke betale sig til en placering"))
+        punkter.append(("Gratis og uden tilmelding",
+                        "du skal ikke oplyse navn, mail eller telefon"))
+    punkter.append(("Uafhængig sammenligning",
+                    "ingen kan betale sig til en bedre placering"))
 
-    return f"""<div class="tillid">{"".join(
-        f'<div class="ti-punkt"><b>{t}</b><span>{e(n)}</span>'
-        f'<em>{e(u)}</em></div>' for t, n, u in punkter)}</div>"""
+    flueben = ('<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">'
+               '<circle cx="10" cy="10" r="10" fill="#E3F8F0"/>'
+               '<path d="M5.8 10.4l2.8 2.8 5.6-6" fill="none" stroke="#00875D" '
+               'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+    return f"""<ul class="tillid">{"".join(
+        f'<li>{flueben}<span><b>{e(t)}</b><em>{e(u)}</em></span></li>' for t, u in punkter)}</ul>"""
 
 
 
@@ -685,10 +688,10 @@ def hero_forside():
   <div class="baand">
     <div class="hl-gitter">
       <div>
-        <span class="etiket">Opdateret {e(OPDATERET)}</span>
         <h1>Sammenlign mobilabonnementer fra danske udbydere</h1>
-        <p class="led">{D['antal']} abonnementer fra {D['antal_udbydere']} udbydere,
-        sorteret efter pris. Ingen oprettelse, ingen formular.</p>
+        <p class="led">Se hvad du kan spare på mobilregningen. Vi viser priserne fra
+        {D['antal_udbydere']} danske selskaber side om side, så du selv kan vælge.</p>
+        <p class="hl-frisk"><span aria-hidden="true"></span>Priserne er sidst opdateret {e(OPDATERET)}</p>
         <div class="hl-knapper">
           <a href="#sammenlign" class="knap knap-primaer">Se alle priser</a>
           <a href="/guides/hvor-meget-data/" class="knap knap-linje">Hvor meget data har jeg brug for?</a>
@@ -696,9 +699,9 @@ def hero_forside():
         {tillidsbaand()}
       </div>
       <div class="hl-vaerktoej">
-        <div class="signe-paa-kant">{signe("kigger-krop", 150)}</div>
+        <div class="signe-paa-kant">{signe("kigger-krop", 140)}</div>
         {regningstjek()}
-        <div class="signe-haender">{signe("kigger-haender", 150)}</div>
+        <div class="signe-haender">{signe("kigger-haender", 140)}</div>
       </div>
     </div>
   </div>
@@ -1003,10 +1006,15 @@ def hurtigvalg():
     kandidater = [
         ("Billigst med data", sorted(med_data, key=lambda a: a["pris"]),
          "Laveste månedspris med mobildata"),
-        ("Mest data pr. krone", sorted([a for a in med_data if a["data_gb"] < 9999],
+        # Abonnementer på 500 GB og op er i praksis fri data. De vinder altid på
+        # pris pr. GB, men kortet ender så med at anbefale et af de dyreste
+        # abonnementer under en overskrift, der lover meget for pengene.
+        ("Mest data pr. krone", sorted([a for a in med_data if a["data_gb"] < 500],
                                        key=lambda a: a["pris"] / a["data_gb"]),
          "Laveste pris pr. gigabyte"),
-        ("Bedst dækning", sorted(tdc, key=lambda a: a["pris"]),
+        # Mindst 10 GB, ellers bliver anbefalingen et miniabonnement, de færreste kan bruge
+        ("Bedst dækning", sorted([a for a in tdc if a["data_gb"] >= 10] or tdc,
+                                 key=lambda a: a["pris"]),
          "TDC NET — landets mest udbyggede"),
         ("Billigste fri data", sorted(frie, key=lambda a: a["pris"]),
          "Ubegrænset data i Danmark"),
@@ -1037,43 +1045,49 @@ def hurtigvalg():
                      f'derefter {kr(a["pris"])} kr.')
         else:
             vist = a["pris"]
-            under = f'Fast pris · {kr(g * 12)} kr. samlet på et år'
+            under = 'Fast pris hver måned, ingen intropris'
 
-        # Det ene tal der gør kortet værd at kigge på
+        # Besparelsen står som almindelig tekst med forklaring — et løst "spar 960 kr."
+        # uden sammenligningsgrundlag er netop det, en skeptisk læser ikke tror på.
         if median and g < median:
-            spar = f'<span class="valg-spar">Spar {kr((median - g) * 12)} kr. om året</span>'
-        elif a["data_gb"] >= 9999:
-            spar = '<span class="valg-spar valg-spar-ro">Intet dataloft</span>'
+            spar = (f'<p class="valg-spar"><b>Spar {kr((median - g) * 12)} kr. om året</b> '
+                    f'i forhold til et typisk abonnement</p>')
         else:
-            spar = ('<span class="valg-spar valg-spar-ro">'
-                    f'{kr(g)} kr./md. over 12 mdr.</span>')
+            spar = f'<p class="valg-spar valg-spar-ro">{kr(g * 12)} kr. samlet det første år</p>'
 
-        pr_gb = (f'{a["pris"] / a["data_gb"]:.2f}'.replace(".", ",") + " kr./GB"
-                 if 0 < a["data_gb"] < 9999 else "—")
         binding = "Ingen binding" if a["binding"] == 0 else f'{a["binding"]} mdr. binding'
+        tale = "fri tale" if a.get("tale") == "fri" else "tale efter forbrug"
+        fakta = [f"{gb_tekst(a['data_gb'])} og {tale}", binding, netlabel(u)]
+        if a.get("femg"):
+            fakta.append("5G inkluderet")
         stjerne = stjerner(u, kompakt=True)
 
+        # Feedet skriver ofte selskabets navn ind i produktnavnet. Uden tjekket
+        # står der "Lebara Lebara 5 GB".
+        navn = a["navn"] if a["navn"].lower().startswith(u["navn"].lower().split()[0]) \
+            else f"{u['navn']} {a['navn']}"
+
+        flueben = ('<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">'
+                   '<path d="M3.2 8.4l3 3 6.4-7" fill="none" stroke="#00875D" stroke-width="2.2" '
+                   'stroke-linecap="round" stroke-linejoin="round"/></svg>')
         # Signe giver tommel op på det første kort — hendes anbefaling, ikke pynt på alle fire
         figur = f'<span class="valg-signe">{signe("tommel", 70)}</span>' if i == 0 else ""
         kort += f"""<div class="valgkort v{i}">{figur}
-  <span class="valg-badge">{e(kat)}</span>
+  <p class="valg-badge">{e(kat)}</p>
   <div class="valg-top">
     <span class="valg-logo"><img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}"
       loading="lazy" width="{round(u['logo_w'] * 26 / u['logo_h'])}" height="26" decoding="async"></span>
     {stjerne}
   </div>
-  <b class="valg-navn">{e(u['navn'])} {e(a['navn'])}</b>
+  <b class="valg-navn">{e(navn)}</b>
   <div class="valg-pris">{kr(vist)}<span> kr./md.</span></div>
   <div class="valg-under">{under}</div>
+  <ul class="valg-fakta">{"".join(f"<li>{flueben}{e(f)}</li>" for f in fakta)}</ul>
   {spar}
-  <ul class="valg-fakta">
-    <li><span>Data</span><b>{gb_tekst(a['data_gb'])}</b></li>
-    <li><span>Pris pr. GB</span><b>{pr_gb}</b></li>
-    <li><span>Binding</span><b>{e(binding)}</b></li>
-    <li><span>Netværk</span><b>{netlabel(u)}</b></li>
-  </ul>
-  <a class="knap knap-primaer valg-knap" href="/udbydere/{u['slug']}/">Se abonnementet</a>
-  <small class="valg-hvorfor">{e(detalje)}</small>
+  <a class="knap knap-primaer valg-knap" href="{a['link']}" rel="sponsored nofollow noopener"
+     target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
+     aria-label="Gå til {e(u['navn'])} og se {e(navn)}">Gå til {e(u['navn'].split()[0])}</a>
+  <a class="valg-mere" href="/udbydere/{u['slug']}/">Læs vores vurdering af {e(u['navn'].split()[0])}</a>
 </div>"""
 
     return f'<div class="baand"><div class="hurtigvalg">{kort}</div></div>'
