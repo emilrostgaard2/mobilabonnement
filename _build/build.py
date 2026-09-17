@@ -32,6 +32,7 @@ import sider6  # noqa: E402
 from udbyder_unik import UNIK  # noqa: E402
 import skabelon  # noqa: E402
 from maskot import signe  # noqa: E402
+import opsigelse as ops  # noqa: E402
 
 MAANEDER = ["januar", "februar", "marts", "april", "maj", "juni", "juli",
             "august", "september", "oktober", "november", "december"]
@@ -3014,7 +3015,11 @@ TJENESTER_META = {
 # produkter til. Tretten sider uden ét eneste abonnement og med næsten samme
 # tekst er tynde sider, der trækker hele domænet ned. De små tjenester nævnes
 # i stedet på oversigten og i brødteksten.
-STORE_TJENESTER = ["Netflix", "HBO Max", "Disney+", "Viaplay", "TV 2 Play"]
+STORE_TJENESTER = ["Netflix", "HBO Max", "Disney+", "Viaplay", "TV 2 Play",
+                   # Search Console, september 2026: disse tre lå på plads 10-18 med
+                   # visninger, da de blev fjernet som tynde. De er tilbage — med eget
+                   # indhold, så de ikke er tynde denne gang.
+                   "Prime Video", "Podimo", "SkyShowtime"]
 
 
 def _tjenester_der_fortjener_side():
@@ -3150,6 +3155,28 @@ TJENESTE_EGET = {
                 "kroner — men kun hvis du rent faktisk ser sport.",
                 "Sportsrettigheder skifter oftere end filmkataloger. Vælger du et abonnement "
                 "på grund af én bestemt rettighed, så tjek hvor længe aftalen løber."),
+    "Prime Video": ("Prime Video er i Danmark en del af et Amazon Prime-medlemskab og kan ikke "
+                    "sammenlignes én til én med de andre tjenester: en stor del af kataloget er "
+                    "film og serier til leje eller køb oven i abonnementet. Tjek derfor, hvad der "
+                    "reelt er inkluderet, før du tillægger det værdi i regnestykket.",
+                    "Prime Video er blandt de billigste streamingtjenester at tegne selv. Det "
+                    "betyder, at den sjældent alene kan retfærdiggøre et dyrere mobilabonnement — "
+                    "vælg efter data og pris først, og se tjenesten som en bonus."),
+    "Podimo": ("Podimo er dansk og har podcasts og lydbøger i samme abonnement. Lyd bruger "
+               "meget lidt data: en times podcast fylder typisk 30-60 MB, så selv daglig lytning "
+               "på farten lander under 2 GB om måneden. Du behøver altså ikke et stort "
+               "abonnement for at få glæde af den.",
+               "Er det mest lydbøger, du vil have, så sammenlign med vores side om "
+               "<a href=\"/mobilabonnement-med-lydbog/\">mobilabonnement med lydbog</a> — "
+               "udvalget af titler er forskelligt fra tjeneste til tjeneste, og det er "
+               "udvalget, ikke prisen, der afgør om du bruger den."),
+    "SkyShowtime": ("SkyShowtime samler film og serier fra flere amerikanske studier og kom til "
+                    "Danmark i 2022. Den findes både med og uden reklamer. Får du den med i et "
+                    "abonnement, så tjek hvilken udgave det er — det er den samme faldgrube som "
+                    "ved de andre store tjenester.",
+                    "SkyShowtime er en af de billigere tjenester at købe separat. Besparelsen "
+                    "ved et bundle er derfor mindre end ved Viaplay eller Netflix, og den bør "
+                    "ikke være grunden til at vælge et bestemt mobilselskab."),
     "TV 2 Play": ("TV 2 Play har flere niveauer, fra basis til pakker med sport og flere "
                   "kanaler. Det er sjældent tydeligt i mobilabonnementets markedsføring, "
                   "hvilket niveau der indgår — spørg, hvis det er afgørende.",
@@ -5199,6 +5226,7 @@ def byg_udbyder(u):
 # Undersider under en guide: brødkrummen skal vise forældresiden, ellers står
 # hierarkiet kun i adressen og hjælper hverken læser eller søgemaskine.
 GUIDE_FORAELDRE = {
+    **{ops.sti(_s): ("/guides/opsig-mobilabonnement/", "Opsigelse") for _s in ops.SELSKABER},
     "/guides/hvor-meget-data/apps/":
         ("/guides/hvor-meget-data/", "Hvor meget data"),
     "/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/":
@@ -9196,8 +9224,37 @@ def byg_lydbog():
     med = [a for a in ABON if a["pris"] > 0
            and any("lydbog" in t.lower() or "podimo" in t.lower()
                    or "mofibo" in t.lower() for t in a.get("streaming", []))]
-    krumme = [("/", "Forside"), (None, "Med lydbog")]
+    krumme = [("/", "Forside"), ("/mobilabonnement-med-streaming/", "Med streaming"),
+              (None, "Med lydbog")]
     fra = min((a["pris"] for a in med), default=0)
+
+    # Sidens pointe er, at lyd næsten ingen data bruger. Så den rigtige tabel er
+    # ikke kun de få abonnementer med en tjeneste indbygget, men de små og billige
+    # abonnementer, der rækker til at lytte hver dag. Udvid, hvis feedet er tyndt.
+    for loft in (20, 30, 50):
+        smaa = [a for a in ABON if 0 < a["data_gb"] <= loft and a["pris"] > 0
+                and not a.get("forbrugsafregnet")]
+        if len(smaa) >= 8:
+            break
+    billigst = min(smaa, key=lambda a: gns12(a) or a["pris"]) if smaa else None
+    selskaber_smaa = len({a["udbyder"] for a in smaa})
+
+    toptabel = ""
+    if med:
+        bm = min(med, key=lambda a: gns12(a) or a["pris"])
+        toptabel += pristabel(med, UMAP, titel="Abonnementer med lydbøger inkluderet",
+                              undertitel=f"{len(med)} abonnementer, hvor en lydbogs- eller "
+                                         f"podcasttjeneste er med i prisen.",
+                              filtre=False, billigst_id=bm["id"], id_attr="med-lydbog", vis=10)
+    if smaa:
+        toptabel += pristabel(
+            smaa, UMAP,
+            titel=f"Billige abonnementer der rækker til lydbøger — op til {loft} GB",
+            undertitel=(f"{len(smaa)} abonnementer fra {selskaber_smaa} selskaber. En time lydbog "
+                        f"om dagen bruger under 1 GB om måneden, så alle på listen har rigeligt. "
+                        f"Tegn Mofibo, Podimo eller Saxo selv ved siden af, og behold den, "
+                        f"hvis du skifter selskab."),
+            filtre=True, billigst_id=billigst["id"], id_attr="sammenlign", vis=10)
 
     tabel = ""
     if med:
@@ -9234,16 +9291,19 @@ time video. Du behøver ikke et stort abonnement for at lytte.</p></div>
 sag. Det er det ikke. Video kræver et stort abonnement. Lyd gør ikke, og forskellen
 er større, end de fleste regner med.</p>
 
-<h2>Hvilke selskaber tilbyder lydbøger?</h2>
+<p>Derfor viser tabellen øverst de billigste abonnementer med nok data til daglig
+lytning. Vil du hellere have tjenesten med i selve abonnementet, kan du se, hvem
+der tilbyder det, herunder — og læse om
+<a href="/mobilabonnement-med-podimo/">mobilabonnement med Podimo</a> og
+<a href="/mobilabonnement-med-musik/">mobilabonnement med musik</a>.</p>
+
+<h2 id="selskaber">Hvilke mobilselskaber har lydbøger med?</h2>
 {tabel_lydbog_selskaber()}
 <p>Bemærk kolonnen længst til højre. Danmark har tre fysiske mobilnet, og et
 selskab uden lydbog kan sagtens køre på samme master som et med — forskellen
 ligger i pakken, ikke i dækningen.</p>
 
-<h2>Abonnementer med lydbog inkluderet</h2>
-{tabel}
-
-<h2>Hvor lidt fylder en lydbog?</h2>
+<h2 id="dataforbrug">Hvor meget data bruger lydbøger?</h2>
 {tabel_lyd_dataforbrug()}
 <p>En time lydbog fylder 0,03 gigabyte. Lytter du en time hver dag hele måneden,
 bruger du under ét gigabyte. Selv et af de mindste abonnementer på markedet rækker
@@ -9291,10 +9351,26 @@ sparer flere hundrede kroner om året i forhold til en stor pakke.</p>
 <p>Streamer du samtidig video på farten, er billedet et andet. Se
 <a href="/mobilabonnement-10-30-gb/">10-30 GB</a>, som dækker langt de fleste.</p>
 
+{signe_cta("Find et billigt abonnement til dine lydbøger",
+           "Du betaler for data, du ikke bruger, hvis du vælger stort. Se de billigste "
+           "abonnementer med nok data til at lytte hver dag.",
+           "Se abonnementerne", "#sammenlign")}
 {forfatterboks()}
 </section>"""
 
+    _sel = sorted({UMAP[a["udbyder"]]["navn"] for a in med})
     faq = [
+        {"sp": "Hvilke mobilabonnementer har lydbøger med?",
+         "sv": (f"Lige nu har {len(med)} abonnementer fra {' og '.join(_sel)} en lydbogs- eller "
+                f"podcasttjeneste med i prisen. Billigst er {kr(fra)} kr. om måneden."
+                if med else
+                "Blandt de abonnementer, vi følger, har ingen en lydbogstjeneste med i prisen "
+                "lige nu. Udvalget skifter, og tabellen opdateres automatisk to gange dagligt. "
+                "Det billigste er som regel et lille abonnement plus tjenesten tegnet separat.")},
+        {"sp": "Kan jeg få Mofibo eller Podimo med i mit mobilabonnement?",
+         "sv": "Nogle selskaber tilbyder en lydbogs- eller podcasttjeneste som del af pakken "
+               "eller som tilvalg. Se oversigten over selskaber på siden. Tegner du tjenesten "
+               "selv, beholder du den, når du skifter mobilselskab."},
         {"sp": "Hvor meget data bruger en lydbog?",
          "sv": "Cirka 0,03 gigabyte i timen. Lytter du en time hver dag hele "
                "måneden, bruger du under ét gigabyte."},
@@ -9314,24 +9390,28 @@ sparer flere hundrede kroner om året i forhold til en stor pakke.</p>
                "rækker et abonnement med 1-10 GB fint."},
     ]
 
+    _fra = round(gns12(billigst) or billigst["pris"]) if billigst else 0
+    titel = (f"Mobilabonnement med lydbog — priser fra {kr(fra)} kr./md." if med else
+             f"Mobilabonnement med lydbog — fra {kr(_fra)} kr./md.")
+    besk = (f"Sammenlign {len(smaa)} billige mobilabonnementer til lydbøger og podcast fra "
+            f"{kr(_fra)} kr./md. En time lydbog bruger kun 0,03 GB — se hvem der har "
+            f"lydbøger med i prisen.")
+    hero_tekst = (f"Lydbøger bruger næsten ingen data. Sammenlign {len(smaa)} abonnementer, der "
+                  f"rækker til at lytte hver dag — fra {kr(_fra)} kr. om måneden.")
     skriv("/mobilabonnement-med-lydbog/", shell(
-        sti="/mobilabonnement-med-lydbog/",
-        titel=("Mobilabonnement med lydbog"
-               + (f" — fra {kr(fra)} kr./md." if med else " — sådan lytter du billigst")),
-        beskrivelse="Lydbøger fylder 0,03 GB i timen — hundrede gange mindre end video. "
-                    "Se hvilke abonnementer der har lydbog med, og hvor lidt data du "
-                    "reelt har brug for.",
-        hero=hero_side("Med lydbog", "Mobilabonnement med lydbog",
-                       "Lydbøger er den letteste streaming, der findes. Du behøver "
-                       "ikke et stort abonnement for at lytte."),
-        efter_hero="", krumme=krumme, toc=False,
-        indhold=krop + faqblok(faq, "Spørgsmål om lydbøger og mobilabonnement"),
+        sti="/mobilabonnement-med-lydbog/", titel=titel, beskrivelse=besk,
+        hero=hero_side("Med lydbog", "Mobilabonnement med lydbog og podcast", hero_tekst,
+                       '<a href="#sammenlign" class="knap knap-primaer">Se abonnementerne</a>'
+                       '<a href="#selskaber" class="knap knap-linje">Hvem har lydbøger med?</a>',
+                       chips=[("Abonnementer", str(len(smaa))), ("Fra", f"{kr(_fra)} kr."),
+                              ("Data pr. time", "0,03 GB")]),
+        efter_hero="", krumme=krumme, toc=True,
+        indhold=toptabel + krop + faqblok(faq, "Spørgsmål om lydbøger og mobilabonnement"),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
-                     artikelld("/mobilabonnement-med-lydbog/",
-                               "Mobilabonnement med lydbog",
-                               "Hvor lidt data lydbøger fylder, og hvilke selskaber "
-                               "der har dem med i abonnementet."))],
-    ), prioritet="0.7", hyppighed="weekly")
+                     artikelld("/mobilabonnement-med-lydbog/", "Mobilabonnement med lydbog",
+                               besk),
+                     listeld(med or smaa[:10], "Mobilabonnementer til lydbøger og podcast"))],
+    ), prioritet="0.75", hyppighed="daily")
 
 
 def byg_guideoversigt():
@@ -9553,6 +9633,180 @@ fra i mellemtiden.</p>
 <tbody>{raekker}</tbody></table>"""
 
 
+# ------------------------------------------------------------ PRISINDEKS (visning)
+_KORT_MD = ["jan.", "feb.", "mar.", "apr.", "maj", "jun.", "jul.", "aug.", "sep.", "okt.", "nov.", "dec."]
+
+
+def _kort_dato(iso, med_aar=False):
+    d = date.fromisoformat(iso)
+    return f"{d.day}. {_KORT_MD[d.month - 1]}" + (f" {d.year}" if med_aar else "")
+
+
+def _median(tal):
+    tal = sorted(tal)
+    n = len(tal)
+    if not n:
+        return None
+    return tal[n // 2] if n % 2 else (tal[n // 2 - 1] + tal[n // 2]) / 2
+
+
+def _samlet_median(m):
+    """Medianen af alle abonnementer i én måling. Ældre målinger uden
+    enkeltpriser falder tilbage på medianen af gruppernes medianer."""
+    if m.get("priser"):
+        return _median(m["priser"].values())
+    return _median([g["median"] for g in m.get("grupper", {}).values()])
+
+
+def _aendring(a, b):
+    """Returnerer (tekst, klasse) for ændringen fra a til b."""
+    if not a or b is None:
+        return "—", "pu-flad"
+    d, pct = b - a, (b - a) / a * 100
+    if abs(pct) < 0.5:
+        return "uændret", "pu-flad"
+    pct_t = f"{pct:+.1f}".replace(".", ",").replace("-", "−")
+    return (f"{'+' if d > 0 else '−'}{kr(abs(d))} kr. ({pct_t} %)",
+            "pu-op" if d > 0 else "pu-ned")
+
+
+def _linje(vaerdier, bredde, hoejde, farve, *, pad=(8, 8, 8, 8), flade=True, akse=None):
+    """Én ren linje med valgfri flade under. Bruges både stort og småt."""
+    v = [x for x in vaerdier if x is not None]
+    if len(v) < 2:
+        return ""
+    pt, ph, pb, pv = pad
+    lav, hoej = min(v), max(v)
+    # Lidt luft over og under, så en flad linje ikke klistrer til kanten
+    luft = max((hoej - lav) * .25, hoej * .03, 1)
+    lav, hoej = lav - luft, hoej + luft
+    tb, th = bredde - pv - ph, hoejde - pt - pb
+
+    def X(i):
+        return pv + tb * i / (len(vaerdier) - 1)
+
+    def Y(x):
+        return pt + th - th * (x - lav) / (hoej - lav)
+
+    pkt = [(X(i), Y(x)) for i, x in enumerate(vaerdier) if x is not None]
+    sti = " ".join(f"{'M' if i == 0 else 'L'}{x:.1f} {y:.1f}" for i, (x, y) in enumerate(pkt))
+    ud = ""
+    if akse:
+        for k in range(4):
+            val = lav + (hoej - lav) * k / 3
+            ud += (f'<line x1="{pv}" y1="{Y(val):.1f}" x2="{bredde - ph}" y2="{Y(val):.1f}" '
+                   f'stroke="#E6EAF4"/><text x="{pv - 8}" y="{Y(val) + 4:.1f}" text-anchor="end" '
+                   f'font-size="12" fill="#4A5275">{kr(round(val))} kr.</text>')
+    if flade:
+        ud += (f'<path d="{sti} L{pkt[-1][0]:.1f} {pt + th} L{pkt[0][0]:.1f} {pt + th} Z" '
+               f'fill="{farve}" fill-opacity=".08"/>')
+    ud += (f'<path d="{sti}" fill="none" stroke="{farve}" stroke-width="2.5" '
+           f'stroke-linejoin="round" stroke-linecap="round"/>'
+           f'<circle cx="{pkt[-1][0]:.1f}" cy="{pkt[-1][1]:.1f}" r="4.5" fill="{farve}" '
+           f'stroke="#fff" stroke-width="2"/>')
+    return ud
+
+
+def _pu_overblik(maalinger):
+    """Svaret først: hvad koster et typisk abonnement, og hvor er det på vej hen."""
+    serie = [_samlet_median(m) for m in maalinger]
+    a, b = serie[0], serie[-1]
+    tekst, klasse = _aendring(a, b)
+    første, sidste = maalinger[0]["dato"], maalinger[-1]["dato"]
+    dage = (date.fromisoformat(sidste) - date.fromisoformat(første)).days
+    if klasse == "pu-op":
+        dom = f"Priserne er steget siden {_kort_dato(første)}"
+    elif klasse == "pu-ned":
+        dom = f"Priserne er faldet siden {_kort_dato(første)}"
+    else:
+        dom = f"Priserne har ligget stille siden {_kort_dato(første)}"
+    B, H = 760, 300
+    graf_ = _linje(serie, B, H, "#2438D8", pad=(16, 18, 34, 64), akse=True)
+    return f"""<div class="pu-top" id="udvikling">
+  <div class="pu-dom">
+    <p class="pu-dom-titel">{e(dom)}</p>
+    <p class="pu-dom-tal">{kr(round(b))} kr.<span> pr. måned koster et typisk mobilabonnement i dag</span></p>
+    <p class="pu-dom-under">Ændring siden første måling: <b class="{klasse}">{tekst}</b></p>
+  </div>
+  <dl class="pu-noegletal">
+    <div><dt>Målinger gemt</dt><dd>{kr(len(maalinger))}</dd></div>
+    <div><dt>Periode</dt><dd>{dage} dage</dd></div>
+    <div><dt>Abonnementer i dag</dt><dd>{maalinger[-1]["antal"]}</dd></div>
+    <div><dt>Selskaber</dt><dd>{maalinger[-1]["udbydere"]}</dd></div>
+  </dl>
+</div>
+<figure class="prisudvikling">
+  <figcaption class="pu-figtitel">Medianpris for alle mobilabonnementer, kr. pr. måned</figcaption>
+  <svg viewBox="0 0 {B} {H}" role="img" width="{B}" height="{H}"
+    aria-label="Kurve over medianprisen for alle mobilabonnementer fra {e(_kort_dato(første, True))} til {e(_kort_dato(sidste, True))}">
+    {graf_}
+    <text x="64" y="{H - 8}" font-size="12" fill="#4A5275">{e(_kort_dato(første, True))}</text>
+    <text x="{B - 18}" y="{H - 8}" text-anchor="end" font-size="12" fill="#4A5275">{e(_kort_dato(sidste, True))}</text>
+  </svg>
+</figure>"""
+
+
+def _pu_grupper(maalinger):
+    """Én lille kurve pr. datastørrelse i stedet for syv linjer oven i hinanden."""
+    kort = ""
+    for g, navn in GRUPPENAVNE.items():
+        serie = [m["grupper"][g]["median"] if g in m.get("grupper", {}) else None for m in maalinger]
+        v = [x for x in serie if x is not None]
+        if len(v) < 2:
+            continue
+        tekst, klasse = _aendring(v[0], v[-1])
+        farve = {"pu-op": "#C2405A", "pu-ned": "#00875D"}.get(klasse, "#4A5275")
+        kort += f"""<div class="pu-lille">
+  <p class="pu-lille-navn">{e(navn)}</p>
+  <p class="pu-lille-pris">{kr(v[-1])} kr.<span>/md.</span></p>
+  <svg viewBox="0 0 220 64" width="220" height="64" role="img"
+    aria-label="Medianpris for {e(navn)}: {kr(v[0])} kr. til {kr(v[-1])} kr.">{_linje(serie, 220, 64, farve)}</svg>
+  <p class="pu-lille-aendring {klasse}">{tekst}</p>
+</div>"""
+    if not kort:
+        return ""
+    return f"""<h2 id="datastoerrelse">Prisudvikling pr. datastørrelse</h2>
+<p>Hver boks viser medianprisen i dag, kurven siden første måling og ændringen i
+kroner og procent. Rød betyder dyrere, grøn billigere.</p>
+<div class="pu-gitter">{kort}</div>"""
+
+
+def _pu_selskaber(maalinger):
+    først, sidst = maalinger[0], maalinger[-1]
+    raekker = []
+    for slug, nu in sidst.get("pr_udbyder", {}).items():
+        if slug not in UMAP:
+            continue
+        # Første måling hvor selskabet optræder — ikke nødvendigvis den allerførste
+        start = next((m for m in maalinger if slug in m.get("pr_udbyder", {})), None)
+        if not start or start["dato"] == sidst["dato"]:
+            continue
+        a, b = start["pr_udbyder"][slug]["median"], nu["median"]
+        tekst, klasse = _aendring(a, b)
+        raekker.append((b - a, f'<tr><td><a href="/udbydere/{slug}/">{e(UMAP[slug]["navn"])}</a></td>'
+                        f'<td>{kr(a)} kr.</td><td>{kr(b)} kr.</td>'
+                        f'<td><span class="{klasse}">{tekst}</span></td></tr>'))
+    if not raekker:
+        return ""
+    raekker.sort(key=lambda r: -r[0])
+    return f"""<h2 id="selskaber">Hvilke selskaber har ændret prisen?</h2>
+<p>Medianen af hvert selskabs abonnementer ved første og seneste måling. Selskaber
+øverst er blevet dyrest. Et selskab kan flytte sig, fordi priserne ændres, eller
+fordi udvalget gør det — tabellen viser, at noget er sket, ikke hvorfor.</p>
+<div class="tabelrul"><table><thead><tr><th>Selskab</th><th>Første måling</th><th>I dag</th>
+<th>Ændring</th></tr></thead><tbody>{"".join(r[1] for r in raekker)}</tbody></table></div>"""
+
+
+def _pu_citer(maalinger):
+    return f"""<aside class="pu-citer">
+  <p class="pu-citer-titel">Brug gerne tallene</p>
+  <p>Journalister, bloggere og studerende må frit citere tallene med kilden
+  <strong>Telemobil.dk</strong> og et link til denne side. Rådata ligger på
+  <a href="/data/">vores dataside</a>, og har du brug for et særudtræk eller en
+  kommentar, står kontaktoplysningerne på <a href="/presse/">pressesiden</a>.</p>
+</aside>"""
+
+
 def byg_prisudvikling():
     sti = "/prisudvikling/"
     maalinger = _historik()
@@ -9572,11 +9826,10 @@ kurven kræver mindst to. Kom tilbage om en uge — så er der noget at se.</p>
     else:
         først, sidst = maalinger[0], maalinger[-1]
         dage = len(maalinger)
-        indhold_midt = f"""<h2>Hvad tallene viser</h2>
-<p>Vi har {dage} målinger fra {e(først["dato"])} til {e(sidst["dato"])}. Hver
-måling dækker {sidst["antal"]} abonnementer fra {sidst["udbydere"]} udbydere.</p>
-{_kurve(maalinger)}
-{_udviklingstabel(maalinger)}"""
+        indhold_midt = f"""{_pu_overblik(maalinger)}
+{_pu_grupper(maalinger)}
+{_pu_selskaber(maalinger)}
+{_pu_citer(maalinger)}"""
 
     brod = f"""<section class="sektion baand-smal artikel">
 {gennemgangslinje(OPDATERET, fakta="Målingerne gemmes automatisk ved hvert build")}
@@ -9585,7 +9838,9 @@ Ingen viser, hvad det kostede for tre måneder siden. Vi gemmer hver eneste
 måling, så du kan se, om priserne rent faktisk falder — eller om det bare er
 kampagnerne, der skifter navn.</p>
 
-<h2>Sådan måler vi</h2>
+{indhold_midt}
+
+<h2 id="metode">Sådan måler vi</h2>
 <p>To gange i døgnet henter vi priserne og gemmer fire tal for hver
 datastørrelse: laveste pris, median, gennemsnit og højeste pris. Vi regner
 altid på <strong>normalprisen</strong>, aldrig på introprisen. En intropris
@@ -9593,8 +9848,6 @@ siger noget om en kampagne, ikke om prisniveauet.</p>
 <p>Medianen er det vigtigste tal. Gennemsnittet trækkes op af enkelte dyre
 abonnementer, mens medianen viser den midterste pris — altså hvad et typisk
 abonnement i den gruppe koster.</p>
-
-{indhold_midt}
 
 {prisstatistik()}
 
@@ -11365,15 +11618,36 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement")],
               billede="skift-mobilselskab",
               altbillede="Person opsiger sit mobilabonnement på laptop",
-              ekstra=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), fejllink(),
-                      begrebslink(), udbydergitter(), tabel_pr_datamaengde(), statistiktabel(),
-                      tabel_billigst_pr_udbyder(),
+              ekstra=[ops.oversigt(e), tabel_aarsomkostning(), tabel_billigst_pr_udbyder(),
+                      fejllink(), begrebslink(), udbydergitter(), tabel_pr_datamaengde(),
+                      statistiktabel(),
                       vejviser("/guides/opsig-mobilabonnement/"),
                       kilder(["teleankenaevnet", "teleanke_klag", "digst_klage",
                               "forbrugerombudsmanden"],
                              ["Varsler og opsigelsesvilkår: udbydernes abonnementsvilkår.",
                               "Vi giver ikke juridisk rådgivning — ved tvivl om din konkrete "
                               "aftale, kontakt udbyderen eller Teleankenævnet."])])
+
+    for _slug, _d in ops.SELSKABER.items():
+        _n = _d["navn"]
+        _u = _d["udbyder_slug"]
+        _link = (f'Se <a href="/udbydere/{_u}/">vores vurdering af {e(_n)}</a>, eller find et '
+                 f'billigere alternativ blandt de <a href="/billigste-mobilabonnement/">billigste '
+                 f'mobilabonnementer</a>.' if _u in UMAP else
+                 f'Se de <a href="/billigste-mobilabonnement/">billigste mobilabonnementer lige '
+                 f'nu</a>, eller dem <a href="/mobilabonnement-uden-binding/">uden binding</a>.')
+        byg_guide(ops.sti(_slug), f"Opsig {_n}",
+                  f"Opsig {_n}: varsel og fremgangsmåde",
+                  f"Opsig {_n} mobilabonnement — {_d['varsel_kort']}",
+                  f"{_n} har {_d['varsel_kort']}. Se hvordan du opsiger via {_d['metode_kort']}, "
+                  f"hvornår abonnementet stopper, og hvordan du beholder dit nummer.",
+                  ops.brodtekst(_slug, e, gennemgangslinje(OPDATERET, f"Læst i {_n}s egne vilkår"),
+                                D, _link),
+                  ops.faq(_slug),
+                  [("/guides/opsig-mobilabonnement/", "Opsigelse — de generelle regler"),
+                   ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
+                   ("/mobilabonnement-uden-binding/", "Abonnementer uden binding"),
+                   ("/billigste-mobilabonnement/", "Billigste mobilabonnement")])
 
     byg_guide("/mobilabonnement-til-erhverv/", "Til erhverv",
               "Mobilabonnement til erhverv",
