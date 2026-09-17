@@ -1,5 +1,5 @@
 {
- "hentet": "2026-09-13",
+ "hentet": "2026-09-17",
  "abonnementer": [
   {
    "id": "bb-566679",
@@ -48,31 +48,6 @@
    "link": "https://go.adt242.com/t/t?a=1697235826&as=2102885611&t=2&tk=1&url=https://www.hiper.dk/bredbaand"
   },
   {
-   "id": "bb-125052",
-   "udbyder": "oister",
-   "udbyder_navn": "Oister",
-   "navn": "5G internet",
-   "teknologi": "5g",
-   "ned": 950,
-   "op": 90,
-   "pris": 279,
-   "intro_pris": 99,
-   "intro_mdr": 3,
-   "oprettelse": 0,
-   "binding": 6,
-   "seks_maaneder": 1674,
-   "seks_maaneder_tilbud": 1134,
-   "net": "Oister",
-   "fordele": [
-    "Adgang til fordelsklubben OiSTER+",
-    "Fri data",
-    "Inkl. gratis router"
-   ],
-   "kampagnetekst": "99 kr/md første 3 mdr",
-   "logo_url": "https://adtraction.com/image.htm?imgId=1666103636",
-   "link": "https://go.adt284.net/t/t?a=1666103641&as=2102885611&t=2&tk=1&url=https://www.oister.dk/internet/5g/"
-  },
-  {
    "id": "bb-319728",
    "udbyder": "telmore",
    "udbyder_navn": "Telmore",
@@ -82,19 +57,19 @@
    "op": 43,
    "pris": 279,
    "intro_pris": 99,
-   "intro_mdr": 3,
+   "intro_mdr": 4,
    "oprettelse": 0,
    "binding": 6,
    "seks_maaneder": 1674,
-   "seks_maaneder_tilbud": 1134,
+   "seks_maaneder_tilbud": 954,
    "net": "Telmore",
    "fordele": [
     "Inkl. 4G- lånerouter",
     "Streamingtjenester kan tilvælges"
    ],
-   "kampagnetekst": "99 kr/md første 3 mdr",
+   "kampagnetekst": "99 kr/md første 4 mdr",
    "logo_url": "https://adtraction.com/image.htm?imgId=1721073353",
-   "link": "https://on.telmore.dk/t/t?a=1721073357&as=2102885611&t=2&tk=1&url=https://www.telmore.dk/internet"
+   "link": "https://on.telmore.dk/t/t?a=1721073357&as=2102885611&t=2&tk=1&url=https://www.telmore.dk/internet-5g-affiliate?utm_source=Adtraction&utm_medium=affiliate"
   },
   {
    "id": "bb-657087",
@@ -106,19 +81,19 @@
    "op": 90,
    "pris": 319,
    "intro_pris": 99,
-   "intro_mdr": 3,
+   "intro_mdr": 4,
    "oprettelse": 0,
    "binding": 6,
    "seks_maaneder": 1914,
-   "seks_maaneder_tilbud": 1254,
+   "seks_maaneder_tilbud": 1034,
    "net": "Telmore",
    "fordele": [
     "Inkl 5G lånerouter",
     "Tilvælg streamingtjenester"
    ],
-   "kampagnetekst": "99 kr/md første 3 mdr",
+   "kampagnetekst": "99 kr/md første 4 mdr",
    "logo_url": "https://adtraction.com/image.htm?imgId=1721073353",
-   "link": "https://on.telmore.dk/t/t?a=1721073357&as=2102885611&t=2&tk=1&url=https://www.telmore.dk/internet"
+   "link": "https://on.telmore.dk/t/t?a=1721073357&as=2102885611&t=2&tk=1&url=https://www.telmore.dk/internet-5g-affiliate?utm_source=Adtraction&utm_medium=affiliate"
   },
   {
    "id": "bb-397480",
@@ -169,6 +144,31 @@
    "link": "https://on.eesy.dk/t/t?a=1700040947&as=2102885611&t=2&tk=1&url=https://eesy.dk/rabat/5g-internet"
   },
   {
+   "id": "bb-125052",
+   "udbyder": "oister",
+   "udbyder_navn": "Oister",
+   "navn": "5G internet",
+   "teknologi": "5g",
+   "ned": 950,
+   "op": 90,
+   "pris": 279,
+   "intro_pris": 139,
+   "intro_mdr": 6,
+   "oprettelse": 0,
+   "binding": 6,
+   "seks_maaneder": 1674,
+   "seks_maaneder_tilbud": 834,
+   "net": "Oister",
+   "fordele": [
+    "Adgang til fordelsklubben OiSTER+",
+    "Fri data",
+    "Inkl. gratis router"
+   ],
+   "kampagnetekst": "139 kr/md første 6 mdr",
+   "logo_url": "https://adtraction.com/image.htm?imgId=1666103636",
+   "link": "https://go.adt284.net/t/t?a=1666103641&as=2102885611&t=2&tk=1&url=https://www.oister.dk/internet/5g/"
+  },
+  {
    "id": "bb-370680",
    "udbyder": "yousee",
    "udbyder_navn": "YouSee",
@@ -214,31 +214,6 @@
    "kampagnetekst": "169 kr/md første 3 mdr - spar 510 kr",
    "logo_url": "https://adtraction.com/image.htm?imgId=1693093220",
    "link": "https://go.ewii.dk/t/t?a=1693093225&as=2102885611&t=2&tk=1&url=https://www.ewii.dk/privat/internet/"
-  },
-  {
-   "id": "bb-12505201",
-   "udbyder": "oister",
-   "udbyder_navn": "Oister",
-   "navn": "5G internet - 25 % rabat",
-   "teknologi": "5g",
-   "ned": 950,
-   "op": 90,
-   "pris": 259,
-   "intro_pris": 194,
-   "intro_mdr": 6,
-   "oprettelse": 0,
-   "binding": 6,
-   "seks_maaneder": 1554,
-   "seks_maaneder_tilbud": 1164,
-   "net": "Oister",
-   "fordele": [
-    "Adgang til fordelsklubben OiSTER+",
-    "Fri data",
-    "Inkl. gratis router"
-   ],
-   "kampagnetekst": "25 % rabat i 6 mdr",
-   "logo_url": "https://adtraction.com/image.htm?imgId=1666103636",
-   "link": "https://go.adt284.net/t/t?a=1666103641&as=2102885611&t=2&tk=1&url=https://www.oister.dk/rabat/oister-internet/"
   },
   {
    "id": "bb-219501",
