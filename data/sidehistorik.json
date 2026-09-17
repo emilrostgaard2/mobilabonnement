@@ -1,0 +1,482 @@
+{
+ "/": {
+  "dato": "2026-09-17",
+  "hash": "b90c8524c2984506"
+ },
+ "/12-maaneders-prisen/": {
+  "dato": "2026-09-17",
+  "hash": "da753f895111eb98"
+ },
+ "/anmeldelser/": {
+  "dato": "2026-09-17",
+  "hash": "0da67a1c499b04f0"
+ },
+ "/bedste-mobilabonnement/": {
+  "dato": "2026-09-17",
+  "hash": "32d4be0847e2eea8"
+ },
+ "/billigste-mobilabonnement/": {
+  "dato": "2026-09-17",
+  "hash": "3e998ab34c3aee4d"
+ },
+ "/bredbaand/": {
+  "dato": "2026-09-17",
+  "hash": "72e6a15e1d48a33d"
+ },
+ "/bredbaand/5g/": {
+  "dato": "2026-09-17",
+  "hash": "be00de4aef60c78e"
+ },
+ "/bredbaand/fibernet/": {
+  "dato": "2026-09-17",
+  "hash": "af7fb54e0a4aaf33"
+ },
+ "/bredbaand/kabel-internet/": {
+  "dato": "2026-09-17",
+  "hash": "f492a27b79071a4c"
+ },
+ "/cookiepolitik/": {
+  "dato": "2026-09-17",
+  "hash": "43e57631b881f0ad"
+ },
+ "/daekningskort/": {
+  "dato": "2026-09-17",
+  "hash": "2b55539cd536075e"
+ },
+ "/danskernes-forbrug/": {
+  "dato": "2026-09-17",
+  "hash": "a6419585aab684ee"
+ },
+ "/driftsstatus/": {
+  "dato": "2026-09-17",
+  "hash": "d5947bde9764063c"
+ },
+ "/driftsstatus/cbb-mobil/": {
+  "dato": "2026-09-17",
+  "hash": "8f4ed0dd75c3c3b9"
+ },
+ "/driftsstatus/duka/": {
+  "dato": "2026-09-17",
+  "hash": "7dd1b45b26c52dc2"
+ },
+ "/driftsstatus/eesy/": {
+  "dato": "2026-09-17",
+  "hash": "db0044c6197b02de"
+ },
+ "/driftsstatus/flexii/": {
+  "dato": "2026-09-17",
+  "hash": "3b85e3bd15dc92b7"
+ },
+ "/driftsstatus/greentel/": {
+  "dato": "2026-09-17",
+  "hash": "ebfc488a60387214"
+ },
+ "/driftsstatus/lebara/": {
+  "dato": "2026-09-17",
+  "hash": "a42039fa64cd72f6"
+ },
+ "/driftsstatus/lyca-mobile/": {
+  "dato": "2026-09-17",
+  "hash": "6d0636af1907ee08"
+ },
+ "/driftsstatus/oister/": {
+  "dato": "2026-09-17",
+  "hash": "709c1313c263f56a"
+ },
+ "/driftsstatus/telmore/": {
+  "dato": "2026-09-17",
+  "hash": "7d700e68538ca0e6"
+ },
+ "/driftsstatus/yousee/": {
+  "dato": "2026-09-17",
+  "hash": "f92fa15b852213c1"
+ },
+ "/guides/": {
+  "dato": "2026-09-17",
+  "hash": "5a3c1ebfd24cc3a6"
+ },
+ "/guides/daekning-og-netvaerk/": {
+  "dato": "2026-09-17",
+  "hash": "aeb493faa401ab98"
+ },
+ "/guides/er-5g-pengene-vaerd/": {
+  "dato": "2026-09-17",
+  "hash": "56c10e78bc0ef03a"
+ },
+ "/guides/esim/": {
+  "dato": "2026-09-17",
+  "hash": "f1ec387469d25cd9"
+ },
+ "/guides/flyt-internettet/": {
+  "dato": "2026-09-17",
+  "hash": "d523b23c5b971813"
+ },
+ "/guides/hvor-meget-data/": {
+  "dato": "2026-09-17",
+  "hash": "20c44204d6a5a260"
+ },
+ "/guides/hvor-meget-data/apps/": {
+  "dato": "2026-09-17",
+  "hash": "b0c7540795fa5c37"
+ },
+ "/guides/koeb-mobiltelefon/": {
+  "dato": "2026-09-17",
+  "hash": "3159e3de883bb0b4"
+ },
+ "/guides/langsomt-internet/": {
+  "dato": "2026-09-17",
+  "hash": "648220b1fadbf8cf"
+ },
+ "/guides/mobil-virker-ikke/": {
+  "dato": "2026-09-17",
+  "hash": "e3ba8bb19cdeaf76"
+ },
+ "/guides/mobilabonnement-eller-bredbaand/": {
+  "dato": "2026-09-17",
+  "hash": "cd4a72467e29b90c"
+ },
+ "/guides/mobilabonnement-i-udlandet/": {
+  "dato": "2026-09-17",
+  "hash": "5f4beabd60a574bc"
+ },
+ "/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/": {
+  "dato": "2026-09-17",
+  "hash": "5014f40632dbd72e"
+ },
+ "/guides/mobilabonnement-trods-rki/": {
+  "dato": "2026-09-17",
+  "hash": "c73c89f99277c22d"
+ },
+ "/guides/mobilabonnement-uden-kreditvurdering/": {
+  "dato": "2026-09-17",
+  "hash": "6659e048a993a32e"
+ },
+ "/guides/mobilt-bredbaand/": {
+  "dato": "2026-09-17",
+  "hash": "29473e7325c502b1"
+ },
+ "/guides/opsig-mobilabonnement/": {
+  "dato": "2026-09-17",
+  "hash": "a1bc721f0f9cffeb"
+ },
+ "/guides/ping-og-svartid/": {
+  "dato": "2026-09-17",
+  "hash": "0312500cd8a58cac"
+ },
+ "/guides/prisstigning-mobilabonnement/": {
+  "dato": "2026-09-17",
+  "hash": "6fb5bb1eaadc4816"
+ },
+ "/guides/simkort/": {
+  "dato": "2026-09-17",
+  "hash": "0f2ea9be9ae808b1"
+ },
+ "/guides/skift-mobilselskab/": {
+  "dato": "2026-09-17",
+  "hash": "78455add220b2f32"
+ },
+ "/guides/to-numre-en-telefon/": {
+  "dato": "2026-09-17",
+  "hash": "09d42fefc42daed0"
+ },
+ "/guides/undgaa-hoej-regning/": {
+  "dato": "2026-09-17",
+  "hash": "dc86e2b8657c3dc5"
+ },
+ "/hvad-koster-et-mobilabonnement/": {
+  "dato": "2026-09-17",
+  "hash": "54c7cdb8a51fe9e2"
+ },
+ "/hvem-ringer-til-mig/": {
+  "dato": "2026-09-17",
+  "hash": "b53a888e25d2bd6f"
+ },
+ "/kampagner/": {
+  "dato": "2026-09-17",
+  "hash": "a8ccdd21b61bb01a"
+ },
+ "/kampagner/hoeretelefoner/": {
+  "dato": "2026-09-17",
+  "hash": "8730849f3e72f0a6"
+ },
+ "/kampagner/oister/": {
+  "dato": "2026-09-17",
+  "hash": "6078673cf38a20f0"
+ },
+ "/kontakt/": {
+  "dato": "2026-09-17",
+  "hash": "988a2d32d15d735e"
+ },
+ "/landekoder/": {
+  "dato": "2026-09-17",
+  "hash": "bca42c7385ef89c3"
+ },
+ "/metode/": {
+  "dato": "2026-09-17",
+  "hash": "43c7806bda185ddd"
+ },
+ "/mobilabonnement-1-10-gb/": {
+  "dato": "2026-09-17",
+  "hash": "73b0eea32e8656b4"
+ },
+ "/mobilabonnement-10-30-gb/": {
+  "dato": "2026-09-17",
+  "hash": "8bdc09a32c059c49"
+ },
+ "/mobilabonnement-100-gb/": {
+  "dato": "2026-09-17",
+  "hash": "eea2dead7a36c5dc"
+ },
+ "/mobilabonnement-30-50-gb/": {
+  "dato": "2026-09-17",
+  "hash": "8c081a7d9378fe32"
+ },
+ "/mobilabonnement-50-gb/": {
+  "dato": "2026-09-17",
+  "hash": "267ae72c7f320f04"
+ },
+ "/mobilabonnement-med-disney-plus/": {
+  "dato": "2026-09-17",
+  "hash": "539d3754bb792777"
+ },
+ "/mobilabonnement-med-esim/": {
+  "dato": "2026-09-17",
+  "hash": "f6ee66ad4700bc0f"
+ },
+ "/mobilabonnement-med-fri-data/": {
+  "dato": "2026-09-17",
+  "hash": "6175d08ecadcca39"
+ },
+ "/mobilabonnement-med-fri-tale/": {
+  "dato": "2026-09-17",
+  "hash": "5ad1bde90f517014"
+ },
+ "/mobilabonnement-med-hbo-max/": {
+  "dato": "2026-09-17",
+  "hash": "c662eab17433a6b0"
+ },
+ "/mobilabonnement-med-lydbog/": {
+  "dato": "2026-09-17",
+  "hash": "f5c940337c4f170b"
+ },
+ "/mobilabonnement-med-musik/": {
+  "dato": "2026-09-17",
+  "hash": "7fb8378676a9e409"
+ },
+ "/mobilabonnement-med-netflix/": {
+  "dato": "2026-09-17",
+  "hash": "0529dfc5ca8553cb"
+ },
+ "/mobilabonnement-med-streaming/": {
+  "dato": "2026-09-17",
+  "hash": "d148e1ffcc8a6691"
+ },
+ "/mobilabonnement-med-streaming/tjenester/": {
+  "dato": "2026-09-17",
+  "hash": "c84e3ba8e9c6ef47"
+ },
+ "/mobilabonnement-med-telefon/": {
+  "dato": "2026-09-17",
+  "hash": "cd80dcf5aeb6f829"
+ },
+ "/mobilabonnement-med-tv2-play/": {
+  "dato": "2026-09-17",
+  "hash": "bfabbd6cfb9f102e"
+ },
+ "/mobilabonnement-med-viaplay/": {
+  "dato": "2026-09-17",
+  "hash": "7e2c400a51e4de2e"
+ },
+ "/mobilabonnement-til-aeldre/": {
+  "dato": "2026-09-17",
+  "hash": "93efe228f590eb2b"
+ },
+ "/mobilabonnement-til-boern/": {
+  "dato": "2026-09-17",
+  "hash": "ec8f01f9e24a6778"
+ },
+ "/mobilabonnement-til-erhverv/": {
+  "dato": "2026-09-17",
+  "hash": "2785a5b71e146c74"
+ },
+ "/mobilabonnement-til-familie/": {
+  "dato": "2026-09-17",
+  "hash": "485cfcc34a289bb1"
+ },
+ "/mobilabonnement-til-unge/": {
+  "dato": "2026-09-17",
+  "hash": "a370a7407265339a"
+ },
+ "/mobilabonnement-uden-binding/": {
+  "dato": "2026-09-17",
+  "hash": "e94a9d1594d0d2ac"
+ },
+ "/mobilabonnement-uden-data/": {
+  "dato": "2026-09-17",
+  "hash": "f7bb3a9e40828ca2"
+ },
+ "/mobilabonnement-under-100-kr/": {
+  "dato": "2026-09-17",
+  "hash": "df45d91915bc6f38"
+ },
+ "/mobilabonnementer-black-friday/": {
+  "dato": "2026-09-17",
+  "hash": "e889d2e2bd73699b"
+ },
+ "/netvaerk/": {
+  "dato": "2026-09-17",
+  "hash": "048ec848b45ba0fc"
+ },
+ "/netvaerk/3/": {
+  "dato": "2026-09-17",
+  "hash": "81ce2a870b7efc82"
+ },
+ "/netvaerk/tdc-net/": {
+  "dato": "2026-09-17",
+  "hash": "985a80f328925695"
+ },
+ "/netvaerk/telenor/": {
+  "dato": "2026-09-17",
+  "hash": "3af779361cda082e"
+ },
+ "/om-os/": {
+  "dato": "2026-09-17",
+  "hash": "b41bac7c8fc563c7"
+ },
+ "/om/emil-rostgaard/": {
+  "dato": "2026-09-17",
+  "hash": "393d9224cec49e77"
+ },
+ "/ordbog/": {
+  "dato": "2026-09-17",
+  "hash": "1c0600fc4b842bce"
+ },
+ "/pin-og-puk-kode/": {
+  "dato": "2026-09-17",
+  "hash": "a189be5cac9b29b2"
+ },
+ "/presse/": {
+  "dato": "2026-09-17",
+  "hash": "ce965f68998c03e2"
+ },
+ "/prisudvikling/": {
+  "dato": "2026-09-17",
+  "hash": "7d739118568e4011"
+ },
+ "/privatlivspolitik/": {
+  "dato": "2026-09-17",
+  "hash": "f7b4d4aa21d32522"
+ },
+ "/saadan-tjener-vi-penge/": {
+  "dato": "2026-09-17",
+  "hash": "3f809fca0e3850ab"
+ },
+ "/sammenlign/": {
+  "dato": "2026-09-17",
+  "hash": "6600ca1ce99b7a60"
+ },
+ "/sammenlign/duka-vs-greentel/": {
+  "dato": "2026-09-17",
+  "hash": "bb8901b35fc16def"
+ },
+ "/sammenlign/eesy-vs-flexii/": {
+  "dato": "2026-09-17",
+  "hash": "a88185d83eb976e9"
+ },
+ "/sammenlign/eesy-vs-telmore/": {
+  "dato": "2026-09-17",
+  "hash": "f7a65be36ebc84ae"
+ },
+ "/sammenlign/eesy-vs-yousee/": {
+  "dato": "2026-09-17",
+  "hash": "78440fa473a7676f"
+ },
+ "/sammenlign/flexii-vs-greentel/": {
+  "dato": "2026-09-17",
+  "hash": "50766efde450e885"
+ },
+ "/sammenlign/greentel-vs-eesy/": {
+  "dato": "2026-09-17",
+  "hash": "b325a3ff2c89edb0"
+ },
+ "/sammenlign/lebara-vs-lyca-mobile/": {
+  "dato": "2026-09-17",
+  "hash": "6d8fc799d18128c1"
+ },
+ "/sammenlign/oister-vs-eesy/": {
+  "dato": "2026-09-17",
+  "hash": "613735d4f2f23187"
+ },
+ "/sammenlign/oister-vs-flexii/": {
+  "dato": "2026-09-17",
+  "hash": "7ceb9d86ed23c401"
+ },
+ "/sammenlign/oister-vs-greentel/": {
+  "dato": "2026-09-17",
+  "hash": "b6af922c69547f00"
+ },
+ "/sammenlign/telmore-vs-yousee/": {
+  "dato": "2026-09-17",
+  "hash": "e5febda564ab105b"
+ },
+ "/sammenlign/yousee-vs-oister/": {
+  "dato": "2026-09-17",
+  "hash": "07dab7fd99683993"
+ },
+ "/speedtest/": {
+  "dato": "2026-09-17",
+  "hash": "05b4363dc7dffdeb"
+ },
+ "/taletidskort/": {
+  "dato": "2026-09-17",
+  "hash": "38c07a8aa633622e"
+ },
+ "/telemobil-score/": {
+  "dato": "2026-09-17",
+  "hash": "2a1da228d0c39a37"
+ },
+ "/udbydere/": {
+  "dato": "2026-09-17",
+  "hash": "58665a57111c8f5b"
+ },
+ "/udbydere/cbb-mobil/": {
+  "dato": "2026-09-17",
+  "hash": "fa8712ff3305fcdb"
+ },
+ "/udbydere/duka/": {
+  "dato": "2026-09-17",
+  "hash": "cb77e6f3aba1d21f"
+ },
+ "/udbydere/eesy/": {
+  "dato": "2026-09-17",
+  "hash": "f00b4ae0b06f7ab3"
+ },
+ "/udbydere/flexii/": {
+  "dato": "2026-09-17",
+  "hash": "5cf904e9ebfffad8"
+ },
+ "/udbydere/greentel/": {
+  "dato": "2026-09-17",
+  "hash": "96229762fde59753"
+ },
+ "/udbydere/lebara/": {
+  "dato": "2026-09-17",
+  "hash": "3098585cb15a31a4"
+ },
+ "/udbydere/lyca-mobile/": {
+  "dato": "2026-09-17",
+  "hash": "a02f3d5cddac83a4"
+ },
+ "/udbydere/oister/": {
+  "dato": "2026-09-17",
+  "hash": "c831ab3ef5c38cba"
+ },
+ "/udbydere/telmore/": {
+  "dato": "2026-09-17",
+  "hash": "3601aa997c98cd8b"
+ },
+ "/udbydere/yousee/": {
+  "dato": "2026-09-17",
+  "hash": "4543580916d85d20"
+ }
+}
