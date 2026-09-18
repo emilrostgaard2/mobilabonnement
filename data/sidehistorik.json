@@ -1,7 +1,7 @@
 {
  "/": {
-  "dato": "2026-09-17",
-  "hash": "bb98368127a04385"
+  "dato": "2026-09-18",
+  "hash": "b98094367ecd6141"
  },
  "/12-maaneders-prisen/": {
   "dato": "2026-09-17",
@@ -256,8 +256,8 @@
   "hash": "e593d4046d26bf55"
  },
  "/mobilabonnement-med-fri-data/": {
-  "dato": "2026-09-17",
-  "hash": "1f76a092aa13d4a9"
+  "dato": "2026-09-18",
+  "hash": "96b348cb0bd539d7"
  },
  "/mobilabonnement-med-fri-tale/": {
   "dato": "2026-09-17",
@@ -384,8 +384,8 @@
   "hash": "c92c88050f21bae8"
  },
  "/prisudvikling/": {
-  "dato": "2026-09-17",
-  "hash": "08acb781135d7ef9"
+  "dato": "2026-09-18",
+  "hash": "550ef409f385d9c1"
  },
  "/privatlivspolitik/": {
   "dato": "2026-09-17",
@@ -468,39 +468,39 @@
   "hash": "66e3ad373fd70559"
  },
  "/udbydere/duka/": {
-  "dato": "2026-09-17",
-  "hash": "5a0508a6356578cf"
+  "dato": "2026-09-18",
+  "hash": "4520925e3dfec251"
  },
  "/udbydere/eesy/": {
-  "dato": "2026-09-17",
-  "hash": "36b55eee6be4792f"
+  "dato": "2026-09-18",
+  "hash": "80bac531c366e32e"
  },
  "/udbydere/flexii/": {
-  "dato": "2026-09-17",
-  "hash": "56385dfd2c196c7f"
+  "dato": "2026-09-18",
+  "hash": "5092a50909d6cf7b"
  },
  "/udbydere/greentel/": {
-  "dato": "2026-09-17",
-  "hash": "b8ae444df73ab7ba"
+  "dato": "2026-09-18",
+  "hash": "34368e6457672a3a"
  },
  "/udbydere/lebara/": {
-  "dato": "2026-09-17",
-  "hash": "3432dacae86f739f"
+  "dato": "2026-09-18",
+  "hash": "1d7fce1e1fa55493"
  },
  "/udbydere/lyca-mobile/": {
-  "dato": "2026-09-17",
-  "hash": "677756845a8a42e7"
+  "dato": "2026-09-18",
+  "hash": "4f4458c50701d9f8"
  },
  "/udbydere/oister/": {
-  "dato": "2026-09-17",
-  "hash": "9f3a3252ceda6bca"
+  "dato": "2026-09-18",
+  "hash": "9c75951dce725b04"
  },
  "/udbydere/telmore/": {
-  "dato": "2026-09-17",
-  "hash": "72968e867622e58a"
+  "dato": "2026-09-18",
+  "hash": "bb4f23de2a4fccf6"
  },
  "/udbydere/yousee/": {
-  "dato": "2026-09-17",
-  "hash": "e6ca4b6e5588767d"
+  "dato": "2026-09-18",
+  "hash": "1d0bd9ef25bc016e"
  }
 }
