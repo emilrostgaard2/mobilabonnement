@@ -463,6 +463,7 @@ def fod(opdateret):
           <li><a href="/mobilabonnement-til-aeldre/">Til ældre</a></li>
           <li><a href="/taletidskort/">Taletidskort</a></li>
           <li><a href="/prisudvikling/">Prisudvikling</a></li>
+          <li><a href="/prisarkiv/">Prisarkiv</a></li>
         </ul>
       </div>
 

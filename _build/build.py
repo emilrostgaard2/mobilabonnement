@@ -2255,6 +2255,7 @@ def vejviser(aktuel=""):
         ("/mobilabonnement-med-lydbog/", "Med lydbog", "podcast og lydbøger"),
         ("/mobilabonnement-med-musik/", "Med musik", "Spotify og musiktjenester"),
         ("/danskernes-forbrug/", "Markedet i tal", "priser og forbrug"),
+        ("/prisarkiv/", "Prisarkiv", "hver målt prisændring"),
         ("/guides/", "Alle guides", f"{len(GUIDER)} gennemgange"),
         ("/anmeldelser/", "Anmeldelser",
          f"{len({a['udbyder'] for a in ABON if a['pris'] > 0})} selskaber vurderet"),
@@ -9312,6 +9313,254 @@ sparer flere hundrede kroner om året i forhold til en stor pakke.</p>
     ), prioritet="0.7", hyppighed="weekly")
 
 
+# ============================================================ PRISARKIV
+# Rå data, offentligt fremlagt. Hver eneste prisændring vi har målt, med
+# dato og beløb. Ingen konkurrent kan kopiere siden uden først at have
+# gemt data i månedsvis — og det er præcis dét, der gør den værd at linke til.
+
+def _prisarkiv_data():
+    """Samler alle målte prisændringer. Returnerer (målinger, ændringer)."""
+    try:
+        with open(os.path.join(ROD, "data", "prishistorik.json"), encoding="utf-8") as f:
+            h = json.load(f)
+    except (FileNotFoundError, ValueError):
+        return [], []
+    med = [m for m in h.get("maalinger", []) if m.get("priser")]
+    aendringer = []
+    for foer, nu in zip(med, med[1:]):
+        for aid, ny in nu["priser"].items():
+            gammel = foer["priser"].get(aid)
+            if gammel is None or gammel == ny:
+                continue
+            a = next((x for x in ABON if x["id"] == aid), None)
+            aendringer.append({
+                "dato": nu["dato"], "id": aid, "fra": gammel, "til": ny,
+                "abonnement": a,
+                # Forsvundne abonnementer beholder vi. Prisen blev målt, og
+                # det er lige så interessant, at et produkt er udgået.
+                "udgaaet": a is None,
+            })
+    aendringer.reverse()
+    return med, aendringer
+
+
+def prisarkiv_tabel(aendringer, maks=60):
+    if not aendringer:
+        return ""
+    raekker = ""
+    for x in aendringer[:maks]:
+        a = x["abonnement"]
+        d = x["til"] - x["fra"]
+        pct = abs(d / x["fra"] * 100) if x["fra"] else 0
+        if a:
+            u = UMAP[a["udbyder"]]
+            hvem = (f'<a href="/udbydere/{u["slug"]}/"><strong>{e(u["navn"])}</strong></a>'
+                    f'<br><span class="tabel-under">{e(a["navn"])} · '
+                    f'{gb_tekst(a["data_gb"])}</span>')
+        else:
+            hvem = ('<strong>Udgået abonnement</strong><br>'
+                    '<span class="tabel-under">findes ikke længere i feedet</span>')
+        raekker += f"""<tr>
+  <td class="tal"><time datetime="{e(x['dato'])}">{e(x['dato'])}</time></td>
+  <td>{hvem}</td>
+  <td class="tal">{kr(x['fra'])} kr.</td>
+  <td class="tal">{kr(x['til'])} kr.</td>
+  <td class="tal{' ned' if d < 0 else ' op'}">{'−' if d < 0 else '+'}{kr(abs(d))} kr.
+      ({pct:.0f} %)</td>
+</tr>"""
+    flere = (f'<p class="tabel-under">Viser de {maks} nyeste af '
+             f'{kr(len(aendringer))} registrerede ændringer.</p>'
+             if len(aendringer) > maks else "")
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Hver prisændring vi har målt, nyeste først. Vi sammenligner
+  normalprisen fra én måling til den næste.</caption>
+  <thead><tr><th scope="col">Målt</th><th scope="col">Abonnement</th>
+    <th scope="col">Fra</th><th scope="col">Til</th>
+    <th scope="col">Ændring</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>{flere}"""
+
+
+def prisarkiv_selskaber(aendringer):
+    """Hvem ændrer priser oftest — og i hvilken retning."""
+    pr = {}
+    for x in aendringer:
+        a = x["abonnement"]
+        if not a:
+            continue
+        s = pr.setdefault(a["udbyder"], {"op": 0, "ned": 0, "sum": 0})
+        d = x["til"] - x["fra"]
+        s["op" if d > 0 else "ned"] += 1
+        s["sum"] += d
+    if not pr:
+        return ""
+    raekker = ""
+    for slug, s in sorted(pr.items(), key=lambda x: -(x[1]["op"] + x[1]["ned"])):
+        u = UMAP[slug]
+        i_alt = s["op"] + s["ned"]
+        snit = s["sum"] / i_alt if i_alt else 0
+        raekker += f"""<tr>
+  <td><a href="/udbydere/{u['slug']}/"><strong>{e(u['navn'])}</strong></a></td>
+  <td class="tal">{i_alt}</td>
+  <td class="tal">{s['ned']}</td>
+  <td class="tal">{s['op']}</td>
+  <td class="tal{' ned' if snit < 0 else (' op' if snit > 0 else '')}">
+      {'−' if snit < 0 else ('+' if snit > 0 else '')}{kr(abs(round(snit)))} kr.</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Hvor ofte hvert selskab har ændret priser i måleperioden, og hvilken
+  vej det i gennemsnit er gået.</caption>
+  <thead><tr><th scope="col">Selskab</th><th scope="col">Ændringer</th>
+    <th scope="col">Ned</th><th scope="col">Op</th>
+    <th scope="col">Gennemsnit</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def byg_prisarkiv():
+    med, aendringer = _prisarkiv_data()
+    if len(med) < 2:
+        print("  Springer /prisarkiv/ over — kræver mindst to målinger")
+        return
+
+    dage = (date.fromisoformat(med[-1]["dato"]) - date.fromisoformat(med[0]["dato"])).days
+    ned = len([x for x in aendringer if x["til"] < x["fra"]])
+    op = len(aendringer) - ned
+    maalinger = sum(len(m["priser"]) for m in med)
+    krumme = [("/", "Forside"), (None, "Prisarkiv")]
+
+    if aendringer:
+        stoerst = max(aendringer, key=lambda x: abs(x["til"] - x["fra"]))
+        a = stoerst["abonnement"]
+        stoerst_txt = (
+            f'Den største enkeltændring var {e(UMAP[a["udbyder"]]["navn"])} '
+            f'{e(a["navn"])}, der gik fra {kr(stoerst["fra"])} til '
+            f'{kr(stoerst["til"])} kr. den {e(stoerst["dato"])}.'
+            if a else
+            f'Den største enkeltændring var på {kr(abs(stoerst["til"] - stoerst["fra"]))} kr.')
+    else:
+        stoerst_txt = ""
+
+    krop = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"{kr(maalinger)} prismålinger gemt siden {med[0]['dato']}")}
+<div class="udtag"><p><strong>Kort fortalt:</strong> Vi har gemt
+{kr(maalinger)} prismålinger siden {e(med[0]['dato'])} og registreret
+{kr(len(aendringer))} prisændringer. Alle tal på denne side er målt, ikke
+anslået, og du må gerne bruge dem.</p></div>
+
+<p>Prissammenligninger viser, hvad et abonnement koster i dag. Ingen viser, hvad
+det kostede i sidste uge. Derfor er det umuligt at svare på et af de mest
+oplagte spørgsmål: bevæger priserne sig, og i hvilken retning?</p>
+
+<p>Vi henter priserne fra udbydernes datafeed to gange i døgnet og gemmer hver
+eneste måling. Den her side er det rå resultat. Ingen udvælgelse, ingen
+fremhævelse af det, der passer os bedst.</p>
+
+<h2>Sådan ser det ud i tal</h2>
+<ul class="pilliste">
+  <li><strong>{kr(maalinger)} prismålinger</strong> gemt siden
+      {e(med[0]['dato'])}</li>
+  <li><strong>{len(med)} måledage</strong> over {dage} dage</li>
+  <li><strong>{kr(len(aendringer))} prisændringer</strong> registreret</li>
+  <li><strong>{kr(ned)} faldt</strong> i pris, <strong>{kr(op)} steg</strong></li>
+</ul>
+<p>{stoerst_txt}</p>
+
+<h2>Hver eneste prisændring, vi har målt</h2>
+{prisarkiv_tabel(aendringer)}
+
+<h2>Hvem ændrer priser oftest?</h2>
+{prisarkiv_selskaber(aendringer)}
+<p>Bemærk, at mange ændringer ikke nødvendigvis er dårligt. Et selskab, der
+justerer ofte, kan være et, der reagerer på konkurrencen. Kolonnen længst til
+højre viser, hvilken vej det i gennemsnit er gået.</p>
+
+<h2>Sådan måler vi</h2>
+<p>To gange i døgnet henter vi udbydernes datafeed og gemmer prisen på hvert
+enkelt abonnement. Vi sammenligner normalprisen fra én måling til den næste, og
+registrerer en ændring, når tallet er et andet.</p>
+<p>Vi måler på normalprisen, ikke på introprisen. En kampagne, der starter eller
+udløber, er ikke en prisændring — det er en kampagne. Derfor viser den her side
+reelle justeringer af, hvad abonnementet koster, når tilbuddet er ovre.</p>
+<p>Forsvinder et abonnement fra feedet, beholder vi de målinger, vi nåede at
+lave. De står som udgået i tabellen. Et produkt, der forsvinder, er lige så
+interessant som et, der stiger i pris.</p>
+
+<h2>Hvad tallene ikke viser</h2>
+<ul class="pilliste">
+  <li><strong>Hele markedet.</strong> Vi måler de abonnementer, vi har adgang
+  til gennem udbydernes feeds. Det dækker en stor del af markedet, men ikke det
+  hele.</li>
+  <li><strong>Kampagner.</strong> Intropriser skifter hele tiden og er ikke
+  medregnet. Se dem i stedet i
+  <a href="/kampagner/">oversigten over aktuelle kampagner</a>.</li>
+  <li><strong>Hvorfor prisen ændrede sig.</strong> Vi måler hvad, ikke hvorfor.
+  Det skal du spørge selskabet om.</li>
+</ul>
+
+<h2>Du må gerne bruge tallene</h2>
+<p>Skriver du en artikel, en opgave eller en rapport, må du citere fra denne
+side. Vi beder om, at du angiver Telemobil som kilde med et link hertil, og at
+du skriver, hvornår tallene er hentet. De ændrer sig hver dag.</p>
+<p>Har du brug for et udtræk, vi ikke viser her — en bestemt periode, et bestemt
+selskab eller rådata — så skriv til <a href="/kontakt/">redaktionen</a>. Vi
+hjælper gerne journalister og studerende.</p>
+
+<h2>Se også</h2>
+<ul class="pilliste">
+  <li><a href="/prisudvikling/">Prisudvikling på mobilabonnementer</a> — kurven
+  over medianprisen pr. datastørrelse</li>
+  <li><a href="/danskernes-forbrug/">Markedet i tal</a> — priser, forbrug og
+  udbredelse lige nu</li>
+  <li><a href="/telemobil-score/">Telemobil-scoren</a> — sådan vægter vi, når vi
+  rangerer</li>
+</ul>
+
+{forfatterboks()}
+</section>"""
+
+    faq = [
+        {"sp": "Hvor mange prismålinger har I gemt?",
+         "sv": f"{kr(maalinger)} målinger fordelt på {len(med)} måledage siden "
+               f"{med[0]['dato']}. Vi henter priserne to gange i døgnet."},
+        {"sp": "Måler I på tilbudsprisen eller normalprisen?",
+         "sv": "Normalprisen. En kampagne, der starter eller udløber, er ikke en "
+               "prisændring — det er en kampagne. Vi måler reelle justeringer af, "
+               "hvad abonnementet koster bagefter."},
+        {"sp": "Hvad sker der, når et abonnement forsvinder?",
+         "sv": "Vi beholder de målinger, vi nåede at lave. De står som udgået i "
+               "tabellen, fordi et produkt der forsvinder er lige så interessant "
+               "som et, der stiger i pris."},
+        {"sp": "Må jeg bruge tallene i en artikel?",
+         "sv": "Ja. Angiv Telemobil som kilde med et link til denne side, og skriv "
+               "hvornår tallene er hentet."},
+        {"sp": "Dækker I hele det danske marked?",
+         "sv": "Nej. Vi måler de abonnementer, vi har adgang til gennem udbydernes "
+               "datafeeds. Det dækker en stor del af markedet, men ikke det hele."},
+    ]
+
+    skriv("/prisarkiv/", shell(
+        sti="/prisarkiv/",
+        titel=med_maaned(f"Prisarkiv — {kr(len(aendringer))} målte prisændringer"),
+        beskrivelse=(f"Hver prisændring vi har målt på danske mobilabonnementer siden "
+                     f"{med[0]['dato']}. {kr(maalinger)} målinger, rå data, frit at "
+                     f"citere med kildeangivelse."),
+        hero=hero_side("Rå data", "Prisarkiv",
+                       f"{kr(maalinger)} prismålinger siden {med[0]['dato']}. "
+                       f"Hver eneste prisændring, vi har registreret."),
+        efter_hero="", krumme=krumme, toc=False,
+        indhold=krop + faqblok(faq, "Spørgsmål om prisarkivet"),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld("/prisarkiv/", "Prisarkiv",
+                               "Alle målte prisændringer på danske "
+                               "mobilabonnementer, med dato og beløb."))],
+    ), prioritet="0.8", hyppighed="daily")
+
+
 def byg_guideoversigt():
     sti = "/guides/"
     krumme = [("/", "Forside"), (None, "Guides")]
@@ -11817,6 +12066,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_driftsstatus()
     byg_anmeldelser()
     byg_lydbog()
+    byg_prisarkiv()
     byg_guideoversigt()
     byg_guide("/guides/skift-mobilselskab/", "Skift mobilselskab",
               "Sådan skifter du mobilselskab",
