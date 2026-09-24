@@ -31,9 +31,6 @@ import sider5  # noqa: E402
 import sider6  # noqa: E402
 from udbyder_unik import UNIK  # noqa: E402
 import skabelon  # noqa: E402
-from maskot import signe  # noqa: E402
-import opsigelse as ops  # noqa: E402
-import prisindeks as pi  # noqa: E402
 
 MAANEDER = ["januar", "februar", "marts", "april", "maj", "juni", "juli",
             "august", "september", "oktober", "november", "december"]
@@ -538,28 +535,25 @@ def tillidsbaand():
     except (FileNotFoundError, ValueError, KeyError):
         pass
 
-    # Hele sætninger frem for store tal med små etiketter. En skeptisk læser
-    # skal kunne forstå hvert løfte uden at afkode det.
     punkter = [
-        (f"{len(betalte)} abonnementer fra {D['antal_udbydere']} selskaber",
-         "samlet ét sted og sorteret efter pris"),
-        ("Priserne opdateres to gange dagligt", "hentet direkte fra selskaberne"),
+        (f"{len(betalte)}", "abonnementer sammenlignet",
+         # Samme kilde som underoverskriften — ellers står der to forskellige
+         # tal på samme skærm.
+         f"fra {D['antal_udbydere']} danske selskaber"),
+        ("2×", "opdateret dagligt", "priserne hentes direkte fra udbydernes feed"),
     ]
     if maalinger >= 2 and dage >= 7:
-        punkter.append((f"{kr(maalinger)} prismålinger gemt",
-                        f"vi har fulgt markedet i {dage} dage"))
+        punkter.append((f"{kr(maalinger)}", "prismålinger gemt",
+                        f"vi har målt markedet i {dage} dage"))
     else:
-        punkter.append(("Gratis og uden tilmelding",
-                        "du skal ikke oplyse navn, mail eller telefon"))
-    punkter.append(("Uafhængig sammenligning",
-                    "ingen kan betale sig til en bedre placering"))
+        punkter.append(("0 kr.", "og ingen formular",
+                        "vi beder aldrig om dine oplysninger"))
+    punkter.append(("100 %", "uafhængig",
+                    "udbydere kan ikke betale sig til en placering"))
 
-    flueben = ('<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">'
-               '<circle cx="10" cy="10" r="10" fill="#E3F8F0"/>'
-               '<path d="M5.8 10.4l2.8 2.8 5.6-6" fill="none" stroke="#00875D" '
-               'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
-    return f"""<ul class="tillid">{"".join(
-        f'<li>{flueben}<span><b>{e(t)}</b><em>{e(u)}</em></span></li>' for t, u in punkter)}</ul>"""
+    return f"""<div class="tillid">{"".join(
+        f'<div class="ti-punkt"><b>{t}</b><span>{e(n)}</span>'
+        f'<em>{e(u)}</em></div>' for t, n, u in punkter)}</div>"""
 
 
 
@@ -690,21 +684,17 @@ def hero_forside():
   <div class="baand">
     <div class="hl-gitter">
       <div>
+        <span class="etiket">Opdateret {e(OPDATERET)}</span>
         <h1>Sammenlign mobilabonnementer fra danske udbydere</h1>
-        <p class="led">Se hvad du kan spare på mobilregningen. Vi viser priserne fra
-        {D['antal_udbydere']} danske selskaber side om side, så du selv kan vælge.</p>
-        <p class="hl-frisk"><span aria-hidden="true"></span>Priserne er sidst opdateret {e(OPDATERET)}</p>
+        <p class="led">{D['antal']} abonnementer fra {D['antal_udbydere']} udbydere,
+        sorteret efter pris. Ingen oprettelse, ingen formular.</p>
         <div class="hl-knapper">
           <a href="#sammenlign" class="knap knap-primaer">Se alle priser</a>
           <a href="/guides/hvor-meget-data/" class="knap knap-linje">Hvor meget data har jeg brug for?</a>
         </div>
         {tillidsbaand()}
       </div>
-      <div class="hl-vaerktoej">
-        <div class="signe-paa-kant">{signe("kigger-krop", 140)}</div>
-        {regningstjek()}
-        <div class="signe-haender">{signe("kigger-haender", 140)}</div>
-      </div>
+      {regningstjek()}
     </div>
   </div>
 </section>"""
@@ -1008,15 +998,10 @@ def hurtigvalg():
     kandidater = [
         ("Billigst med data", sorted(med_data, key=lambda a: a["pris"]),
          "Laveste månedspris med mobildata"),
-        # Abonnementer på 500 GB og op er i praksis fri data. De vinder altid på
-        # pris pr. GB, men kortet ender så med at anbefale et af de dyreste
-        # abonnementer under en overskrift, der lover meget for pengene.
-        ("Mest data pr. krone", sorted([a for a in med_data if a["data_gb"] < 500],
+        ("Mest data pr. krone", sorted([a for a in med_data if a["data_gb"] < 9999],
                                        key=lambda a: a["pris"] / a["data_gb"]),
          "Laveste pris pr. gigabyte"),
-        # Mindst 10 GB, ellers bliver anbefalingen et miniabonnement, de færreste kan bruge
-        ("Bedst dækning", sorted([a for a in tdc if a["data_gb"] >= 10] or tdc,
-                                 key=lambda a: a["pris"]),
+        ("Bedst dækning", sorted(tdc, key=lambda a: a["pris"]),
          "TDC NET — landets mest udbyggede"),
         ("Billigste fri data", sorted(frie, key=lambda a: a["pris"]),
          "Ubegrænset data i Danmark"),
@@ -1047,49 +1032,41 @@ def hurtigvalg():
                      f'derefter {kr(a["pris"])} kr.')
         else:
             vist = a["pris"]
-            under = 'Fast pris hver måned, ingen intropris'
+            under = f'Fast pris · {kr(g * 12)} kr. samlet på et år'
 
-        # Besparelsen står som almindelig tekst med forklaring — et løst "spar 960 kr."
-        # uden sammenligningsgrundlag er netop det, en skeptisk læser ikke tror på.
+        # Det ene tal der gør kortet værd at kigge på
         if median and g < median:
-            spar = (f'<p class="valg-spar"><b>Spar {kr((median - g) * 12)} kr. om året</b> '
-                    f'i forhold til et typisk abonnement</p>')
+            spar = f'<span class="valg-spar">Spar {kr((median - g) * 12)} kr. om året</span>'
+        elif a["data_gb"] >= 9999:
+            spar = '<span class="valg-spar valg-spar-ro">Intet dataloft</span>'
         else:
-            spar = f'<p class="valg-spar valg-spar-ro">{kr(g * 12)} kr. samlet det første år</p>'
+            spar = ('<span class="valg-spar valg-spar-ro">'
+                    f'{kr(g)} kr./md. over 12 mdr.</span>')
 
+        pr_gb = (f'{a["pris"] / a["data_gb"]:.2f}'.replace(".", ",") + " kr./GB"
+                 if 0 < a["data_gb"] < 9999 else "—")
         binding = "Ingen binding" if a["binding"] == 0 else f'{a["binding"]} mdr. binding'
-        tale = "fri tale" if a.get("tale") == "fri" else "tale efter forbrug"
-        fakta = [f"{gb_tekst(a['data_gb'])} og {tale}", binding, netlabel(u)]
-        if a.get("femg"):
-            fakta.append("5G inkluderet")
         stjerne = stjerner(u, kompakt=True)
 
-        # Feedet skriver ofte selskabets navn ind i produktnavnet. Uden tjekket
-        # står der "Lebara Lebara 5 GB".
-        navn = a["navn"] if a["navn"].lower().startswith(u["navn"].lower().split()[0]) \
-            else f"{u['navn']} {a['navn']}"
-
-        flueben = ('<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">'
-                   '<path d="M3.2 8.4l3 3 6.4-7" fill="none" stroke="#00875D" stroke-width="2.2" '
-                   'stroke-linecap="round" stroke-linejoin="round"/></svg>')
-        # Signe giver tommel op på det første kort — hendes anbefaling, ikke pynt på alle fire
-        figur = f'<span class="valg-signe">{signe("tommel", 70)}</span>' if i == 0 else ""
-        kort += f"""<div class="valgkort v{i}">{figur}
-  <p class="valg-badge">{e(kat)}</p>
+        kort += f"""<div class="valgkort v{i}">
+  <span class="valg-badge">{e(kat)}</span>
   <div class="valg-top">
     <span class="valg-logo"><img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}"
       loading="lazy" width="{round(u['logo_w'] * 26 / u['logo_h'])}" height="26" decoding="async"></span>
     {stjerne}
   </div>
-  <b class="valg-navn">{e(navn)}</b>
+  <b class="valg-navn">{e(u['navn'])} {e(a['navn'])}</b>
   <div class="valg-pris">{kr(vist)}<span> kr./md.</span></div>
   <div class="valg-under">{under}</div>
-  <ul class="valg-fakta">{"".join(f"<li>{flueben}{e(f)}</li>" for f in fakta)}</ul>
   {spar}
-  <a class="knap knap-primaer valg-knap" href="{a['link']}" rel="sponsored nofollow noopener"
-     target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
-     aria-label="Gå til {e(u['navn'])} og se {e(navn)}">Gå til {e(u['navn'].split()[0])}</a>
-  <a class="valg-mere" href="/udbydere/{u['slug']}/">Læs vores vurdering af {e(u['navn'].split()[0])}</a>
+  <ul class="valg-fakta">
+    <li><span>Data</span><b>{gb_tekst(a['data_gb'])}</b></li>
+    <li><span>Pris pr. GB</span><b>{pr_gb}</b></li>
+    <li><span>Binding</span><b>{e(binding)}</b></li>
+    <li><span>Netværk</span><b>{netlabel(u)}</b></li>
+  </ul>
+  <a class="knap knap-primaer valg-knap" href="/udbydere/{u['slug']}/">Se abonnementet</a>
+  <small class="valg-hvorfor">{e(detalje)}</small>
 </div>"""
 
     return f'<div class="baand"><div class="hurtigvalg">{kort}</div></div>'
@@ -2240,25 +2217,6 @@ def bb_aarspris(a):
 
 
 
-def signe_cta(titel=None, tekst=None, knap="Se de billigste abonnementer", href="/billigste-mobilabonnement/"):
-    """Afsluttende opfordring, hvor Signe peger på knappen.
-
-    Guiderne sluttede uden nogen vej videre til sammenligningen. Læseren har
-    lige fået svar på sit spørgsmål — det er dér, et klik til prislisten giver
-    mening."""
-    titel = titel or "Klar til at se, hvad det koster?"
-    tekst = tekst or (f"Vi har {D['antal']} abonnementer fra {D['antal_udbydere']} selskaber, "
-                      f"opdateret to gange i døgnet. Ingen formular, ingen oprettelse.")
-    return f"""<aside class="signe-cta afslør">
-  <div class="signe-cta-figur">{signe("peger", 132)}</div>
-  <div class="signe-cta-tekst">
-    <p class="signe-cta-titel">{e(titel)}</p>
-    <p>{e(tekst)}</p>
-    <a href="{href}" class="knap knap-primaer">{e(knap)}</a>
-  </div>
-</aside>"""
-
-
 def vejviser(aktuel=""):
     """Krydslinks til alle kategorier med antal — deres 'vælg din vej videre'."""
     veje = [
@@ -2302,17 +2260,26 @@ def vejviser(aktuel=""):
          f"{len({a['udbyder'] for a in ABON if a['pris'] > 0})} selskaber vurderet"),
         ("/driftsstatus/", "Driftsstatus", "er nettet nede?"),
         ("/telemobil-score/", "Telemobil-scoren", "sådan rangerer vi"),
-        ("/bredbaand/", "Bredbånd",
-         f"{len(BB)} abonnementer" if BB else "til hjemmet"),
-        ("/bredbaand/fibernet/", "Fibernet",
-         f"fra {kr(min(round(bb_aarspris(a) / 12) for a in BB if a['teknologi'] == 'fiber'))} kr."
-         if [a for a in BB if a["teknologi"] == "fiber"] else "hurtigst"),
-        ("/bredbaand/5g/", "5G-bredbånd", "klar samme dag"),
-        ("/bredbaand/kabel-internet/", "Kabel-internet",
-         f"{len([a for a in BB if a['teknologi'] == 'coax'])} abonnementer"
-         if [a for a in BB if a["teknologi"] == "coax"] else "via tv-kablet"),
         ("/kampagner/", "Kampagner", "tilbud lige nu"),
     ]
+
+    # Bredbåndssiderne bygges kun, når feedet har data. Uden den her
+    # betingelse står linkene tilbage som døde, den dag feedet fejler.
+    if BB:
+        fiber = [a for a in BB if a["teknologi"] == "fiber"]
+        coax = [a for a in BB if a["teknologi"] == "coax"]
+        femg = [a for a in BB if a["teknologi"] == "5g"]
+        veje += [("/bredbaand/", "Bredbånd", f"{len(BB)} abonnementer")]
+        if fiber:
+            veje.append(
+                ("/bredbaand/fibernet/", "Fibernet",
+                 f"fra {kr(min(round(bb_aarspris(a) / 12) for a in fiber))} kr."))
+        if femg:
+            veje.append(("/bredbaand/5g/", "5G-bredbånd", "klar samme dag"))
+        if coax:
+            veje.append(
+                ("/bredbaand/kabel-internet/", "Kabel-internet",
+                 f"{len(coax)} abonnementer"))
     punkter = "".join(
         f'<a href="{h}"><b>{e(t)}</b><span>{e(u)}</span></a>'
         for h, t, u in [v for v in veje if v]
@@ -3016,11 +2983,7 @@ TJENESTER_META = {
 # produkter til. Tretten sider uden ét eneste abonnement og med næsten samme
 # tekst er tynde sider, der trækker hele domænet ned. De små tjenester nævnes
 # i stedet på oversigten og i brødteksten.
-STORE_TJENESTER = ["Netflix", "HBO Max", "Disney+", "Viaplay", "TV 2 Play",
-                   # Search Console, september 2026: disse tre lå på plads 10-18 med
-                   # visninger, da de blev fjernet som tynde. De er tilbage — med eget
-                   # indhold, så de ikke er tynde denne gang.
-                   "Prime Video", "Podimo", "SkyShowtime"]
+STORE_TJENESTER = ["Netflix", "HBO Max", "Disney+", "Viaplay", "TV 2 Play"]
 
 
 def _tjenester_der_fortjener_side():
@@ -3068,14 +3031,22 @@ NETVAERK = [
                  "dækning."),
     },
     {
-        "slug": "telenor", "navn": "Telenor", "kort": "Bred dækning til fornuftig pris",
-        "styrke": ("Telenors net leverer bred dækning i hele landet og rammer for de fleste "
+        # Nettet hed TT-Netværket, da Telia og Telenor ejede det sammen. Efter
+        # Norlys overtog Telia Danmark, hedder det TN-Network og ejes 50/50 af
+        # Telenor og Norlys. Telia findes ikke længere på det danske marked.
+        "slug": "telenor", "navn": "TN-Network", "kort": "Bred dækning til fornuftig pris",
+        "ejerskab": ("TN-Network ejes 50/50 af Telenor og Norlys. Nettet hed "
+                     "TT-Netværket indtil 2025, da Telia trak sig ud af det danske "
+                     "marked og Norlys overtog deres halvdel. Både Telenors og "
+                     "Norlys' egne selskaber kører på det, og det gør en række "
+                     "mindre udbydere også."),
+        "styrke": ("TN-Network leverer bred dækning i hele landet og rammer for de fleste "
                    "brugere en god balance mellem kvalitet og pris. Flere af de billigste "
                    "abonnementer på markedet kører på dette net, hvilket gør det til det "
                    "mest oplagte valg for prisbevidste brugere med almindeligt forbrug."),
         "svaghed": ("Der findes enkelte huller i tyndt befolkede områder, hvor TDC NET "
                     "står stærkere. Forskellen er dog mindre, end den var for få år siden."),
-        "hvem": ("Vælg Telenors net hvis du vil have solid dækning uden at betale "
+        "hvem": ("Vælg TN-Network hvis du vil have solid dækning uden at betale "
                  "premiumpris — for langt de fleste danskere er det den rigtige balance."),
     },
     {
@@ -3156,28 +3127,6 @@ TJENESTE_EGET = {
                 "kroner — men kun hvis du rent faktisk ser sport.",
                 "Sportsrettigheder skifter oftere end filmkataloger. Vælger du et abonnement "
                 "på grund af én bestemt rettighed, så tjek hvor længe aftalen løber."),
-    "Prime Video": ("Prime Video er i Danmark en del af et Amazon Prime-medlemskab og kan ikke "
-                    "sammenlignes én til én med de andre tjenester: en stor del af kataloget er "
-                    "film og serier til leje eller køb oven i abonnementet. Tjek derfor, hvad der "
-                    "reelt er inkluderet, før du tillægger det værdi i regnestykket.",
-                    "Prime Video er blandt de billigste streamingtjenester at tegne selv. Det "
-                    "betyder, at den sjældent alene kan retfærdiggøre et dyrere mobilabonnement — "
-                    "vælg efter data og pris først, og se tjenesten som en bonus."),
-    "Podimo": ("Podimo er dansk og har podcasts og lydbøger i samme abonnement. Lyd bruger "
-               "meget lidt data: en times podcast fylder typisk 30-60 MB, så selv daglig lytning "
-               "på farten lander under 2 GB om måneden. Du behøver altså ikke et stort "
-               "abonnement for at få glæde af den.",
-               "Er det mest lydbøger, du vil have, så sammenlign med vores side om "
-               "<a href=\"/mobilabonnement-med-lydbog/\">mobilabonnement med lydbog</a> — "
-               "udvalget af titler er forskelligt fra tjeneste til tjeneste, og det er "
-               "udvalget, ikke prisen, der afgør om du bruger den."),
-    "SkyShowtime": ("SkyShowtime samler film og serier fra flere amerikanske studier og kom til "
-                    "Danmark i 2022. Den findes både med og uden reklamer. Får du den med i et "
-                    "abonnement, så tjek hvilken udgave det er — det er den samme faldgrube som "
-                    "ved de andre store tjenester.",
-                    "SkyShowtime er en af de billigere tjenester at købe separat. Besparelsen "
-                    "ved et bundle er derfor mindre end ved Viaplay eller Netflix, og den bør "
-                    "ikke være grunden til at vælge et bestemt mobilselskab."),
     "TV 2 Play": ("TV 2 Play har flere niveauer, fra basis til pakker med sport og flere "
                   "kanaler. Det er sjældent tydeligt i mobilabonnementets markedsføring, "
                   "hvilket niveau der indgår — spørg, hvis det er afgørende.",
@@ -3660,6 +3609,8 @@ def byg_netvaerksside(n):
 
   <h2>Styrken ved {e(n['navn'])}</h2>
   <p>{e(n['styrke'])}</p>
+
+  {f'<h2>Hvem ejer nettet?</h2><p>{e(n["ejerskab"])}</p>' if n.get("ejerskab") else ""}
 
   <h2>Svagheden</h2>
   <p>{e(n['svaghed'])}</p>
@@ -5227,7 +5178,6 @@ def byg_udbyder(u):
 # Undersider under en guide: brødkrummen skal vise forældresiden, ellers står
 # hierarkiet kun i adressen og hjælper hverken læser eller søgemaskine.
 GUIDE_FORAELDRE = {
-    **{ops.sti(_s): ("/guides/opsig-mobilabonnement/", "Opsigelse") for _s in ops.SELSKABER},
     "/guides/hvor-meget-data/apps/":
         ("/guides/hvor-meget-data/", "Hvor meget data"),
     "/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/":
@@ -5254,7 +5204,6 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
     krop = f"""
 {krop_tekst}
 <section class="sektion baand-smal">
-  {signe_cta()}
   {laesvidere(links)}
   {forfatterboks()}
   {afsloering()}
@@ -8620,7 +8569,7 @@ DRIFT_VINKEL = {
         "YouSee — oplever du problemer, andre på TDC NET ikke har, er det din "
         "telefon eller dit simkort."),
     "cbb-mobil": (
-        "CBB Mobil kører på Telenors net og har gennem flere år ligget i toppen "
+        "CBB Mobil kører på TN-Network og har gennem flere år ligget i toppen "
         "af danske kundetilfredshedsmålinger. Det betyder i praksis, at "
         "driftsmeldinger som regel kommer hurtigt, og at supporten er "
         "tilgængelig. Bemærk at Telenor og Telia deler net i Danmark — et "
@@ -8636,7 +8585,7 @@ DRIFT_VINKEL = {
         "hjemmesiden. Da Flexii deler net med Oister, kan du bruge deres status "
         "som indikation, hvis Flexiis egen side ikke er opdateret endnu."),
     "greentel": (
-        "Greentel er et mindre dansk selskab på Telenors net med fokus på "
+        "Greentel er et mindre dansk selskab på TN-Network med fokus på "
         "enkle abonnementer uden binding. De har ikke døgnbemandet support, så "
         "driftsmeldinger uden for åbningstid kan være forsinkede. Er du i tvivl, "
         "så tjek om andre Telenor-kunder oplever det samme."),
@@ -9225,37 +9174,8 @@ def byg_lydbog():
     med = [a for a in ABON if a["pris"] > 0
            and any("lydbog" in t.lower() or "podimo" in t.lower()
                    or "mofibo" in t.lower() for t in a.get("streaming", []))]
-    krumme = [("/", "Forside"), ("/mobilabonnement-med-streaming/", "Med streaming"),
-              (None, "Med lydbog")]
+    krumme = [("/", "Forside"), (None, "Med lydbog")]
     fra = min((a["pris"] for a in med), default=0)
-
-    # Sidens pointe er, at lyd næsten ingen data bruger. Så den rigtige tabel er
-    # ikke kun de få abonnementer med en tjeneste indbygget, men de små og billige
-    # abonnementer, der rækker til at lytte hver dag. Udvid, hvis feedet er tyndt.
-    for loft in (20, 30, 50):
-        smaa = [a for a in ABON if 0 < a["data_gb"] <= loft and a["pris"] > 0
-                and not a.get("forbrugsafregnet")]
-        if len(smaa) >= 8:
-            break
-    billigst = min(smaa, key=lambda a: gns12(a) or a["pris"]) if smaa else None
-    selskaber_smaa = len({a["udbyder"] for a in smaa})
-
-    toptabel = ""
-    if med:
-        bm = min(med, key=lambda a: gns12(a) or a["pris"])
-        toptabel += pristabel(med, UMAP, titel="Abonnementer med lydbøger inkluderet",
-                              undertitel=f"{len(med)} abonnementer, hvor en lydbogs- eller "
-                                         f"podcasttjeneste er med i prisen.",
-                              filtre=False, billigst_id=bm["id"], id_attr="med-lydbog", vis=10)
-    if smaa:
-        toptabel += pristabel(
-            smaa, UMAP,
-            titel=f"Billige abonnementer der rækker til lydbøger — op til {loft} GB",
-            undertitel=(f"{len(smaa)} abonnementer fra {selskaber_smaa} selskaber. En time lydbog "
-                        f"om dagen bruger under 1 GB om måneden, så alle på listen har rigeligt. "
-                        f"Tegn Mofibo, Podimo eller Saxo selv ved siden af, og behold den, "
-                        f"hvis du skifter selskab."),
-            filtre=True, billigst_id=billigst["id"], id_attr="sammenlign", vis=10)
 
     tabel = ""
     if med:
@@ -9292,19 +9212,16 @@ time video. Du behøver ikke et stort abonnement for at lytte.</p></div>
 sag. Det er det ikke. Video kræver et stort abonnement. Lyd gør ikke, og forskellen
 er større, end de fleste regner med.</p>
 
-<p>Derfor viser tabellen øverst de billigste abonnementer med nok data til daglig
-lytning. Vil du hellere have tjenesten med i selve abonnementet, kan du se, hvem
-der tilbyder det, herunder — og læse om
-<a href="/mobilabonnement-med-podimo/">mobilabonnement med Podimo</a> og
-<a href="/mobilabonnement-med-musik/">mobilabonnement med musik</a>.</p>
-
-<h2 id="selskaber">Hvilke mobilselskaber har lydbøger med?</h2>
+<h2>Hvilke selskaber tilbyder lydbøger?</h2>
 {tabel_lydbog_selskaber()}
 <p>Bemærk kolonnen længst til højre. Danmark har tre fysiske mobilnet, og et
 selskab uden lydbog kan sagtens køre på samme master som et med — forskellen
 ligger i pakken, ikke i dækningen.</p>
 
-<h2 id="dataforbrug">Hvor meget data bruger lydbøger?</h2>
+<h2>Abonnementer med lydbog inkluderet</h2>
+{tabel}
+
+<h2>Hvor lidt fylder en lydbog?</h2>
 {tabel_lyd_dataforbrug()}
 <p>En time lydbog fylder 0,03 gigabyte. Lytter du en time hver dag hele måneden,
 bruger du under ét gigabyte. Selv et af de mindste abonnementer på markedet rækker
@@ -9352,26 +9269,10 @@ sparer flere hundrede kroner om året i forhold til en stor pakke.</p>
 <p>Streamer du samtidig video på farten, er billedet et andet. Se
 <a href="/mobilabonnement-10-30-gb/">10-30 GB</a>, som dækker langt de fleste.</p>
 
-{signe_cta("Find et billigt abonnement til dine lydbøger",
-           "Du betaler for data, du ikke bruger, hvis du vælger stort. Se de billigste "
-           "abonnementer med nok data til at lytte hver dag.",
-           "Se abonnementerne", "#sammenlign")}
 {forfatterboks()}
 </section>"""
 
-    _sel = sorted({UMAP[a["udbyder"]]["navn"] for a in med})
     faq = [
-        {"sp": "Hvilke mobilabonnementer har lydbøger med?",
-         "sv": (f"Lige nu har {len(med)} abonnementer fra {' og '.join(_sel)} en lydbogs- eller "
-                f"podcasttjeneste med i prisen. Billigst er {kr(fra)} kr. om måneden."
-                if med else
-                "Blandt de abonnementer, vi følger, har ingen en lydbogstjeneste med i prisen "
-                "lige nu. Udvalget skifter, og tabellen opdateres automatisk to gange dagligt. "
-                "Det billigste er som regel et lille abonnement plus tjenesten tegnet separat.")},
-        {"sp": "Kan jeg få Mofibo eller Podimo med i mit mobilabonnement?",
-         "sv": "Nogle selskaber tilbyder en lydbogs- eller podcasttjeneste som del af pakken "
-               "eller som tilvalg. Se oversigten over selskaber på siden. Tegner du tjenesten "
-               "selv, beholder du den, når du skifter mobilselskab."},
         {"sp": "Hvor meget data bruger en lydbog?",
          "sv": "Cirka 0,03 gigabyte i timen. Lytter du en time hver dag hele "
                "måneden, bruger du under ét gigabyte."},
@@ -9391,28 +9292,24 @@ sparer flere hundrede kroner om året i forhold til en stor pakke.</p>
                "rækker et abonnement med 1-10 GB fint."},
     ]
 
-    _fra = round(gns12(billigst) or billigst["pris"]) if billigst else 0
-    titel = (f"Mobilabonnement med lydbog — priser fra {kr(fra)} kr./md." if med else
-             f"Mobilabonnement med lydbog — fra {kr(_fra)} kr./md.")
-    besk = (f"Sammenlign {len(smaa)} billige mobilabonnementer til lydbøger og podcast fra "
-            f"{kr(_fra)} kr./md. En time lydbog bruger kun 0,03 GB — se hvem der har "
-            f"lydbøger med i prisen.")
-    hero_tekst = (f"Lydbøger bruger næsten ingen data. Sammenlign {len(smaa)} abonnementer, der "
-                  f"rækker til at lytte hver dag — fra {kr(_fra)} kr. om måneden.")
     skriv("/mobilabonnement-med-lydbog/", shell(
-        sti="/mobilabonnement-med-lydbog/", titel=titel, beskrivelse=besk,
-        hero=hero_side("Med lydbog", "Mobilabonnement med lydbog og podcast", hero_tekst,
-                       '<a href="#sammenlign" class="knap knap-primaer">Se abonnementerne</a>'
-                       '<a href="#selskaber" class="knap knap-linje">Hvem har lydbøger med?</a>',
-                       chips=[("Abonnementer", str(len(smaa))), ("Fra", f"{kr(_fra)} kr."),
-                              ("Data pr. time", "0,03 GB")]),
-        efter_hero="", krumme=krumme, toc=True,
-        indhold=toptabel + krop + faqblok(faq, "Spørgsmål om lydbøger og mobilabonnement"),
+        sti="/mobilabonnement-med-lydbog/",
+        titel=("Mobilabonnement med lydbog"
+               + (f" — fra {kr(fra)} kr./md." if med else " — sådan lytter du billigst")),
+        beskrivelse="Lydbøger fylder 0,03 GB i timen — hundrede gange mindre end video. "
+                    "Se hvilke abonnementer der har lydbog med, og hvor lidt data du "
+                    "reelt har brug for.",
+        hero=hero_side("Med lydbog", "Mobilabonnement med lydbog",
+                       "Lydbøger er den letteste streaming, der findes. Du behøver "
+                       "ikke et stort abonnement for at lytte."),
+        efter_hero="", krumme=krumme, toc=False,
+        indhold=krop + faqblok(faq, "Spørgsmål om lydbøger og mobilabonnement"),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
-                     artikelld("/mobilabonnement-med-lydbog/", "Mobilabonnement med lydbog",
-                               besk),
-                     listeld(med or smaa[:10], "Mobilabonnementer til lydbøger og podcast"))],
-    ), prioritet="0.75", hyppighed="daily")
+                     artikelld("/mobilabonnement-med-lydbog/",
+                               "Mobilabonnement med lydbog",
+                               "Hvor lidt data lydbøger fylder, og hvilke selskaber "
+                               "der har dem med i abonnementet."))],
+    ), prioritet="0.7", hyppighed="weekly")
 
 
 def byg_guideoversigt():
@@ -9634,386 +9531,97 @@ fra i mellemtiden.</p>
 <tbody>{raekker}</tbody></table>"""
 
 
-# ------------------------------------------------------------ PRISINDEKS (visning)
-_KORT_MD = ["jan.", "feb.", "mar.", "apr.", "maj", "jun.", "jul.", "aug.", "sep.", "okt.", "nov.", "dec."]
-
-
-def _kort_dato(iso, med_aar=False):
-    d = date.fromisoformat(iso)
-    return f"{d.day}. {_KORT_MD[d.month - 1]}" + (f" {d.year}" if med_aar else "")
-
-
-def _median(tal):
-    tal = sorted(tal)
-    n = len(tal)
-    if not n:
-        return None
-    return tal[n // 2] if n % 2 else (tal[n // 2 - 1] + tal[n // 2]) / 2
-
-
-def _samlet_median(m):
-    """Medianen af alle abonnementer i én måling. Ældre målinger uden
-    enkeltpriser falder tilbage på medianen af gruppernes medianer."""
-    if m.get("priser"):
-        return _median(m["priser"].values())
-    return _median([g["median"] for g in m.get("grupper", {}).values()])
-
-
-def _aendring(a, b):
-    """Returnerer (tekst, klasse) for ændringen fra a til b."""
-    if not a or b is None:
-        return "—", "pu-flad"
-    d, pct = b - a, (b - a) / a * 100
-    if abs(pct) < 0.5:
-        return "uændret", "pu-flad"
-    pct_t = f"{pct:+.1f}".replace(".", ",").replace("-", "−")
-    return (f"{'+' if d > 0 else '−'}{kr(abs(d))} kr. ({pct_t} %)",
-            "pu-op" if d > 0 else "pu-ned")
-
-
-def _linje(vaerdier, bredde, hoejde, farve, *, pad=(8, 8, 8, 8), flade=True, akse=None):
-    """Én ren linje med valgfri flade under. Bruges både stort og småt."""
-    v = [x for x in vaerdier if x is not None]
-    if len(v) < 2:
-        return ""
-    pt, ph, pb, pv = pad
-    lav, hoej = min(v), max(v)
-    # Lidt luft over og under, så en flad linje ikke klistrer til kanten
-    luft = max((hoej - lav) * .25, hoej * .03, 1)
-    lav, hoej = lav - luft, hoej + luft
-    tb, th = bredde - pv - ph, hoejde - pt - pb
-
-    def X(i):
-        return pv + tb * i / (len(vaerdier) - 1)
-
-    def Y(x):
-        return pt + th - th * (x - lav) / (hoej - lav)
-
-    pkt = [(X(i), Y(x)) for i, x in enumerate(vaerdier) if x is not None]
-    sti = " ".join(f"{'M' if i == 0 else 'L'}{x:.1f} {y:.1f}" for i, (x, y) in enumerate(pkt))
-    ud = ""
-    if akse:
-        for k in range(4):
-            val = lav + (hoej - lav) * k / 3
-            ud += (f'<line x1="{pv}" y1="{Y(val):.1f}" x2="{bredde - ph}" y2="{Y(val):.1f}" '
-                   f'stroke="#E6EAF4"/><text x="{pv - 8}" y="{Y(val) + 4:.1f}" text-anchor="end" '
-                   f'font-size="12" fill="#4A5275">{kr(round(val))} kr.</text>')
-    if flade:
-        ud += (f'<path d="{sti} L{pkt[-1][0]:.1f} {pt + th} L{pkt[0][0]:.1f} {pt + th} Z" '
-               f'fill="{farve}" fill-opacity=".08"/>')
-    ud += (f'<path d="{sti}" fill="none" stroke="{farve}" stroke-width="2.5" '
-           f'stroke-linejoin="round" stroke-linecap="round"/>'
-           f'<circle cx="{pkt[-1][0]:.1f}" cy="{pkt[-1][1]:.1f}" r="4.5" fill="{farve}" '
-           f'stroke="#fff" stroke-width="2"/>')
-    return ud
-
-
-def _pu_overblik(maalinger):
-    """Svaret først: hvad koster et typisk abonnement, og hvor er det på vej hen."""
-    serie = [_samlet_median(m) for m in maalinger]
-    a, b = serie[0], serie[-1]
-    tekst, klasse = _aendring(a, b)
-    første, sidste = maalinger[0]["dato"], maalinger[-1]["dato"]
-    dage = (date.fromisoformat(sidste) - date.fromisoformat(første)).days
-    if klasse == "pu-op":
-        dom = f"Priserne er steget siden {_kort_dato(første)}"
-    elif klasse == "pu-ned":
-        dom = f"Priserne er faldet siden {_kort_dato(første)}"
-    else:
-        dom = f"Priserne har ligget stille siden {_kort_dato(første)}"
-    B, H = 760, 300
-    graf_ = _linje(serie, B, H, "#2438D8", pad=(16, 18, 34, 64), akse=True)
-    return f"""<div class="pu-top" id="udvikling">
-  <div class="pu-dom">
-    <p class="pu-dom-titel">{e(dom)}</p>
-    <p class="pu-dom-tal">{kr(round(b))} kr.<span> pr. måned koster et typisk mobilabonnement i dag</span></p>
-    <p class="pu-dom-under">Ændring siden første måling: <b class="{klasse}">{tekst}</b></p>
-  </div>
-  <dl class="pu-noegletal">
-    <div><dt>Målinger gemt</dt><dd>{kr(len(maalinger))}</dd></div>
-    <div><dt>Periode</dt><dd>{dage} dage</dd></div>
-    <div><dt>Abonnementer i dag</dt><dd>{maalinger[-1]["antal"]}</dd></div>
-    <div><dt>Selskaber</dt><dd>{maalinger[-1]["udbydere"]}</dd></div>
-  </dl>
-</div>
-<figure class="prisudvikling">
-  <figcaption class="pu-figtitel">Medianpris for alle mobilabonnementer, kr. pr. måned</figcaption>
-  <svg viewBox="0 0 {B} {H}" role="img" width="{B}" height="{H}"
-    aria-label="Kurve over medianprisen for alle mobilabonnementer fra {e(_kort_dato(første, True))} til {e(_kort_dato(sidste, True))}">
-    {graf_}
-    <text x="64" y="{H - 8}" font-size="12" fill="#4A5275">{e(_kort_dato(første, True))}</text>
-    <text x="{B - 18}" y="{H - 8}" text-anchor="end" font-size="12" fill="#4A5275">{e(_kort_dato(sidste, True))}</text>
-  </svg>
-</figure>"""
-
-
-def _pu_grupper(maalinger):
-    """Én lille kurve pr. datastørrelse i stedet for syv linjer oven i hinanden."""
-    kort = ""
-    for g, navn in GRUPPENAVNE.items():
-        serie = [m["grupper"][g]["median"] if g in m.get("grupper", {}) else None for m in maalinger]
-        v = [x for x in serie if x is not None]
-        if len(v) < 2:
-            continue
-        tekst, klasse = _aendring(v[0], v[-1])
-        farve = {"pu-op": "#C2405A", "pu-ned": "#00875D"}.get(klasse, "#4A5275")
-        kort += f"""<div class="pu-lille">
-  <p class="pu-lille-navn">{e(navn)}</p>
-  <p class="pu-lille-pris">{kr(v[-1])} kr.<span>/md.</span></p>
-  <svg viewBox="0 0 220 64" width="220" height="64" role="img"
-    aria-label="Medianpris for {e(navn)}: {kr(v[0])} kr. til {kr(v[-1])} kr.">{_linje(serie, 220, 64, farve)}</svg>
-  <p class="pu-lille-aendring {klasse}">{tekst}</p>
-</div>"""
-    if not kort:
-        return ""
-    return f"""<h2 id="datastoerrelse">Prisudvikling pr. datastørrelse</h2>
-<p>Hver boks viser medianprisen i dag, kurven siden første måling og ændringen i
-kroner og procent. Rød betyder dyrere, grøn billigere.</p>
-<div class="pu-gitter">{kort}</div>"""
-
-
-def _pu_selskaber(maalinger):
-    først, sidst = maalinger[0], maalinger[-1]
-    raekker = []
-    for slug, nu in sidst.get("pr_udbyder", {}).items():
-        if slug not in UMAP:
-            continue
-        # Første måling hvor selskabet optræder — ikke nødvendigvis den allerførste
-        start = next((m for m in maalinger if slug in m.get("pr_udbyder", {})), None)
-        if not start or start["dato"] == sidst["dato"]:
-            continue
-        a, b = start["pr_udbyder"][slug]["median"], nu["median"]
-        tekst, klasse = _aendring(a, b)
-        raekker.append((b - a, f'<tr><td><a href="/udbydere/{slug}/">{e(UMAP[slug]["navn"])}</a></td>'
-                        f'<td>{kr(a)} kr.</td><td>{kr(b)} kr.</td>'
-                        f'<td><span class="{klasse}">{tekst}</span></td></tr>'))
-    if not raekker:
-        return ""
-    raekker.sort(key=lambda r: -r[0])
-    return f"""<h2 id="selskaber">Hvilke selskaber har ændret prisen?</h2>
-<p>Medianen af hvert selskabs abonnementer ved første og seneste måling. Selskaber
-øverst er blevet dyrest. Et selskab kan flytte sig, fordi priserne ændres, eller
-fordi udvalget gør det — tabellen viser, at noget er sket, ikke hvorfor.</p>
-<div class="tabelrul"><table><thead><tr><th>Selskab</th><th>Første måling</th><th>I dag</th>
-<th>Ændring</th></tr></thead><tbody>{"".join(r[1] for r in raekker)}</tbody></table></div>"""
-
-
-def _pu_citer(maalinger):
-    return f"""<aside class="pu-citer">
-  <p class="pu-citer-titel">Brug gerne tallene</p>
-  <p>Journalister, bloggere og studerende må frit citere tallene med kilden
-  <strong>Telemobil.dk</strong> og et link til denne side. Rådata ligger på
-  <a href="/data/">vores dataside</a>, og har du brug for et særudtræk eller en
-  kommentar, står kontaktoplysningerne på <a href="/presse/">pressesiden</a>.</p>
-</aside>"""
-
-
-PI_CSS = """<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/source-serif-4.woff2" crossorigin>
-<style>@font-face{font-family:"Source Serif 4";font-weight:400 800;font-display:swap;src:url("/assets/fonts/source-serif-4.woff2") format("woff2")}
-body{background:#fff}.pi{--s:#1A1A1A;--g:#666;--l:#DCDCDC;--op:#B3261E;--ned:#1B7F4B;color:var(--s);width:min(100% - 2.5rem,1180px);margin:0 auto;padding-bottom:3rem}
-.pi h1,.pi h2,.pi .pi-stor,.pi .pi-kr{font-family:"Source Serif 4",Georgia,"Times New Roman",serif;letter-spacing:-.01em;color:var(--s)}
-.pi p{margin:0 0 1em}.pi a{color:var(--s);text-decoration-color:#999}.pi a:hover{color:var(--signal-dyb)}
-.pi-mast{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:baseline;border-bottom:2px solid var(--s);padding:1.6rem 0 .6rem;font-size:.86rem;color:var(--g)}
-.pi-mast b{color:var(--s)}.pi-navn{font-weight:700;color:var(--s);font-size:.95rem}.pi-navn span{font-weight:400;color:var(--g);margin-left:.5rem}
-.pi-hero{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:3.5rem;padding:2rem 0 2.2rem;align-items:start}
-.pi h1{font-size:clamp(2rem,4.4vw,3.2rem);line-height:1.08;font-weight:700;margin:0 0 1rem;max-width:18ch}
-.pi-dek{font-size:1.2rem;line-height:1.5;color:#333;max-width:42ch;margin:0}
-.pi-citat{border-top:2px solid var(--s);border-bottom:1px solid var(--l);padding:.9rem 0 1rem}
-.pi-citat h2{font-family:var(--font-brod);font-size:.8rem;font-weight:700;margin:0 0 .5rem;color:var(--g);letter-spacing:0}
-.pi-citat blockquote{margin:0 0 .9rem;font-family:"Source Serif 4",Georgia,serif;font-size:1.06rem;line-height:1.5}
-.pi-citat p{font-size:.8rem;color:var(--g);margin:.8rem 0 0}
-.pi-knap{display:inline-block;font:600 .84rem var(--font-brod);border:1px solid var(--s);border-radius:2px;padding:.45rem .8rem;background:#fff;color:var(--s);cursor:pointer;text-decoration:none;margin:0 .4rem .4rem 0}
-.pi-knap.m{background:var(--s);color:#fff}.pi-knap:hover{background:#F2F2F2;color:var(--s)}.pi-knap.m:hover{background:#000;color:#fff}
-.pi-tal{display:grid;grid-template-columns:260px 240px minmax(0,1fr);border-top:1px solid var(--l);border-bottom:1px solid var(--l)}
-.pi-tal>div{padding:1.1rem 1.6rem 1.1rem 0;margin-right:1.6rem;border-right:1px solid var(--l)}.pi-tal>div:last-child{border:0;margin:0;padding-right:0}
-.pi-lab{font-size:.82rem;color:var(--g);margin:0!important}.pi-und{font-size:.84rem;color:var(--g);margin:0!important}
-.pi-stor{font-size:2.7rem;font-weight:700;line-height:1.1;margin:.1rem 0!important;white-space:nowrap}
-.pi-stor small{font:500 1rem var(--font-brod);color:var(--g)}.pi-stor em{font:700 1.05rem var(--font-brod);margin-left:.4rem;vertical-align:.5rem}
-.pi-op{color:var(--op)}.pi-ned{color:var(--ned)}.pi-flad{color:var(--g)}
-.pi-felter{display:grid;grid-template-columns:repeat(auto-fill,minmax(16px,1fr));gap:3px;margin:.6rem 0 .7rem;max-width:620px}
-.pi-felter i{aspect-ratio:1;display:block;background:#D6D6D6}.pi-felter .op{background:var(--op)}.pi-felter .ned{background:var(--ned)}
-.pi-leg{display:flex;gap:1.3rem;flex-wrap:wrap;font-size:.88rem}.pi-leg span::before{content:"";display:inline-block;width:10px;height:10px;margin-right:.4rem;background:var(--c)}.pi-leg b{margin-right:.25rem}
-.pi-fig{margin:2.4rem 0 0}.pi-fig h2{font-size:1.35rem;margin:0 0 .15rem;font-weight:700}.pi-fig>p{font-size:.92rem;color:var(--g);margin:0 0 .4rem}
-.pi-fig svg{display:block;width:100%;height:auto}
-.pi-noter{list-style:none;padding:0;margin:.3rem 0 0;display:flex;gap:.4rem 1.6rem;flex-wrap:wrap;font-size:.88rem;color:#333}
-.pi-noter span{display:inline-grid;place-items:center;width:19px;height:19px;border:1px solid var(--s);border-radius:50%;font-size:.72rem;font-weight:700;margin-right:.4rem}
-.pi-fod{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;border-top:1px solid var(--l);margin-top:.9rem;padding-top:.8rem;font-size:.84rem;color:var(--g)}
-.pi-fod p{margin:0;max-width:60ch}
-.pi-embed{display:none;margin-top:.8rem;border:1px solid var(--l);padding:.9rem 1rem;background:#FAFAFA}.pi-embed:target{display:block}
-.pi-embed code{display:block;font:12.5px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;color:#333;margin:.4rem 0 .7rem}
-.pi-kroner{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;border-top:2px solid var(--s);border-bottom:1px solid var(--l);margin:3rem 0 0}
-.pi-kroner>div{padding:1.2rem 1.6rem 1.2rem 0;margin-right:1.6rem;border-right:1px solid var(--l)}.pi-kroner>div:last-child{border:0;margin:0}
-.pi-kroner h2{font-size:1.35rem;margin:0 0 .3rem}.pi-kroner p{font-size:.9rem;color:var(--g);margin:0}.pi-kr{font-size:2rem!important;font-weight:700;line-height:1.15;margin:.1rem 0!important}
-.pi-sek{margin-top:3.2rem}.pi-sek h2{font-size:1.7rem;font-weight:700;margin:0 0 .3rem}.pi-sek>p{color:#333;max-width:70ch;margin:0 0 1rem;font-size:.98rem}
-.pi-tabel{width:100%;border-collapse:collapse;font-size:.95rem;background:none;box-shadow:none;border:0;border-radius:0}
-.pi-tabel th{background:none;color:var(--g);font-size:.78rem;font-weight:600;text-align:left;padding:.5rem .8rem .5rem 0;border-bottom:2px solid var(--s);text-transform:none;letter-spacing:0}
-.pi-tabel td{padding:.7rem .8rem .7rem 0;border-bottom:1px solid var(--l);vertical-align:middle;background:none}
-.pi-tabel tr:hover td{background:#FAFAFA}.pi-tabel .t{text-align:right;white-space:nowrap}.pi-tabel s{color:#888}
-.pi-dato{color:var(--g);white-space:nowrap;font-size:.88rem}.pi-sel{width:96px}.pi-sel img{display:block;max-width:84px;height:auto;max-height:24px;object-fit:contain;object-position:left}
-.pi-u{display:block;font-size:.84rem;color:var(--g)}.pi-note{font-size:.84rem;color:var(--g);margin-top:.6rem}
-.pi-div{width:30%;min-width:180px}.pi-div div{position:relative;height:18px}.pi-div div::before{content:"";position:absolute;left:50%;top:-6px;bottom:-6px;width:1px;background:var(--s)}
-.pi-bar{position:absolute;top:2px;height:14px;display:block}.pi-bar.op{background:var(--op)}.pi-bar.ned{background:var(--ned)}
-.pi-divh{text-align:center!important}.pi-aend{font-weight:700;width:110px}
-.pi-sh,.pi-sr{display:grid;grid-template-columns:150px minmax(0,1fr) 110px;align-items:center}
-.pi-sh{font-size:.78rem;color:var(--g);font-weight:600;border-bottom:2px solid var(--s);padding-bottom:.5rem}.pi-sh span:last-child{text-align:right}
-.pi-sr{height:52px;border-bottom:1px solid var(--l);font-size:.95rem}.pi-sr b span{display:block;font-weight:400;font-size:.8rem;color:var(--g)}
-.pi-sl{position:relative;height:100%;margin:0 4.2rem 0 3.6rem}.pi-sb{position:absolute;top:23px;height:6px;background:#CFCFCF;display:block}
-.pi-sm{position:absolute;top:16px;width:3px;height:20px;background:var(--s);margin-left:-1px;display:block}
-.pi-sl em{position:absolute;top:16px;font-style:normal;font-size:.8rem;color:var(--g);white-space:nowrap}.pi-sl em.l{transform:translateX(-100%);padding-right:.5rem}.pi-sl em.r{padding-left:.5rem}
-.pi-sd{text-align:right;font-weight:700;color:var(--op)}
-.pi-presse{display:grid;grid-template-columns:1.2fr 1fr 1fr;margin-top:3.4rem;border-top:2px solid var(--s);border-bottom:1px solid var(--l)}
-.pi-presse>div{padding:1.4rem 1.8rem 1.4rem 0;margin-right:1.8rem;border-right:1px solid var(--l);font-size:.94rem;color:#333}.pi-presse>div:last-child{border:0;margin:0}
-.pi-presse h2{font-size:1.15rem;margin:0 0 .5rem}.pi-presse h2+h2,.pi-presse .pi-h2b{margin-top:1.2rem}
-.pi-emil{display:flex;gap:.8rem;align-items:center;margin-bottom:.8rem}.pi-emil img{width:56px;height:56px;border-radius:50%;object-fit:cover}.pi-emil b{display:block;color:var(--s)}.pi-emil span{font-size:.84rem;color:var(--g)}
-.pi-presse blockquote{margin:0 0 .8rem;font-family:"Source Serif 4",Georgia,serif;font-size:1.05rem;line-height:1.5;color:var(--s);border-left:2px solid var(--s);padding-left:.9rem}
-.pi-ikke{list-style:none;padding:0;margin:0}.pi-ikke li{padding:.35rem 0;border-bottom:1px solid var(--l)}.pi-ikke li::before{content:"–";margin-right:.5rem;color:var(--g)}
-.pi-artikel{max-width:760px;margin-top:3.2rem}.pi-artikel h2{font-size:1.5rem;margin:2rem 0 .4rem}
-@media(max-width:900px){.pi-hero{grid-template-columns:1fr;gap:1.6rem}.pi-tal,.pi-kroner,.pi-presse{grid-template-columns:minmax(0,1fr)}
- .pi-rul{overflow-x:auto}.pi-rul svg{min-width:660px}
- .pi-tal>div,.pi-kroner>div,.pi-presse>div{border-right:0;border-bottom:1px solid var(--l);margin:0;padding-right:0}
- .pi-div,.pi-divh{display:none}.pi-sh,.pi-sr{grid-template-columns:96px minmax(0,1fr) 84px}.pi-sl{margin:0 3.4rem 0 3rem}.pi-sel{width:64px}.pi-sel img{max-width:56px}}
-</style>"""
-
-
 def byg_prisudvikling():
     sti = "/prisudvikling/"
     maalinger = _historik()
-    R = pi.beregn(maalinger, ABON, UMAP)
+    titel = "Prisudvikling på mobilabonnementer i Danmark"
+    besk = ("Se hvordan priserne på mobilabonnementer har udviklet sig. Vi måler "
+            "median- og gennemsnitspris pr. datastørrelse to gange dagligt og "
+            "gemmer hver måling.")
     krumme = [("/", "Forside"), (None, "Prisudvikling")]
-    nu_md = f"{MAANEDER[IDAG.month - 1].capitalize()} {IDAG.year}"
 
-    snapshot = {}
-    for slug in UMAP:
-        egne = [a for a in ABON if a["udbyder"] == slug and a["pris"] > 0]
-        if egne:
-            snapshot[slug] = {"antal": len(egne), "billigst": min(a["pris"] for a in egne),
-                              "median": pi.median([a["pris"] for a in egne])}
-    betalte = [a["pris"] for a in ABON if a["pris"] > 0]
-
-    if R:
-        pi.skriv_filer(R, ROD, DOMAENE)
-        r = pi.retning(R["pct"])
-        pil = {"op": f'<em class="pi-op">▲ {pi.tal(abs(R["pct"]))} %</em>',
-               "ned": f'<em class="pi-ned">▼ {pi.tal(abs(R["pct"]))} %</em>', "flad": ""}[r]
-        h1 = pi.rubrik(R)
-        dek = pi.underrubrik(R)
-        titel = f"Prisudvikling på mobilabonnementer — Telemobil Prisindeks {nu_md.lower()}"
-        besk = (f"{h1.replace('&nbsp;', ' ')}. Telemobil Prisindeks følger {R['antal']} "
-                f"mobilabonnementer to gange dagligt: se prisændringer pr. selskab, hent data og grafer.")
-        embedkode = (f'<iframe src="{DOMAENE}/prisudvikling/embed.html" width="100%" height="520" '
-                     f'style="border:0" loading="lazy" title="Telemobil Prisindeks"></iframe>\n'
-                     f'<p>Kilde: <a href="{DOMAENE}/prisudvikling/">Telemobil Prisindeks</a></p>')
-        top = f"""<div class="pi-hero"><div><h1>{h1}</h1><p class="pi-dek">{e(dek)}</p></div>
-<aside class="pi-citat"><h2>Lige til at citere</h2><blockquote id="pi-citat">»{e(pi.citat(R))}«</blockquote>
-<button type="button" class="pi-knap m" data-kopier="#pi-citat">Kopiér tekst</button>
-<button type="button" class="pi-knap" data-kopier="{DOMAENE}{sti}">Kopiér link</button>
-<p>Kilde: Telemobil Prisindeks · telemobil.dk/prisudvikling</p></aside></div>
-<div class="pi-tal"><div><p class="pi-lab">Prisindeks</p><p class="pi-stor">{pi.tal(R["indeks"])}{pil}</p>
-<p class="pi-und">{pi.d_lang(R["start"])} = 100</p></div>
-<div><p class="pi-lab">Typisk pris i dag</p><p class="pi-stor">{kr(R["median"])} <small>kr./md.</small></p>
-<p class="pi-und">median af normalpriser</p></div>
-<div><p class="pi-lab">De {R["dyrere"] + R["billigere"] + R["uaendret"]} abonnementer, vi har fulgt hele perioden — ét felt pr. abonnement</p>
-<div class="pi-felter">{pi.felter(R)}</div><div class="pi-leg"><span style="--c:var(--op)"><b>{R["dyrere"]}</b>dyrere</span>
-<span style="--c:var(--ned)"><b>{R["billigere"]}</b>billigere</span><span style="--c:#D6D6D6"><b>{R["uaendret"]}</b>uændret</span></div></div></div>
-<figure class="pi-fig" id="udvikling"><h2>Prisindeks for mobilabonnementer</h2>
-<p>De samme abonnementer fulgt over tid. Hvert punkt er en måledag, hvert trin en prisændring.</p>
-<div class="pi-rul">{pi.graf_svg(R)}</div>{pi._noter(R, UMAP, e)}
-<div class="pi-fod"><p>Kilde: Telemobil Prisindeks · {R["maaledage"]} måledage. Nye ({R["nye"]}) og udgåede
-({R["udgaaet"]}) abonnementer indgår ikke, så kun reelle prisændringer flytter tallet.</p>
-<div><a class="pi-knap m" href="#indsaet">&lt;/&gt; Indsæt grafen på din side</a><a class="pi-knap"
-href="/prisudvikling/telemobil-prisindeks.svg" download>Hent grafen (SVG)</a><a class="pi-knap"
-href="/prisudvikling/telemobil-prisindeks.csv" download>Hent data (CSV)</a></div></div>
-<div class="pi-embed" id="indsaet"><b>Kopiér koden ind på din side.</b> Grafen opdaterer sig selv.
-<code id="pi-embedkode">{e(embedkode)}</code><button type="button" class="pi-knap m" data-kopier="#pi-embedkode">Kopiér kode</button></div>
-</figure>
-{pi.sek_kroner(R)}
-<section class="pi-sek">{pi.sek_log(R, UMAP, e)}</section>
-<section class="pi-sek">{pi.sek_selskaber(R, UMAP, e)}</section>"""
-        _haevet = len([1 for d in R["pr_selskab"].values() if d["op"]])
-        if r == "op" and _haevet > len(R["pr_selskab"]) / 2:
-            kommentar = (f"Stigningen er bred. {_haevet} af {len(R['pr_selskab'])} selskaber har hævet "
-                         f"prisen på mindst ét abonnement, og det er normalpriserne, der flytter sig — "
-                         f"ikke kampagnerne.")
-        elif r == "op":
-            kommentar = ("Det er ikke hele markedet, der bliver dyrere. Stigningen kommer fra få selskaber, "
-                         "der har hævet enkelte abonnementer, mens resten står stille.")
-        elif r == "ned":
-            kommentar = ("Priserne falder ikke af sig selv. Det er enkelte selskaber, der sænker for at "
-                         "vinde kunder, og det er dem, det kan betale sig at holde øje med.")
-        else:
-            kommentar = ("Normalpriserne ligger stille. Bevægelsen lige nu ligger i introtilbud og gaver, "
-                         "og de ændrer ikke på, hvad abonnementet koster på lang sigt.")
+    if len(maalinger) < 2:
+        indhold_midt = f"""<h2>Målingerne er lige begyndt</h2>
+<p>Vi gemmer et øjebliksbillede af markedet to gange i døgnet. Der er
+{len(maalinger)} måling{"er" if len(maalinger) != 1 else ""} indtil videre, og
+kurven kræver mindst to. Kom tilbage om en uge — så er der noget at se.</p>
+<p>Indtil da kan du se det aktuelle prisniveau på
+<a href="/billigste-mobilabonnement/#prisniveau">billigste mobilabonnement</a>.</p>"""
     else:
-        h1 = "Hvad koster et mobilabonnement lige nu?"
-        titel = "Prisudvikling på mobilabonnementer — Telemobil Prisindeks"
-        besk = ("Telemobil Prisindeks følger priserne på danske mobilabonnementer to gange dagligt. "
-                "Se prisniveauet pr. selskab og datastørrelse.")
-        top = f"""<div class="pi-hero"><div><h1>{h1}</h1><p class="pi-dek">Et typisk mobilabonnement koster
-{kr(pi.median(betalte))} kr. om måneden. Indekset begynder, så snart vi har to dages målinger — herfra følger
-vi de samme abonnementer dag for dag.</p></div></div>
-<section class="pi-sek">{pi.sek_selskaber(None, UMAP, e, snapshot)}</section>"""
-        kommentar = ("Alle viser, hvad et abonnement koster i dag. Vi gemmer, hvad det kostede i går — "
-                     "så man kan se, hvem der hæver prisen, og hvornår.")
+        først, sidst = maalinger[0], maalinger[-1]
+        dage = len(maalinger)
+        indhold_midt = f"""<h2>Hvad tallene viser</h2>
+<p>Vi har {dage} målinger fra {e(først["dato"])} til {e(sidst["dato"])}. Hver
+måling dækker {sidst["antal"]} abonnementer fra {sidst["udbydere"]} udbydere.</p>
+{_kurve(maalinger)}
+{_udviklingstabel(maalinger)}"""
 
-    krop = f"""<div class="pi">
-<div class="pi-mast"><span class="pi-navn">Telemobil Prisindeks<span>{nu_md}</span></span>
-<span>Opdateret <b>{e(OPDATERET)}</b> · måles to gange i døgnet</span></div>
-{top}
-<section class="pi-sek">{pi.sek_spaend(ABON, gb_tekst)}</section>
-<div class="pi-presse"><div><h2>Kommentar til pressen</h2>
-<div class="pi-emil"><img src="/assets/img/emil-rostgaard.webp" alt="Emil Rostgaard" width="56" height="56" loading="lazy">
-<div><b>Emil Rostgaard</b><span>Stifter af Telemobil</span></div></div>
-<blockquote>»{e(kommentar)}«</blockquote>
-<p><a href="mailto:kontakt@telemobil.dk?subject=Telemobil%20Prisindeks">kontakt@telemobil.dk</a> ·
-<a href="/presse/">Pressemateriale</a></p></div>
-<div><h2>Sådan måler vi</h2><p>Priserne hentes to gange i døgnet direkte fra selskabernes datafeed. Indekset
-regnes på normalprisen og følger de samme abonnementer fra måling til måling, kædet sammen med geometrisk
-gennemsnit. <a href="/metode/">Hele metoden</a> · <a href="/data/">Rådata</a></p>
-<h2 class="pi-h2b">Det viser indekset ikke</h2><ul class="pi-ikke"><li>Introtilbud, gaver og oprettelsesgebyr</li>
-<li>Selskaber uden for vores datafeed</li><li>Erhvervsabonnementer</li></ul></div>
-<div><h2>Brug tallene frit</h2><p>Tekst, tal og grafer må gengives mod kildeangivelse med link til
-Telemobil Prisindeks (<a href="https://creativecommons.org/licenses/by/4.0/deed.da" rel="noopener license"
-target="_blank">CC BY 4.0</a>).</p>
-<h2 class="pi-h2b">Få tallene på mail</h2><p>Vil du have indekset den 1. i hver måned, så
-<a href="mailto:kontakt@telemobil.dk?subject=Presseliste%20%E2%80%94%20Telemobil%20Prisindeks">skriv
-»presseliste« til os</a>.</p></div></div>
+    brod = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta="Målingerne gemmes automatisk ved hvert build")}
+<p class="led">Alle sammenligningssider viser, hvad et abonnement koster i dag.
+Ingen viser, hvad det kostede for tre måneder siden. Vi gemmer hver eneste
+måling, så du kan se, om priserne rent faktisk falder — eller om det bare er
+kampagnerne, der skifter navn.</p>
 
-<div class="pi-artikel artikel">
-{gennemgangslinje(OPDATERET, fakta="Målingerne gemmes automatisk to gange i døgnet")}
-<h2>Hvorfor et indeks og ikke bare en gennemsnitspris?</h2>
-<p>En gennemsnitspris flytter sig, hver gang et selskab tilføjer eller fjerner et abonnement — også selv om ingen
-har ændret en eneste pris. Indekset sammenligner derfor kun abonnementer, der findes både før og efter. Det er
-samme princip, som ligger bag forbrugerprisindekset.</p>
+<h2>Sådan måler vi</h2>
+<p>To gange i døgnet henter vi priserne og gemmer fire tal for hver
+datastørrelse: laveste pris, median, gennemsnit og højeste pris. Vi regner
+altid på <strong>normalprisen</strong>, aldrig på introprisen. En intropris
+siger noget om en kampagne, ikke om prisniveauet.</p>
+<p>Medianen er det vigtigste tal. Gennemsnittet trækkes op af enkelte dyre
+abonnementer, mens medianen viser den midterste pris — altså hvad et typisk
+abonnement i den gruppe koster.</p>
+
+{indhold_midt}
+
+{prisstatistik()}
+
+  {prisaendringer()}
+
 <h2>Hvorfor det er værd at holde øje med</h2>
-<p>Mobilpriserne i Danmark bevæger sig ikke jævnt. De falder i perioder med hård konkurrence og stiger, når
-selskaberne justerer — ofte samlet og med kort varsel. Har du et abonnement, der er mere end et år gammelt,
-betaler du med stor sandsynlighed mere end den typiske pris for din datastørrelse. Se de
-<a href="/billigste-mobilabonnement/">billigste mobilabonnementer lige nu</a>, eller læs om
-<a href="/guides/prisstigning-mobilabonnement/">dine rettigheder ved en prisstigning</a>.</p>
-{prisaendringer()}
-</div></div>{pi.KOPI_JS}"""
+<p>Mobilpriserne i Danmark bevæger sig ikke jævnt. De falder i perioder med hård
+konkurrence og stiger, når selskaberne justerer efter inflation — ofte samlet og
+med kort varsel. Har du et abonnement, der er mere end et år gammelt, betaler du
+med stor sandsynlighed over medianen for din datastørrelse.</p>
+<p>Det er også derfor, prisen alene er et dårligt beslutningsgrundlag. Et
+abonnement, der er billigt i dag, kan være dyrt om et halvt år, hvis udbyderen
+lever af introtilbud. Vores <a href="/12-maaneders-prisen/">12-måneders-pris</a>
+tager højde for det.</p>
+</section>
+<section class="sektion baand-smal">
+  {laesvidere([("/billigste-mobilabonnement/", "Billigste mobilabonnement lige nu"),
+               ("/12-maaneders-prisen/", "Sådan regner vi 12-måneders-prisen"),
+               ("/metode/", "Vores metode"),
+               ("/guides/prisstigning-mobilabonnement/", "Hvad gør du ved en prisstigning?")])}
+  {forfatterboks()}
+  {afsloering()}
+</section>"""
 
     faq = [
         {"sp": "Stiger priserne på mobilabonnementer?",
-         "sv": (f"{h1.replace('&nbsp;', ' ')}. Telemobil Prisindeks står i {pi.tal(R['indeks'])} mod 100 den "
-                f"{pi.d_lang(R['start'])}. {R['dyrere']} abonnementer er blevet dyrere og {R['billigere']} billigere."
-                if R else "Vi måler priserne to gange dagligt. Indekset begynder, når der er to dages målinger.")},
-        {"sp": "Hvordan beregnes Telemobil Prisindeks?",
-         "sv": "Vi følger de samme abonnementer fra måling til måling og kæder ændringerne sammen med "
-               "geometrisk gennemsnit. Nye og udgåede abonnementer indgår ikke, så kun reelle "
-               "prisændringer flytter indekset."},
+         "sv": "Det svinger. Vi måler median- og gennemsnitsprisen pr. datastørrelse to "
+               "gange dagligt og viser udviklingen på denne side, så du kan se det "
+               "faktiske forløb frem for at gætte."},
+        {"sp": "Hvorfor bruger I medianprisen?",
+         "sv": "Fordi gennemsnittet trækkes skævt af enkelte dyre abonnementer. Medianen "
+               "er den midterste pris og viser bedre, hvad et typisk abonnement koster."},
         {"sp": "Regner I med introprisen?",
-         "sv": "Nej. Vi bruger altid normalprisen. En intropris måler en kampagne, ikke prisniveauet."},
-        {"sp": "Må jeg bruge tallene og grafen?",
-         "sv": "Ja. Tekst, tal og grafer må gengives frit mod kildeangivelse med link til Telemobil "
-               "Prisindeks. Grafen kan indsættes direkte på din egen side, og data kan hentes som CSV."},
+         "sv": "Nej. Vi bruger altid normalprisen. En intropris måler en kampagne, ikke "
+               "prisniveauet på markedet."},
+        {"sp": "Hvor ofte opdateres tallene?",
+         "sv": "To gange i døgnet. Hver måling gemmes, så historikken vokser dag for dag."},
     ]
-    ld = [graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq), artikelld(sti, titel, besk),
-               *([pi.dataset_ld(R, DOMAENE, besk)] if R else []))]
-    return skriv(sti, shell(sti=sti, titel=titel, beskrivelse=besk, hero=None, efter_hero="",
-                            krumme=krumme, toc=False, ekstra_hoved=PI_CSS,
-                            indhold=krop + faqblok(faq), jsonld=ld),
-                 prioritet="0.8", hyppighed="daily")
+
+    return skriv(sti, shell(
+        sti=sti, titel=titel, beskrivelse=besk,
+        hero=hero_side("Prisudvikling", titel,
+                       "Vi gemmer priserne to gange i døgnet, så du kan se, hvordan "
+                       "markedet flytter sig — ikke bare hvad det koster i dag.",
+                       '<a href="#udvikling" class="knap knap-primaer">Se udviklingen</a>'),
+        efter_hero=logobaand(), krumme=krumme, indhold=brod + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, titel, besk))],
+    ), prioritet="0.8", hyppighed="daily")
 
 
 # ---------------------------------------------------------------- KAMPAGNER
@@ -11028,8 +10636,7 @@ ErrorDocument 404 /404.html
 
 def byg_404():
     krop = """<section class="sektion baand-smal artikel" style="text-align:center">
-  <div class="signe-404">""" + signe("leder", 190, alt="Signe, Telemobils maskot, leder efter siden med et forstørrelsesglas") + """</div>
-  <h2>Signe har ledt — siden findes ikke</h2>
+  <h2>Siden findes ikke</h2>
   <p>Linket er enten forældet, eller også har vi flyttet siden. Prøv en af disse i stedet:</p>
   <p style="margin-top:2rem">
     <a href="/billigste-mobilabonnement/" class="knap knap-primaer">Se billigste abonnementer</a>
@@ -11049,6 +10656,19 @@ def byg_404():
 def main():
     # Popup'en ligger på hver side, så den skal bygges før noget andet
     skabelon.FIRMA = site.get("firma", {})
+    # Menupunkterne må kun pege på sider, der faktisk bygges. Fejler
+    # bredbåndsfeedet, bygges de ikke, og så skal de ud af menuen.
+    if not BB:
+        skabelon.BREDBAAND_MENU = []
+    else:
+        tek = {a["teknologi"] for a in BB}
+        skabelon.BREDBAAND_MENU = [
+            (h, t) for h, t in skabelon.BREDBAAND_MENU
+            if not h.startswith("/bredbaand/")
+            or h == "/bredbaand/"
+            or any(h == f"/bredbaand/{sti}/" and n in tek
+                   for n, _, sti, _ in TEK_SIDER)
+        ]
     skabelon.SCOREMAERKAT = scoremaerkat
     skabelon.SCORETAL = lambda a: telemobil_score(a) or 0
     skabelon.HURTIGPRIS = hurtigpris_dialog()
@@ -11735,36 +11355,15 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement")],
               billede="skift-mobilselskab",
               altbillede="Person opsiger sit mobilabonnement på laptop",
-              ekstra=[ops.oversigt(e), tabel_aarsomkostning(), tabel_billigst_pr_udbyder(),
-                      fejllink(), begrebslink(), udbydergitter(), tabel_pr_datamaengde(),
-                      statistiktabel(),
+              ekstra=[tabel_aarsomkostning(), tabel_billigst_pr_udbyder(), fejllink(),
+                      begrebslink(), udbydergitter(), tabel_pr_datamaengde(), statistiktabel(),
+                      tabel_billigst_pr_udbyder(),
                       vejviser("/guides/opsig-mobilabonnement/"),
                       kilder(["teleankenaevnet", "teleanke_klag", "digst_klage",
                               "forbrugerombudsmanden"],
                              ["Varsler og opsigelsesvilkår: udbydernes abonnementsvilkår.",
                               "Vi giver ikke juridisk rådgivning — ved tvivl om din konkrete "
                               "aftale, kontakt udbyderen eller Teleankenævnet."])])
-
-    for _slug, _d in ops.SELSKABER.items():
-        _n = _d["navn"]
-        _u = _d["udbyder_slug"]
-        _link = (f'Se <a href="/udbydere/{_u}/">vores vurdering af {e(_n)}</a>, eller find et '
-                 f'billigere alternativ blandt de <a href="/billigste-mobilabonnement/">billigste '
-                 f'mobilabonnementer</a>.' if _u in UMAP else
-                 f'Se de <a href="/billigste-mobilabonnement/">billigste mobilabonnementer lige '
-                 f'nu</a>, eller dem <a href="/mobilabonnement-uden-binding/">uden binding</a>.')
-        byg_guide(ops.sti(_slug), f"Opsig {_n}",
-                  f"Opsig {_n}: varsel og fremgangsmåde",
-                  f"Opsig {_n} mobilabonnement — {_d['varsel_kort']}",
-                  f"{_n} har {_d['varsel_kort']}. Se hvordan du opsiger via {_d['metode_kort']}, "
-                  f"hvornår abonnementet stopper, og hvordan du beholder dit nummer.",
-                  ops.brodtekst(_slug, e, gennemgangslinje(OPDATERET, f"Læst i {_n}s egne vilkår"),
-                                D, _link),
-                  ops.faq(_slug),
-                  [("/guides/opsig-mobilabonnement/", "Opsigelse — de generelle regler"),
-                   ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
-                   ("/mobilabonnement-uden-binding/", "Abonnementer uden binding"),
-                   ("/billigste-mobilabonnement/", "Billigste mobilabonnement")])
 
     byg_guide("/mobilabonnement-til-erhverv/", "Til erhverv",
               "Mobilabonnement til erhverv",

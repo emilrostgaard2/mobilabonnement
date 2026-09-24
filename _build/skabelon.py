@@ -4,7 +4,6 @@ import re
 
 import json
 import html
-from maskot import signe
 
 DOMAENE = "https://telemobil.dk"
 SITENAVN = "Telemobil"
@@ -158,6 +157,8 @@ def netlabel(u):
         return "MVNO"
     if n == "3":
         return "Nettet fra 3"
+    if n == "TN-Network":
+        return "TN-Network"
     return f"{e(n)}-nettet" if n == "TDC NET" else f"{e(n)}s net"
 
 
@@ -354,7 +355,12 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0B1026">
-<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/schibsted-grotesk.woff2" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <script>document.documentElement.className+=" js";</script>
 <style>{CSS_INLINE}</style>
 {ekstra_hoved}
@@ -389,6 +395,23 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 </body>
 </html>
 """
+
+
+def bredbaandsfod():
+    """Bredbåndskolonnen i footeren.
+
+    Bygges af BREDBAAND_MENU, så den forsvinder helt, hvis feedet fejler og
+    siderne ikke bliver bygget. Ellers står der døde links på 120 sider."""
+    punkter = [(h, t) for h, t in BREDBAAND_MENU if h != "/bredbaand/"]
+    if not BREDBAAND_MENU:
+        return ""
+    return f"""      <div>
+        <div class="fodtitel">Bredbånd</div>
+        <ul>
+          <li><a href="/bredbaand/">Alle bredbåndsabonnementer</a></li>
+          {"".join(f'<li><a href="{h}">{e(t)}</a></li>' for h, t in punkter)}
+        </ul>
+      </div>"""
 
 
 def cvrlinje():
@@ -443,16 +466,7 @@ def fod(opdateret):
         </ul>
       </div>
 
-      <div>
-        <div class="fodtitel">Bredbånd</div>
-        <ul>
-          <li><a href="/bredbaand/">Alle bredbåndsabonnementer</a></li>
-          <li><a href="/bredbaand/fibernet/">Fibernet</a></li>
-          <li><a href="/bredbaand/5g/">5G internet</a></li>
-          <li><a href="/bredbaand/kabel-internet/">Kabel-internet</a></li>
-          <li><a href="/guides/mobilt-bredbaand/">Mobilt bredbånd — guide</a></li>
-        </ul>
-      </div>
+      {bredbaandsfod()}
 
       <div>
         <div class="fodtitel">Efter datamængde</div>
@@ -950,12 +964,8 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
   {filterhtml}
   <div class="listeramme afslør">
     <div class="planliste">{kort}</div>
-    <div class="pk-tom" data-tom hidden>
-      {signe("leder", 120)}
-      <p><strong>Signe fandt ingen abonnementer, der matcher.</strong><br>
-      Prøv at hæve prisloftet eller fjerne et filter.</p>
-      <button type="button" class="knap knap-linje knap-lille" data-nulstil>Nulstil filtre</button>
-    </div>
+    <p class="pk-tom" data-tom hidden>Ingen abonnementer matcher filtrene.
+      <button type="button" class="knap knap-linje knap-lille" data-nulstil>Nulstil filtre</button></p>
     {visflere}
     <div class="listefod">
       <span>Klik <strong>Se detaljer</strong> for EU-data, pris pr. GB og den reelle

@@ -5,16 +5,16 @@
    "slug": "cbb-mobil",
    "navn": "CBB Mobil",
    "logo": "cbb-mobil.webp",
-   "netvaerk": "Telenor",
+   "netvaerk": "TN-Network",
    "ejer": "Telenor Danmark",
    "hjemmeside": "https://www.cbb.dk",
    "grundlagt": 2000,
    "tagline": "Lav pris uden binding — og en app der faktisk virker",
    "kort": "CBB Mobil er Telenors prisbrand og en af de mest stabile spillere i den billige ende. Ingen binding, ingen oprettelse, og en prisstruktur der er til at forstå.",
-   "anmeldelse": "CBB Mobil er for os benchmarken i den billige ende af det danske marked. Selskabet er ejet af Telenor og kører på Telenors netværk, hvilket i praksis betyder, at du får dækning på niveau med et af landets tre store net til en pris, der ligger markant under det, moderselskabet selv tager for tilsvarende abonnementer.\n\nDet, der adskiller CBB fra flere af de rene discountbrands, er, at prisen ikke er en lokketilbudspris. Du finder sjældent den type kampagne, hvor prisen tredobles efter seks måneder. Det gør CBB til et af de få selskaber, hvor den pris, du ser ved bestilling, også er den pris, du betaler om et år. For en almindelig forbruger er det ofte flere hundrede kroner værd over en abonnementsperiode sammenlignet med et kampagneabonnement, man glemmer at genforhandle.\n\nAppen fortjener at blive nævnt, fordi den er et reelt konkurrenceparameter i den billige ende. Du kan se dit forbrug løbende, skifte abonnement uden at ringe nogen steder hen, og slå datastop til. Netop datastop er værd at aktivere fra dag ét, hvis du har børn på abonnementet eller selv har det med at streame video på farten.\n\nSvaghederne er der. Kundeservice er primært digital, og har du brug for at tale med et menneske hurtigt, er ventetiden længere end hos de store. Der følger ingen streamingtjenester eller mobilforsikring med, som man ser hos Telmore og YouSee. Og skal du bruge meget data i udlandet uden for EU, er CBB ikke det stærkeste valg.",
+   "anmeldelse": "CBB Mobil er for os benchmarken i den billige ende af det danske marked. Selskabet er ejet af Telenor og kører på TN-Network, det fælles net Telenor og Norlys ejer sammen, hvilket i praksis betyder, at du får dækning på niveau med et af landets tre store net til en pris, der ligger markant under det, moderselskabet selv tager for tilsvarende abonnementer.\n\nDet, der adskiller CBB fra flere af de rene discountbrands, er, at prisen ikke er en lokketilbudspris. Du finder sjældent den type kampagne, hvor prisen tredobles efter seks måneder. Det gør CBB til et af de få selskaber, hvor den pris, du ser ved bestilling, også er den pris, du betaler om et år. For en almindelig forbruger er det ofte flere hundrede kroner værd over en abonnementsperiode sammenlignet med et kampagneabonnement, man glemmer at genforhandle.\n\nAppen fortjener at blive nævnt, fordi den er et reelt konkurrenceparameter i den billige ende. Du kan se dit forbrug løbende, skifte abonnement uden at ringe nogen steder hen, og slå datastop til. Netop datastop er værd at aktivere fra dag ét, hvis du har børn på abonnementet eller selv har det med at streame video på farten.\n\nSvaghederne er der. Kundeservice er primært digital, og har du brug for at tale med et menneske hurtigt, er ventetiden længere end hos de store. Der følger ingen streamingtjenester eller mobilforsikring med, som man ser hos Telmore og YouSee. Og skal du bruge meget data i udlandet uden for EU, er CBB ikke det stærkeste valg.",
    "fordele": [
     "Ingen binding og typisk ingen oprettelsesgebyr",
-    "Kører på Telenors netværk med bred 4G- og 5G-dækning",
+    "Kører på TN-Network med bred 4G- og 5G-dækning",
     "Prisen holder — sjældent skjulte prisstigninger efter kampagneperiode",
     "Velfungerende app med forbrugsoversigt og datastop",
     "Nemt at skifte abonnement op og ned fra måned til måned"
@@ -29,7 +29,7 @@
    "faq": [
     {
      "sp": "Hvilket netværk bruger CBB Mobil?",
-     "sv": "CBB Mobil kører på Telenors netværk. Det betyder, at dækningen svarer til Telenors egen, både på 4G og 5G, selvom prisen er lavere."
+     "sv": "CBB Mobil kører på TN-Network. Det betyder, at dækningen svarer til Telenors egen, både på 4G og 5G, selvom prisen er lavere."
     },
     {
      "sp": "Har CBB Mobil binding?",
@@ -45,7 +45,7 @@
     "antal": 67000,
     "hentet": "2026-06-11"
    },
-   "ejer_note": "CBB Mobil ejes af Telenor og kører på Telenors net.",
+   "ejer_note": "CBB Mobil ejes af Telenor og kører på TN-Network, det fælles mobilnet Telenor og Norlys ejer 50/50.",
    "kundeservice": {
     "url": null,
     "tlf": null,
@@ -211,7 +211,7 @@
    "slug": "lebara",
    "navn": "Lebara",
    "logo": "lebara.webp",
-   "netvaerk": "Telenor",
+   "netvaerk": "TN-Network",
    "ejer": "Lebara Group",
    "hjemmeside": "https://www.lebara.dk",
    "grundlagt": 2001,
@@ -262,7 +262,7 @@
    "slug": "greentel",
    "navn": "Greentel",
    "logo": "greentel.webp",
-   "netvaerk": "Telenor",
+   "netvaerk": "TN-Network",
    "ejer": "Greentel",
    "hjemmeside": "https://greentel.dk",
    "grundlagt": 2010,
@@ -313,7 +313,7 @@
    "slug": "duka",
    "navn": "Duka",
    "logo": "duka.webp",
-   "netvaerk": "MVNO",
+   "netvaerk": "TN-Network",
    "ejer": "Duka",
    "hjemmeside": "https://duka.dk",
    "grundlagt": 2015,
@@ -364,7 +364,7 @@
    "slug": "lyca-mobile",
    "navn": "Lyca Mobile",
    "logo": "lyca-mobile.webp",
-   "netvaerk": "MVNO",
+   "netvaerk": "TN-Network",
    "ejer": "Lycamobile Group",
    "hjemmeside": "https://www.lycamobile.dk",
    "grundlagt": 2006,

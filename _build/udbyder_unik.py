@@ -6,7 +6,7 @@ udskiftet navn. Hver udbyder har egne H2'er, egne vinkler og egne afsnit.
 UNIK = {
     "cbb-mobil": {
         "h2_vurdering": "CBB Mobil i praksis: hvad du får for prisen",
-        "h2_net": "Telenors net — det du reelt køber hos CBB",
+        "h2_net": "TN-Network — det du reelt køber hos CBB",
         "h2_hvem": "Er CBB Mobil det rigtige valg for dig?",
         "h2_sammenlign": "CBB Mobil mod de andre discountselskaber",
         "h2_skift": "Fra dit nuværende selskab til CBB Mobil",

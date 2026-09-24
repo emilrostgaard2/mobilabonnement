@@ -212,14 +212,21 @@ def oversaet(post, i):
 
 
 # Feedets netværksnavne oversat til vores
+# Feedet bruger flere navne for det samme net. Telenor og Norlys ejer
+# TN-Network 50/50. Det hed TT-Netværket, indtil Telia trak sig ud af det
+# danske marked i 2025 og Norlys overtog deres halvdel.
 NET_KORT = {
     "3": "3",
     "tdc": "TDC NET",
     "tdc net": "TDC NET",
-    "telenor": "Telenor",
-    "norlys/telenor": "Telenor",
-    "telia": "Telia",
-    "telia/telenor": "Telenor",
+    "telenor": "TN-Network",
+    "norlys": "TN-Network",
+    "norlys/telenor": "TN-Network",
+    "telenor/norlys": "TN-Network",
+    "telia": "TN-Network",
+    "telia/telenor": "TN-Network",
+    "tt-netvaerket": "TN-Network",
+    "tn-network": "TN-Network",
 }
 
 
@@ -274,13 +281,6 @@ def gem_historik(abonnementer):
     årevis uden at fylde. Én linje pr. dag; køres importøren flere gange samme
     dag, overskrives dagens post."""
     sti = os.path.join(ROD, "data", "prishistorik.json")
-    # Flet først alt ind, som git husker. Ligger her og ikke kun i workflowet,
-    # fordi .github er en skjult mappe, der let falder ud ved en manuel upload.
-    try:
-        import genskab_historik
-        genskab_historik.main()
-    except Exception as ex:
-        print(f"Prishistorik: genskabelse sprunget over ({ex})")
     try:
         with open(sti, encoding="utf-8") as f:
             historik = json.load(f)
