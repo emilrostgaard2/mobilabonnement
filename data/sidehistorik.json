@@ -1,7 +1,7 @@
 {
  "/": {
-  "dato": "2026-09-24",
-  "hash": "72fc6d09e956d3ce"
+  "dato": "2026-09-25",
+  "hash": "59b68a6c3c913c68"
  },
  "/12-maaneders-prisen/": {
   "dato": "2026-09-24",
@@ -256,8 +256,8 @@
   "hash": "d0464d02b9510a6a"
  },
  "/mobilabonnement-med-fri-data/": {
-  "dato": "2026-09-24",
-  "hash": "2c6e0a53de8636f7"
+  "dato": "2026-09-25",
+  "hash": "8c54c4e22533bb55"
  },
  "/mobilabonnement-med-fri-tale/": {
   "dato": "2026-09-24",
@@ -384,12 +384,12 @@
   "hash": "cc9862c9e4b8c7b0"
  },
  "/prisarkiv/": {
-  "dato": "2026-09-24",
-  "hash": "dbfc4702384bbc5a"
+  "dato": "2026-09-25",
+  "hash": "283842f8133ee757"
  },
  "/prisudvikling/": {
-  "dato": "2026-09-24",
-  "hash": "0188d78a15a756e7"
+  "dato": "2026-09-25",
+  "hash": "3a0b31ef3dd024d3"
  },
  "/privatlivspolitik/": {
   "dato": "2026-09-24",
@@ -472,39 +472,39 @@
   "hash": "829122ce44a8a171"
  },
  "/udbydere/duka/": {
-  "dato": "2026-09-24",
-  "hash": "8fb19c6a855407a7"
+  "dato": "2026-09-25",
+  "hash": "76af74c4192738a0"
  },
  "/udbydere/eesy/": {
-  "dato": "2026-09-24",
-  "hash": "3b5f3186b8777130"
+  "dato": "2026-09-25",
+  "hash": "65281791636b3c7e"
  },
  "/udbydere/flexii/": {
-  "dato": "2026-09-24",
-  "hash": "f4279171470545ce"
+  "dato": "2026-09-25",
+  "hash": "caf3f5c5df66e371"
  },
  "/udbydere/greentel/": {
-  "dato": "2026-09-24",
-  "hash": "ba51b457dd63c656"
+  "dato": "2026-09-25",
+  "hash": "0be0db2e89324c82"
  },
  "/udbydere/lebara/": {
-  "dato": "2026-09-24",
-  "hash": "b08d2e74e2767f94"
+  "dato": "2026-09-25",
+  "hash": "1eab2ce250c9fc24"
  },
  "/udbydere/lyca-mobile/": {
-  "dato": "2026-09-24",
-  "hash": "b64c26b4be56a0a8"
+  "dato": "2026-09-25",
+  "hash": "1718c7e81355bfc1"
  },
  "/udbydere/oister/": {
-  "dato": "2026-09-24",
-  "hash": "f8a0638cb797b2f5"
+  "dato": "2026-09-25",
+  "hash": "53b5ba61f566540b"
  },
  "/udbydere/telmore/": {
-  "dato": "2026-09-24",
-  "hash": "02a6ab7a4e5e5124"
+  "dato": "2026-09-25",
+  "hash": "881ee23a9388cb8a"
  },
  "/udbydere/yousee/": {
-  "dato": "2026-09-24",
-  "hash": "e8a1baba0a16bb2f"
+  "dato": "2026-09-25",
+  "hash": "4903a7147e1e5af4"
  }
 }
