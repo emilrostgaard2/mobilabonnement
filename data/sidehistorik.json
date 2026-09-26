@@ -1,7 +1,7 @@
 {
  "/": {
-  "dato": "2026-09-25",
-  "hash": "e7c82d6f4eca8d37"
+  "dato": "2026-09-26",
+  "hash": "6739f95aa41d4c13"
  },
  "/12-maaneders-prisen/": {
   "dato": "2026-09-25",
@@ -16,8 +16,8 @@
   "hash": "00f8d1cf400acb97"
  },
  "/billigste-mobilabonnement/": {
-  "dato": "2026-09-25",
-  "hash": "e4d118f8191f18d3"
+  "dato": "2026-09-26",
+  "hash": "b7d4d5d127197569"
  },
  "/bredbaand/": {
   "dato": "2026-09-25",
@@ -256,12 +256,12 @@
   "hash": "36fd71650cc2d409"
  },
  "/mobilabonnement-med-fri-data/": {
-  "dato": "2026-09-25",
-  "hash": "423426f3ad9f637e"
+  "dato": "2026-09-26",
+  "hash": "9eb413bee367c939"
  },
  "/mobilabonnement-med-fri-tale/": {
-  "dato": "2026-09-25",
-  "hash": "af15b9ae712dc082"
+  "dato": "2026-09-26",
+  "hash": "bf8137d86b282e18"
  },
  "/mobilabonnement-med-hbo-max/": {
   "dato": "2026-09-25",
@@ -384,12 +384,12 @@
   "hash": "082f418572521f5d"
  },
  "/prisarkiv/": {
-  "dato": "2026-09-25",
-  "hash": "83ddc885148f8521"
+  "dato": "2026-09-26",
+  "hash": "342691f302a95e6d"
  },
  "/prisudvikling/": {
-  "dato": "2026-09-25",
-  "hash": "eacd817d65c67717"
+  "dato": "2026-09-26",
+  "hash": "9934c084b7e7f6e0"
  },
  "/privatlivspolitik/": {
   "dato": "2026-09-25",
@@ -472,39 +472,39 @@
   "hash": "4f10e7daff70dc88"
  },
  "/udbydere/duka/": {
-  "dato": "2026-09-25",
-  "hash": "3ba2d33d1d93df7d"
+  "dato": "2026-09-26",
+  "hash": "81330b9ae6ff603b"
  },
  "/udbydere/eesy/": {
-  "dato": "2026-09-25",
-  "hash": "90917dd7fb441ab6"
+  "dato": "2026-09-26",
+  "hash": "6f27cd3dbd333c52"
  },
  "/udbydere/flexii/": {
-  "dato": "2026-09-25",
-  "hash": "48fdb5ee73ebb5c4"
+  "dato": "2026-09-26",
+  "hash": "19cc9749ea8d9ef6"
  },
  "/udbydere/greentel/": {
-  "dato": "2026-09-25",
-  "hash": "43ea18eb5a5795f2"
+  "dato": "2026-09-26",
+  "hash": "d69b58c20ad76b60"
  },
  "/udbydere/lebara/": {
-  "dato": "2026-09-25",
-  "hash": "159d7c72981a0efe"
+  "dato": "2026-09-26",
+  "hash": "4ae2270f1d83b931"
  },
  "/udbydere/lyca-mobile/": {
-  "dato": "2026-09-25",
-  "hash": "bf7e26a5d013cec3"
+  "dato": "2026-09-26",
+  "hash": "e82d0466ad1c4317"
  },
  "/udbydere/oister/": {
-  "dato": "2026-09-25",
-  "hash": "591d8774ac933ae0"
+  "dato": "2026-09-26",
+  "hash": "a2c295b1a75815ad"
  },
  "/udbydere/telmore/": {
-  "dato": "2026-09-25",
-  "hash": "01f6b4e5db7f1d72"
+  "dato": "2026-09-26",
+  "hash": "d456922b5b1a0afe"
  },
  "/udbydere/yousee/": {
-  "dato": "2026-09-25",
-  "hash": "97543c3f3c938a6e"
+  "dato": "2026-09-26",
+  "hash": "4335539a459c782f"
  }
 }
