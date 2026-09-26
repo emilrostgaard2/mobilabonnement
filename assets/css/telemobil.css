@@ -2045,3 +2045,20 @@ body{overflow-x:clip;max-width:100%;position:relative}
   .ti-punkt b{font-size:1.3rem}
 }
 @media(max-width:420px){.ti-punkt em{display:none}}
+
+/* Sideopdeling på guideoversigten */
+.paginering{display:flex;align-items:center;justify-content:center;gap:.35rem;
+  flex-wrap:wrap;margin:2rem 0 0}
+.paginering a,.paginering span{min-width:2.4rem;height:2.4rem;display:inline-flex;
+  align-items:center;justify-content:center;border-radius:var(--r-m);
+  font-family:var(--font-tal);font-size:.9rem;text-decoration:none;
+  border:1px solid var(--graa-lys);color:var(--blaek);background:#fff}
+.paginering a:hover{border-color:var(--signal);color:var(--signal-dyb)}
+.paginering .pg-nu{background:var(--signal);border-color:var(--signal);color:#fff;
+  font-weight:600}
+.paginering .pg-pil{width:auto;padding:0 .85rem;gap:.35rem;font-family:var(--font-brod);
+  font-size:.86rem;font-weight:600}
+@media(max-width:560px){
+  .paginering .pg-pil span{display:none}
+  .paginering .pg-pil{padding:0 .7rem}
+}

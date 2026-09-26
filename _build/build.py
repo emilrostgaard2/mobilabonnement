@@ -9678,12 +9678,61 @@ hjælper gerne journalister og studerende.</p>
     ), prioritet="0.8", hyppighed="daily")
 
 
+PR_SIDE = 12
+
+
 def byg_guideoversigt():
-    sti = "/guides/"
-    krumme = [("/", "Forside"), (None, "Guides")]
+    """Oversigten som dateret strøm med sideopdeling.
+
+    23 kort på én side er en mur. Tolv ad gangen kan skimmes, og de nyeste
+    står øverst, så det er tydeligt, at der bliver skrevet løbende.
+
+    Vi laver ikke en separat /artikler/ med samme indhold. To sider om de
+    samme guides ville konkurrere indbyrdes om de samme søgninger.
+    """
+    # Nyeste først. Datoen kommer fra sidehistorikken, så den er sand.
+    sorteret = sorted(GUIDER, key=lambda g: sidst_aendret(g[0])[0], reverse=True)
+    antal_sider = max(1, (len(sorteret) + PR_SIDE - 1) // PR_SIDE)
+    # En sidste side med ét enkelt kort ser forladt ud. Har den under fire,
+    # fordeler vi i stedet jævnt over færre sider.
+    rest = len(sorteret) - (antal_sider - 1) * PR_SIDE
+    if antal_sider > 1 and rest < 4:
+        antal_sider -= 1
+    pr_side = max(1, -(-len(sorteret) // antal_sider))
+    for n in range(antal_sider):
+        _byg_guideside(sorteret[n * pr_side:(n + 1) * pr_side], n + 1, antal_sider,
+                       len(sorteret))
+
+
+def _guidesti(n):
+    return "/guides/" if n == 1 else f"/guides/side-{n}/"
+
+
+def guidepaginering(nu, i_alt):
+    if i_alt < 2:
+        return ""
+    led = ""
+    if nu > 1:
+        led += (f'<a class="pg-pil" href="{_guidesti(nu - 1)}" rel="prev">'
+                f'<span aria-hidden="true">←</span> Nyere</a>')
+    for n in range(1, i_alt + 1):
+        if n == nu:
+            led += f'<span class="pg-nu" aria-current="page">{n}</span>'
+        else:
+            led += f'<a href="{_guidesti(n)}">{n}</a>'
+    if nu < i_alt:
+        led += (f'<a class="pg-pil" href="{_guidesti(nu + 1)}" rel="next">'
+                f'Ældre <span aria-hidden="true">→</span></a>')
+    return f'<nav class="paginering" aria-label="Flere guides">{led}</nav>'
+
+
+def _byg_guideside(udvalg, nu, i_alt, i_alt_guides):
+    sti = _guidesti(nu)
+    krumme = ([("/", "Forside"), (None, "Guides")] if nu == 1
+              else [("/", "Forside"), ("/guides/", "Guides"), (None, f"Side {nu}")])
 
     kort = ""
-    for h, t, besk, bil, alt, maerkat, min in GUIDER:
+    for h, t, besk, bil, alt, maerkat, min in udvalg:
         kort += f"""<a class="artikelkort" href="{h}">
   <span class="ak-billede">{guidebillede(bil, alt)}</span>
   <span class="ak-krop">
@@ -9701,11 +9750,13 @@ def byg_guideoversigt():
   <div class="sektion-hoved afslør">
     <span class="etiket">Guides</span>
     <h2>Start her</h2>
-    <p class="led">{len(GUIDER)} guides, der dækker de spørgsmål vi oftest får. De tager
-    hver et par minutter at læse og sparer typisk flere hundrede kroner om året.</p>
+    <p class="led">{i_alt_guides} guides, der dækker de spørgsmål vi oftest får. De tager
+    hver et par minutter at læse og sparer typisk flere hundrede kroner om året.
+    Nyeste står øverst.</p>
   </div>
   <div class="artikelkort-gitter">{kort}</div>
-  <p class="ak-antal">Viser alle {len(GUIDER)} guides</p>
+  <p class="ak-antal">Viser {len(udvalg)} af {i_alt_guides} guides{f" · side {nu} af {i_alt}" if i_alt > 1 else ""}</p>
+  {guidepaginering(nu, i_alt)}
 </section>
 
 <section class="sektion baand-smal artikel">
@@ -9761,22 +9812,30 @@ def byg_guideoversigt():
 
 <section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>"""
 
+    # Side 2 og frem får samme titel med sidetal, så de ikke ser ud som
+    # dubletter i søgeresultatet.
+    sidetekst = "" if nu == 1 else f" — side {nu}"
     return skriv(sti, shell(
-        sti=sti, titel="Guides til mobilabonnement — data, dækning, eSIM og skifte",
+        sti=sti,
+        titel=f"Guides til mobilabonnement — data, dækning, eSIM og skifte{sidetekst}",
         beskrivelse=("Praktiske guides om dataforbrug, netværk, eSIM og hvordan du skifter "
-                     "mobilselskab. Skrevet i almindeligt dansk og opdateret løbende."),
+                     "mobilselskab. Skrevet i almindeligt dansk og opdateret løbende."
+                     if nu == 1 else
+                     f"Side {nu} af vores guides om mobilabonnement, dataforbrug, "
+                     f"netværk og hvordan du skifter selskab. Nyeste øverst."),
         opdateret=OPDATERET,
         hero=hero_side("Guides", "Guides til mobilabonnement",
                        "Det du skal vide, før du vælger — skrevet i almindeligt dansk.",
-                       "", [("Guides", str(len(GUIDER))), ("Værktøjer", "4"), ("Pris", "gratis")]),
-        efter_hero=logobaand(), krumme=krumme, indhold=krop,
+                       "", [("Guides", str(i_alt_guides)), ("Værktøjer", "4"),
+                            ("Pris", "gratis")]),
+        efter_hero="", krumme=krumme, indhold=krop,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme),
                      {"@type": "ItemList", "name": "Guides til mobilabonnement",
-                      "numberOfItems": len(GUIDER),
+                      "numberOfItems": len(udvalg),
                       "itemListElement": [
                           {"@type": "ListItem", "position": i + 1, "url": DOMAENE + g[0],
-                           "name": g[1]} for i, g in enumerate(GUIDER)]})],
-    ), prioritet="0.7")
+                           "name": g[1]} for i, g in enumerate(udvalg)]})],
+    ), prioritet="0.7" if nu == 1 else "0.4")
 
 
 # --------------------------------------------------------------- STATISKE
