@@ -1498,6 +1498,121 @@ mobilselskaber</a> og beregningen bag i <a href="/telemobil-score/">Telemobil-sc
 
 
 
+def mobil_maalgrupper(udvalg, hvad, *, vis_streaming=True):
+    """Sektioner der rammer de længere søgninger på kategorisiderne.
+
+    Folk søger ikke på "fri data". De søger på "billigste mobilabonnement med
+    fri data", "fri data uden binding" og "fri data til familien". Sektionerne
+    hører hjemme på den side, der i forvejen rangerer på hovedordet, frem for
+    på hver sin tynde underside.
+
+    Ordene billig, billige og billigste bruges i bøjet form i overskrifterne,
+    så de læses naturligt frem for som gentagne søgeord.
+    """
+    if not udvalg:
+        return ""
+    betalte = [a for a in udvalg if a["pris"] > 0 and not a.get("forbrugsafregnet")]
+    if not betalte:
+        return ""
+
+    def mini(liste, maks=4):
+        raekker = ""
+        for i, a in enumerate(sorted(liste, key=lambda x: x["pris"])[:maks], 1):
+            u = UMAP[a["udbyder"]]
+            g = gns12(a)
+            raekker += f"""<tr>
+  <td class="tal">{i}</td>
+  <td><a href="/udbydere/{u['slug']}/"><strong>{e(u['navn'])}</strong></a><br>
+      <span class="tabel-under">{e(a['navn'])} · {gb_tekst(a['data_gb'])}</span></td>
+  <td class="tal">{kr(a['pris'])} kr.</td>
+  <td class="tal">{kr(g) if g is not None else '—'} kr.</td>
+  <td><a class="knap knap-primaer knap-lille" href="{a['link']}"
+        rel="sponsored nofollow noopener" target="_blank"
+        data-udgaaende="{e(u['slug'])}">Se tilbud</a></td>
+</tr>"""
+        return f"""<div class="tabelramme">
+<table class="datatabel">
+  <thead><tr><th scope="col">#</th><th scope="col">Abonnement</th>
+    <th scope="col">Pr. md.</th><th scope="col">Snit 12 mdr.</th>
+    <th scope="col"></th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+    billigst = min(betalte, key=lambda a: a["pris"])
+    ud = ""
+
+    # ---- Billigste ----------------------------------------------------
+    ud += f"""
+<h2 id="billigste">Billigste {e(hvad)}</h2>
+<p>Målt på normalprisen er {e(UMAP[billigst['udbyder']]['navn'])}
+{e(billigst['navn'])} billigst til {kr(billigst['pris'])} kr. om måneden.
+Kolonnen til højre viser gennemsnittet over tolv måneder, hvor intropris og
+oprettelse er regnet med. Det er dét tal, der kan sammenlignes.</p>
+{mini(betalte)}
+<p>Vil du presse prisen længere ned, så kig efter et abonnement uden binding.
+Så kan du skifte igen, når kampagnen udløber, og gentage øvelsen. Det er den
+billigste måde at have mobilabonnement på år efter år.</p>"""
+
+    # ---- Uden binding ---------------------------------------------------
+    fri = [a for a in betalte if not a.get("binding")]
+    if len(fri) >= 2:
+        b = min(fri, key=lambda a: a["pris"])
+        ud += f"""
+<h2 id="uden-binding">{e(hvad.capitalize())} uden binding</h2>
+<p>{len(fri)} af abonnementerne er helt uden bindingsperiode. Det billigste er
+{e(UMAP[b['udbyder']]['navn'])} til {kr(b['pris'])} kr. om måneden.</p>
+{mini(fri)}
+<p>Uden binding betyder ikke, at du kan opsige fra dag til dag. Der er stadig
+et varsel, typisk løbende måned plus 30 dage. Til gengæld er du ikke bundet,
+når en bedre kampagne dukker op. Se
+<a href="/mobilabonnement-uden-binding/">alle abonnementer uden binding</a>.</p>"""
+
+    # ---- Med 5G ---------------------------------------------------------
+    femg = [a for a in betalte if a.get("femg")]
+    if len(femg) >= 2 and len(femg) < len(betalte):
+        b = min(femg, key=lambda a: a["pris"])
+        ud += f"""
+<h2 id="med-5g">Billige abonnementer med 5G</h2>
+<p>{len(femg)} af {len(betalte)} har 5G. Billigst er
+{e(UMAP[b['udbyder']]['navn'])} til {kr(b['pris'])} kr.</p>
+{mini(femg)}
+<p>Til almindelig brug på en telefon mærker de fleste ikke forskellen fra 4G.
+Vi har regnet på, hvad 5G reelt koster ekstra, i guiden
+<a href="/guides/er-5g-pengene-vaerd/">er 5G pengene værd?</a></p>"""
+
+    # ---- Med streaming ---------------------------------------------------
+    if vis_streaming:
+        stream = [a for a in betalte if a.get("streaming")]
+        if len(stream) >= 2:
+            b = min(stream, key=lambda a: a["pris"])
+            ud += f"""
+<h2 id="med-streaming">{e(hvad.capitalize())} og streaming</h2>
+<p>{len(stream)} af abonnementerne har en eller flere streamingtjenester med.
+Billigst er {e(UMAP[b['udbyder']]['navn'])} til {kr(b['pris'])} kr.</p>
+{mini(stream)}
+<p>Regnestykket er det samme hver gang: tjenesten er kun en besparelse, hvis du
+i forvejen betalte for den. Se
+<a href="/mobilabonnement-med-streaming/">alle abonnementer med streaming</a>
+og hvad hver tjeneste koster alene.</p>"""
+
+    # ---- Til familien ----------------------------------------------------
+    familie = [a for a in betalte if a["data_gb"] >= 50]
+    if len(familie) >= 2:
+        b = min(familie, key=lambda a: a["pris"])
+        ud += f"""
+<h2 id="familie">{e(hvad.capitalize())} til familien</h2>
+<p>Skal flere i husstanden have samme abonnement, er det den samlede regning,
+der tæller. Fire abonnementer til 149 kr. er 7.152 kr. om året. Billigste med
+mindst 50 GB er {e(UMAP[b['udbyder']]['navn'])} til {kr(b['pris'])} kr.</p>
+{mini(familie)}
+<p>Nogle selskaber giver rabat på abonnement nummer to og tre. Det står sjældent
+i markedsføringen, så det er værd at spørge om. Se også
+<a href="/mobilabonnement-til-familie/">abonnementer til familien</a>.</p>"""
+
+    return ud
+
+
 def prisstatistik():
     """Gennemsnit, median og laveste normalpris pr. datastørrelse.
 
@@ -2735,7 +2850,7 @@ def byg_billigste():
 
 def byg_fridata():
     sti = "/mobilabonnement-med-fri-data/"
-    titel = med_maaned(f"Mobilabonnement med fri data{fra(D['pris_fri'], ' — fra ')}")
+    titel = med_maaned(f"Billigste mobilabonnement med fri data{fra(D['pris_fri'], ' — fra ')}")
     besk = ("Sammenlign mobilabonnementer med fri data." + fra(D['pris_fri'], " Priser fra ") + " "
             "Se hvad fri data reelt dækker, og om du overhovedet har brug for det.")
     krumme = [("/", "Forside"), (None, "Fri data")]
@@ -2775,7 +2890,9 @@ def byg_fridata():
     '<section class="sektion baand-smal artikel">' + gennemgangslinje(OPDATERET), 1
 ).replace(
     '<h2>Hvad bruger man egentlig data på?</h2>',
-    erfaring('fri_data') + tabel_pr_datamaengde() + '<h2>Hvad bruger man egentlig data på?</h2>', 1
+    erfaring('fri_data')
+    + mobil_maalgrupper([a for a in ABON if a["data_gb"] >= 9999], "mobilabonnement med fri data")
+    + tabel_pr_datamaengde() + '<h2>Hvad bruger man egentlig data på?</h2>', 1
 ).replace('</section>', tabel_prgb_rangliste() + fejllink() + begrebslink() + '</section>', 1)}
 
 <section class="sektion baand-smal">
@@ -2792,7 +2909,7 @@ def byg_fridata():
 
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk,
-        hero=hero_side("Fri data", "Mobilabonnement med fri data",
+        hero=hero_side("Fri data", "Billigste mobilabonnement med fri data",
                        f"Fri data koster fra {D['pris_fri']} kr. om måneden. Her er hvad det dækker, "
                        "hvad det ikke dækker, og hvordan du regner ud, om du overhovedet har brug for det.",
                        '<a href="#sammenlign" class="knap knap-primaer">Se priserne</a>'),
@@ -11035,7 +11152,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         forvalg={"ekstra": ["fritale"]},
         billede="med-fri-tale", spejlvend=False,
         h1="Billigste mobilabonnement med fri tale",
-        titel=med_maaned(f"Mobilabonnement med fri tale{fra(D['pris_fritale'], ' — fra ')}"),
+        titel=med_maaned(f"Billigste mobilabonnement med fri tale{fra(D['pris_fritale'], ' — fra ')}"),
         besk=("Sammenlign mobilabonnementer med fri tale og fri sms."
               + fra(D['pris_fritale'], " Priser fra ")
               + " Se hvad fri tale dækker — og hvad det ikke gør."),
@@ -11044,8 +11161,10 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=fritale, tekstfunktion=sider.fri_tale,
         chips=[("Fra", f"{D['pris_fritale']} kr."), ("Fri tale", "og sms"), ("Uden", "binding")],
         tabeltitel="Abonnementer med fri tale og sms",
-        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_aarsomkostning(), begrebslink(),
-                         fejllink(), vejviser('/mobilabonnement-med-fri-tale/')],
+        ekstra_tabeller=[mobil_maalgrupper(fritale, "mobilabonnement med fri tale"),
+                         tabel_billigst_pr_udbyder(), tabel_aarsomkostning(),
+                         begrebslink(), fejllink(),
+                         vejviser('/mobilabonnement-med-fri-tale/')],
         faq=[
             {"sp": "Hvad koster det billigste mobilabonnement med fri tale?",
              "sv": f"Det billigste abonnement med fri tale i vores sammenligning koster {D['pris_fritale']} kr. om "
