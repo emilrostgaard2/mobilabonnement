@@ -423,22 +423,30 @@ def faqld(sp):
     }
 
 
-def artikelld(sti, titel, beskrivelse, ordtal=None, emne="Mobilabonnement"):
+UDGIVET = {
+    "/guides/mistet-telefon/": "2026-09-27",
+    "/guides/studierabat-mobilabonnement/": "2026-09-27",
+    "/guides/barnets-foerste-mobil/": "2026-09-27",
+}
+
+
+def artikelld(sti, titel, beskrivelse, ordtal=None, emne="Mobilabonnement", billede=None):
     node = {
         "@type": "Article",
         "@id": DOMAENE + sti + "#artikel",
         "headline": titel,
         "description": beskrivelse,
         "inLanguage": "da-DK",
-        "datePublished": site.get("udgivet", ISO),
+        "datePublished": UDGIVET.get(sti, site.get("udgivet", ISO)),
         "dateModified": ISO,
         "author": {"@id": DOMAENE + "/om/emil-rostgaard/#person"},
         "publisher": {"@id": DOMAENE + "/#organisation"},
         "isPartOf": {"@id": DOMAENE + "/#website"},
         "mainEntityOfPage": DOMAENE + sti,
         "image": {"@type": "ImageObject",
-                  "url": DOMAENE + "/assets/img/telemobil-social.png",
-                  "width": 1200, "height": 630},
+                  "url": DOMAENE + (billede[0] if billede else "/assets/img/telemobil-social.png"),
+                  "width": billede[1] if billede else 1200,
+                  "height": billede[2] if billede else 630},
         "isAccessibleForFree": True,
         "articleSection": "Mobilabonnement",
         "inLanguage": "da-DK",
@@ -2354,7 +2362,7 @@ def vejviser(aktuel=""):
         ("/mobilabonnement-uden-binding/", "Uden binding",
          f"{len([a for a in ABON if a['binding'] == 0])} planer"),
         ("/netvaerk/", "Mobilnetværk", "de tre danske net"),
-        ("/mobilabonnementer-black-friday/", "Black Friday", "er tilbuddene ægte?"),
+        ("/mobilabonnementer-black-friday/", f"Black Friday {IDAG.year}", "tilbud regnet efter"),
         # Datastørrelserne hører med her — ellers får de kun links fra footeren
         ("/mobilabonnement-1-10-gb/", "1–10 GB",
          f"{len([a for a in ABON if 1 <= a['data_gb'] <= 10])} planer"),
@@ -5327,13 +5335,17 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
   {afsloering()}
 </section>
 """
+    og = None
+    if billede and os.path.exists(os.path.join(ROD, "assets", "img", "guides", "og",
+                                               f"{billede}.jpg")):
+        og = (f"/assets/img/guides/og/{billede}.jpg", 1200, 630)
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk,
         hero=hero_side(etiket, h1, besk,
                        billede=guidebillede(billede, altbillede or h1, prioritet=True) if billede else None),
-        efter_hero="", krumme=krumme, indhold=krop + faqblok(faq),
+        efter_hero="", krumme=krumme, indhold=krop + faqblok(faq), og_billede=og,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
-                     artikelld(sti, titel, besk),
+                     artikelld(sti, titel, besk, billede=og),
                      howtold(sti, h1, besk, brodtekst))],
     ), prioritet="0.7")
 
@@ -5415,6 +5427,15 @@ GUIDER = [
     ("/guides/flyt-internettet/", "Sådan tager du internettet med, når du flytter",
      "Tidsplan, opsigelsesvarsel og de fejl der koster penge.",
      "flyt-internettet", "Flyttekasser og en router i en tom stue", "Flytning", 7),
+    ("/guides/mistet-telefon/", "Mistet eller stjålet telefon",
+     "Spær simkort og MitID, lås telefonen og anmeld tyveriet — i den rigtige rækkefølge.",
+     "mistet-telefon", "Kvinde på café ringer for at spærre sit simkort", "Hjælp", 7),
+    ("/guides/studierabat-mobilabonnement/", "Studierabat på mobilabonnement",
+     "Betaler studierabatten sig? Vi regner efter med dagens priser og over en hel uddannelse.",
+     "studierabat", "Studerende taler i telefon på campus", "Studerende", 7),
+    ("/guides/barnets-foerste-mobil/", "Barnets første mobil",
+     "Hvornår, hvilken telefon og hvordan du sætter den sikkert op, før barnet får den.",
+     "barnets-foerste-mobil", "Mor og datter kigger på pigens første mobil", "Familie", 7),
     ("/guides/ping-og-svartid/", "Ping og svartid — det tal gamere skal kigge på",
      "Hastighed er ligegyldig til gaming. Svartiden afgør alt.",
      "ping-og-svartid", "Ung mand spiller online spil på computer", "Gaming", 6),
@@ -9817,7 +9838,8 @@ def _byg_guideside(udvalg, nu, i_alt, i_alt_guides):
     sidetekst = "" if nu == 1 else f" — side {nu}"
     return skriv(sti, shell(
         sti=sti,
-        titel=f"Guides til mobilabonnement — data, dækning, eSIM og skifte{sidetekst}",
+        titel=(f"Guides til mobilabonnement — data, dækning, eSIM og skifte" if nu == 1
+               else f"Guides til mobilabonnement — side {nu} af {i_alt}"),
         beskrivelse=("Praktiske guides om dataforbrug, netværk, eSIM og hvordan du skifter "
                      "mobilselskab. Skrevet i almindeligt dansk og opdateret løbende."
                      if nu == 1 else
@@ -11078,6 +11100,1264 @@ def byg_404():
 
 # --------------------------------------------------------------- kør
 
+# ======================================================================
+# Q4 2026 — Black Friday-siden og tre guides
+#
+# Afgrænsning mod hovedsiderne, så de ikke konkurrerer om samme søgning:
+#   /mobilabonnementer-black-friday/      → "black friday mobilabonnement"
+#                                            (kampagner/ ejer "tilbud" året rundt)
+#   /guides/mistet-telefon/               → "mistet/stjålet telefon" (ingen hovedside)
+#   /guides/studierabat-mobilabonnement/  → "studierabat" og SU-regnestykket
+#                                            (/mobilabonnement-til-unge/ ejer
+#                                             "mobilabonnement til studerende")
+#   /guides/barnets-foerste-mobil/        → "barnets første mobil", alder, opsætning
+#                                            (/mobilabonnement-til-boern/ ejer
+#                                             "mobilabonnement til børn")
+# Guiderne linker til hovedsiden med hovedsidens søgeord som ankertekst.
+# ======================================================================
+from datetime import timedelta as _td
+
+KILDER.update({
+    "mitid_spaer": ("MitID — Spær MitID app",
+                    "https://www.mitid.dk/hjaelp/hjaelpeunivers/mitid-app/spaer-mitid-app/",
+                    "Fem måder at spærre appen på, også uden login"),
+    "mitid_misbrug": ("MitID — Mistanke om misbrug",
+                      "https://www.mitid.dk/hjaelp/hjaelpeunivers/mistanke-om-misbrug/",
+                      "Hvornår hele MitID skal spærres frem for kun appen"),
+    "politi_tyveri": ("Politiet — Anmeld tyveri af genstande",
+                      "https://politi.dk/anmeld-kriminalitet/tyveri-og-haervaerk/"
+                      "anmeld-tyveri-af-genstande",
+                      "Online anmeldelse, hvor IMEI-nummeret skal oplyses"),
+    "trivselskommissionen": ("Regeringen — Trivselskommissionens anbefalinger",
+                             "https://regeringen.dk/aktuelt/nyheder/2025/"
+                             "trivselskommissionens-anbefalinger-er-klar/",
+                             "Anbefaling om første smartphone tidligst som 13-årig"),
+    "uvm_mobilfri": ("Børne- og Undervisningsministeriet — aftale om mobilfri skole",
+                     "https://www.uvm.dk/-/media/filer/uvm/aktuelt/pdf25/september/"
+                     "aftale-om-mobilfrie-folkeskoler-og-fritidstilbud-mv.pdf",
+                     "Politisk aftale fra september 2025"),
+    "studiz_eesy": ("Studiz — eesy studierabat",
+                    "https://www.studiz.dk/en/student-discounts/online/eesy",
+                    "Rabatten og kravet om studieverifikation"),
+    "greentel_studie": ("Greentel — studierabat",
+                        "https://www.greentel.dk/hjaelp-og-spoergsmaal/studierabat/",
+                        "Selskabets eget svar: samme pris for alle, ingen studierabat"),
+    "meremobil_bf25": ("MereMobil — Black Friday-tilbud 2025",
+                       "https://meremobil.dk/2025/12/black-friday-mobilabonnement-tilbud-2025/",
+                       "Selskabernes tilbud i Black Week 2025"),
+    "mobilsiden_bf25": ("Mobilsiden — Black Friday-tilbud med fri data",
+                        "https://mobilsiden.dk/nyheder/mobilabonnement-telefoni/"
+                        "black-friday-tilbud-paa-mobilabonnementer-med-fri-data/",
+                        "Fri data-tilbud fra Oister, Flexii og eesy i 2025"),
+    "telebranchen_bf25": ("Telebranchen — Black Friday mobilabonnement",
+                          "https://telebranchen.dk/black-friday-mobilabonnement/",
+                          "Oversigt over Black Week-tilbud 2025"),
+})
+
+
+def _samlet(a, mdr):
+    """Samlet pris over et antal måneder inkl. intropris og oprettelse."""
+    m = min(a.get("intro_mdr") or 0, mdr)
+    ip = a.get("intro_pris")
+    intro = ip * m if (ip is not None and m) else 0
+    return intro + a["pris"] * (mdr - (m if ip is not None else 0)) + a.get("oprettelse", 0)
+
+
+def _abonavn(a):
+    """Abonnementets navn uden selskabsnavnet foran og uden dobbelt datamængde."""
+    u = UMAP[a["udbyder"]]
+    n = " ".join(a["navn"].split())
+    if n.lower().startswith(u["navn"].lower()):
+        n = n[len(u["navn"]):].strip()
+    return n or gb_tekst(a["data_gb"])
+
+
+def _hvem(a):
+    u = UMAP[a["udbyder"]]
+    n = _abonavn(a)
+    gb = gb_tekst(a["data_gb"])
+    detalje = n if n.lower() == gb.lower() else f"{n} · {gb}"
+    tale = "fri tale" if a["tale"] == "fri" else f"{a['tale']} tale"
+    return (f'<a href="/udbydere/{u["slug"]}/"><strong>{e(u["navn"])}</strong></a><br>'
+            f'<span class="tabel-under">{e(detalje)} · {e(tale)}</span>')
+
+
+def _cta(a, tekst="Se tilbud"):
+    u = UMAP[a["udbyder"]]
+    return (f'<a class="knap knap-primaer knap-lille" href="{a["link"]}"'
+            f' rel="sponsored nofollow noopener" target="_blank"'
+            f' data-udgaaende="{e(u["slug"])}" data-abonnement="{e(a["id"])}">{tekst}</a>')
+
+
+def _betalte():
+    return [a for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")]
+
+
+DATAGRUPPER = [
+    ("Op til 10 GB", 1, 10, "/mobilabonnement-1-10-gb/"),
+    ("10–30 GB", 11, 30, "/mobilabonnement-10-30-gb/"),
+    ("30–50 GB", 31, 50, "/mobilabonnement-30-50-gb/"),
+    ("50–99 GB", 51, 99, "/mobilabonnement-50-gb/"),
+    ("100 GB og op", 100, 9998, "/mobilabonnement-100-gb/"),
+    ("Fri data", 9999, 10 ** 9, "/mobilabonnement-med-fri-data/"),
+]
+
+
+def _billigst_i(lav, hoej, mdr=12, kun_fri_tale=False):
+    k = [a for a in _betalte() if lav <= a["data_gb"] <= hoej
+         and (a["tale"] == "fri" or not kun_fri_tale)]
+    return min(k, key=lambda a: _samlet(a, mdr)) if k else None
+
+
+# ------------------------------------------------------------ BLACK FRIDAY
+
+def black_friday(aar):
+    """Dagen efter fjerde torsdag i november."""
+    d = date(aar, 11, 1)
+    foerste_torsdag = d + _td(days=(3 - d.weekday()) % 7)
+    return foerste_torsdag + _td(days=22)
+
+
+def _kort_dato(d):
+    dage = ["mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag", "søndag"]
+    return f"{dage[d.weekday()]} {dansk_dato(d)}"
+
+
+def _bf_kampagner():
+    """Alle abonnementer med intropris, sorteret efter reel besparelse over 12 mdr."""
+    k = [a for a in _betalte() if a.get("intro_pris") is not None and a.get("intro_mdr")
+         and a["intro_pris"] < a["pris"]]
+    k.sort(key=lambda a: (a["pris"] * 12 + a.get("oprettelse", 0)) - _samlet(a, 12),
+           reverse=True)
+    return k
+
+
+def _bf_kampagnetabel(maks=12):
+    liste = _bf_kampagner()[:maks]
+    if not liste:
+        return "", []
+    raekker = ""
+    for i, a in enumerate(liste, 1):
+        spar = a["pris"] * 12 + a.get("oprettelse", 0) - _samlet(a, 12)
+        raekker += f"""<tr>
+  <td class="tal">{i}</td>
+  <td>{_hvem(a)}</td>
+  <td class="tal"><strong>{kr(a['intro_pris'])} kr.</strong><br>
+      <span class="tabel-under">i {a['intro_mdr']} md{'r' if a['intro_mdr'] != 1 else ''}.</span></td>
+  <td class="tal">{kr(a['pris'])} kr.</td>
+  <td class="tal">{kr(gns12(a))} kr.</td>
+  <td class="tal ned">−{kr(spar)} kr.</td>
+  <td class="tal">{'Ingen' if not a['binding'] else f"{a['binding']} mdr."}</td>
+  <td>{_cta(a)}</td>
+</tr>"""
+    tabel = f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Mobilabonnementer med kampagnepris lige nu, sorteret efter hvor meget du reelt
+  sparer over 12 måneder i forhold til normalprisen. Opdateret {OPDATERET}.</caption>
+  <thead><tr><th scope="col">#</th><th scope="col">Abonnement</th>
+    <th scope="col">Kampagnepris</th><th scope="col">Derefter</th>
+    <th scope="col">Snit 12 mdr.</th><th scope="col">Sparet år 1</th>
+    <th scope="col">Binding</th><th scope="col"></th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+    return tabel, liste
+
+
+def _bf_kategoritabel():
+    raekker = ""
+    for navn, lav, hoej, sti in DATAGRUPPER:
+        a = _billigst_i(lav, hoej)
+        if not a:
+            continue
+        raekker += f"""<tr>
+  <td><a href="{sti}"><strong>{e(navn)}</strong></a></td>
+  <td>{_hvem(a)}</td>
+  <td class="tal">{kr(visningspris(a))} kr.</td>
+  <td class="tal"><strong>{kr(gns12(a))} kr.</strong></td>
+  <td class="tal">{kr(_samlet(a, 12))} kr.</td>
+  <td>{_cta(a)}</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Billigste abonnement i hver datastørrelse målt på den samlede pris over et år
+  — intropris og oprettelse er regnet med. Klik på datastørrelsen for hele listen.</caption>
+  <thead><tr><th scope="col">Datamængde</th><th scope="col">Billigst over 12 mdr.</th>
+    <th scope="col">Pris nu</th><th scope="col">Snit pr. md.</th>
+    <th scope="col">Hele året</th><th scope="col"></th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def _bf_selskabsindeks():
+    """Laveste målte normalpris pr. selskab siden målingerne startede.
+
+    Det er grundlaget for at afgøre, om en Black Friday-pris er ægte: ligger
+    kampagneprisen under det laveste, vi har set selskabet tage i normalpris?"""
+    try:
+        with open(os.path.join(ROD, "data", "prishistorik.json"), encoding="utf-8") as f:
+            maal = [m for m in json.load(f).get("maalinger", []) if m.get("pr_udbyder")]
+    except (FileNotFoundError, ValueError):
+        return "", None
+    if len(maal) < 2:
+        return "", None
+    start = maal[0]["dato"]
+    raekker = ""
+    for u in sorted(UDBYDERE_MED_DATA, key=lambda x: x["navn"].lower()):
+        s = u["slug"]
+        serie = [(m["dato"], m["pr_udbyder"][s]["min"]) for m in maal
+                 if s in m["pr_udbyder"] and m["pr_udbyder"][s].get("min")]
+        mine = [a for a in _betalte() if a["udbyder"] == s]
+        if not serie or not mine:
+            continue
+        laveste_dato, laveste = min(serie, key=lambda x: (x[1], x[0]))
+        hoejeste = max(v for _, v in serie)
+        nu = min(visningspris(a) for a in mine)
+        if nu < laveste:
+            dom = '<span class="ned"><strong>Under målt niveau</strong></span>'
+        elif nu == laveste:
+            dom = "På laveste målte niveau"
+        else:
+            dom = "Over laveste målte niveau"
+        raekker += f"""<tr>
+  <td><a href="/udbydere/{s}/"><strong>{e(u['navn'])}</strong></a></td>
+  <td class="tal">{kr(nu)} kr.</td>
+  <td class="tal">{kr(laveste)} kr.<br><span class="tabel-under">
+      <time datetime="{laveste_dato}">{e(dansk_dato(date.fromisoformat(laveste_dato)))}</time></span></td>
+  <td class="tal">{kr(hoejeste)} kr.</td>
+  <td>{dom}</td>
+</tr>"""
+    tabel = f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Billigste abonnement pr. selskab i dag (inkl. intropris) sammenlignet med den
+  laveste og højeste normalpris, vi har målt siden {dansk_dato(date.fromisoformat(start))}. {len(maal)} daglige målinger.</caption>
+  <thead><tr><th scope="col">Selskab</th><th scope="col">Billigst i dag</th>
+    <th scope="col">Laveste målte normalpris</th><th scope="col">Højeste målte</th>
+    <th scope="col">Vurdering</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+    return tabel, (start, len(maal))
+
+
+# Black Week 2025 — offentligt annoncerede tilbud. Kilder i KILDER (bf25).
+# (selskab-slug, abonnement, kampagnepris, kampagnemåneder, normalpris)
+BF2025 = [
+    ("lebara", "70 GB, fri tale", 0, 1, 59),
+    ("duka", "13 GB, fri tale", 65, 12, 65),
+    ("oister", "150 GB, fri tale", 54, 3, 109),
+    ("flexii", "Fri data, fri tale", 114, 12, 134),
+    ("flexii", "Fri data, fri tale (5G)", 0, 1, 149),
+    ("oister", "Fri data, fri tale", 89, 3, 179),
+    ("cbb-mobil", "Fri data, fri tale", 99, 3, 209),
+]
+
+
+def _bf_2025_tabel():
+    rk = []
+    for slug, navn, kp, km, np in BF2025:
+        aar = kp * km + np * (12 - km)
+        rk.append((slug, navn, kp, km, np, aar))
+    raekker = ""
+    for slug, navn, kp, km, np, aar in sorted(rk, key=lambda x: x[5] / 12):
+        u = UMAP.get(slug)
+        nv = (f'<a href="/udbydere/{slug}/"><strong>{e(u["navn"])}</strong></a>'
+              if u else f"<strong>{e(slug)}</strong>")
+        raekker += f"""<tr>
+  <td>{nv}<br><span class="tabel-under">{e(navn)}</span></td>
+  <td class="tal">{kr(kp)} kr. i {km} md{'r' if km != 1 else ''}.</td>
+  <td class="tal">{kr(np)} kr.</td>
+  <td class="tal">{kr(aar)} kr.</td>
+  <td class="tal"><strong>{kr(round(aar / 12))} kr.</strong></td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Udvalgte Black Week-tilbud fra november 2025 omregnet til den reelle pris over
+  12 måneder. Oprettelse er ikke medregnet. Kilder nederst på siden.</caption>
+  <thead><tr><th scope="col">Tilbud 2025</th><th scope="col">Kampagnepris</th>
+    <th scope="col">Derefter</th><th scope="col">Første år i alt</th>
+    <th scope="col">Snit pr. md.</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def _bf_datotabel(aar):
+    bf = black_friday(aar)
+    raekker = [
+        ("Singles Day", date(aar, 11, 11), "De første kampagner. Ofte tilbehør og telefoner."),
+        ("Black Week starter", bf - _td(days=4),
+         "De fleste teleselskaber kører ugen op til — nogle hele november."),
+        ("Black Friday", bf, "Hoveddagen. Enkelte tilbud gælder kun i døgnet."),
+        ("Cyber Monday", bf + _td(days=3),
+         "Sidste chance for de fleste kampagner. Mange udløber ved midnat."),
+    ]
+    rk = "".join(
+        f'<tr><td><strong>{e(n)}</strong></td><td><time datetime="{d.isoformat()}">'
+        f'{e(_kort_dato(d))}</time></td><td>{e(t)}</td></tr>'
+        for n, d, t in raekker)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Datoerne for Black Friday {aar} i Danmark.</caption>
+  <thead><tr><th scope="col">Dag</th><th scope="col">Dato</th>
+    <th scope="col">Hvad sker der</th></tr></thead>
+  <tbody>{rk}</tbody>
+</table>
+</div>"""
+
+
+def byg_black_friday():
+    sti = "/mobilabonnementer-black-friday/"
+    aar = IDAG.year
+    bf = black_friday(aar)
+    cm = bf + _td(days=3)
+    slut = IDAG > cm
+    dage = (bf - IDAG).days
+
+    kamp_tabel, kamp = _bf_kampagnetabel()
+    indeks, indeks_info = _bf_selskabsindeks()
+    betalte = _betalte()
+    fri = [a for a in betalte if a["data_gb"] >= 9999]
+    billigst_fri = min(fri, key=gns12) if fri else None
+    antal_kamp = len(_bf_kampagner())
+
+    if slut:
+        status = (f"Black Friday {aar} er overstået. Næste gang er "
+                  f"{_kort_dato(black_friday(aar + 1))}. Tabellerne herunder viser stadig "
+                  f"de kampagner, der kører lige nu — mange forlænges ind i december.")
+    elif dage > 0:
+        status = (f"Der er {dage} dage til. Tabellerne herunder opdateres to gange i "
+                  f"døgnet, så Black Week-priserne står her, så snart selskaberne "
+                  f"lancerer dem.")
+    else:
+        status = (f"Det er Black Week lige nu. Tabellerne herunder opdateres to gange i "
+                  f"døgnet og viser de aktuelle kampagnepriser regnet om til årspris.")
+
+    titel = f"Black Friday mobilabonnement {aar} — tilbud regnet over 12 mdr."
+    besk = (f"De bedste Black Friday-tilbud på mobilabonnement i {aar}, regnet om til "
+            f"reel pris over 12 måneder og tjekket mod priser, vi har målt dagligt.")
+    h1 = f"Black Friday mobilabonnement {aar}"
+    krumme = [("/", "Forside"), ("/kampagner/", "Kampagner"), (None, "Black Friday")]
+
+    fri_linje = ""
+    if billigst_fri:
+        uf = UMAP[billigst_fri["udbyder"]]
+        fri_linje = (f"<p>Til sammenligning koster den billigste fri data-løsning i vores "
+                     f"sammenligning i dag {kr(gns12(billigst_fri))} kr. om måneden i snit "
+                     f"over et år ({e(uf['navn'])}). Brug det tal som målestok, når "
+                     f"årets Black Friday-tilbud på fri data lander.</p>")
+
+    kamp_blok = (f"""{kamp_tabel}
+<p>Kolonnen <strong>Snit 12 mdr.</strong> er den eneste, der kan sammenlignes på tværs.
+Et tilbud på 0 kr. i én måned og et på 79 kr. i tolv ser vidt forskellige ud på
+forsiden — men det er gennemsnittet, der står på kontoudtoget. Vil du se samtlige
+kampagner med gave, så gå til <a href="/kampagner/">alle aktuelle kampagner på
+mobilabonnementer</a>.</p>""" if kamp_tabel else """<p>Ingen selskaber kører kampagnepris
+i dag. Tabellen fyldes automatisk, når de første Black Week-priser lanceres. Indtil
+da kan du se <a href="/kampagner/">alle aktuelle kampagner</a>.</p>""")
+
+    indeks_blok = ""
+    if indeks:
+        start, n = indeks_info
+        indeks_blok = f"""
+<h2 id="aegte">Er Black Friday-prisen ægte? Vi har målt priserne hver dag</h2>
+<p>Den mest almindelige Black Friday-kritik er, at priserne sættes op i oktober og ned
+igen i november. Det kan du ikke se på selskabernes egne sider. Vi kan, fordi vi har
+registreret alle priser på markedet dagligt — {n} målinger indtil videre.</p>
+<p>Tabellen viser det billigste, hvert selskab tager i dag — inklusive intropris — over
+for den laveste og højeste normalpris, vi har målt. Står der <strong>Under målt
+niveau</strong>, er dagens pris lavere end selskabets laveste normalpris. Er den højeste
+målte pris steget op til november, så vær skeptisk over for rabatten. Om en lav pris er et
+nyt Black Friday-tilbud eller en intropris, der har kørt længe, kan du se med dato i
+prisarkivet.</p>
+{indeks}
+<p>Hver enkelt prisændring kan du se med dato i vores
+<a href="/prisarkiv/">prisarkiv</a>, og den samlede kurve for markedet står på
+<a href="/prisudvikling/">prisudviklingen for mobilabonnementer</a>.</p>"""
+
+    selskaber = [
+        ("oister", "Oister plejer at gå hårdt til den med halv pris i tre måneder på de "
+                   "store dataabonnementer, og har tidligere haft gaver som ure og "
+                   "højttalere med. Normalprisen efter kampagnen er det tal, du skal holde "
+                   "øje med."),
+        ("flexii", "Flexii har kørt to spor: en 0-kroners første måned og en mindre "
+                   "rabat, der gælder et helt år. I 2025 var årsrabatten den billigste af "
+                   "de to over tolv måneder, selvom 0 kr. fik overskrifterne."),
+        ("cbb-mobil", "CBB kalder det Black Days og kombinerer typisk rabat på "
+                      "abonnementet med telefontilbud. Pas på pakker med telefon og "
+                      "binding — regn mindsteprisen ud."),
+        ("eesy", "eesy har haft Black Week-priser på fri data, hvor rabatten gjaldt "
+                 "flere måneder. Kører på TDC NET, så det er et af de billigere veje "
+                 "ind på det net."),
+        ("duka", "Duka har tidligere lanceret særlige Black Week-abonnementer med fast "
+                 "lav pris frem for intropris. Det er den type tilbud, der holder længst."),
+        ("lebara", "Lebara har givet første måned gratis. Da normalprisen i forvejen er "
+                   "lav, betyder én gratis måned relativt meget på årsregningen."),
+        ("telmore", "Telmore har primært brugt Black Week på telefoner til nye og "
+                    "eksisterende kunder frem for rabat på selve abonnementet."),
+    ]
+    selskab_html = ""
+    for slug, tekst in selskaber:
+        u = UMAP.get(slug)
+        if not u:
+            continue
+        selskab_html += (f'<h3>{e(u["navn"])} Black Friday</h3>\n<p>{e(tekst)} Læs '
+                         f'<a href="/udbydere/{slug}/">vores gennemgang af {e(u["navn"])}</a>.</p>\n')
+
+    brod = f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> De bedste Black Friday-tilbud på
+mobilabonnement står i tabellen herunder, regnet om til reel pris over 12 måneder. Black
+Friday {aar} er {e(_kort_dato(bf))}, men teleselskaberne kører typisk kampagner hele
+Black Week og ofte hele november. {e(status)} Lige nu har {antal_kamp} abonnementer en kampagnepris.
+Sammenlign altid på prisen over 12 måneder — ikke på det store tal i
+annoncen.</p></div>
+
+<h2 id="tilbud">De bedste Black Friday-tilbud på mobilabonnement lige nu</h2>
+<p>Her er alle abonnementer med kampagnepris i vores sammenligning, sorteret efter hvor
+mange kroner du reelt sparer det første år. Vi henter priserne direkte fra selskabernes
+datafeeds, så listen skifter automatisk, når Black Week-priserne går i luften.</p>
+{kamp_blok}
+
+<h2>Billigste abonnement i hver størrelse under Black Friday</h2>
+<p>Kampagnetabellen viser rabatterne. Denne viser det, der i sidste ende betyder noget:
+hvilket abonnement er billigst over et helt år i den størrelse, du har brug for — med
+eller uden kampagne.</p>
+{_bf_kategoritabel()}
+<p>Er du i tvivl om størrelsen, så find dit reelle forbrug i
+<a href="/guides/hvor-meget-data/">guiden til dataforbrug</a>, før du bestiller. Den
+dyreste Black Friday-fejl er at købe fri data til et forbrug på 15 GB.</p>
+{indeks_blok}
+
+<h2 id="datoer">Hvornår er Black Friday {aar}?</h2>
+<p>Black Friday er altid fredagen efter den amerikanske Thanksgiving — i {aar}
+{e(_kort_dato(bf))}. For mobilabonnementer er selve dagen mindre vigtig end ugen omkring
+den. De fleste selskaber starter kampagnerne mandag i Black Week, og flere kører
+dem hele november.</p>
+{_bf_datotabel(aar)}
+
+<h2>Sådan så Black Friday 2025 ud — regnet om til årspris</h2>
+<p>Sidste års tilbud viser mønsteret bedre end nogen forklaring. Vi har taget de mest
+omtalte Black Week-tilbud fra 2025 og regnet dem om til, hvad de faktisk kostede det
+første år.</p>
+{_bf_2025_tabel()}
+<p>Læg mærke til de to tilbud fra Flexii. Tilbuddet med 0 kr. første måned fik
+overskrifterne, men det mindre prangende tilbud med rabat hele året var billigst over
+tolv måneder for samme fri data. Og det dyreste fri data-tilbud var det med størst
+procentvis rabat i de første måneder.</p>
+{fri_linje}
+
+<h2>Sådan regner du et Black Friday-tilbud om på et minut</h2>
+<p>Alle tilbud på mobilabonnement er bygget på samme måde: en lav pris i en periode og
+derefter normalprisen. Så der er kun ét regnestykke:</p>
+<div class="formelboks">
+  <code>(kampagnepris × kampagnemåneder) + (normalpris × resterende måneder) + oprettelse</code>
+  <span class="formel-div">÷ 12</span>
+</div>
+<p><strong>Eksempel:</strong> 54 kr. i tre måneder og derefter 109 kr. giver
+(54 × 3) + (109 × 9) = 1.143 kr. det første år — eller 95 kr. om måneden i snit. Det er
+det tal, du sammenligner med andre tilbud og med det, du betaler i dag. Vi har skrevet
+mere om metoden i <a href="/12-maaneders-prisen/">sådan regner vi 12-måneders-prisen</a>.</p>
+
+<div class="tip"><h3>Sæt en påmindelse, samme dag du bestiller</h3>
+<p>Et Black Friday-tilbud uden binding er kun billigt, hvis du reagerer, når
+kampagnen udløber. Sæt en påmindelse i kalenderen en uge før. Så kan du skifte igen til
+næste kampagne eller til <a href="/billigste-mobilabonnement/">det billigste
+mobilabonnement</a> på det tidspunkt — og beholde dit nummer.</p></div>
+
+<h2>Hvilke selskaber har Black Friday-tilbud?</h2>
+<p>Stort set alle lavprisselskaber kører en form for Black Week. Her er, hvad de plejer
+at gøre, baseret på de seneste års kampagner. Årets konkrete priser står i tabellerne
+øverst, så snart de er lanceret.</p>
+{selskab_html}
+
+<h2>Det der reelt bliver billigere på Black Friday</h2>
+<ul class="pilliste">
+  <li><strong>Telefoner.</strong> Her er der ægte lagerrydning, især på sidste års
+  topmodeller. Køb helst telefonen kontant og abonnementet for sig — se
+  <a href="/guides/koeb-mobiltelefon/">guiden til køb af mobiltelefon</a>.</li>
+  <li><strong>Oprettelsesgebyrer.</strong> Flere selskaber dropper oprettelse i
+  kampagneperioden. Det er reelle penge, men sjældent mere end et par hundrede kroner.</li>
+  <li><strong>Bredbånd.</strong> Flere selskaber kører også Black Week på internet
+  derhjemme, typisk som lav pris de første måneder. Samme regnestykke gælder — se
+  <a href="/bredbaand/">bredbånd sammenlignet på årspris</a>.</li>
+  <li><strong>Gaver.</strong> Høretelefoner, ure og tablets med i købet. Regn
+  mindsteprisen ud, og sammenlign med at købe produktet selv. Vores
+  <a href="/kampagner/">kampagneoversigt</a> gør det for dig.</li>
+</ul>
+
+<h2>Pas på binding og telefonpakker</h2>
+<p>Den dyreste fejl på Black Friday er en telefon med abonnement og 6 måneders binding,
+hvor den samlede mindstepris ikke fremgår tydeligt. Læg månedsprisen sammen over hele
+bindingsperioden, og læg udbetalingen til. Er tallet højere end telefonens normalpris
+plus et billigt abonnement, er det ikke et tilbud. Se
+<a href="/mobilabonnement-med-telefon/">mobilabonnement med telefon</a> for
+regnestykket, eller vælg et <a href="/mobilabonnement-uden-binding/">mobilabonnement
+uden binding</a>, så du kan skifte, når kampagnen slutter.</p>
+
+<h2>Tjekliste før du slår til</h2>
+<ol class="nummerliste">
+  <li><strong>Find dit dataforbrug.</strong> Det står i telefonens indstillinger under
+  mobildata. Tag gennemsnittet af de sidste tre måneder.</li>
+  <li><strong>Notér hvad du betaler i dag.</strong> Uden det tal kan du ikke vurdere,
+  om et tilbud er godt.</li>
+  <li><strong>Regn årsprisen ud.</strong> Brug formlen ovenfor eller kolonnen
+  Snit 12 mdr. i vores tabeller.</li>
+  <li><strong>Tjek dækningen.</strong> Et billigt abonnement på et net, der er svagt
+  hvor du bor, er dyrt. Se <a href="/netvaerk/">de tre danske mobilnet</a>.</li>
+  <li><strong>Bestil med nummerflytning.</strong> Den nye udbyder opsiger det gamle
+  abonnement for dig. Se <a href="/guides/skift-mobilselskab/">sådan skifter du
+  mobilselskab</a>.</li>
+</ol>
+
+{kilder(["meremobil_bf25", "mobilsiden_bf25", "telebranchen_bf25"],
+        [f"Daglige prismålinger fra selskabernes datafeeds via Adtraction, senest {OPDATERET}."])}
+</section>
+<section class="sektion baand-smal">
+  {laesvidere([("/kampagner/", "Alle kampagner på mobilabonnementer"),
+               ("/billigste-mobilabonnement/", "Billigste mobilabonnement lige nu"),
+               ("/mobilabonnement-med-fri-data/", "Mobilabonnement med fri data"),
+               ("/prisarkiv/", "Prisarkivet — hver målt prisændring")])}
+  {forfatterboks()}
+  {afsloering()}
+</section>"""
+
+    faq = [
+        {"sp": f"Hvornår er Black Friday {aar}?",
+         "sv": f"Black Friday {aar} er {_kort_dato(bf)}. Black Week løber typisk fra "
+               f"mandag {dansk_dato(bf - _td(days=4))} til Cyber Monday "
+               f"{dansk_dato(cm)}, og flere teleselskaber kører tilbud hele november."},
+        {"sp": "Er Black Friday et godt tidspunkt at købe mobilabonnement?",
+         "sv": "Det kan være, men ikke automatisk. Tilbuddene er næsten altid en intropris i "
+               "nogle måneder efterfulgt af normalprisen. Regn prisen ud over 12 måneder og "
+               "sammenlign med markedets billigste — så kan du se, om tilbuddet er ægte."},
+        {"sp": "Hvilke selskaber har Black Friday-tilbud på mobilabonnement?",
+         "sv": "Oister, Flexii, CBB, eesy, Duka, Lebara og Telmore har alle haft Black "
+               "Week-kampagner de seneste år. Vores tabel opdateres to gange i døgnet med "
+               "de aktuelle kampagnepriser."},
+        {"sp": "Kan eksisterende kunder få Black Friday-tilbuddet?",
+         "sv": "Som regel ikke — kampagnerne er oftest for nye kunder. Har du et abonnement "
+               "uden binding, kan du skifte selskab og tage tilbuddet med dit nuværende "
+               "nummer. Nummerflytning er gratis."},
+        {"sp": "Hvad er forskellen på Black Friday og Black Week?",
+         "sv": "Black Friday er én dag — fredagen efter Thanksgiving. Black Week er ugen "
+               "omkring den, fra mandag til Cyber Monday. Teleselskaberne kører oftest "
+               "kampagnerne hele Black Week, så du behøver ikke vente til fredag."},
+        {"sp": "Skal jeg vælge et Black Friday-tilbud med binding?",
+         "sv": "Kun hvis den samlede mindstepris over hele bindingsperioden er lavere end "
+               "alternativet. Uden binding kan du skifte igen, når kampagnen udløber, og "
+               "det er som regel den billigste løsning på sigt."},
+    ]
+
+    hero = hero_side("Black Friday", h1, besk,
+                     '<a href="#tilbud" class="knap knap-primaer">Se tilbuddene</a>')
+    return skriv(sti, shell(
+        sti=sti, titel=titel, beskrivelse=besk, hero=hero, efter_hero=logobaand(),
+        krumme=krumme, indhold=brod + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     artikelld(sti, titel, besk, emne="Black Friday mobilabonnement"),
+                     listeld(kamp or sorted(betalte, key=gns12),
+                             f"Black Friday-tilbud på mobilabonnement {aar}"))],
+    ), prioritet="0.9", hyppighed="daily")
+
+
+# ------------------------------------------------------------ MISTET TELEFON
+
+def tabel_mistet_spaerring():
+    rk = [
+        ("Find og lås telefonen", "Find (iPhone) eller Find Hub (Android) fra en anden "
+         "enhed", "Straks", "Låser skærmen og viser dit nummer. På iPhone sættes "
+         "Apple Pay samtidig på pause."),
+        ("Spær simkortet", "Dit teleselskab — app, Mit side eller telefon",
+         "Inden for en time", "Et simkort i fremmede hænder modtager dine sms'er, også "
+         "koder fra bank og MitID."),
+        ("Spær MitID-appen", "mitid.dk (også uden login) eller MitID Support",
+         "Inden for en time", "Så længe appen ikke er spærret, står den som aktiv."),
+        ("Spær betalingskort", "Din banks app eller bankens spærreservice",
+         "Samme dag", "Kun nødvendigt, hvis kortet lå i coveret, eller du har mistanke "
+         "om misbrug."),
+        ("Skift adgangskoder", "Mail, Apple-ID eller Google-konto og sociale medier",
+         "Samme dag", "Mailen er nøglen til alt andet — den kan nulstille resten."),
+        ("Anmeld til politiet", "politi.dk — anmeld tyveri af genstande",
+         "Inden for et døgn", "Kræves af forsikringen. Hav IMEI-nummeret klar."),
+    ]
+    raekker = "".join(
+        f'<tr><td><strong>{e(a)}</strong></td><td>{e(b)}</td><td>{e(c)}</td>'
+        f'<td>{e(d)}</td></tr>' for a, b, c, d in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Hvad der skal spærres, hvor du gør det, og hvor hurtigt det haster.</caption>
+  <thead><tr><th scope="col">Hvad</th><th scope="col">Hvor</th>
+    <th scope="col">Hvornår</th><th scope="col">Hvorfor</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def tabel_mistet_udbydere():
+    raekker = ""
+    for u in sorted(UDBYDERE_MED_DATA, key=lambda x: x["navn"].lower()):
+        mine = [a for a in _betalte() if a["udbyder"] == u["slug"]]
+        if not mine:
+            continue
+        esim = [a for a in mine if a.get("esim")]
+        uden = [a for a in mine if not a["binding"]]
+        billigst = min(uden or mine, key=visningspris)
+        raekker += f"""<tr>
+  <td><a href="/udbydere/{u['slug']}/"><strong>{e(u['navn'])}</strong></a></td>
+  <td>{netlabel(u)}</td>
+  <td>{'Ja' if esim else 'Ikke oplyst'}</td>
+  <td class="tal">{kr(visningspris(billigst))} kr.</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Selskaberne i vores sammenligning. Med eSIM kan du typisk have dit nummer
+  aktivt igen samme dag, fordi der ikke skal sendes et kort med posten.</caption>
+  <thead><tr><th scope="col">Selskab</th><th scope="col">Net</th>
+    <th scope="col">eSIM</th><th scope="col">Billigst uden binding</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def tabel_mistet_forsikring():
+    rk = [
+        ("Stjålet ved indbrud i din bolig", "Typisk ja", "Politianmeldelse, kvittering"),
+        ("Røveri eller overfald", "Typisk ja", "Politianmeldelse"),
+        ("Stjålet fra lomme, taske eller bord ude", "Ofte med loft eller som tilvalg",
+         "Politianmeldelse, beskrivelse af hændelsen"),
+        ("Glemt eller tabt", "Typisk nej", "Kræver særskilt elektronik- eller "
+         "mobilforsikring"),
+        ("Knust skærm eller vandskade", "Nej uden tilvalg", "Tilvalget pludselig skade "
+         "eller elektronikforsikring"),
+    ]
+    raekker = "".join(f'<tr><td><strong>{e(a)}</strong></td><td>{e(b)}</td>'
+                      f'<td>{e(c)}</td></tr>' for a, b, c in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Hvad en almindelig indboforsikring typisk dækker. Vilkårene varierer mellem
+  selskaber — tjek altid din egen police.</caption>
+  <thead><tr><th scope="col">Situation</th><th scope="col">Dækket af indbo?</th>
+    <th scope="col">Det skal du bruge</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def byg_mistet_telefon():
+    sti = "/guides/mistet-telefon/"
+    esim_selskaber = len({a["udbyder"] for a in _betalte() if a.get("esim")})
+    brod = f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> Har du mistet din telefon eller
+fået den stjålet, så lås den via Find eller Find Hub, spær simkortet hos dit teleselskab, og spær MitID-appen på mitid.dk eller på
+telefon 33 98 00 10. Det tager et kvarter og lukker de vigtigste døre. Anmeld derefter
+tyveriet til politiet med telefonens IMEI-nummer, hvis du vil have forsikringen til at
+dække. Dit nummer mister du ikke — du får et nyt simkort med samme nummer.</p></div>
+
+<p>Det er et af de øjeblikke, hvor rækkefølgen betyder mere end noget andet. En
+telefon i dag er ikke bare en telefon. Den er nøglen til din bank, dit MitID og din
+mail, og det er de adgange, der skal lukkes først — ikke selve telefonen.</p>
+
+<h2 id="foerste-kvarter">Mistet telefon: det første kvarter trin for trin</h2>
+<ol class="nummerliste">
+  <li><strong>Lås og find telefonen.</strong> Log ind fra en computer eller en andens
+  telefon. Har du iPhone, bruger du Find på icloud.com og vælger Markér som mistet. Har du
+  Android, bruger du Googles Find Hub, og har du Samsung, kan du også bruge SmartThings
+  Find. Telefonen låses, Apple Pay sættes på pause, og du
+  kan skrive et nummer på skærmen, så en ærlig finder kan ringe.</li>
+  <li><strong>Spær simkortet.</strong> Ring til dit teleselskab, eller brug deres app
+  eller Mit side fra en anden enhed. Spær simkortet — ikke nummeret. Så kan du bagefter
+  få et nyt kort med samme nummer.</li>
+  <li><strong>Spær MitID-appen.</strong> Det kan gøres på mitid.dk uden at logge ind,
+  eller ved at ringe til MitID Support på 33 98 00 10. Det er ikke nok at slette appen
+  eksternt — den tæller som aktiv, indtil den er spærret.</li>
+  <li><strong>Skift adgangskode til din mail.</strong> Mailen kan nulstille næsten alle
+  andre konti. Skift derefter koden til Apple-ID eller Google-konto og de sociale medier,
+  du er logget ind på i telefonen.</li>
+  <li><strong>Anmeld tyveriet.</strong> På politi.dk under anmeld tyveri af genstande.
+  Du skal bruge IMEI-nummeret. Gem journalnummeret til forsikringen.</li>
+</ol>
+
+<div class="advarsel"><p><strong>Lå MitID-appen på den stjålne telefon?</strong> Så kan
+du ikke logge ind med app. Brug din kodeviser, en MitID-app på en tablet, spærringen
+uden login på mitid.dk eller ring til MitID Support. Har du mistanke om, at nogen har
+brugt dit MitID, skal du spærre hele dit MitID midlertidigt — ikke kun appen.</p></div>
+
+<h2>Overblik: hvad skal spærres, og hvor</h2>
+{tabel_mistet_spaerring()}
+
+<h2>Mistet eller stjålet? Det ændrer rækkefølgen lidt</h2>
+<h3>Hvis du tror, den bare er væk</h3>
+<p>Ring til dit eget nummer fra en anden telefon, og tjek Find eller Find Hub. Viser
+kortet en adresse, du lige har været på, så ring dertil. Lås den alligevel med det samme
+— en låst telefon kan altid låses op igen, når du har den.</p>
+<p>Vent med at slette telefonen. Når den er slettet, kan den på ældre modeller ikke længere
+spores, og du mister muligheden for at finde den.</p>
+<h3>Tjek hittegods</h3>
+<p>Mange telefoner bliver afleveret. Hver politikreds har et hittegodskontor, hvor du kan
+efterlyse telefonen — typisk på mail med en beskrivelse og IMEI-nummeret. Har du mistet den
+i bus, tog, taxa eller i en lufthavn, så kontakt også transportselskabets eget hittegods,
+for der havner den ofte først.</p>
+<h3>Hvis den er stjålet</h3>
+<p>Gå direkte til spærringerne, og forsøg ikke selv at hente telefonen, hvis kortet viser
+en adresse. Giv i stedet adressen videre til politiet i anmeldelsen. Er det ikke akut,
+kan du ringe til politiet på 114.</p>
+<h3>Hvis det sker i udlandet</h3>
+<p>Spærringerne er de samme og kan alle klares online. Anmeld tyveriet til det lokale
+politi og få en skriftlig kvittering — forsikringen kræver den. Har du rejseforsikring, så
+tjek den også, da den kan dække, hvor indboforsikringen ikke gør.</p>
+
+<h2>Sådan finder du IMEI-nummeret, når telefonen er væk</h2>
+<p>IMEI er telefonens 15-cifrede serienummer, og politiet beder om det i anmeldelsen. Det
+står flere steder:</p>
+<ul class="pilliste">
+  <li><strong>På æsken</strong> på et klistermærke ved stregkoden.</li>
+  <li><strong>På kvitteringen</strong> eller fakturaen, hvis du har købt telefonen hos et
+  teleselskab eller en større forhandler.</li>
+  <li><strong>I din Apple- eller Google-konto</strong> under enheder, hvor telefonen står
+  med model og serienummer.</li>
+  <li><strong>Hos dit teleselskab</strong>, som ofte kan se, hvilken enhed simkortet sidst
+  var i.</li>
+</ul>
+<p>Får du en ny telefon, så tast <code>*#06#</code> på den med det samme og gem nummeret et
+sikkert sted. Det tager ti sekunder og sparer dig for besvær næste gang.</p>
+
+<h2>Få dit nummer tilbage samme dag</h2>
+<p>Dit nummer følger ikke simkortet, men abonnementet. Når kortet er spærret, bestiller du
+et nyt hos dit selskab, og det nye kort får det gamle nummer. Med fysisk simkort tager det
+typisk et par dage med posten. Med eSIM får du en QR-kode på mail og kan være i gang
+samme dag, så snart du har en telefon.</p>
+<p>{esim_selskaber} af selskaberne i vores sammenligning tilbyder eSIM. Se hvordan det
+virker i <a href="/guides/esim/">vores guide til eSIM</a>, eller find
+<a href="/mobilabonnement-med-esim/">mobilabonnementer med eSIM</a>, hvis du alligevel
+overvejer at skifte.</p>
+{tabel_mistet_udbydere()}
+<p>Klik på selskabet for at se vores gennemgang med kundeservice og vilkår. Er
+simkortet låst efter forkerte forsøg på en lånt telefon, så se
+<a href="/pin-og-puk-kode/">hvordan du finder din PIN- og PUK-kode</a>.</p>
+
+<h2>Skal du blive ved med at betale abonnementet?</h2>
+<p>Ja. Abonnementet løber videre, selvom telefonen er væk, og du skal bruge det igen til
+den nye telefon. Men situationen er en god anledning til at tjekke, om du betaler for
+meget.</p>
+<ul class="pilliste">
+  <li><strong>Uden binding</strong> kan du skifte selskab med det samme og tage nummeret
+  med. Den nye udbyder sender et nyt simkort eller eSIM, og det gamle opsiges automatisk.
+  Se <a href="/mobilabonnement-uden-binding/">mobilabonnementer uden binding</a>.</li>
+  <li><strong>Med binding</strong> skal du betale perioden ud, også hvis telefonen er
+  stjålet.</li>
+  <li><strong>Købte du telefonen på afbetaling</strong> sammen med abonnementet, skylder du
+  stadig restbeløbet. Forsikringen kan dække telefonen, men afdragene til teleselskabet
+  løber videre. Se hvordan pakkerne er skruet sammen under
+  <a href="/mobilabonnement-med-telefon/">mobilabonnement med telefon</a>.</li>
+</ul>
+
+<h2>Hvad dækker forsikringen?</h2>
+<p>De fleste har mobilen dækket gennem indboforsikringen, men kun i bestemte situationer.
+Den afgørende forskel er, om telefonen er stjålet eller bare er væk.</p>
+{tabel_mistet_forsikring()}
+<p>Forsikringen kræver næsten altid en politianmeldelse, før den udbetaler, og
+erstatningen afhænger af telefonens alder og din selvrisiko. Er telefonen et par år
+gammel, kan selvrisikoen være tæt på det, du får udbetalt.</p>
+
+<h2>Ny telefon: køb den kontant</h2>
+<p>Det er fristende at tage den første telefon med abonnement, du ser. Men en telefonpakke
+med binding er et lån, og du binder dig i en situation, hvor du har travlt. Køb hellere en
+telefon kontant — gerne renoveret — og behold dit nuværende abonnement. Se
+<a href="/guides/koeb-mobiltelefon/">guiden til køb af mobiltelefon</a> for, hvad du skal
+tjekke ved brugt køb.</p>
+
+<h2>Gør det her i dag, så er du klar næste gang</h2>
+<ol class="nummerliste">
+  <li><strong>Skriv IMEI-nummeret ned.</strong> Tast <code>*#06#</code>.</li>
+  <li><strong>Få MitID i reserve.</strong> En kodeviser eller MitID-app på en tablet gør,
+  at du kan logge ind, selvom telefonen er væk.</li>
+  <li><strong>Slå Find til.</strong> Og på iPhone også Beskyttelse af stjålen enhed.</li>
+  <li><strong>Skift standard-PIN på simkortet.</strong> Så kan en tyv ikke bare sætte
+  kortet i en anden telefon.</li>
+  <li><strong>Gem dit teleselskabs kundeservicenummer</strong> et sted, der ikke kun er
+  i telefonen.</li>
+</ol>
+
+{kilder(["mitid_spaer", "mitid_misbrug", "politi_tyveri"],
+        ["Oplysninger om eSIM og binding hentet fra selskabernes datafeeds og opdateret "
+         "to gange i døgnet."])}
+</section>"""
+
+    faq = [
+        {"sp": "Hvad skal jeg gøre først, hvis min telefon er stjålet?",
+         "sv": "Lås telefonen via Find (iPhone) eller Find Hub (Android), spær simkortet hos "
+               "dit teleselskab og spær MitID-appen på mitid.dk eller på 33 98 00 10. "
+               "Skift derefter koden til din mail, og anmeld tyveriet til politiet."},
+        {"sp": "Mister jeg mit nummer, hvis jeg spærrer simkortet?",
+         "sv": "Nej. Nummeret hører til abonnementet, ikke til kortet. Du får et nyt "
+               "simkort eller eSIM med samme nummer."},
+        {"sp": "Hvordan spærrer jeg MitID, når telefonen er væk?",
+         "sv": "Du kan spærre MitID-appen på mitid.dk uden at logge ind, ringe til MitID "
+               "Support på 33 98 00 10 eller møde op i Borgerservice. Har du mistanke om "
+               "misbrug, bør du spærre hele dit MitID midlertidigt."},
+        {"sp": "Hvor finder jeg IMEI-nummeret, hvis telefonen er væk?",
+         "sv": "På æsken, på kvitteringen eller under enheder i din Apple- eller "
+               "Google-konto. Dit teleselskab kan ofte også se det."},
+        {"sp": "Dækker indboforsikringen en stjålet telefon?",
+         "sv": "Typisk ved indbrud og røveri. Tyveri uden for hjemmet er ofte dækket med "
+               "loft eller som tilvalg, mens en glemt eller tabt telefon typisk ikke er "
+               "dækket. Forsikringen kræver som regel en politianmeldelse."},
+        {"sp": "Skal jeg blive ved med at betale mit abonnement?",
+         "sv": "Ja, abonnementet løber videre. Er det uden binding, kan du dog skifte "
+               "selskab med det samme og tage nummeret med."},
+    ]
+    byg_guide(
+        sti, "Mistet telefon", "Mistet eller stjålet telefon",
+        "Mistet eller stjålet telefon? Sådan spærrer du det hele",
+        "Telefonen er væk? Spær simkort og MitID, lås telefonen og anmeld tyveriet — "
+        "i den rigtige rækkefølge. Plus hvad forsikringen dækker.",
+        brod, faq,
+        [("/guides/esim/", "eSIM forklaret — nyt nummer samme dag"),
+         ("/mobilabonnement-uden-binding/", "Mobilabonnement uden binding"),
+         ("/pin-og-puk-kode/", "PIN- og PUK-kode"),
+         ("/guides/koeb-mobiltelefon/", "Køb mobiltelefon — ny eller brugt")],
+        billede="mistet-telefon",
+        altbillede="Bekymret kvinde på café ringer for at spærre sit simkort efter at "
+                   "have mistet sin telefon")
+
+
+# ------------------------------------------------------------ STUDIERABAT
+
+def tabel_studie_uddannelse():
+    raekker = ""
+    for navn, lav, hoej, sti in DATAGRUPPER:
+        a = _billigst_i(lav, hoej, mdr=36, kun_fri_tale=True)
+        if not a:
+            continue
+        raekker += f"""<tr>
+  <td><a href="{sti}"><strong>{e(navn)}</strong></a></td>
+  <td>{_hvem(a)}</td>
+  <td class="tal">{kr(_samlet(a, 12))} kr.</td>
+  <td class="tal"><strong>{kr(_samlet(a, 36))} kr.</strong></td>
+  <td class="tal">{kr(_samlet(a, 60))} kr.</td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Billigste abonnement med fri tale i hver størrelse, regnet over en hel
+  uddannelse. Intropris og oprettelse er medregnet én gang; resten er normalpris.</caption>
+  <thead><tr><th scope="col">Datamængde</th><th scope="col">Billigst</th>
+    <th scope="col">1 år</th><th scope="col">Bachelor (3 år)</th>
+    <th scope="col">Bachelor + kandidat (5 år)</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def tabel_studierabat(rabat=0.20, slug="eesy"):
+    mine = sorted([a for a in _betalte() if a["udbyder"] == slug],
+                  key=lambda a: a["data_gb"])
+    if not mine:
+        return ""
+    andre = [a for a in _betalte() if a["udbyder"] != slug]
+    raekker = ""
+    for a in mine:
+        rp = round(a["pris"] * (1 - rabat))
+        alt = [b for b in andre if b["data_gb"] >= a["data_gb"]
+               and (b["tale"] == "fri" or a["tale"] != "fri")]
+        if not alt:
+            continue
+        b = min(alt, key=lambda x: x["pris"])
+        forskel = (rp - b["pris"]) * 12
+        dom = (f'<span class="ned">{e(UMAP[slug]["navn"])} er {kr(-forskel)} kr. billigere</span>'
+               if forskel < 0 else
+               f"Alternativet er {kr(forskel)} kr. billigere" if forskel > 0 else "Lige dyre")
+        raekker += f"""<tr>
+  <td><strong>{e(UMAP[slug]['navn'])} {e(_abonavn(a))}</strong><br>
+      <span class="tabel-under">{'fri tale' if a['tale'] == 'fri' else e(a['tale']) + ' tale'}</span></td>
+  <td class="tal">{kr(a['pris'])} kr.</td>
+  <td class="tal"><strong>{kr(rp)} kr.</strong></td>
+  <td>{_hvem(b)}<br><span class="tabel-under">{kr(b['pris'])} kr./md. uden rabat</span></td>
+  <td>{dom} pr. år</td>
+</tr>"""
+    if not raekker:
+        return ""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>{e(UMAP[slug]['navn'])} med {round(rabat * 100)} % studierabat af normalprisen
+  over for det billigste abonnement med mindst samme data og tale — uden rabat.
+  Opdateret {OPDATERET}.</caption>
+  <thead><tr><th scope="col">Abonnement</th><th scope="col">Normalpris</th>
+    <th scope="col">Med studierabat</th><th scope="col">Billigste alternativ</th>
+    <th scope="col">Forskel</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def byg_studierabat():
+    sti = "/guides/studierabat-mobilabonnement/"
+    b30 = _billigst_i(11, 50, kun_fri_tale=True)
+    tal = ""
+    if b30:
+        tal = (f" Det billigste abonnement med fri tale og 10–50 GB koster i dag "
+               f"{kr(gns12(b30))} kr. om måneden i snit over et år — uden rabat.")
+    eesy_tabel = tabel_studierabat()
+    brod = f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> Studierabat på mobilabonnement
+findes, men den er sjældent den billigste løsning. Rabatten gives typisk af selskaber med høje
+normalpriser, og efter rabatten er lavprisselskaberne ofte stadig billigere.{e(tal)}
+Regn efter, før du uploader dit studiekort.</p></div>
+
+<p>Som studerende er mobilen en fast udgift, der følger dig hele uddannelsen. Og netop
+derfor er det værd at regne på den én gang ordentligt: over en bachelor på tre år kan
+forskellen på det rigtige og det forkerte valg løbe op i flere tusinde kroner — uden at
+du får mindre data.</p>
+
+<h2>Hvilke selskaber giver studierabat?</h2>
+<p>Studierabat på mobilabonnement gives ikke direkte af selskaberne, men gennem
+rabatplatforme som Studiz og Student Beans, hvor du bekræfter din studiestatus med
+studiekort eller skolemail. Rabatterne kommer og går, så tjek platformen samme dag, du
+bestiller.</p>
+<ul class="pilliste">
+  <li><strong>eesy</strong> annoncerer 20 % studierabat via Studiz. eesy kører på TDC NET,
+  så det er en af de billigere veje ind på det net — men normalprisen er høj.</li>
+  <li><strong>Greentel</strong> skriver selv, at de ikke giver studierabat, men har samme
+  faste pris for alle uden prisstigninger.</li>
+  <li><strong>Andre selskaber</strong> dukker jævnligt op på Studiz og Student Beans med
+  tidsbegrænsede rabatter. Vi regner kun på de rabatter, vi har kunnet bekræfte hos kilden,
+  men metoden i tabellen herunder virker på dem alle: træk rabatten fra normalprisen, og
+  sammenlign med markedets billigste.</li>
+  <li><strong>Øvrige lavprisselskaber</strong> har typisk ingen formel studierabat. De
+  konkurrerer i stedet på normalprisen, som ofte er lavere end andres pris med rabat.</li>
+</ul>
+
+<h2>Betaler studierabatten sig? Vi har regnet efter</h2>
+<p>Tabellen tager hvert eesy-abonnement med 20 % studierabat og stiller det op mod det
+billigste abonnement på markedet med mindst samme mængde data og tale — uden nogen
+rabat. Priserne opdateres to gange i døgnet.</p>
+{eesy_tabel}
+<p>Vi har regnet rabatten af normalprisen. Tjek på Studiz, om den også gælder oveni en
+eventuel intropris, og om den kræver, at du genbekræfter din studiestatus hvert år.
+Rabatten bortfalder typisk, når du ikke længere er studerende.</p>
+
+<h2>Hvad koster mobilen over hele uddannelsen?</h2>
+<p>Den mest oversete regning er den lange. En intropris gælder et par måneder — en
+uddannelse varer tre til fem år. Derfor har vi regnet det billigste abonnement med fri
+tale i hver størrelse ud over en bachelor og over en hel kandidat.</p>
+{tabel_studie_uddannelse()}
+<p>Tallene forudsætter, at du bliver hos samme selskab hele vejen. Skifter du, når
+introprisen udløber, kan du presse prisen yderligere — og det er let, når abonnementet
+er uden binding. Den løbende liste over de billigste står under
+<a href="/mobilabonnement-til-unge/">mobilabonnement til studerende og unge</a>.</p>
+
+<h2>Hvor meget data har du brug for som studerende?</h2>
+<p>Mindre end de fleste tror, hvis du bruger campus-wifi. De fleste videregående
+uddannelsessteder har eduroam, som også virker på andre uddannelsessteder og mange
+biblioteker i hele verden. Log på én gang, så kører telefonen på wi-fi resten af
+uddannelsen.</p>
+<ul class="pilliste">
+  <li><strong>10–30 GB</strong> rækker til de fleste, der har wi-fi på kollegiet og på
+  studiet og streamer musik og sociale medier på farten.</li>
+  <li><strong>50–100 GB</strong> hvis du pendler langt og ser video i toget.</li>
+  <li><strong>Fri data</strong> giver kun mening, hvis mobilen også er dit internet
+  derhjemme. Se <a href="/guides/mobilabonnement-eller-bredbaand/">mobilabonnement eller
+  bredbånd</a>.</li>
+</ul>
+<p>Find dit faktiske forbrug i <a href="/guides/hvor-meget-data/">guiden til
+dataforbrug</a>. De fleste studerende kan gå en størrelse ned og spare 20–40 kr. om
+måneden.</p>
+
+<h2>Mobil som studerende — fem ting, der sparer mere end rabatten</h2>
+<ol class="nummerliste">
+  <li><strong>Vælg uden binding.</strong> Så kan du følge med, når priserne falder, og
+  skifte, når en intropris udløber. Se <a href="/mobilabonnement-uden-binding/">
+  mobilabonnementer uden binding</a>.</li>
+  <li><strong>Del et stort abonnement.</strong> Flere selskaber tilbyder datadeling eller
+  ekstra simkort, hvor I bor flere sammen.</li>
+  <li><strong>Brug hotspot i stedet for mobilt bredbånd.</strong> Har du stort
+  abonnement, kan det dække computeren til eksamen på en café.</li>
+  <li><strong>Tjek dækningen, hvor du bor.</strong> Kollegier i betonbyggeri kan have svag
+  indendørsdækning. Wi-fi-opkald løser det gratis. Se <a href="/netvaerk/">de tre danske
+  mobilnet</a>.</li>
+  <li><strong>Drop streamingpakken, hvis du alligevel har studierabat på Spotify.</strong>
+  Mange musiktjenester har egen studiepris, som ofte er billigere end at få den med i
+  abonnementet.</li>
+</ol>
+
+<h2>Udveksling og semester i udlandet</h2>
+<p>I EU virker dit danske abonnement som hjemme, men reglerne om rimeligt forbrug gør, at
+selskabet kan opkræve tillæg, hvis du over en periode på fire måneder bruger telefonen
+mere i udlandet end i Danmark. Skal du på et helt semester, så overvej et lokalt
+simkort eller eSIM som supplement, og behold dit danske nummer til MitID og bank. Uden
+for EU er det altid dyrt uden en lokal løsning. Se
+<a href="/guides/mobilabonnement-i-udlandet/">mobilabonnement i udlandet</a>.</p>
+
+<h2>International studerende i Danmark?</h2>
+<p>De fleste abonnementer kræver CPR-nummer og en kreditvurdering. Venter du på dit
+CPR-nummer, er et taletidskort den hurtige vej til et dansk nummer — du betaler forud og
+kan flytte nummeret til et abonnement senere. Se <a href="/taletidskort/">taletidskort</a>
+og <a href="/guides/mobilabonnement-uden-kreditvurdering/">mobilabonnement uden
+kreditvurdering</a>.</p>
+
+{kilder(["studiz_eesy", "greentel_studie"],
+        [f"Priser fra selskabernes datafeeds, opdateret {OPDATERET}. Studierabatten er "
+         f"regnet af normalprisen."])}
+</section>"""
+
+    faq = [
+        {"sp": "Findes der studierabat på mobilabonnement?",
+         "sv": "Ja, men den gives typisk via platforme som Studiz og Student Beans, og kun "
+               "hos få selskaber. eesy annoncerer 20 % via Studiz. De fleste lavprisselskaber "
+               "har ingen studierabat, men lavere normalpris."},
+        {"sp": "Er studierabat billigere end et lavprisabonnement?",
+         "sv": "Ofte ikke. Rabatten gives af selskaber med høje normalpriser, så et "
+               "lavprisabonnement uden rabat er tit billigere. Vores tabel sammenligner det "
+               "automatisk to gange i døgnet."},
+        {"sp": "Hvor meget data har en studerende brug for?",
+         "sv": "De fleste klarer sig med 10–30 GB, når de bruger eduroam-wifi på studiet og "
+               "wi-fi derhjemme. Pendler du langt og ser video, kan 50–100 GB være nødvendigt."},
+        {"sp": "Virker mit abonnement på udveksling?",
+         "sv": "I EU ja, som hjemme. Men bruger du det mere i udlandet end i Danmark over fire "
+               "måneder, kan selskabet opkræve tillæg. På et helt semester kan et lokalt "
+               "simkort eller eSIM som supplement være billigere."},
+        {"sp": "Kan jeg få mobilabonnement uden CPR-nummer?",
+         "sv": "De fleste abonnementer kræver CPR-nummer. Et taletidskort kræver det ikke, og "
+               "nummeret kan flyttes til et abonnement senere."},
+    ]
+    byg_guide(
+        sti, "Studierabat", "Studierabat på mobilabonnement",
+        f"Studierabat på mobilabonnement {IDAG.year} — betaler den sig?",
+        "Hvem giver studierabat, og er den billigere end et lavprisabonnement? Vi regner "
+        "det efter med dagens priser — og over en hel uddannelse.",
+        brod, faq,
+        [("/mobilabonnement-til-unge/", "Mobilabonnement til studerende og unge"),
+         ("/billigste-mobilabonnement/", "Billigste mobilabonnement lige nu"),
+         ("/mobilabonnement-10-30-gb/", "Mobilabonnement med 10–30 GB"),
+         ("/guides/hvor-meget-data/", "Hvor meget data har jeg brug for?")],
+        billede="studierabat",
+        altbillede="Studerende taler i telefon ved et bord på campus med laptop og "
+                   "notesbog")
+
+
+# ------------------------------------------------------------ BARNETS FØRSTE MOBIL
+
+def tabel_barn_alder():
+    rk = [
+        ("Under 9 år", "Som regel ingen", "GPS-ur med opkald til få godkendte numre, hvis "
+         "barnet går alene til og fra skole."),
+        ("9–12 år", "Knaptelefon eller basistelefon", "Opkald og sms. Ingen apps, ingen "
+         "sociale medier, ingen internetbrowser."),
+        ("13 år og op", "Smartphone med begrænsninger", "Datastop, skærmtid og "
+         "godkendelse af køb. Løsnes gradvist."),
+    ]
+    raekker = "".join(f'<tr><td><strong>{e(a)}</strong></td><td>{e(b)}</td>'
+                      f'<td>{e(c)}</td></tr>' for a, b, c in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Tommelfingerregel for barnets første telefon, baseret på Trivselskommissionens
+  anbefaling om smartphone tidligst som 13-årig.</caption>
+  <thead><tr><th scope="col">Alder</th><th scope="col">Telefon</th>
+    <th scope="col">Hvad den skal kunne</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def tabel_barn_pris():
+    rk = []
+    uden = [a for a in _betalte() if a["data_gb"] == 0]
+    if uden:
+        a = min(uden, key=lambda x: _samlet(x, 12))
+        rk.append(("Uden data", "Knaptelefon. Kun opkald og sms.", a,
+                   "/mobilabonnement-uden-data/"))
+    for navn, lav, hoej, sti, hvem in [
+        ("Op til 10 GB", 1, 10, "/mobilabonnement-1-10-gb/",
+         "Første smartphone med stramt datastop."),
+        ("10–30 GB", 11, 30, "/mobilabonnement-10-30-gb/",
+         "Ældre børn med skole-apps og beskeder."),
+    ]:
+        a = _billigst_i(lav, hoej)
+        if a:
+            rk.append((navn, hvem, a, sti))
+    raekker = ""
+    for navn, hvem, a, sti in rk:
+        raekker += f"""<tr>
+  <td><a href="{sti}"><strong>{e(navn)}</strong></a><br>
+      <span class="tabel-under">{e(hvem)}</span></td>
+  <td>{_hvem(a)}</td>
+  <td class="tal">{kr(visningspris(a))} kr.</td>
+  <td class="tal"><strong>{kr(_samlet(a, 12))} kr.</strong></td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Hvad abonnementet koster det første år, afhængigt af hvor meget barnet skal
+  kunne. Billigste i hver gruppe i dag, intropris og oprettelse medregnet.</caption>
+  <thead><tr><th scope="col">Behov</th><th scope="col">Billigst nu</th>
+    <th scope="col">Pr. md.</th><th scope="col">Første år</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def byg_barnets_foerste_mobil():
+    sti = "/guides/barnets-foerste-mobil/"
+    brod = f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> Barnets første mobil behøver ikke være
+en smartphone. Trivselskommissionen anbefaler, at børn først får egen smartphone, når de er fyldt 13 år. Før det er en knaptelefon eller et
+GPS-ur med opkald nok til at holde kontakten. Uanset alder: slå datastop og spærring for
+betalingstjenester til, før telefonen udleveres, og lav aftalerne om brug på
+forhånd.</p></div>
+
+<p>Spørgsmålet kommer typisk op omkring skolestart eller i 3.–4. klasse, når barnet
+begynder at gå alene hjem og kammeraterne får telefon. Det er to forskellige beslutninger,
+der tit bliver blandet sammen: <em>om</em> barnet skal kunne ringe, og <em>om</em> barnet
+skal have en smartphone. Den første er praktisk. Den anden er langt større.</p>
+
+<h2>Hvornår skal barnet have sin første mobil?</h2>
+<p>Der er ingen lovfastsat alder, men der er en klar anbefaling. Trivselskommissionen,
+som regeringen nedsatte for at se på børn og unges trivsel, anbefalede i 2025, at børn
+ikke får egen smartphone eller tablet, før de er 13 år. Samme år indgik partierne bag
+folkeskolen en aftale om mobilfri skole og fritidstilbud.</p>
+{tabel_barn_alder()}
+<p>Aldersgrænserne er vejledende. Det afgørende er, om barnet har brug for at kunne
+ringe — og at du vælger den mindst mulige telefon, der dækker behovet.</p>
+
+<h2>Knaptelefon, smartwatch eller smartphone?</h2>
+<h3>Knaptelefon</h3>
+<p>Kan ringe og skrive sms. Batteriet holder en uge, den er billig at erstatte, og den
+kan ikke åbne sociale medier. Køb en model med 4G og VoLTE — de ældste telefoner mister
+forbindelsen, efterhånden som de gamle net lukkes. En ny knaptelefon koster typisk
+400–900 kr.</p>
+<h3>GPS-ur med opkald</h3>
+<p>Populært til de mindste. Uret kan kun ringe til numre, du har godkendt, og du kan se,
+hvor barnet er. Kræver et lille abonnement med simkort eller eSIM, og nogle mærker har
+eget abonnement med månedlig betaling.</p>
+<h3>Smartphone</h3>
+<p>Når tiden er inde, er en brugt eller renoveret telefon i mellemklassen rigeligt. Den
+skal holde til at blive tabt, og den behøver ikke det nyeste kamera. Se
+<a href="/guides/koeb-mobiltelefon/">guiden til køb af mobiltelefon</a> for, hvad du skal
+tjekke ved brugt køb.</p>
+
+<h3>Mellemvejen: en smartphone uden simkort</h3>
+<p>Nogle familier starter med en aflagt smartphone uden simkort, som kun kan bruges på
+hjemmets wi-fi — til musik, et par spil og beskeder til familien. Så lærer barnet at
+bruge en telefon og overholde aftalerne, før den kommer med ud af huset.</p>
+
+<h2>Hvad koster det?</h2>
+<p>Selve abonnementet er det billigste. Et barn med knaptelefon kan klare sig med et
+abonnement uden data, og en første smartphone med få gigabyte og fast datastop.</p>
+{tabel_barn_pris()}
+<p>Se hele udvalget og de abonnementer, der passer bedst til de forskellige aldre, i vores
+oversigt over <a href="/mobilabonnement-til-boern/">mobilabonnement til børn</a>. Vil du
+have et hårdt loft over regningen, er et <a href="/taletidskort/">taletidskort</a> det
+eneste, hvor forbruget stopper helt, når saldoen er brugt.</p>
+
+<h2>Sådan sætter du telefonen op, før barnet får den</h2>
+<ol class="nummerliste">
+  <li><strong>Slå datastop til hos teleselskabet.</strong> Så kan dataforbruget ikke løbe
+  over pakken. Det er gratis og den vigtigste enkeltindstilling. Se
+  <a href="/guides/undgaa-hoej-regning/">sådan undgår du en høj mobilregning</a>.</li>
+  <li><strong>Spær for betalingstjenester og overtakserede numre.</strong> Det forhindrer
+  køb via mobilregningen og opkald til dyre servicenumre.</li>
+  <li><strong>Bestem over app-køb.</strong> På iPhone bruger du Familiedeling med Spørg
+  før køb. På Android bruger du Google Family Link, hvor du godkender apps og køb.</li>
+  <li><strong>Sæt skærmtid.</strong> Skærmtid på iPhone og Family Link på Android lader
+  dig lukke telefonen om natten og begrænse bestemte apps.</li>
+  <li><strong>Del placering i familien.</strong> Kun hvis I har talt om det. Det er en
+  tryghed for forældre, men kan opleves som overvågning af større børn.</li>
+</ol>
+
+<h2>Lav aftalerne, før telefonen er pakket ud</h2>
+<p>Teknikken er den lette del. Det, der virker, er de aftaler, der er lavet, før telefonen
+er blevet en vane. Gode emner at blive enige om:</p>
+<ul class="pilliste">
+  <li><strong>Hvor telefonen sover.</strong> Uden for soveværelset er den mest effektive
+  regel for søvn.</li>
+  <li><strong>Hvornår den er slukket.</strong> Ved måltider, lektier og efter et bestemt
+  klokkeslæt.</li>
+  <li><strong>Hvad der sker, når data er brugt.</strong> Datastop betyder, at dataen
+  stopper. Aftal, at den ikke bliver fyldt op hver gang.</li>
+  <li><strong>Hvem der må ringe og skrive.</strong> Særligt for de mindste.</li>
+  <li><strong>At barnet kan komme til dig.</strong> Hvis noget ubehageligt sker, skal
+  barnet vide, at det ikke mister telefonen ved at fortælle det.</li>
+</ul>
+<p>Snak gerne med de andre forældre i klassen. Det er lettere at holde fast, når flere
+familier gør det samme.</p>
+
+<h2>Sociale medier, billeder og hvor barnet kan få hjælp</h2>
+<p>De store sociale medier har en aldersgrænse på 13 år i deres egne vilkår, men den bliver
+sjældent håndhævet. Tal derfor om det konkret: hvilke apps er okay, og hvilke venter I med.</p>
+<ul class="pilliste">
+  <li><strong>Billeder.</strong> Aftal, at man ikke deler billeder af andre uden at spørge,
+  og at et billede, der er sendt, ikke kan kaldes tilbage.</li>
+  <li><strong>Fremmede.</strong> Barnet skal vide, at det altid må fortælle dig om en
+  besked, der føles forkert — også fra en, det kender.</li>
+  <li><strong>Hjælp udefra.</strong> Børn kan ringe anonymt til Børns Vilkårs BørneTelefon
+  på 116 111, og Red Barnets rådgivning SletDet hjælper med krænkende billeder og
+  indhold på nettet.</li>
+</ul>
+
+<h2>Hvem skal stå på abonnementet?</h2>
+<p>Du skal være 18 år for at indgå en aftale, så abonnementet står på en forælder med
+barnet som bruger. Det betyder også, at det er dig, teleselskabet kontakter om regningen.
+Har du flere børn, kan det betale sig at se på familieløsninger — men regn efter, for
+separate lavprisabonnementer er ofte billigere. Se
+<a href="/mobilabonnement-til-familie/">mobilabonnement til familien</a>.</p>
+
+<h2>Vælg uden binding</h2>
+<p>Barnets behov ændrer sig hurtigt, fra knaptelefon til smartphone og fra 5 GB til 30 GB.
+Et <a href="/mobilabonnement-uden-binding/">mobilabonnement uden binding</a> lader dig
+skifte størrelse eller selskab, når det passer — og beholde nummeret, så bedsteforældrene
+ikke skal have et nyt.</p>
+
+{kilder(["trivselskommissionen", "uvm_mobilfri"],
+        [f"Priser fra selskabernes datafeeds, opdateret {OPDATERET}."])}
+</section>"""
+
+    faq = [
+        {"sp": "Hvornår skal et barn have sin første mobil?",
+         "sv": "Der er ingen fast grænse, men Trivselskommissionen anbefaler, at børn først "
+               "får egen smartphone som 13-årige. Før det kan en knaptelefon eller et GPS-ur "
+               "dække behovet for at kunne ringe hjem."},
+        {"sp": "Hvilken telefon er bedst som første mobil?",
+         "sv": "En knaptelefon med 4G til de 9–12-årige og en brugt eller renoveret "
+               "smartphone i mellemklassen fra 13 år. Den skal kunne tåle at blive tabt."},
+        {"sp": "Hvad koster et mobilabonnement til et barn?",
+         "sv": (f"Det billigste abonnement med op til 10 GB koster i dag "
+                f"{kr(visningspris(_billigst_i(1, 10)))} kr. om måneden. "
+                if _billigst_i(1, 10) else "") +
+               "Et taletidskort giver et hårdt loft over forbruget, fordi det stopper, når "
+               "saldoen er brugt."},
+        {"sp": "Hvordan undgår jeg en høj regning?",
+         "sv": "Slå datastop til hos teleselskabet, spær for betalingstjenester og "
+               "overtakserede numre, og brug Spørg før køb på iPhone eller Family Link på "
+               "Android."},
+        {"sp": "Skal en 10-årig have smartphone?",
+         "sv": "Trivselskommissionen anbefaler at vente til 13 år. En knaptelefon eller et "
+               "GPS-ur med opkald dækker behovet for at kunne ringe hjem, uden sociale medier "
+               "og apps."},
+        {"sp": "Kan barnet selv stå på abonnementet?",
+         "sv": "Nej, man skal være 18 år for at indgå aftalen. Abonnementet står på en "
+               "forælder med barnet som bruger."},
+    ]
+    byg_guide(
+        sti, "Barnets første mobil", "Barnets første mobil",
+        "Barnets første mobil — alder, telefon og sikker opsætning",
+        "Hvornår skal barnet have mobil, hvilken telefon skal det være, og hvordan sætter "
+        "du den op sikkert? Med priser og anbefalinger for hver alder.",
+        brod, faq,
+        [("/mobilabonnement-til-boern/", "Mobilabonnement til børn"),
+         ("/taletidskort/", "Taletidskort — forudbetalt uden regning"),
+         ("/guides/undgaa-hoej-regning/", "Sådan undgår du en høj mobilregning"),
+         ("/mobilabonnement-til-familie/", "Mobilabonnement til familien")],
+        billede="barnets-foerste-mobil",
+        altbillede="Mor og datter ved spisebordet kigger sammen på pigens første mobil")
+
+
+def byg_q4():
+    byg_black_friday()
+    byg_mistet_telefon()
+    byg_studierabat()
+    byg_barnets_foerste_mobil()
+
+
+
 def main():
     # Popup'en ligger på hver side, så den skal bygges før noget andet
     skabelon.FIRMA = site.get("firma", {})
@@ -11094,6 +12374,16 @@ def main():
             or any(h == f"/bredbaand/{sti}/" and n in tek
                    for n, _, sti, _ in TEK_SIDER)
         ]
+    # Sæsonlink: Black Friday-siden får et link fra menuen på alle sider i
+    # perioden op til og under Black Week. Det er det stærkeste interne signal,
+    # siden kan få, og det forsvinder af sig selv efter sæsonen.
+    if date(IDAG.year, 9, 15) <= IDAG <= date(IDAG.year, 12, 5):
+        _bf = ("/mobilabonnementer-black-friday/", f"Black Friday {IDAG.year}",
+               "Tilbud regnet over 12 mdr.")
+        if _bf not in skabelon.SAMMENLIGN_MENU:
+            _i = next((i for i, m in enumerate(skabelon.SAMMENLIGN_MENU)
+                       if m[0] == "/kampagner/"), 2)
+            skabelon.SAMMENLIGN_MENU.insert(_i + 1, _bf)
     skabelon.SCOREMAERKAT = scoremaerkat
     skabelon.SCORETAL = lambda a: telemobil_score(a) or 0
     skabelon.HURTIGPRIS = hurtigpris_dialog()
@@ -11137,7 +12427,8 @@ du skifte selskab uden at hænge på en restgæld.</li>
 <div class="tip"><h3>Studierabat findes, men regn efter</h3>
 <p>Nogle udbydere tilbyder rabat til studerende. Sammenlign altid rabatprisen med markedets
 billigste abonnement uden rabat — ret ofte er discountudbyderen stadig billigst, selv efter
-studierabatten er trukket fra.</p></div>
+studierabatten er trukket fra. Vi har regnet det igennem i
+<a href="/guides/studierabat-mobilabonnement/">betaler studierabat på mobilabonnement sig?</a></p></div>
 <h2>Sådan holder du forbruget nede</h2>
 <p>Slå automatisk videoafspilning fra i sociale medier, hent musik og podcasts på wi-fi
 inden du går hjemmefra, og sæt streamingtjenester til kun at hente i høj kvalitet på wi-fi.
@@ -11457,11 +12748,12 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                          "Bestil i stedet et nyt kort — det er gratis hos de fleste udbydere."},
                   {"sp": "Hvad gør jeg, hvis jeg mister mit simkort?",
                    "sv": "Spær det med det samme hos udbyderen. Et simkort i en fremmed telefon kan "
-                         "modtage dine sms'er, herunder koder fra bank og MitID."},
+                         "modtage dine sms'er, herunder koder fra bank og MitID. Er hele "
+                         "telefonen væk, så følg vores guide til mistet telefon."},
               ],
               [("/guides/esim/", "eSIM forklaret"),
                ("/pin-og-puk-kode/", "PIN- og PUK-kode"),
-               ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
+               ("/guides/mistet-telefon/", "Mistet eller stjålet telefon"),
                ("/guides/mobil-virker-ikke/", "Mobilen virker ikke — fejlfinding")],
               billede="simkort", altbillede="Tekniker arbejder med simkort i forskellige størrelser",
               ekstra=[begrebslink(), tabel_billigst_pr_udbyder(), udbydergitter(),
@@ -11537,6 +12829,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               ],
               [("/guides/hvor-meget-data/", "Hvor meget data har du brug for?"),
                ("/mobilabonnement-til-boern/", "Mobilabonnement til børn"),
+               ("/guides/barnets-foerste-mobil/", "Opsætning af barnets første mobil"),
                ("/guides/mobilabonnement-i-udlandet/", "Mobil i udlandet"),
                ("/hvem-ringer-til-mig/", "Svindelopkald — sådan genkender du dem")],
               billede="undgaa-hoej-regning",
@@ -11740,6 +13033,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               ],
               [("/mobilabonnement-til-boern/", "Mobilabonnement til børn"),
                ("/mobilabonnement-til-unge/", "Mobilabonnement til unge"),
+               ("/guides/barnets-foerste-mobil/", "Barnets første mobil — alder og opsætning"),
                ("/guides/hvor-meget-data/", "Hvor meget data har I brug for?"),
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement")],
               billede="til-familie",
@@ -11997,6 +13291,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               [("/guides/esim/", "eSIM forklaret — også til rejsen"),
                ("/landekoder/", "Alle landekoder"),
                ("/mobilabonnement-med-fri-tale/", "Abonnementer med fri tale"),
+               ("/guides/studierabat-mobilabonnement/", "Studerende på udveksling"),
                ("/hvem-ringer-til-mig/", "Ukendt opkald fra udlandet?")],
               billede="i-udlandet",
               altbillede="Kvinde bruger mobilen med roaming på en gade i Italien",
@@ -12224,12 +13519,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_speedtest()
 
     # Sæsonside — oprettes i god tid, så den er indekseret inden november
-    byg_statisk("/mobilabonnementer-black-friday/",
-                "Black Friday mobilabonnement — er tilbuddene ægte?",
-                "Black Friday er sjældent den bedste tid at købe mobilabonnement. Se hvordan "
-                "du gennemskuer et tilbud, og hvad der faktisk bliver billigere.",
-                "Black Friday", "Black Friday og mobilabonnement",
-                sider3.BLACK_FRIDAY, prioritet="0.6")
+    # (Black Friday bygges nu af byg_q4() sammen med de tre Q4-guides)
 
     # Udbydere
     byg_udbyderoversigt()
@@ -12245,6 +13535,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_anmeldelser()
     byg_lydbog()
     byg_prisarkiv()
+    byg_q4()
     byg_guideoversigt()
     byg_guide("/guides/skift-mobilselskab/", "Skift mobilselskab",
               "Sådan skifter du mobilselskab",
@@ -12451,6 +13742,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
                          "fysisk kort tilsendt."},
               ],
               [("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
+               ("/guides/mistet-telefon/", "Mistet telefon? Få nummeret igen via eSIM"),
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
                ("/udbydere/", "Alle udbydere")],
               billede="esim",
@@ -12612,6 +13904,11 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
   <p>Delvist. Et eSIM har også en PIN, men det kan ikke tages fysisk ud af telefonen, så
   risikoen ved tyveri er lavere. Til gengæld kan et eSIM ikke bare flyttes til en lånt
   telefon, hvis din går i stykker. Se <a href="/guides/esim/">vores guide til eSIM</a>.</p>
+
+  <h2>Er telefonen mistet eller stjålet?</h2>
+  <p>Så er PIN-koden ikke nok. Spær simkortet hos dit selskab og MitID-appen med det samme
+  — se <a href="/guides/mistet-telefon/">hvad du skal gøre, hvis du har mistet din
+  telefon</a>, trin for trin.</p>
 </section>"""
     byg_statisk("/pin-og-puk-kode/", "PIN- og PUK-kode — sådan låser du simkortet op",
                 "Glemt PIN-kode? Se hvordan du finder din PUK, hvor mange forsøg du har, "

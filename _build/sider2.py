@@ -276,7 +276,10 @@ rabattens størrelse.</p>
 <h3>Tal om det, inden telefonen udleveres</h3>
 <p>De fleste problemer med børns mobilforbrug er ikke tekniske. Aftal på forhånd, hvad
 telefonen må bruges til, hvornår den er slukket, og hvad der sker, hvis dataen er brugt
-den 20. i måneden. Datastop er den tekniske sikring — aftalen er den vigtige del.</p>
+den 20. i måneden. Datastop er den tekniske sikring — aftalen er den vigtige del. Står
+I foran beslutningen for første gang, så læs vores guide til
+<a href="/guides/barnets-foerste-mobil/">barnets første mobil</a> om alder, telefon og
+opsætning.</p>
 </div>
 
 <h2>Binding, telefon og den samlede regning</h2>

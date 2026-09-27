@@ -228,7 +228,8 @@ UDEN_LOGOBAAND = (
 
 
 def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
-          hero=None, efter_hero="", opdateret="", ekstra_hoved="", toc=True):
+          hero=None, efter_hero="", opdateret="", ekstra_hoved="", toc=True,
+          og_billede=None):
     if efter_hero and "logobaand" in efter_hero and sti.startswith(UDEN_LOGOBAAND):
         efter_hero = ""
     indhold, _toc = indholdsfortegnelse(indhold)
@@ -332,8 +333,8 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <meta name="author" content="{e(FORFATTER['navn'])}">
 <meta name="twitter:label1" content="Estimeret læsetid">
 <meta name="twitter:data1" content="{minutter} minutter">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+<meta property="og:image:width" content="{og_billede[1] if og_billede else 1200}">
+<meta property="og:image:height" content="{og_billede[2] if og_billede else 630}">
 <meta name="geo.region" content="DK">
 <meta name="language" content="Danish">
 <meta name="publisher" content="Telemobil">
@@ -347,7 +348,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <meta property="og:title" content="{e(titel)}">
 <meta property="og:description" content="{e(beskrivelse)}">
 <meta property="og:url" content="{kanonisk}">
-<meta property="og:image" content="{DOMAENE}/assets/img/telemobil-social.png">
+<meta property="og:image" content="{DOMAENE}{og_billede[0] if og_billede else '/assets/img/telemobil-social.png'}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{e(titel)}">
 <meta name="twitter:description" content="{e(beskrivelse)}">
