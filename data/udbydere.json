@@ -47,9 +47,13 @@
    },
    "ejer_note": "CBB Mobil ejes af Telenor og kører på TN-Network, det fælles mobilnet Telenor og Norlys ejer 50/50.",
    "kundeservice": {
-    "url": null,
-    "tlf": null,
-    "tider": null
+    "tlf": "50 50 50 50",
+    "tider": "Hverdage kl. 8.00–16.00",
+    "email": "kundeservice@cbb.dk",
+    "chat": null,
+    "spaerring": "På Mit CBB døgnet rundt, på 50 50 50 50 i åbningstiden eller på mail til tyveri@cbb.dk",
+    "url": "https://www.cbb.dk/info/kontakt/",
+    "kontrolleret": "2026-09-28"
    },
    "adresse": "Frederikskaj 8, 2450 København SV"
   },
@@ -99,9 +103,13 @@
    },
    "ejer_note": "YouSee er en del af Nuuday, TDC Groups kundevendte selskab. Samme koncern ejer Telmore og eesy — de tre kører alle på TDC NET.",
    "kundeservice": {
-    "url": null,
-    "tlf": null,
-    "tider": null
+    "tlf": "70 70 40 40",
+    "tider": null,
+    "email": null,
+    "chat": null,
+    "spaerring": "Ring 70 70 30 20 — spærring kan ske når som helst",
+    "url": "https://yousee.dk/hjaelp/artikler/sadan-tyverispaerrer-du-dit-simkort",
+    "kontrolleret": "2026-09-28"
    },
    "adresse": "Teglholmsgade 1, 2450 København SV"
   },
@@ -150,9 +158,13 @@
    },
    "ejer_note": "Telmore blev grundlagt i 2000 som Danmarks første rent onlinebaserede mobilselskab og opkøbt af TDC i 2003. I dag ejet af Nuuday sammen med YouSee og eesy.",
    "kundeservice": {
-    "url": null,
-    "tlf": null,
-    "tider": null
+    "tlf": "70 21 89 00",
+    "tider": "Mandag–fredag kl. 9–16. Lukket weekend og helligdage",
+    "email": null,
+    "chat": null,
+    "spaerring": "På Mit Telmore eller på 70 21 85 00, som er døgnåben",
+    "url": "https://www.telmore.dk/om-telmore/kontakt",
+    "kontrolleret": "2026-09-28"
    },
    "adresse": "Teglholmsgade 1, 2450 København SV"
   },
@@ -201,9 +213,13 @@
    },
    "ejer_note": "Oister ejes af Hi3G, samme selskab som står bag 3, og kører på 3's net.",
    "kundeservice": {
-    "url": null,
-    "tlf": null,
-    "tider": null
+    "tlf": "70 31 30 70",
+    "tider": "Mandag–torsdag kl. 8–16, fredag kl. 8–15.30. Lukket weekend og helligdage",
+    "email": null,
+    "chat": null,
+    "spaerring": "På Mit OiSTER eller på 70 31 30 70 døgnet rundt (tast 1 for selvbetjening)",
+    "url": "https://www.oister.dk/hjalp/kontakt/",
+    "kontrolleret": "2026-09-28"
    },
    "adresse": "Scandiagade 8, 2450 København SV"
   },
@@ -252,9 +268,13 @@
    },
    "ejer_note": null,
    "kundeservice": {
-    "url": null,
-    "tlf": null,
-    "tider": null
+    "tlf": "50 10 10 10",
+    "tider": "Mandag–torsdag kl. 8–16, fredag kl. 8–15.30. Lukket weekend og helligdage",
+    "email": null,
+    "chat": null,
+    "spaerring": null,
+    "url": "https://www.lebara.dk/da/kontakt-os.html",
+    "kontrolleret": "2026-09-28"
    },
    "adresse": "Bomhusvej 13, 2100 København Ø"
   },
@@ -303,9 +323,13 @@
    },
    "ejer_note": null,
    "kundeservice": {
-    "url": null,
-    "tlf": null,
-    "tider": null
+    "tlf": "44 10 10 10",
+    "tider": "Mandag–onsdag kl. 8.30–15.30, torsdag kl. 8.30–16.30, fredag kl. 9–15 (frokostlukket 12–12.30). Mails besvares også i weekenden",
+    "email": "support@greentel.dk",
+    "chat": null,
+    "spaerring": null,
+    "url": "https://www.greentel.dk/kundeservice/",
+    "kontrolleret": "2026-09-28"
    },
    "adresse": null
   },
@@ -354,9 +378,13 @@
    },
    "ejer_note": null,
    "kundeservice": {
-    "url": null,
-    "tlf": null,
-    "tider": null
+    "tlf": "77 34 18 18",
+    "tider": "Hverdage kl. 9–20, lørdag kl. 9–15",
+    "email": "kundeservice@duka.dk",
+    "chat": null,
+    "spaerring": null,
+    "url": "https://www.dukatale.dk/danmarks-bedste-kundeservice",
+    "kontrolleret": "2026-09-28"
    },
    "adresse": null
   },
@@ -405,9 +433,14 @@
    },
    "ejer_note": null,
    "kundeservice": {
-    "url": null,
-    "tlf": null,
-    "tider": null
+    "tlf": "71 30 33 32",
+    "tider": "Mandag–fredag kl. 9–18",
+    "email": null,
+    "chat": "Chatassistent døgnet rundt",
+    "tlf_note": "Gratis fra et Lyca-nummer på 3332. Fra andre net og udlandet: 70 14 55 56",
+    "spaerring": null,
+    "url": "https://www.lycamobile.dk/da/help/contact-us/",
+    "kontrolleret": "2026-09-28"
    },
    "adresse": null
   },
@@ -456,9 +489,14 @@
    },
    "ejer_note": "eesy blev stiftet af Nuuday i september 2020 som koncernens lavprisselskab. Samme ejer som YouSee og Telmore, samme net.",
    "kundeservice": {
-    "url": null,
     "tlf": null,
-    "tider": null
+    "tider": null,
+    "email": null,
+    "chat": "Digital assistent i appen døgnet rundt. Chat med en medarbejder mandag–torsdag kl. 8–16 og fredag kl. 8–15.30",
+    "ingen_telefon": true,
+    "spaerring": "I eesy-appen eller selvbetjeningen — eller ring 70 15 70 10",
+    "url": "https://eesy.dk/kontakt",
+    "kontrolleret": "2026-09-28"
    },
    "adresse": "Teglholmsgade 1, 2450 København SV"
   },
@@ -507,9 +545,14 @@
    },
    "ejer_note": null,
    "kundeservice": {
-    "url": null,
     "tlf": null,
-    "tider": null
+    "tider": null,
+    "email": "kundeservice@flexii.dk",
+    "chat": "Chatbot døgnet rundt. Livechat med en medarbejder mandag–torsdag kl. 8–16 og fredag kl. 8–15.30",
+    "ingen_telefon": true,
+    "spaerring": "På Mit Flexii døgnet rundt eller på +45 36 20 20 00",
+    "url": "https://www.flexii.dk/kontakt",
+    "kontrolleret": "2026-09-28"
    },
    "adresse": null
   }

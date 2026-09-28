@@ -1,0 +1,22 @@
+{
+ "_om": "Egne tests af abonnementer. INTET vises på sitet, før der står en test i 'tests'. Skriv kun tal, du selv har målt. Se TESTPROTOKOL.md.",
+ "_skabelon": {
+  "udbyder": "oister",
+  "abonnement": "Oister 40 GB",
+  "betalt_af": "Telemobil",
+  "simkort": "eSIM",
+  "periode_fra": "2026-10-01",
+  "periode_til": "2026-10-21",
+  "aktivering_minutter": 12,
+  "hastighed": [
+   {"dato": "2026-10-03", "sted": "Aarhus C", "omraade": "by", "inde": false, "ned_mbit": 85, "op_mbit": 22, "ping_ms": 28},
+   {"dato": "2026-10-04", "sted": "Mols, sommerhusområde", "omraade": "land", "inde": true, "ned_mbit": 14, "op_mbit": 4, "ping_ms": 45}
+  ],
+  "kundeservice": [
+   {"dato": "2026-10-06", "klokken": "10:15", "kanal": "telefon", "ventetid_minutter": 4, "loest": true, "emne": "Spørgsmål om EU-data"}
+  ],
+  "observationer": ["Skriv korte, konkrete iagttagelser. Fx: 'Nummerflytningen tog to hverdage.'"],
+  "billeder": [{"fil": "oister-esim-aktivering.webp", "alt": "eSIM fra Oister aktiveret i iPhonens indstillinger"}]
+ },
+ "tests": []
+}

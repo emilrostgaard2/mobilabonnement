@@ -44,11 +44,35 @@ def dansk_dato(d):
     return f"{d.day}. {MAANEDER[d.month - 1]} {d.year}"
 
 
+def _pak_tabeller(html):
+    """Tabeller uden egen ramme får en rullebar boks om sig.
+
+    Tidligere rullede selve <table> via display:block, hvilket fik thead og
+    tbody til at blive lagt ud som to separate tabeller — overskrifterne
+    flugtede ikke med kolonnerne. Nu ruller boksen, og tabellen er en tabel."""
+    ud, pos = [], 0
+    for m in re.finditer(r"<table\b[^>]*>", html):
+        start = m.start()
+        foer = html[max(0, start - 80):start]
+        tag = m.group(0)
+        if "tabelramme" in foer or "tabelscroll" in foer or 'class="pris' in tag:
+            continue
+        slut = html.find("</table>", start)
+        if slut == -1:
+            continue
+        ud.append(html[pos:start])
+        ud.append('<div class="tabelscroll">' + html[start:slut + 8] + "</div>")
+        pos = slut + 8
+    ud.append(html[pos:])
+    return "".join(ud)
+
+
 def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     # Kategoriteksterne indeholder pladsholdere til tabeller, der først kan
     # beregnes her. Løses ét sted frem for i hver enkelt sidebygger.
     if "[[tabel_" in html or "[[gruppe_prisudvikling_fri]]" in html:
         html = indsaet_kattabeller(html)
+    html = _pak_tabeller(html)
     mappe = os.path.join(ROD, sti.strip("/"))
     if sti == "/":
         filsti = os.path.join(ROD, "index.html")
@@ -320,7 +344,8 @@ PERSON = {
     "sameAs": [FORFATTER["linkedin"]],
     "description": FORFATTER["bio"],
     "knowsAbout": ["Mobilabonnementer", "Telemarkedet i Danmark", "Forbrugerøkonomi",
-                   "Prissammenligning", "Mobilnetværk", "eSIM", "Nummerportering"],
+                   "Prissammenligning", "Mobilnetværk", "eSIM", "Nummerportering",
+                   "Søgemaskineoptimering", "Affiliate-markedsføring"],
     "knowsLanguage": ["da-DK", "en"],
     "nationality": {"@type": "Country", "name": "Danmark"},
     "hasOccupation": {
@@ -5046,97 +5071,6 @@ def udbyder_faktaboks(u, egne):
 </div>"""
 
 
-def udbyder_kundeservice(u):
-    """Kontaktoplysninger — en søgning med stor volumen.
-
-    "telmore kundeservice" og "yousee telefonnummer" søges hyppigt, og ingen
-    sammenligningsside svarer på det. Vi opfinder ikke numre: står feltet tomt,
-    henviser vi til selskabets egen side i stedet."""
-    ks = u.get("kundeservice") or {}
-    rk = [("Telefon", ks.get("tlf")), ("Åbningstider", ks.get("tider"))]
-    linjer = "".join(f"<li><strong>{n}:</strong> {e(str(v))}</li>"
-                     for n, v in rk if v)
-    if linjer:
-        indhold = f"<ul class=\"pilliste\">{linjer}</ul>"
-    else:
-        indhold = ""
-    link = (f'<p>Du finder kontaktoplysninger og åbningstider på '
-            f'<a href="{e(ks["url"])}" rel="nofollow noopener" target="_blank">'
-            f'{e(u["navn"])}s egen supportside</a>.</p>'
-            if ks.get("url") else
-            f'<p>Kontaktoplysninger står på {e(u["navn"])}s egen hjemmeside under '
-            f'kundeservice eller kontakt.</p>')
-    return f"""
-  <h2>Kundeservice hos {e(u['navn'])}</h2>
-  {indhold}
-  {link}
-  <p>Handler det om at opsige eller skifte, kan du gøre det uden at kontakte
-  selskabet: den nye udbyder opsiger selv den gamle og flytter dit nummer. Se
-  <a href="/guides/skift-mobilselskab/">hvordan du skifter mobilselskab</a>.</p>
-  <p>Er du utilfreds med en afgørelse, kan du klage til Teleankenævnet. Det er
-  gratis at få sagen vurderet, hvis selskabet har afvist din klage.</p>"""
-
-
-
-def udbyder_prisudvikling(u):
-    """Hvordan denne udbyders priser har flyttet sig.
-
-    Ingen konkurrent kan vise det her, fordi ingen andre gemmer historik.
-    Siden degraderer pænt: har vi under to målinger, skriver vi intet frem
-    for at vise en tom kasse."""
-    try:
-        with open(os.path.join(ROD, "data", "prishistorik.json"), encoding="utf-8") as f:
-            h = json.load(f)
-    except (FileNotFoundError, ValueError):
-        return ""
-    med = [m for m in h.get("maalinger", []) if u["slug"] in m.get("pr_udbyder", {})]
-    if len(med) < 2:
-        return ""
-
-    foerst, sidst = med[0], med[-1]
-    a, b = foerst["pr_udbyder"][u["slug"]], sidst["pr_udbyder"][u["slug"]]
-    raekker = ""
-    for navn, noegle in [("Laveste pris", "min"), ("Median", "median"), ("Højeste", "maks")]:
-        f_v, s_v = a[noegle], b[noegle]
-        d = s_v - f_v
-        pct = (d / f_v * 100) if f_v else 0
-        retning = ("uændret" if abs(d) < 0.5
-                   else f'{"+" if d > 0 else "−"}{abs(d):.0f} kr. ({abs(pct):.0f} %)')
-        klasse = "" if abs(d) < 0.5 else (' class="op"' if d > 0 else ' class="ned"')
-        raekker += (f'<tr><td><strong>{e(navn)}</strong></td>'
-                    f'<td class="tal">{kr(round(f_v))} kr.</td>'
-                    f'<td class="tal">{kr(round(s_v))} kr.</td>'
-                    f'<td class="tal"{klasse}>{retning}</td></tr>')
-
-    d_med = b["median"] - a["median"]
-    if abs(d_med) < 0.5:
-        opsummering = (f'{e(u["navn"])}s medianpris har ligget stille på '
-                       f'{kr(round(b["median"]))} kr. i hele perioden.')
-    else:
-        opsummering = (f'{e(u["navn"])}s medianpris er '
-                       f'{"steget" if d_med > 0 else "faldet"} fra '
-                       f'{kr(round(a["median"]))} til {kr(round(b["median"]))} kr. — '
-                       f'{abs(d_med / a["median"] * 100):.0f} procent.')
-
-    return f"""
-  <h2>Sådan har {e(u['navn'])}s priser flyttet sig</h2>
-  <p>{opsummering} Vi gemmer priserne to gange i døgnet, så tallene her er målt,
-  ikke husket. Vi regner altid på normalprisen — en intropris siger noget om en
-  kampagne, ikke om prisniveauet.</p>
-  <div class="tabelramme">
-  <table class="datatabel">
-    <caption>{e(u['navn'])}s priser fra {e(foerst['dato'])} til {e(sidst['dato'])},
-    målt over {len(med)} målinger.</caption>
-    <thead><tr><th scope="col">Tal</th><th scope="col">{e(foerst['dato'])}</th>
-      <th scope="col">{e(sidst['dato'])}</th><th scope="col">Ændring</th></tr></thead>
-    <tbody>{raekker}</tbody>
-  </table>
-  </div>
-  <p>Se hele markedets udvikling på <a href="/prisudvikling/">prisudvikling på
-  mobilabonnementer</a>.</p>"""
-
-
-
 def byg_udbyder(u):
     sti = f"/udbydere/{u['slug']}/"
     egne = [a for a in ABON if a["udbyder"] == u["slug"]]
@@ -5214,6 +5148,8 @@ def byg_udbyder(u):
 
   {unikke}
 
+  {test_sektion(u)}
+
   {udbyder_prisudvikling(u)}
 
   <h2>{e(uq.get("h2_net", f"Netværk og dækning hos {u['navn']}"))}</h2>
@@ -5282,6 +5218,18 @@ def byg_udbyder(u):
 </section>
 """
 
+    faq_u = list(u["faq"])
+    _kf = kundeservice_faq(u)
+    if _kf and not any("telefon" in q["sp"].lower() or "ringe" in q["sp"].lower()
+                       for q in faq_u):
+        faq_u.append(_kf)
+    org_u = {"@type": "Organization", "name": u["navn"], "url": u["hjemmeside"],
+             "logo": DOMAENE + f"/assets/img/logoer/{u['logo']}"}
+    _ks = u.get("kundeservice") or {}
+    if _ks.get("tlf"):
+        org_u["contactPoint"] = {"@type": "ContactPoint", "contactType": "customer service",
+                                 "telephone": "+45 " + _ks["tlf"].replace("+45 ", ""),
+                                 "areaServed": "DK", "availableLanguage": "Danish"}
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk,
         # H1 skal indeholde det, folk faktisk søger på: brandnavn + "mobilabonnement".
@@ -5291,11 +5239,10 @@ def byg_udbyder(u):
                        e(u["kort"]),
                        '<a href="#sammenlign" class="knap knap-primaer">Se priser</a>'
                        if egne else ""),
-        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(u["faq"], f"Spørgsmål om {u['navn']}"),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(u["faq"]),
-                     artikelld(sti, titel, besk),
-                     {"@type": "Organization", "name": u["navn"], "url": u["hjemmeside"],
-                      "logo": DOMAENE + f"/assets/img/logoer/{u['logo']}"})],
+        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq_u, f"Spørgsmål om {u['navn']}"),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq_u),
+                     artikelld(sti, titel, besk), org_u,
+                     *([test_reviewld(u)] if test_reviewld(u) else []))],
     ), prioritet="0.8")
 
 
@@ -5311,8 +5258,57 @@ GUIDE_FORAELDRE = {
 }
 
 
+# Generiske statistiktabeller stod ordret på op til 16 guides og fyldte op til
+# 39 % af teksten. Det er gentaget indhold, som udvander, hvad hver guide
+# handler om. Nu må en guide højst have de tabeller, der hører til dens emne.
+# Hovedsiderne (kategorier, billigste, fri data osv.) er ikke berørt.
+GUIDE_TABELLER = {
+    "/guides/hvor-meget-data/": {"tabel_pr_datamaengde"},
+    "/guides/prisstigning-mobilabonnement/": {"tabel_aarsomkostning"},
+    "/guides/mobilabonnement-eller-bredbaand/": {"tabel_pr_datamaengde"},
+    "/guides/skift-mobilselskab/": {"tabel_billigst_pr_udbyder"},
+    "/guides/daekning-og-netvaerk/": {"udbydergitter"},
+    "/mobilabonnement-til-familie/": {"tabel_aarsomkostning"},
+}
+_GENERISKE = None
+
+
+def _generiske():
+    global _GENERISKE
+    if _GENERISKE is None:
+        _GENERISKE = {}
+        for navn, fn in [("tabel_billigst_pr_udbyder", tabel_billigst_pr_udbyder),
+                         ("udbydergitter", udbydergitter),
+                         ("tabel_pr_datamaengde", tabel_pr_datamaengde),
+                         ("statistiktabel", statistiktabel),
+                         ("prisfordeling", prisfordeling),
+                         ("tabel_prgb_rangliste", tabel_prgb_rangliste),
+                         ("tabel_aarsomkostning", tabel_aarsomkostning)]:
+            try:
+                _GENERISKE[fn()] = navn
+            except Exception:
+                pass
+    return _GENERISKE
+
+
+def _rens_ekstra(sti, ekstra):
+    tilladt = GUIDE_TABELLER.get(sti, set())
+    g = _generiske()
+    ud, set_ = [], set()
+    for x in ekstra:
+        navn = g.get(x)
+        if navn and (navn not in tilladt or navn in set_):
+            continue
+        if navn:
+            set_.add(navn)
+        ud.append(x)
+    return ud
+
+
 def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
               altbillede="", ekstra=None):
+    if ekstra:
+        ekstra = _rens_ekstra(sti, ekstra)
     krumme = [("/", "Forside"), ("/guides/", "Guides")]
     if sti in GUIDE_FORAELDRE:
         krumme.append(GUIDE_FORAELDRE[sti])
@@ -11707,14 +11703,16 @@ def tabel_mistet_udbydere():
   <td><a href="/udbydere/{u['slug']}/"><strong>{e(u['navn'])}</strong></a></td>
   <td>{netlabel(u)}</td>
   <td>{'Ja' if esim else 'Ikke oplyst'}</td>
+  <td>{e((u.get('kundeservice') or {}).get('spaerring') or 'Kontakt kundeservice')}</td>
   <td class="tal">{kr(visningspris(billigst))} kr.</td>
 </tr>"""
     return f"""<div class="tabelramme">
 <table class="datatabel">
-  <caption>Selskaberne i vores sammenligning. Med eSIM kan du typisk have dit nummer
-  aktivt igen samme dag, fordi der ikke skal sendes et kort med posten.</caption>
+  <caption>Sådan spærrer du simkortet hos hvert selskab, kontrolleret på selskabernes egne
+  sider. Med eSIM kan du typisk have dit nummer aktivt igen samme dag.</caption>
   <thead><tr><th scope="col">Selskab</th><th scope="col">Net</th>
-    <th scope="col">eSIM</th><th scope="col">Billigst uden binding</th></tr></thead>
+    <th scope="col">eSIM</th><th scope="col">Sådan spærrer du simkortet</th>
+    <th scope="col">Billigst uden binding</th></tr></thead>
   <tbody>{raekker}</tbody>
 </table>
 </div>"""
@@ -12356,6 +12354,407 @@ def byg_q4():
     byg_studierabat()
     byg_barnets_foerste_mobil()
 
+
+
+_MDR_KORT = ["jan.", "feb.", "mar.", "apr.", "maj", "jun.", "jul.", "aug.", "sep.",
+             "okt.", "nov.", "dec."]
+
+
+def _kort_dato_kort(iso):
+    d = date.fromisoformat(iso)
+    return f"{d.day}. {_MDR_KORT[d.month - 1]}"
+
+
+def _tlf_link(tlf):
+    cifre = "".join(c for c in tlf if c.isdigit() or c == "+")
+    if not cifre.startswith("+"):
+        cifre = "+45" + cifre
+    return f'<a href="tel:{cifre}">{e(tlf)}</a>'
+
+
+def udbyder_kundeservice(u):
+    """Kontaktoplysninger — en søgning med stor volumen.
+
+    Hvert felt er kontrolleret på selskabets egen side og dateret. Står et
+    felt tomt, opfinder vi ikke noget, men henviser til selskabets side."""
+    ks = u.get("kundeservice") or {}
+    navn = e(u["navn"])
+    rk = []
+    if ks.get("ingen_telefon"):
+        rk.append(("Telefon", f"{navn} har ikke telefonisk kundeservice. Hjælpen foregår "
+                              f"digitalt."))
+    elif ks.get("tlf"):
+        v = _tlf_link(ks["tlf"])
+        if ks.get("tlf_note"):
+            v += f'<br><span class="ks-note">{e(ks["tlf_note"])}</span>'
+        rk.append(("Telefon", v))
+    if ks.get("tider"):
+        rk.append(("Åbningstider", e(ks["tider"])))
+    if ks.get("chat"):
+        rk.append(("Chat", e(ks["chat"])))
+    if ks.get("email"):
+        rk.append(("E-mail", f'<a href="mailto:{e(ks["email"])}">{e(ks["email"])}</a>'))
+    if ks.get("spaerring"):
+        rk.append(("Mistet telefon", e(ks["spaerring"])))
+
+    liste = "".join(f'<div class="ks-raekke"><dt>{n}</dt><dd>{v}</dd></div>' for n, v in rk)
+    kontrol = ""
+    if ks.get("url"):
+        dato = ""
+        if ks.get("kontrolleret"):
+            dato = f" {dansk_dato(date.fromisoformat(ks['kontrolleret']))}"
+        kontrol = (f'<p class="ks-kilde">Kontrolleret{dato} på '
+                   f'<a href="{e(ks["url"])}" rel="nofollow noopener" target="_blank">'
+                   f'{navn}s egen side</a>. Åbningstider kan ændre sig på helligdage — '
+                   f'tjek selskabets side, før du ringer.</p>')
+    boks = (f'<dl class="ks-boks">{liste}</dl>{kontrol}' if liste else
+            f'<p>Kontaktoplysninger står på {navn}s egen hjemmeside under kundeservice '
+            f'eller kontakt.</p>')
+    spaer = ""
+    if ks.get("spaerring"):
+        spaer = (f'<p>Har du mistet telefonen, så spær simkortet med det samme — og husk '
+                 f'MitID. Se <a href="/guides/mistet-telefon/">hvad du skal gøre, hvis du '
+                 f'har mistet din telefon</a>, trin for trin.</p>')
+    return f"""
+  <h2 id="kundeservice">{navn} kundeservice — telefon og åbningstider</h2>
+  {boks}
+  {spaer}
+  <p>Handler det om at opsige eller skifte, kan du gøre det uden at kontakte
+  selskabet: den nye udbyder opsiger selv den gamle og flytter dit nummer. Se
+  <a href="/guides/skift-mobilselskab/">hvordan du skifter mobilselskab</a>.</p>
+  <p>Er du utilfreds med en afgørelse, kan du klage til Teleankenævnet. Det er
+  gratis at få sagen vurderet, hvis selskabet har afvist din klage.</p>"""
+
+
+def kundeservice_faq(u):
+    ks = u.get("kundeservice") or {}
+    n = u["navn"]
+    if ks.get("ingen_telefon"):
+        sv = f"Nej. {n} har ikke telefonisk kundeservice."
+        if ks.get("chat"):
+            sv += f" {ks['chat']}."
+        if ks.get("spaerring"):
+            sv += f" Mistet telefon: {ks['spaerring']}."
+        return {"sp": f"Kan man ringe til {n}?", "sv": sv}
+    if ks.get("tlf"):
+        sv = f"{n}s kundeservice har telefon {ks['tlf']}."
+        if ks.get("tider"):
+            sv += f" Åbningstider: {ks['tider']}."
+        if ks.get("spaerring"):
+            sv += f" Mistet telefon: {ks['spaerring']}."
+        return {"sp": f"Hvad er {n}s telefonnummer til kundeservice?", "sv": sv}
+    return None
+
+
+def _nice_trin(spaend):
+    for t in (1, 2, 5, 10, 20, 25, 50, 100, 200):
+        if spaend / t <= 4:
+            return t
+    return 500
+
+
+def udbyder_prisudvikling(u):
+    """Prisgraf pr. selskab, lavet til at kunne læses af alle.
+
+    To linjer: det billigste abonnement og den typiske pris (medianen).
+    Aksetekster og slutværdier er HTML oven på grafen, så de har samme
+    størrelse på mobil og desktop. Ingen JavaScript."""
+    try:
+        with open(os.path.join(ROD, "data", "prishistorik.json"), encoding="utf-8") as f:
+            h = json.load(f)
+    except (FileNotFoundError, ValueError):
+        return ""
+    s = u["slug"]
+    maal = [m for m in h.get("maalinger", []) if s in m.get("pr_udbyder", {})
+            and m["pr_udbyder"][s].get("min")]
+    if len(maal) < 2:
+        return ""
+    navn = e(u["navn"])
+    mins = [m["pr_udbyder"][s]["min"] for m in maal]
+    meds = [m["pr_udbyder"][s]["median"] for m in maal]
+    start, slut = maal[0]["dato"], maal[-1]["dato"]
+    start_txt = dansk_dato(date.fromisoformat(start))
+
+    # --- akser
+    lo, hi = min(mins), max(meds)
+    pad = max((hi - lo) * 0.3, hi * 0.12, 5)
+    y0, y1 = max(0, lo - pad), hi + pad
+    trin = _nice_trin(y1 - y0)
+    y0 = trin * int(y0 // trin)
+    y1 = trin * (int(y1 // trin) + 1)
+    B, H, XR = 1000, 400, 860
+
+    def x(i):
+        return XR * i / (len(maal) - 1)
+
+    def y(v):
+        return H - (v - y0) / (y1 - y0) * H
+
+    def pct(v):
+        return (y1 - v) / (y1 - y0) * 100
+
+    def trappe(vals):
+        d = f"M{x(0):.1f},{y(vals[0]):.1f}"
+        for i in range(1, len(vals)):
+            d += f" H{x(i):.1f} V{y(vals[i]):.1f}"
+        return d + f" H{B}"
+
+    gitter, yetiketter = "", ""
+    v = y0
+    while v <= y1 + 0.01:
+        gitter += (f'<line x1="0" x2="{B}" y1="{y(v):.1f}" y2="{y(v):.1f}" '
+                   f'class="pg-gitter" vector-effect="non-scaling-stroke"/>')
+        yetiketter += f'<span style="top:{pct(v):.2f}%">{kr(v)} kr.</span>'
+        v += trin
+
+    med_sti, min_sti = trappe(meds), trappe(mins)
+    areal = med_sti + f" V{H} H0 Z"
+
+    # slutmærker — skubbes fra hinanden, hvis de ligger oven i hinanden
+    p_med, p_min = pct(meds[-1]), pct(mins[-1])
+    if abs(p_med - p_min) < 11:
+        midt = (p_med + p_min) / 2
+        p_med, p_min = midt - 6, midt + 6
+    maerker = (f'<span class="pg-maerke pg-m-med" style="top:{p_med:.2f}%">'
+               f'{kr(round(meds[-1]))} kr.</span>')
+    if round(mins[-1]) != round(meds[-1]):
+        maerker += (f'<span class="pg-maerke pg-m-min" style="top:{p_min:.2f}%">'
+                    f'{kr(round(mins[-1]))} kr.</span>')
+
+    midt_i = len(maal) // 2
+    xetiketter = (f'<span>{e(_kort_dato_kort(start))}</span>'
+                  f'<span>{e(_kort_dato_kort(maal[midt_i]["dato"]))}</span>'
+                  f'<span>I dag</span>')
+
+    # --- nøgletal og vurdering i almindeligt dansk
+    d_med = meds[-1] - meds[0]
+    d_min = mins[-1] - mins[0]
+    if abs(d_med) < 0.5 and abs(d_min) < 0.5:
+        dom = (f"{navn}s priser har ikke ændret sig, siden vi begyndte at måle "
+               f"{e(start_txt)}.")
+        dom_kl = "pg-flad"
+    elif d_med > 0:
+        dom = (f"{navn} er blevet dyrere. Den typiske pris er steget "
+               f"{kr(round(d_med))} kr. om måneden siden {e(start_txt)}.")
+        dom_kl = "pg-op"
+    elif d_med < 0:
+        dom = (f"{navn} er blevet billigere. Den typiske pris er faldet "
+               f"{kr(round(-d_med))} kr. om måneden siden {e(start_txt)}.")
+        dom_kl = "pg-ned"
+    else:
+        retning = "steget" if d_min > 0 else "faldet"
+        dom = (f"Den typiske pris hos {navn} er uændret, men det billigste abonnement er "
+               f"{retning} {kr(round(abs(d_min)))} kr. siden {e(start_txt)}.")
+        dom_kl = "pg-op" if d_min > 0 else "pg-ned"
+
+    marked = ""
+    sidste_priser = maal[-1].get("priser") or {}
+    if sidste_priser:
+        alle = sorted(sidste_priser.values())
+        n = len(alle)
+        mm = alle[n // 2] if n % 2 else (alle[n // 2 - 1] + alle[n // 2]) / 2
+        forskel = meds[-1] - mm
+        if abs(forskel) < 0.5:
+            sammen = "på niveau med markedet"
+        else:
+            sammen = (f"{kr(round(abs(forskel)))} kr. "
+                      f"{'over' if forskel > 0 else 'under'} markedet")
+        marked = (f'<div class="pg-kort"><b>{kr(round(mm))} kr.</b>'
+                  f'<span>Typisk pris i hele markedet — {navn} ligger {e(sammen)}</span></div>')
+
+    _, aendringer = _prisarkiv_data()
+    mine = [x_ for x_ in aendringer if x_["abonnement"] and x_["abonnement"]["udbyder"] == s]
+
+    def delta_tekst(dv):
+        if abs(dv) < 0.5:
+            return "uændret"
+        return f"{'+' if dv > 0 else '−'}{kr(round(abs(dv)))} kr."
+
+    kort = f"""<div class="pg-noegletal">
+  <div class="pg-kort"><b>{kr(round(mins[-1]))} kr.</b>
+    <span>Billigste abonnement i dag ({e(delta_tekst(d_min))} siden start)</span></div>
+  <div class="pg-kort"><b>{kr(round(meds[-1]))} kr.</b>
+    <span>Typisk pris hos {navn} ({e(delta_tekst(d_med))} siden start)</span></div>
+  {marked}
+  <div class="pg-kort"><b>{len(mine)}</b>
+    <span>Prisændringer registreret · {len(maal)} daglige målinger</span></div>
+</div>"""
+
+    liste = ""
+    if mine:
+        rk = ""
+        for x_ in mine[:6]:
+            a = x_["abonnement"]
+            dv = x_["til"] - x_["fra"]
+            rk += (f'<li><time datetime="{e(x_["dato"])}">{e(_kort_dato_kort(x_["dato"]))}</time>'
+                   f'<span>{e(_abonavn(a))}</span>'
+                   f'<span class="tal">{kr(x_["fra"])} → {kr(x_["til"])} kr.</span>'
+                   f'<span class="{"pu-op" if dv > 0 else "pu-ned"}">'
+                   f'{"+" if dv > 0 else "−"}{kr(abs(dv))} kr.</span></li>')
+        liste = (f'<h3>Seneste prisændringer hos {navn}</h3>'
+                 f'<ul class="pg-aendringer">{rk}</ul>')
+    else:
+        liste = (f'<p>Vi har ikke registreret nogen prisændring hos {navn} i perioden. '
+                 f'Ændrer selskabet sine priser, står det her dagen efter.</p>')
+
+    sr = (f"Graf over {u['navn']}s priser fra {start_txt} til i dag. Billigste abonnement "
+          f"gik fra {kr(round(mins[0]))} til {kr(round(mins[-1]))} kr., typisk pris fra "
+          f"{kr(round(meds[0]))} til {kr(round(meds[-1]))} kr. om måneden.")
+
+    return f"""
+  <h2 id="prisudvikling">Sådan har {navn}s priser udviklet sig</h2>
+  <p class="pg-dom {dom_kl}">{dom}</p>
+  {kort}
+  <figure class="pg">
+    <p class="pg-sr">{e(sr)}</p>
+    <div class="pg-ramme" aria-hidden="true">
+      <div class="pg-y">{yetiketter}</div>
+      <div class="pg-plot">
+        <svg viewBox="0 0 {B} {H}" preserveAspectRatio="none" focusable="false">
+          {gitter}
+          <path d="{areal}" class="pg-areal"/>
+          <path d="{med_sti}" class="pg-linje pg-l-med" vector-effect="non-scaling-stroke"/>
+          <path d="{min_sti}" class="pg-linje pg-l-min" vector-effect="non-scaling-stroke"/>
+        </svg>
+        {maerker}
+      </div>
+    </div>
+    <div class="pg-x" aria-hidden="true">{xetiketter}</div>
+    <figcaption class="pg-forklaring">
+      <span><i class="pg-i-med"></i>Typisk pris (det midterste af {navn}s abonnementer)</span>
+      <span><i class="pg-i-min"></i>Billigste abonnement</span>
+      <span class="pg-kilde">Normalpriser pr. måned, målt dagligt fra selskabets
+      datafeed. Intropriser er ikke med.</span>
+    </figcaption>
+  </figure>
+  {liste}
+  <p>Hver enkelt ændring står med dato i <a href="/prisarkiv/">prisarkivet</a>, og
+  udviklingen for hele markedet kan du se under
+  <a href="/prisudvikling/">prisudvikling på mobilabonnementer</a>.</p>"""
+
+
+# ------------------------------------------------------------ EGNE TESTS
+# Vises KUN, når data/tests.json indeholder rigtige målinger. Ingen test =
+# ingen påstand om test nogen steder på sitet (markedsføringsloven § 5).
+
+def _tests():
+    try:
+        with open(os.path.join(ROD, "data", "tests.json"), encoding="utf-8") as f:
+            return [t for t in json.load(f).get("tests", []) if t.get("udbyder") in UMAP]
+    except (FileNotFoundError, ValueError):
+        return []
+
+
+TESTS = _tests()
+
+
+def _median_af(vaerdier):
+    v = sorted(x for x in vaerdier if x is not None)
+    if not v:
+        return None
+    n = len(v)
+    return v[n // 2] if n % 2 else (v[n // 2 - 1] + v[n // 2]) / 2
+
+
+def _test_betaling(t):
+    if (t.get("betalt_af") or "").lower() == "telemobil":
+        return "Vi købte og betalte selv abonnementet som almindelig kunde."
+    return (f"Abonnementet blev stillet gratis til rådighed af {t.get('betalt_af')}. "
+            f"Det har ikke haft indflydelse på målingerne eller vurderingen.")
+
+
+def test_sektion(u):
+    mine = [t for t in TESTS if t["udbyder"] == u["slug"]]
+    if not mine:
+        return ""
+    t = mine[-1]
+    navn = e(u["navn"])
+    fra = dansk_dato(date.fromisoformat(t["periode_fra"]))
+    til = dansk_dato(date.fromisoformat(t["periode_til"]))
+    rk = ""
+    for m in t.get("hastighed", []):
+        rk += (f'<tr><td><strong>{e(m["sted"])}</strong><br><span class="tabel-under">'
+               f'{"indendørs" if m.get("inde") else "udendørs"} · '
+               f'{e(_kort_dato_kort(m["dato"]))}</span></td>'
+               f'<td class="tal">{kr(m["ned_mbit"])} Mbit/s</td>'
+               f'<td class="tal">{kr(m["op_mbit"])} Mbit/s</td>'
+               f'<td class="tal">{kr(m["ping_ms"])} ms</td></tr>')
+    hast = ""
+    if rk:
+        med = _median_af([m["ned_mbit"] for m in t["hastighed"]])
+        hast = f"""<h3>Hastighed målt i praksis</h3>
+<p>Medianen af vores målinger var {kr(round(med))} Mbit/s ned. Hastighed afhænger af sted,
+tidspunkt og telefon, så brug tallene som en rettesnor, ikke en garanti.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Egne målinger med {navn} fra {e(fra)} til {e(til)}.</caption>
+<thead><tr><th scope="col">Sted</th><th scope="col">Download</th>
+<th scope="col">Upload</th><th scope="col">Svartid</th></tr></thead>
+<tbody>{rk}</tbody></table></div>"""
+    ks = ""
+    kontakter = t.get("kundeservice", [])
+    if kontakter:
+        li = "".join(
+            f'<li><strong>{e(k["kanal"].capitalize())}, {e(_kort_dato_kort(k["dato"]))} kl. '
+            f'{e(k.get("klokken", ""))}:</strong> {kr(k["ventetid_minutter"])} min. ventetid. '
+            f'{"Løst i første henvendelse." if k.get("loest") else "Ikke løst i første henvendelse."}'
+            f'{" Emne: " + e(k["emne"]) + "." if k.get("emne") else ""}</li>'
+            for k in kontakter)
+        ks = f'<h3>Kundeservice i praksis</h3><ul class="pilliste">{li}</ul>'
+    akt = ""
+    if t.get("aktivering_minutter") is not None:
+        akt = (f'<p><strong>Aktivering:</strong> {e(t.get("simkort", "simkort"))} var aktivt '
+               f'efter {kr(t["aktivering_minutter"])} minutter.</p>')
+    obs = "".join(f"<li>{e(o)}</li>" for o in t.get("observationer", []))
+    obs = f'<h3>Det lagde vi mærke til</h3><ul class="pilliste">{obs}</ul>' if obs else ""
+    bil = ""
+    for b_ in t.get("billeder", []):
+        sti_b = os.path.join(ROD, "assets", "img", "test", b_["fil"])
+        if os.path.exists(sti_b):
+            bil += (f'<figure class="test-billede"><img src="/assets/img/test/{e(b_["fil"])}" '
+                    f'alt="{e(b_["alt"])}" loading="lazy" decoding="async">'
+                    f'<figcaption>{e(b_["alt"])}</figcaption></figure>')
+    return f"""
+  <h2 id="test">Vi har testet {navn}</h2>
+  <div class="test-fakta"><p><strong>Testet af {e(FORFATTER['navn'])}</strong> fra {e(fra)}
+  til {e(til)} med {e(t['abonnement'])}. {e(_test_betaling(t))} Metoden står på
+  <a href="/metode/#egne-tests">vores metodeside</a>.</p></div>
+  {akt}{hast}{ks}{obs}{bil}"""
+
+
+def test_reviewld(u):
+    mine = [t for t in TESTS if t["udbyder"] == u["slug"]]
+    if not mine:
+        return None
+    t = mine[-1]
+    return {"@type": "Review", "author": {"@id": DOMAENE + "/om/emil-rostgaard/#person"},
+            "datePublished": t["periode_til"],
+            "itemReviewed": {"@type": "Service", "name": t["abonnement"],
+                             "provider": {"@type": "Organization", "name": u["navn"]}},
+            "reviewBody": " ".join(t.get("observationer", []))[:500] or
+                          f"Egen test af {t['abonnement']}."}
+
+
+def metode_test_sektion():
+    if not TESTS:
+        return ""
+    antal = len({t["udbyder"] for t in TESTS})
+    return f"""<section class="sektion baand-smal artikel">
+<h2 id="egne-tests">Sådan tester vi selv</h2>
+<p>Ud over priserne fra selskabernes datafeeds tester vi abonnementerne i praksis. Indtil
+videre har vi testet {antal} selskab{'er' if antal != 1 else ''}. Vi køber som
+udgangspunkt abonnementet selv som almindelig kunde. Er et abonnement stillet gratis til
+rådighed, står det tydeligt ved testen.</p>
+<ul class="pilliste">
+  <li><strong>Hastighed:</strong> Tre målinger pr. sted med samme app og telefon. Vi
+  angiver medianen, sted, dato og om vi stod inde eller ude.</li>
+  <li><strong>Steder:</strong> Både by og land, så forskellen mellem de tre net bliver
+  synlig.</li>
+  <li><strong>Kundeservice:</strong> Vi kontakter selskabet med et konkret spørgsmål og
+  noterer tidspunkt, ventetid og om sagen blev løst.</li>
+  <li><strong>Aktivering:</strong> Tiden fra bestilling til fungerende simkort eller eSIM.</li>
+</ul>
+<p>Vi offentliggør alle målinger — også de dårlige — og ændrer ikke tal efterfølgende.</p>
+</section>"""
 
 
 def main():
@@ -13930,49 +14329,93 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     byg_statisk("/metode/", "Vores metode — sådan sammenligner vi mobilabonnementer",
                 "Datagrundlag, beregninger og vurderingskriterier bag Telemobils "
                 "sammenligninger af mobilabonnementer.",
-                "Metode", "Sådan sammenligner vi", indhold.METODE, prioritet="0.6")
+                "Metode", "Sådan sammenligner vi", indhold.METODE + metode_test_sektion(),
+                prioritet="0.6")
 
+    firma = site.get("firma", {})
     emil_krop = f"""<section class="sektion baand-smal artikel">
-  <div style="display:flex;gap:1.8rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:2rem">
+  <div class="forfatter-top">
     <img src="{FORFATTER['billede']}" width="150" height="150" alt="{e(FORFATTER['navn'])}"
-         style="border-radius:18px;box-shadow:var(--skygge-loft)">
-    <div style="flex:1;min-width:260px">
-      <p class="led" style="margin-top:0">{e(FORFATTER['bio'])}</p>
-      <p><a href="{FORFATTER['linkedin']}" rel="noopener nofollow" target="_blank"
-            class="knap knap-linje knap-lille">Se profil på LinkedIn</a></p>
+         class="forfatter-foto">
+    <div>
+      <p class="led" style="margin-top:0">Jeg hedder Emil Rostgaard og står bag Telemobil. Jeg
+      har arbejdet med digitale sammenligningstjenester siden 2018 og har i flere år arbejdet
+      professionelt med søgemaskineoptimering og affiliate-markedsføring. Telemobil er mit
+      forsøg på at lave den sammenligning af mobilabonnementer, jeg selv manglede.</p>
+      <p><a href="{FORFATTER['linkedin']}" rel="me noopener nofollow" target="_blank"
+            class="knap knap-linje knap-lille">Se min profil på LinkedIn</a></p>
     </div>
   </div>
 
-  <h2>Baggrund</h2>
-  <p>Emil Rostgaard har siden 2018 arbejdet med digitale sammenligningstjenester inden for
-  forbrugerøkonomi og har stået bag opbygningen af flere danske prisportaler. Arbejdet har
-  gennemgående handlet om det samme: at oversætte komplicerede produktvilkår til tal, som
-  almindelige forbrugere kan handle på.</p>
+  <h2>Min baggrund</h2>
+  <p>Siden 2018 har jeg bygget og drevet danske sammenligningssider inden for forbrugerøkonomi.
+  Arbejdet har gennemgående handlet om det samme: at oversætte komplicerede produktvilkår og
+  prislister til tal, som almindelige forbrugere kan træffe en beslutning ud fra.</p>
+  <p>Min faglige baggrund er søgemaskineoptimering og affiliate-markedsføring. Det betyder, at
+  jeg kender begge sider af branchen: hvordan sammenligningssider tjener penge, og hvor let
+  det er at lade provisionen styre anbefalingerne. Den erfaring er grunden til, at
+  Telemobil er bygget, som den er.</p>
 
-  <h2>Hvad han laver på Telemobil</h2>
-  <ul>
-    <li>Gennemgår udbydernes produktvilkår og prislister ved hver opdatering</li>
-    <li>Fastlægger den metode, sammenligningerne bygger på</li>
-    <li>Skriver de redaktionelle vurderinger af hver udbyder</li>
-    <li>Behandler henvendelser om faktuelle fejl og rettelser</li>
+  <h2>Hvorfor jeg startede Telemobil</h2>
+  <p>Mobilmarkedet er fyldt med intropriser, der ser billige ud i tre måneder og dyre ud i ni.
+  De fleste sammenligninger viser det store tal fra annoncen. Jeg ville lave en, der viser,
+  hvad abonnementet faktisk koster over et år, og som husker priserne fra dag til dag, så
+  man kan se, om et tilbud er ægte.</p>
+
+  <h2>Sådan arbejder jeg</h2>
+  <ul class="pilliste">
+    <li><strong>Priserne hentes automatisk</strong> fra selskabernes datafeeds to gange i
+    døgnet og gemmes, så vi kan vise prisudviklingen. Se <a href="/prisarkiv/">prisarkivet</a>.</li>
+    <li><strong>Alle beregninger følger samme metode</strong>, som er beskrevet på
+    <a href="/metode/">metodesiden</a>. Intropris og oprettelse regnes altid med over 12 måneder.</li>
+    <li><strong>Vurderingerne skriver jeg selv</strong> efter at have læst selskabernes
+    abonnementsvilkår. Kundeservice-oplysninger kontrolleres på selskabernes egne sider og
+    dateres.</li>
+    <li><strong>Kilder står ved påstandene.</strong> Offentlige kilder som MitID, politiet og
+    ministerierne linkes direkte.</li>
+    <li><strong>Fejl rettes hurtigt.</strong> Finder du en pris eller oplysning, der ikke
+    stemmer, så skriv via <a href="/kontakt/">kontaktsiden</a>.</li>
   </ul>
 
-  <h2>Redaktionel linje</h2>
-  <p>Telemobil skriver konsekvent, at de fleste danskere ikke har brug for det dyreste
-  abonnement — også selvom vi typisk tjener mere på dyre produkter. Det er den vigtigste
-  redaktionelle beslutning på siden, og den er bevidst. En sammenligningsside, der aldrig
-  anbefaler det billige valg, er en annonce.</p>
+  <h2>Uafhængighed og provision</h2>
+  <p>Telemobil er gratis at bruge og finansieres af provision: Når du klikker videre til et
+  selskab og bestiller, kan jeg modtage betaling fra selskabet. Det koster dig ikke noget, og
+  links til selskaberne er markeret som kommercielle. Selskaberne kan ikke købe en bedre
+  placering, og rækkefølgen i tabellerne afgøres af pris og data — ikke af provision.</p>
+  <p>Jeg skriver konsekvent, at de fleste ikke har brug for det dyreste abonnement, også selv
+  om det typisk giver mest i provision. En sammenligning, der aldrig peger på det billige
+  valg, er en annonce. Læs mere om <a href="/saadan-tjener-vi-penge/">hvordan Telemobil
+  tjener penge</a>.</p>
+
+  <h2>Det gør jeg ikke</h2>
+  <ul class="pilliste">
+    <li>Jeg opfinder ikke anmeldelser, bedømmelser eller testresultater.</li>
+    <li>Jeg skriver ikke, at jeg har testet noget, jeg ikke har testet.</li>
+    <li>Jeg giver ikke juridisk eller økonomisk rådgivning. Siden er vejledende, og selskabernes
+    egne vilkår er altid den gældende kilde.</li>
+  </ul>
 
   <h2>Kontakt</h2>
-  <p>Spørgsmål, rettelser eller henvendelser fra presse kan sendes via
+  <p>Spørgsmål, rettelser og henvendelser fra presse kan sendes via
   <a href="/kontakt/">kontaktsiden</a> eller gennem
-  <a href="{FORFATTER['linkedin']}" rel="noopener nofollow" target="_blank">LinkedIn</a>.</p>
+  <a href="{FORFATTER['linkedin']}" rel="me noopener nofollow" target="_blank">LinkedIn</a>.</p>
+
+  <div class="faktaboks">
+    <h2 class="fb-titel">Virksomhedsoplysninger</h2>
+    <dl class="fb-liste">
+      <div><dt>Ansvarlig</dt><dd>{e(FORFATTER['navn'])}</dd></div>
+      <div><dt>Virksomhed</dt><dd>{e(firma.get('navn', ''))}</dd></div>
+      <div><dt>CVR</dt><dd><a href="{e(firma.get('cvr_url', ''))}" rel="noopener nofollow"
+        target="_blank">{e(firma.get('cvr', ''))}</a></dd></div>
+      <div><dt>Hjemmeside</dt><dd>telemobil.dk</dd></div>
+    </dl>
+  </div>
 </section>"""
 
     byg_statisk("/om/emil-rostgaard/",
                 f"{FORFATTER['navn']} — stifter og redaktør af Telemobil",
-                f"{FORFATTER['navn']} står bag Telemobil og har arbejdet med digitale "
-                "sammenligningstjenester siden 2018.",
+                f"{FORFATTER['navn']} står bag Telemobil. Arbejdet med sammenligningstjenester "
+                "siden 2018, med baggrund i SEO og affiliate-markedsføring.",
                 "Forfatter", FORFATTER["navn"], emil_krop, prioritet="0.6",
                 jsonld_ekstra={"@type": "ProfilePage", "mainEntity": {"@id": DOMAENE + "/om/emil-rostgaard/#person"}})
 
