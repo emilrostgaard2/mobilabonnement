@@ -653,9 +653,9 @@ du betaler nøjagtig det samme, som hvis du var gået direkte til deres hjemmesi
 <ul>
 <li><strong>Rækkefølgen i tabellerne.</strong> Alle sammenligningstabeller sorteres efter
 laveste pris. Sorteringen beregnes ud fra data, ikke ud fra hvad vi tjener.</li>
-<li><strong>Hvem der er med.</strong> Vi medtager også udbydere, vi ikke har en
-provisionsaftale med, når de er relevante for dig. De er markeret på samme måde som alle
-andre, og deres links er almindelige links uden sporing.</li>
+<li><strong>Hvem der er med.</strong> Priserne kommer automatisk fra selskaber, vi har en
+aftale med gennem Adtraction. Derfor er ikke alle danske selskaber med. Det skriver vi
+åbent, så du ved, at vores sammenligning ikke dækker hele markedet.</li>
 <li><strong>Hvad vi skriver.</strong> Ulemper står i vores omtaler, uanset om vi tjener på
 udbyderen. En udbyder kan ikke få en kritisk formulering fjernet.</li>
 </ul>

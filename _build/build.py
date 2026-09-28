@@ -44,6 +44,22 @@ def dansk_dato(d):
     return f"{d.day}. {MAANEDER[d.month - 1]} {d.year}"
 
 
+_LOGO_CACHE = {}
+
+
+def _logo_w(slug_, hoejde):
+    """Bredde til et logo i en given højde, så browseren kan reservere pladsen."""
+    if slug_ not in _LOGO_CACHE:
+        try:
+            from PIL import Image as _I
+            with _I.open(os.path.join(ROD, "assets", "img", "logoer", slug_ + ".webp")) as im:
+                _LOGO_CACHE[slug_] = im.size
+        except Exception:
+            _LOGO_CACHE[slug_] = (240, 96)
+    w, h = _LOGO_CACHE[slug_]
+    return round(w * hoejde / h)
+
+
 def _pak_tabeller(html):
     """Tabeller uden egen ramme får en rullebar boks om sig.
 
@@ -5175,6 +5191,7 @@ def byg_udbyder(u):
   </table>
   <p>Se hele markedet i vores <a href="/billigste-mobilabonnement/">sammenligning af
   billigste mobilabonnement</a>.</p>
+  {vs_links(u)}
 
   {udbyder_kundeservice(u)}
 
@@ -5327,6 +5344,7 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
 {krop_tekst}
 <section class="sektion baand-smal">
   {laesvidere(links)}
+  {relaterede_guides(sti)}
   {forfatterboks()}
   {afsloering()}
 </section>
@@ -6169,7 +6187,7 @@ def bb_tabel(udvalg, *, titel):
         binding = "Ingen" if not a["binding"] else f'{a["binding"]} mdr.'
         logo = os.path.join(ROD, "assets", "img", "logoer", a["udbyder"] + ".webp")
         logohtml = (f'<img src="/assets/img/logoer/{a["udbyder"]}.webp" '
-                    f'alt="{e(a["udbyder_navn"])}" loading="lazy" height="22" '
+                    f'alt="{e(a["udbyder_navn"])}" loading="lazy" height="22" width="{_logo_w(a["udbyder"], 22)}" '
                     f'decoding="async" class="bb-logo">'
                     if os.path.exists(logo) else
                     f'<strong>{e(a["udbyder_navn"])}</strong>')
@@ -6490,7 +6508,7 @@ def bb_raekke(a, *, billigst=False, gnsnit_aar=None):
         ekstra.append("symmetrisk")
 
     logohtml = (f'<img src="/assets/img/logoer/{a["udbyder"]}.webp" '
-                f'alt="{e(a["udbyder_navn"])} logo" loading="lazy" height="34" '
+                f'alt="{e(a["udbyder_navn"])} logo" loading="lazy" height="34" width="{_logo_w(a["udbyder"], 34)}" '
                 f'decoding="async" style="width:auto">'
                 if os.path.exists(logo_sti) else
                 f'<strong>{e(a["udbyder_navn"])}</strong>')
@@ -6728,7 +6746,7 @@ def bb_herovisual(udvalg):
         aar = bb_aarspris(a)
         logo = os.path.join(ROD, "assets", "img", "logoer", a["udbyder"] + ".webp")
         logohtml = (f'<img src="/assets/img/logoer/{a["udbyder"]}.webp" alt="" '
-                    f'aria-hidden="true" height="22" loading="lazy" decoding="async">'
+                    f'aria-hidden="true" height="22" width="{_logo_w(a["udbyder"], 22)}" loading="lazy" decoding="async">'
                     if os.path.exists(logo) else
                     f'<span class="hv-navn">{e(a["udbyder_navn"])}</span>')
         # Hastighedsbjælken sætter tallet i forhold til det hurtigste i udvalget
@@ -8770,7 +8788,7 @@ def drifttabel():
         url, net = DRIFT_SIDER[u["slug"]]
         logo = os.path.join(ROD, "assets", "img", "logoer", u["slug"] + ".webp")
         logohtml = (f'<img src="/assets/img/logoer/{u["slug"]}.webp" '
-                    f'alt="{e(u["navn"])} logo" loading="lazy" height="20" '
+                    f'alt="{e(u["navn"])} logo" loading="lazy" height="20" width="{_logo_w(u["slug"], 20)}" '
                     f'decoding="async" class="bb-logo">'
                     if os.path.exists(logo) else "")
         raekker += f"""<tr>
@@ -9277,7 +9295,7 @@ def tabel_lydbog_selskaber():
             hvad = "Kan tilvælges separat hos tjenesten"
         logo = os.path.join(ROD, "assets", "img", "logoer", u["slug"] + ".webp")
         logohtml = (f'<img src="/assets/img/logoer/{u["slug"]}.webp" '
-                    f'alt="{e(u["navn"])} logo" loading="lazy" height="20" '
+                    f'alt="{e(u["navn"])} logo" loading="lazy" height="20" width="{_logo_w(u["slug"], 20)}" '
                     f'decoding="async" class="bb-logo">'
                     if os.path.exists(logo) else "")
         raekker += f"""<tr>
@@ -10147,7 +10165,20 @@ def kampagnekort(k):
 </article>"""
 
 
+def _beregn_kampagnelister():
+    """Hub'en skal kende under-siderne, før de bygges — ellers linker den ikke til dem."""
+    global KAMPAGNE_UDBYDERE, KAMPAGNE_AKTIVE_KAT
+    alle = _kampagner()
+    pr_k = {}
+    for k in alle:
+        if k.get("kategori") in KAMPAGNE_KATEGORIER:
+            pr_k.setdefault(k["kategori"], []).append(k)
+    KAMPAGNE_UDBYDERE = sorted({k["udbyder"] for k in alle})
+    KAMPAGNE_AKTIVE_KAT = [n for n in KAMPAGNE_KATEGORIER if len(pr_k.get(n, [])) >= 3]
+
+
 def byg_kampagner():
+    _beregn_kampagnelister()
     sti = "/kampagner/"
     gaver = _kampagner()
     intro = sorted([a for a in ABON if a.get("intro_pris") is not None
@@ -12757,6 +12788,248 @@ rådighed, står det tydeligt ved testen.</p>
 </section>"""
 
 
+# ------------------------------------------------------------ METODE (sand beskrivelse)
+
+def metode_krop():
+    betalte = _betalte()
+    antal = len(betalte)
+    selsk = len({a["udbyder"] for a in betalte})
+    bb = len(BB) if BB else 0
+    try:
+        with open(os.path.join(ROD, "data", "prishistorik.json"), encoding="utf-8") as f:
+            m = json.load(f).get("maalinger", [])
+    except (FileNotFoundError, ValueError):
+        m = []
+    start = dansk_dato(date.fromisoformat(m[0]["dato"])) if m else OPDATERET
+    return f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort fortalt:</strong> Priserne hentes automatisk fra
+selskabernes egne produktdata to gange i døgnet. Vi regner hvert abonnement om til den
+reelle pris over 12 måneder, gemmer alle priser dag for dag og sorterer efter pris — ikke
+efter hvad vi tjener. Oplysninger, der ikke står i datafeedet, kontrollerer vi manuelt og
+daterer.</p></div>
+
+<h2 id="datagrundlag">Hvor priserne kommer fra</h2>
+<p>Priser og abonnementsdata kommer fra de datafeeds, selskaberne selv leverer gennem
+affiliate-netværket Adtraction. Det er de samme produktdata, selskaberne bruger i deres egen
+markedsføring. Feedet hentes automatisk to gange i døgnet, og siderne bygges igen hver
+gang. Datoen for seneste opdatering står på siderne.</p>
+<p>Lige nu følger vi {antal} mobilabonnementer fra {selsk} selskaber{f" og {bb} bredbåndsprodukter" if bb else ""}.
+Priserne gemmes ved hver opdatering, og vi har målt dagligt siden {e(start)}. Det er
+grundlaget for <a href="/prisarkiv/">prisarkivet</a>, <a href="/prisudvikling/">prisudviklingen</a>
+og graferne på selskabernes sider. Datasættet kan hentes frit under
+<a href="/aabne-data/">åbne data</a>.</p>
+
+<h2 id="manuelt">Det kontrollerer vi manuelt</h2>
+<ul class="pilliste">
+  <li><strong>Kundeservice-oplysninger</strong> — telefon, åbningstider og spærring af
+  simkort — kontrolleres på selskabernes egne sider og står med dato og kildelink.</li>
+  <li><strong>Kampagner med gave</strong> findes ikke i datafeedet og lægges ind i hånden.
+  De fjernes automatisk dagen efter udløb.</li>
+  <li><strong>Vurderinger, fordele og ulemper</strong> skrives ud fra selskabernes
+  abonnementsvilkår.</li>
+  <li><strong>Netværk</strong> angives ud fra selskabernes egne oplysninger.</li>
+</ul>
+
+<h2 id="beregninger">Sådan regner vi</h2>
+<div class="formelboks">
+  <code>(intropris × intromåneder) + (normalpris × resterende måneder) + oprettelse</code>
+  <span class="formel-div">÷ 12</span>
+</div>
+<ul class="pilliste">
+  <li><strong>Snit over 12 måneder</strong> er tallet ovenfor. Det er det eneste tal, der kan
+  sammenlignes på tværs af intropriser. Se <a href="/12-maaneders-prisen/">12-måneders-prisen</a>.</li>
+  <li><strong>Pris pr. GB</strong> er normalprisen divideret med datamængden i Danmark. Fri
+  data indgår ikke, fordi tallet ikke giver mening.</li>
+  <li><strong>Mindstepris</strong> på kampagner er månedsprisen gange bindingsperioden plus
+  udbetaling og oprettelse.</li>
+  <li><strong>Prisudvikling</strong> måles på normalprisen. En intropris siger noget om en
+  kampagne, ikke om prisniveauet.</li>
+  <li><strong>Telemobil-scoren</strong> samler pris, data og vilkår i ét tal. Vægtene står på
+  <a href="/telemobil-score/">siden om scoren</a>.</li>
+</ul>
+
+<h2 id="sortering">Sortering og udvælgelse</h2>
+<p>Sammenligningstabellerne sorteres efter pris. Provision indgår ikke i sorteringen, og et
+selskab kan ikke købe en bedre placering eller få en kritisk formulering fjernet.</p>
+<p>Vi viser i dag selskaber, vi har en aftale med gennem Adtraction, fordi det er derfra,
+de automatiske prisdata kommer. Det betyder, at ikke alle danske selskaber er med. Mangler
+et selskab, der er relevant for dig, så sammenlign også på selskabets egen side.</p>
+
+<h2 id="kriterier">Vurderingskriterier</h2>
+<div class="tabelramme"><table class="datatabel">
+<caption>Det lægger vi vægt på, når vi vurderer et selskab.</caption>
+<thead><tr><th scope="col">Kriterium</th><th scope="col">Vægt</th><th scope="col">Sådan vurderer vi</th></tr></thead>
+<tbody>
+<tr><td><strong>Pris</strong></td><td>Høj</td><td>Snit over 12 måneder og pris pr. GB sammenlignet med markedet</td></tr>
+<tr><td><strong>Vilkår</strong></td><td>Høj</td><td>Binding, oprettelse, opsigelse og hvor længe introprisen gælder</td></tr>
+<tr><td><strong>Netværk</strong></td><td>Middel</td><td>Hvilket af de tre danske net selskabet bruger</td></tr>
+<tr><td><strong>Gennemsigtighed</strong></td><td>Middel</td><td>Hvor let det er at finde de faktiske vilkår og normalprisen</td></tr>
+<tr><td><strong>Kundeservice</strong></td><td>Lav</td><td>Kanaler og åbningstider. Egne målinger, når vores tests foreligger</td></tr>
+</tbody></table></div>
+
+<h2 id="begraensninger">Det gør vi ikke</h2>
+<ul class="pilliste">
+  <li>Vi måler ikke selv dækning. Dækningskort kommer fra netejerne.</li>
+  <li>Vi opfinder ikke anmeldelser, bedømmelser eller testresultater.</li>
+  <li>Vi giver ikke juridisk eller økonomisk rådgivning. Selskabets egne vilkår er altid
+  gældende, og priser kan ændre sig mellem to opdateringer.</li>
+</ul>
+
+<h2 id="rettelser">Rettelser</h2>
+<p>Finder du en pris eller oplysning, der ikke stemmer, så <a href="/kontakt/">skriv til
+os</a> med et link til selskabets side. Vi retter faktuelle fejl hurtigst muligt.</p>
+
+<h2 id="aendringer">Ændringer i metoden</h2>
+<ul class="pilliste">
+  <li><strong>28. september 2026:</strong> Metodebeskrivelsen er skrevet om, så den svarer
+  præcist til, hvordan data hentes og kontrolleres. Kundeservice-oplysninger er kontrolleret
+  og dateret for alle selskaber.</li>
+  <li><strong>September 2026:</strong> Daglige prismålinger gemmes og vises som prisarkiv og
+  prisudvikling.</li>
+</ul>
+<p>Hvem står bag? Se <a href="/om/emil-rostgaard/">Emil Rostgaard</a> og
+<a href="/saadan-tjener-vi-penge/">hvordan Telemobil tjener penge</a>.</p>
+</section>"""
+
+
+# ------------------------------------------------------------ ÅBNE DATA
+
+def byg_aabne_data():
+    """Priserne som CSV under CC BY 4.0. Rådata er det, journalister og andre
+    sider linker til — og det kan ingen konkurrent tilbyde."""
+    mappe = os.path.join(ROD, "assets", "data")
+    os.makedirs(mappe, exist_ok=True)
+    import csv
+    betalte = sorted(_betalte(), key=lambda a: (a["udbyder"], a["pris"]))
+    with open(os.path.join(mappe, "mobilabonnementer.csv"), "w", newline="",
+              encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["dato", "selskab", "abonnement", "data_gb", "tale", "normalpris_kr",
+                    "intropris_kr", "intro_maaneder", "oprettelse_kr", "binding_mdr",
+                    "snit_12_mdr_kr", "esim", "5g"])
+        for a in betalte:
+            g = gns12(a)
+            w.writerow([ISO, UMAP[a["udbyder"]]["navn"], _abonavn(a),
+                        "fri" if a["data_gb"] >= 9999 else a["data_gb"], a["tale"],
+                        a["pris"], a.get("intro_pris") or "", a.get("intro_mdr") or 0,
+                        a.get("oprettelse", 0), a.get("binding", 0),
+                        round(g, 2) if g is not None else "",
+                        "ja" if a.get("esim") else "nej", "ja" if a.get("femg") else "nej"])
+    try:
+        with open(os.path.join(ROD, "data", "prishistorik.json"), encoding="utf-8") as f:
+            maal = json.load(f).get("maalinger", [])
+    except (FileNotFoundError, ValueError):
+        maal = []
+    with open(os.path.join(mappe, "prisudvikling-pr-selskab.csv"), "w", newline="",
+              encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["dato", "selskab", "antal_abonnementer", "laveste_normalpris_kr",
+                    "median_normalpris_kr", "hoejeste_normalpris_kr"])
+        for m in maal:
+            for s, v in sorted(m.get("pr_udbyder", {}).items()):
+                if s in UMAP and v.get("min"):
+                    w.writerow([m["dato"], UMAP[s]["navn"], v.get("antal", ""), v["min"],
+                                v.get("median", ""), v.get("maks", "")])
+    start = maal[0]["dato"] if maal else ISO
+    brod = f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort fortalt:</strong> Du må frit bruge vores prisdata —
+i artikler, opgaver, analyser og på egne sider — så længe du angiver Telemobil som kilde
+med et link til telemobil.dk. Filerne opdateres to gange i døgnet.</p></div>
+
+<h2>Datasæt</h2>
+<div class="tabelramme"><table class="datatabel">
+<caption>Download som CSV (UTF-8, komma-separeret). Opdateret {OPDATERET}.</caption>
+<thead><tr><th scope="col">Fil</th><th scope="col">Indhold</th><th scope="col">Periode</th></tr></thead>
+<tbody>
+<tr><td><a href="/assets/data/mobilabonnementer.csv" download><strong>mobilabonnementer.csv</strong></a></td>
+<td>Alle {len(betalte)} abonnementer med normalpris, intropris, oprettelse, binding og snit over 12 måneder</td>
+<td>I dag</td></tr>
+<tr><td><a href="/assets/data/prisudvikling-pr-selskab.csv" download><strong>prisudvikling-pr-selskab.csv</strong></a></td>
+<td>Laveste, typiske og højeste normalpris pr. selskab, dag for dag</td>
+<td>Fra {e(dansk_dato(date.fromisoformat(start)))}</td></tr>
+</tbody></table></div>
+
+<h2>Licens og kildeangivelse</h2>
+<p>Dataene udgives under <a href="https://creativecommons.org/licenses/by/4.0/deed.da"
+rel="license noopener" target="_blank">Creative Commons Navngivelse 4.0 (CC BY 4.0)</a>.
+Skriv fx: <em>Kilde: Telemobil.dk, prisdata hentet [dato]</em> — med link til
+telemobil.dk.</p>
+
+<h2>Hvor dataene kommer fra</h2>
+<p>Priserne stammer fra selskabernes egne produktdata via Adtraction og hentes automatisk.
+Se <a href="/metode/">vores metode</a> for, hvordan vi regner, og hvad dataene ikke dækker.
+Priser kan ændre sig mellem to opdateringer, og selskabets egen side er altid gældende.</p>
+
+<h2>Journalist eller studerende?</h2>
+<p>Har du brug for et andet udtræk, en længere periode eller en kommentar, så
+<a href="/kontakt/">skriv til os</a>. Se også <a href="/presse/">pressesiden</a> og
+<a href="/prisarkiv/">prisarkivet</a> med hver målt prisændring.</p>
+</section>"""
+    ds = {"@type": "Dataset", "@id": DOMAENE + "/aabne-data/#datasaet",
+          "name": "Priser på danske mobilabonnementer",
+          "description": ("Daglige prisdata for danske mobilabonnementer: normalpris, intropris, "
+                          "oprettelse, binding og beregnet snitpris over 12 måneder, samt "
+                          "prisudvikling pr. selskab."),
+          "url": DOMAENE + "/aabne-data/",
+          "creator": {"@id": DOMAENE + "/#organisation"},
+          "publisher": {"@id": DOMAENE + "/#organisation"},
+          "license": "https://creativecommons.org/licenses/by/4.0/",
+          "isAccessibleForFree": True, "inLanguage": "da-DK",
+          "temporalCoverage": f"{start}/..",
+          "spatialCoverage": {"@type": "Place", "name": "Danmark"},
+          "dateModified": ISO,
+          "keywords": ["mobilabonnement", "priser", "Danmark", "telekommunikation"],
+          "distribution": [
+              {"@type": "DataDownload", "encodingFormat": "text/csv",
+               "contentUrl": DOMAENE + "/assets/data/mobilabonnementer.csv"},
+              {"@type": "DataDownload", "encodingFormat": "text/csv",
+               "contentUrl": DOMAENE + "/assets/data/prisudvikling-pr-selskab.csv"}]}
+    byg_statisk("/aabne-data/", "Åbne prisdata for mobilabonnementer — gratis CSV",
+                "Hent priser på danske mobilabonnementer som CSV. Opdateres to gange i "
+                "døgnet og må bruges frit med kildeangivelse (CC BY 4.0).",
+                "Åbne data", "Åbne prisdata", brod, prioritet="0.6", jsonld_ekstra=ds)
+
+
+# ------------------------------------------------------------ INTERNE LINKS
+
+def vs_links(u):
+    par = [(a, b_) for a, b_ in VS_PAR_AKTIVE if u["slug"] in (a, b_)]
+    if not par:
+        return ""
+    li = ""
+    for a, b_ in par:
+        anden = UMAP[b_ if a == u["slug"] else a]
+        li += (f'<li><a href="/sammenlign/{a}-vs-{b_}/">{e(u["navn"])} eller '
+               f'{e(anden["navn"])}?</a></li>')
+    return (f'<h3>Sammenlign {e(u["navn"])} direkte</h3>'
+            f'<ul class="pilliste">{li}</ul>')
+
+
+def relaterede_guides(sti):
+    stier = [g for g in GUIDER if g[0] != sti]
+    if not stier:
+        return ""
+    i = next((n for n, g in enumerate(GUIDER) if g[0] == sti), 0)
+    n = len(GUIDER)
+    valg, set_ = [], set()
+    for skridt in (1, 3, 7, 11):
+        g = GUIDER[(i + skridt) % n]
+        if g[0] != sti and g[0] not in set_:
+            valg.append(g)
+            set_.add(g[0])
+    li = "".join(f'<li><a href="{g[0]}">{e(g[1])}</a></li>' for g in valg[:3])
+    return f'<h3>Flere guides</h3><ul class="pilliste">{li}</ul>'
+
+
+
+def byg_indexnow_noegle():
+    """Nøglefilen, der beviser over for IndexNow, at vi ejer domænet."""
+    k = site.get("indexnow_key")
+    if k:
+        with open(os.path.join(ROD, f"{k}.txt"), "w", encoding="utf-8") as f:
+            f.write(k)
+
+
 def main():
     # Popup'en ligger på hver side, så den skal bygges før noget andet
     skabelon.FIRMA = site.get("firma", {})
@@ -13934,6 +14207,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_anmeldelser()
     byg_lydbog()
     byg_prisarkiv()
+    byg_aabne_data()
+    byg_indexnow_noegle()
     byg_q4()
     byg_guideoversigt()
     byg_guide("/guides/skift-mobilselskab/", "Skift mobilselskab",
@@ -14329,7 +14604,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     byg_statisk("/metode/", "Vores metode — sådan sammenligner vi mobilabonnementer",
                 "Datagrundlag, beregninger og vurderingskriterier bag Telemobils "
                 "sammenligninger af mobilabonnementer.",
-                "Metode", "Sådan sammenligner vi", indhold.METODE + metode_test_sektion(),
+                "Metode", "Sådan sammenligner vi", metode_krop() + metode_test_sektion(),
                 prioritet="0.6")
 
     firma = site.get("firma", {})
@@ -14419,29 +14694,42 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
                 "Forfatter", FORFATTER["navn"], emil_krop, prioritet="0.6",
                 jsonld_ekstra={"@type": "ProfilePage", "mainEntity": {"@id": DOMAENE + "/om/emil-rostgaard/#person"}})
 
-    kontakt_krop = """<section class="sektion baand-smal artikel">
-  <h2>Skriv til os</h2>
-  <p>Vi svarer på alle henvendelser om faktuelle fejl i priser eller oplysninger. Skriv til
-  <strong>kontakt@telemobil.dk</strong>.</p>
-  <h2>Rettelser</h2>
-  <p>Har du fundet en pris eller en oplysning, der ikke stemmer, så send gerne et link til
-  udbyderens side sammen med din henvendelse. Så kan vi rette hurtigt.</p>
-  <h2>Udbydere</h2>
-  <p>Er du udbyder og mangler i vores sammenligning, hører vi gerne fra dig. Bemærk at
-  optagelse ikke kan købes, og at en eventuel provisionsaftale ikke påvirker placering
-  eller omtale. Se <a href="/saadan-tjener-vi-penge/">vores forretningsmodel</a>.</p>
-  <h2>Presse</h2>
-  <p>Henvendelser fra presse kan sendes til samme adresse eller via
-  <a href="https://www.linkedin.com/in/emil-rostgaard-702809195/" rel="noopener nofollow" target="_blank">LinkedIn</a>.
-  Se også vores <a href="/presse/">pressesid med faktaark</a>.</p>
+    _ks_li = "".join(
+        f'<li><a href="/udbydere/{u["slug"]}/#kundeservice">{e(u["navn"])} kundeservice</a></li>'
+        for u in sorted(UDBYDERE, key=lambda x: x["navn"].lower()))
+    _f = site.get("firma", {})
+    kontakt_krop = f"""<section class="sektion baand-smal artikel">
+  <div class="advarsel"><p><strong>Leder du efter dit teleselskab?</strong> Telemobil er en
+  uafhængig sammenligningstjeneste og kan ikke hjælpe med dit abonnement, din regning eller
+  spærring af simkort. Kontakt dit selskab direkte:</p>
+  <ul class="pilliste">{_ks_li}</ul>
+  <p>Har du mistet din telefon, så se <a href="/guides/mistet-telefon/">hvad du skal gøre
+  nu</a>.</p></div>
 
-  <h2>Postadresse</h2>
-  <p>
-    Telemobil<br>
-    Lundbyesgade 13<br>
-    8000 Aarhus C<br>
-    Danmark
-  </p>
+  <h2>Skriv til Telemobil</h2>
+  <p>Vi svarer på henvendelser om faktuelle fejl, spørgsmål til vores sammenligninger og
+  henvendelser fra presse og selskaber. Skriv til <strong>kontakt@telemobil.dk</strong>.</p>
+
+  <h2>Rettelser</h2>
+  <p>Har du fundet en pris eller oplysning, der ikke stemmer, så send et link til
+  selskabets side sammen med din henvendelse. Så kan vi rette hurtigt.</p>
+
+  <h2>Selskaber</h2>
+  <p>Er du et teleselskab og mangler i sammenligningen, hører vi gerne fra dig. En bedre
+  placering kan ikke købes, og en provisionsaftale påvirker hverken sortering eller omtale.
+  Se <a href="/saadan-tjener-vi-penge/">vores forretningsmodel</a>.</p>
+
+  <h2>Presse og data</h2>
+  <p>Presse kan skrive til samme adresse eller via
+  <a href="{FORFATTER['linkedin']}" rel="noopener nofollow" target="_blank">LinkedIn</a>.
+  Se <a href="/presse/">pressesiden</a>, og hent vores prisdata frit under
+  <a href="/aabne-data/">åbne data</a>.</p>
+
+  <h2>Virksomhedsoplysninger</h2>
+  <p>Telemobil drives af {e(_f.get("navn", ""))}, CVR
+  <a href="{e(_f.get("cvr_url", ""))}" rel="noopener nofollow" target="_blank">{e(_f.get("cvr", ""))}</a>.<br>
+  Lundbyesgade 13, 8000 Aarhus C, Danmark.<br>
+  Ansvarlig redaktør: <a href="/om/emil-rostgaard/">{e(FORFATTER['navn'])}</a>.</p>
   <p>Vi har ikke fysisk kundebetjening — henvendelser besvares på mail.</p>
 </section>"""
     byg_statisk("/kontakt/", "Kontakt Telemobil — rettelser, spørgsmål og presse",
