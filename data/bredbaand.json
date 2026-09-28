@@ -2,6 +2,31 @@
  "hentet": "2026-09-28",
  "abonnementer": [
   {
+   "id": "bb-891414",
+   "udbyder": "cbb",
+   "udbyder_navn": "CBB",
+   "navn": "5G internet",
+   "teknologi": "5g",
+   "ned": 950,
+   "op": 90,
+   "pris": 299,
+   "intro_pris": 99,
+   "intro_mdr": 2,
+   "oprettelse": 0,
+   "binding": 6,
+   "seks_maaneder": 1794,
+   "seks_maaneder_tilbud": 594,
+   "net": "CBB",
+   "fordele": [
+    "Klar på 2 min",
+    "Inklusiv gratis lånerouter",
+    "Nem installation uden kabler"
+   ],
+   "kampagnetekst": "99 kr/md første 2 mdr",
+   "logo_url": "https://adtraction.com/image.htm?imgId=1700024852",
+   "link": "https://on.cbb.dk/t/t?a=1700024858&as=2102885611&t=2&tk=1&url=https://www.cbb.dk/shop/internet/"
+  },
+  {
    "id": "bb-566679",
    "udbyder": "hiper",
    "udbyder_navn": "Hiper",
