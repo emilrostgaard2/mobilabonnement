@@ -2149,3 +2149,10 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .forfatter-top{display:flex;gap:1.8rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:2rem}
 .forfatter-top > div{flex:1;min-width:260px}
 .forfatter-foto{border-radius:18px;box-shadow:var(--skygge-loft)}
+
+/* ---------- Bredbånd: "Lige nu"-boks ---------- */
+.bb-nu{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin:1.2rem 0;padding:1rem 1.2rem;
+  background:#EAFBF4;border:1px solid #BDEFD9;border-radius:var(--r-l)}
+.bb-nu p{margin:0;flex:1 1 320px}
+.bb-nu-maerke{font-family:var(--font-tal);font-size:.72rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;background:var(--puls-dyb);color:#fff;padding:.25rem .6rem;border-radius:99px}
