@@ -5152,7 +5152,9 @@ def byg_udbyder(u):
 
   {udbyder_faktaboks(u, egne)}
 
-  <h2>{e(uq.get("h2_vurdering", f"Vores vurdering af {u['navn']}"))}</h2>
+  {vores_vurdering(u, egne)}
+
+  <h2>{e(uq.get("h2_vurdering", f"{u['navn']} i praksis").replace(" vurderet:", " i praksis:"))}</h2>
   {afsnit}
 
   {stjerner(u)}
@@ -13369,6 +13371,272 @@ def byg_indexnow_noegle():
             f.write(k)
 
 
+# ------------------------------------------------------------ VORES VURDERING
+# Én skabelon og ét regelsæt for alle selskaber. Alt i "Det har vi
+# kontrolleret" kommer fra feedet, prisarkivet eller dateret kundeservice-
+# kontrol. Ordene i "Vores vurdering" beregnes af reglerne nedenfor, som også
+# står på /metode/#vurdering. Ingen håndskrevne domme, ingen særbehandling.
+
+def _gruppe(a):
+    for navn, lo, hi, _ in DATAGRUPPER:
+        if lo <= a["data_gb"] <= hi:
+            return navn
+    return None
+
+
+def _gb_kort(a):
+    return "fri data" if a["data_gb"] >= 9999 else f"{kr(a['data_gb'])} GB"
+
+
+def _markedsmedian_pr_gruppe():
+    pr = {}
+    for a in _betalte():
+        g = _gruppe(a)
+        if g:
+            pr.setdefault(g, []).append(a["pris"])
+    return {g: _median(v) for g, v in pr.items()}
+
+
+def _oprems(liste):
+    return liste[0] if len(liste) == 1 else ", ".join(liste[:-1]) + " og " + liste[-1]
+
+
+def vurdering_regler(u, egne):
+    """Returnerer rækkerne (kriterium, fakta, dom, forklaring) og samlet tekst."""
+    navn = u["navn"]
+    alle = _betalte()
+    rk = []
+
+    # --- Pris
+    intro = [a for a in egne if a.get("intro_pris") is not None and a.get("intro_mdr")]
+    billigst_i = []
+    for gnavn, lo, hi, _ in DATAGRUPPER:
+        k = [a for a in alle if lo <= a["data_gb"] <= hi]
+        if k and min(k, key=lambda a: _samlet(a, 12))["udbyder"] == u["slug"]:
+            billigst_i.append(gnavn[0].lower() + gnavn[1:])
+    med = _markedsmedian_pr_gruppe()
+    afv = [a["pris"] / med[_gruppe(a)] for a in egne if _gruppe(a) in med and med[_gruppe(a)]]
+    niveau = _median(afv) if afv else 1
+    niv_txt = ("under markedets typiske niveau" if niveau < 0.9 else
+               "over markedets typiske niveau" if niveau > 1.1 else
+               "omkring markedets typiske niveau")
+    if intro:
+        set_, valgt = set(), []
+        for a in sorted(intro, key=lambda a: (bool(a.get("streaming")), a["data_gb"], a["intro_pris"])):
+            k = (a["data_gb"], a["intro_pris"], a["intro_mdr"])
+            if k not in set_:
+                set_.add(k)
+                valgt.append(a)
+        eks = ", ".join(f"{_gb_kort(a)} til {kr(a['intro_pris'])} kr. i {a['intro_mdr']} md"
+                        f"{'r' if a['intro_mdr'] != 1 else ''}."
+                        for a in sorted(valgt[:3], key=lambda a: a["data_gb"]))
+        fakta = (f"{len(intro)} af {len(egne)} abonnementer har intropris: {eks} "
+                 f"Normalprisen ligger på {kr(min(a['pris'] for a in egne))}–"
+                 f"{kr(max(a['pris'] for a in egne))} kr. om måneden.")
+    else:
+        fakta = (f"Ingen intropriser. Fast pris på {kr(min(a['pris'] for a in egne))}–"
+                 f"{kr(max(a['pris'] for a in egne))} kr. om måneden.")
+    if billigst_i:
+        dom = "Meget stærk" + (" det første år" if intro else "")
+        forkl = (f"Laveste pris over 12 måneder i vores sammenligning på "
+                 f"{_oprems(billigst_i)}. Normalprisen ligger {niv_txt}.")
+    elif niveau < 0.9:
+        dom, forkl = "Stærk", f"Normalprisen ligger {niv_txt}."
+    elif niveau > 1.1:
+        dom, forkl = "Over markedet", f"Normalprisen ligger {niv_txt}."
+    else:
+        dom, forkl = "Middel", f"Normalprisen ligger {niv_txt}."
+    rk.append(("Pris", fakta, dom, forkl))
+
+    # --- Vilkår
+    uden_b = sum(1 for a in egne if not a["binding"])
+    uden_o = sum(1 for a in egne if not a.get("oprettelse"))
+    esim = sum(1 for a in egne if a.get("esim"))
+    femg = sum(1 for a in egne if a.get("femg"))
+    eu = [a.get("eu_gb") for a in egne if a.get("eu_gb")]
+    n = len(egne)
+
+    def andel(k):
+        return "alle" if k == n else "ingen" if k == 0 else f"{k} af {n}"
+    fakta = (f"Binding: {'ingen' if uden_b == n else f'på {n - uden_b} af {n}'}. "
+             f"Oprettelse: {'ingen' if uden_o == n else f'på {n - uden_o} af {n}'}. "
+             + (f"eSIM på {andel(esim)}, " if esim else "eSIM: ikke oplyst. ")
+             + f"5G på {andel(femg)}."
+             + (f" EU-data: {kr(min(eu))}–{kr(max(eu))} GB." if eu and min(eu) != max(eu)
+                else f" EU-data: {kr(eu[0])} GB." if eu else ""))
+    if uden_b == n and uden_o == n:
+        dom, forkl = "Stærke", "Du kan skifte når som helst, uden at det koster noget."
+    elif uden_b == n:
+        dom, forkl = "Gode", "Ingen binding, men oprettelse på nogle abonnementer."
+    else:
+        dom, forkl = "Svagere", "Binding på nogle abonnementer. Tjek den samlede mindstepris."
+    rk.append(("Vilkår", fakta, dom, forkl))
+
+    # --- Netværk
+    net = u.get("netvaerk", "")
+    net_navn = {"TN-Network": "TT-netværket (Telenor og Telia)", "3": "3's net",
+                "TDC NET": "TDC NET"}.get(net, net)
+    note = u.get("ejer_note") or ""
+    fakta = note if (note and ("net" in note.lower())) else (f"Kører på {net_navn}." + (f" {note}" if note else ""))
+    rk.append(("Netværk", fakta, "Afhænger af din adresse",
+               "Dækningen afgøres af nettet, ikke af selskabet. Tjek dækningen, hvor du bor "
+               "og arbejder."))
+
+    # --- Gennemsigtighed
+    _, aendr = _prisarkiv_data()
+    mine = [x for x in aendr if x["abonnement"] and x["abonnement"]["udbyder"] == u["slug"]]
+    op = [x for x in mine if x["til"] > x["fra"]]
+    ned = [x for x in mine if x["til"] < x["fra"]]
+    spring = max((a["pris"] / a["intro_pris"] for a in intro
+                  if a["intro_pris"] and not a.get("streaming")), default=1)
+    dele = []
+    if intro:
+        kand = [a for a in intro if not a.get("streaming")] or intro
+        a = max(kand, key=lambda a: a["pris"] / a["intro_pris"] if a["intro_pris"] else 0)
+        dele.append(f"Efter introperioden stiger {_gb_kort(a)} fra {kr(a['intro_pris'])} til "
+                    f"{kr(a['pris'])} kr.")
+    if op:
+        x = op[0]
+        dele.append(f"Vi har registreret {len(op)} prisstigning{'er' if len(op) != 1 else ''}"
+                    f", senest {_gb_kort(x['abonnement'])} fra {kr(x['fra'])} til "
+                    f"{kr(x['til'])} kr. den {dansk_dato(date.fromisoformat(x['dato']))}.")
+    if ned:
+        dele.append(f"{len(ned)} prisfald registreret.")
+    if not op and not ned:
+        dele.append("Ingen prisændringer registreret i måleperioden.")
+    fakta = " ".join(dele)
+    if not intro and not op:
+        dom, forkl = "Høj", "Fast pris uden intropris. Det, du ser, er det, du betaler."
+    elif spring >= 2.5 or op:
+        dom, forkl = "Middel", ("Normalprisen er let at finde, men "
+                                + ("springet efter introperioden er stort."
+                                   if spring >= 2.5 else "priserne er steget i måleperioden."))
+    else:
+        dom, forkl = "God", "Intropriserne ligger tæt på normalprisen."
+    rk.append(("Gennemsigtighed", fakta, dom, forkl))
+
+    # --- Kundeservice
+    ks = u.get("kundeservice") or {}
+    dele = []
+    if ks.get("ingen_telefon"):
+        dele.append("Ingen telefonisk kundeservice.")
+    elif ks.get("tlf"):
+        dele.append(f"Telefon {ks['tlf']}" + (f", {ks['tider'][0].lower()}{ks['tider'][1:]}."
+                                              if ks.get("tider") else "."))
+    if ks.get("chat"):
+        dele.append(f"Chat: {ks['chat'][0].lower()}{ks['chat'][1:]}.")
+    if ks.get("spaerring"):
+        dele.append(f"Spærring af simkort: {ks['spaerring'][0].lower()}{ks['spaerring'][1:]}.")
+    if ks.get("kontrolleret"):
+        dele.append(f"Kontrolleret {dansk_dato(date.fromisoformat(ks['kontrolleret']))}.")
+    fakta = " ".join(dele) or "Se selskabets egen hjemmeside."
+    tider = (ks.get("tider") or "").lower()
+    doegn = "døgn" in (ks.get("spaerring") or "") or "når som helst" in (ks.get("spaerring") or "")
+    if ks.get("ingen_telefon"):
+        dom, forkl = "Kun digital", "Hjælpen foregår i app og chat. Passer til dig, der ikke vil ringe."
+    elif "lørdag" in tider or "døgn" in (ks.get("chat") or "").lower():
+        dom, forkl = "God", "Åbent ud over almindelig kontortid."
+    elif ks.get("tlf"):
+        dom = "Tilstrækkelig"
+        forkl = (("Telefon på hverdage" if ks.get("tider") else "Telefonisk kundeservice")
+                 + (", og spærring virker altid." if doegn else "."))
+    else:
+        dom, forkl = "Ikke vurderet", "Oplysningerne kunne ikke kontrolleres."
+    rk.append(("Kundeservice", fakta, dom, forkl))
+
+    # --- Samlet
+    if billigst_i and intro:
+        samlet = (f"{navn} er et af de billigste valg det første år, særligt på "
+                  f"{_oprems(billigst_i)}. Sæt en påmindelse til måneden før, introprisen "
+                  f"udløber, så du kan tage stilling, før prisen stiger.")
+        bedst = "Dig, der vil have en lav pris nu og gerne skifter, når en kampagne udløber."
+        mindre = "Dig, der vil have en fast pris uden at skulle holde øje med den."
+    elif billigst_i:
+        samlet = (f"{navn} har den laveste pris over et år på {_oprems(billigst_i)} — uden "
+                  f"intropris, så prisen er den samme næste år.")
+        bedst = "Dig, der vil have en lav, fast pris uden at skulle holde øje med kampagner."
+        mindre = "Dig, der jagter den laveste pris de første måneder."
+    elif not intro:
+        samlet = f"{navn} har faste priser, så det, du ser, er det, du betaler — også næste år."
+        bedst = "Dig, der foretrækker en fast pris frem for kampagner."
+        mindre = "Dig, der vil have den laveste pris de første måneder."
+    else:
+        samlet = (f"{navn} ligger {niv_txt} på normalprisen. Sammenlign på prisen over 12 "
+                  f"måneder, før du vælger.")
+        ks_god = rk[4][2] == "God"
+        if eu and max(eu) >= 50:
+            bedst = "Dig, der rejser meget og har brug for meget data i EU."
+        elif ks_god:
+            bedst = "Dig, der vil kunne få hjælp uden for almindelig kontortid."
+        elif niveau < 0.9:
+            bedst = "Dig, der vil have en lav normalpris, også når introperioden er slut."
+        elif femg == n:
+            bedst = "Dig, der vil have 5G på alle abonnementer."
+        else:
+            bedst = f"Dig, der vil være på {net_navn}."
+        if niveau > 1.1:
+            mindre = "Dig, der kun går efter den laveste pris."
+        else:
+            mindre = "Dig, der vil have den laveste pris over et år — sammenlign først."
+    if ks.get("ingen_telefon"):
+        mindre += " Og dig, der gerne vil kunne ringe til kundeservice."
+    return rk, samlet, bedst, mindre
+
+
+def vores_vurdering(u, egne):
+    if not egne:
+        return ""
+    rk, samlet, bedst, mindre = vurdering_regler(u, egne)
+    raekker = "".join(
+        f'<tr><th scope="row">{e(k)}</th><td>{e(f)}</td>'
+        f'<td><strong>{e(d)}.</strong> {e(x)}</td></tr>' for k, f, d, x in rk)
+    return f"""
+  <h2 id="vurdering">Vores vurdering af {e(u['navn'])}</h2>
+  <p class="vurd-meta">Vurderet {e(OPDATERET)} af
+  <a href="/om/emil-rostgaard/">{e(FORFATTER['navn'])}</a>. Bygger på priser fra
+  {e(u['navn'])}s datafeed, abonnementsvilkår og kontrollerede kundeservice-oplysninger.
+  Det er ikke en test. Reglerne bag vurderingen står i <a href="/metode/#vurdering">vores
+  metode</a> og er de samme for alle selskaber.</p>
+  <div class="tabelramme"><table class="datatabel vurd-tabel">
+  <caption>Vores vurdering af {e(u['navn'])} på fem kriterier. Opdateres automatisk, når
+  priser eller vilkår ændrer sig.</caption>
+  <thead><tr><th scope="col">Kriterium</th><th scope="col">Det har vi kontrolleret</th>
+  <th scope="col">Vores vurdering</th></tr></thead>
+  <tbody>{raekker}</tbody></table></div>
+  <div class="vurd-samlet">
+    <p><strong>Samlet:</strong> {e(samlet)}</p>
+    <p><strong>Bedst til:</strong> {e(bedst)}<br>
+    <strong>Mindre godt til:</strong> {e(mindre)}</p>
+  </div>"""
+
+
+def metode_vurdering_sektion():
+    return """<section class="sektion baand-smal artikel">
+<h2 id="vurdering">Sådan beregnes "Vores vurdering"</h2>
+<p>Vurderingen på hver udbyderside bygger på samme regler for alle selskaber. Tallene
+opdateres automatisk, og ingen vurdering er skrevet i hånden.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Reglerne bag vurderingen.</caption>
+<thead><tr><th scope="col">Kriterium</th><th scope="col">Regel</th></tr></thead>
+<tbody>
+<tr><th scope="row">Pris</th><td><strong>Meget stærk</strong>, hvis selskabet har den laveste
+pris over 12 måneder i mindst én datastørrelse. Ellers sammenlignes normalprisen med den
+typiske normalpris i samme datastørrelse: mere end 10 % under er <strong>Stærk</strong>,
+mere end 10 % over er <strong>Over markedet</strong>, ellers <strong>Middel</strong>.</td></tr>
+<tr><th scope="row">Vilkår</th><td><strong>Stærke</strong> uden binding og oprettelse på alle
+abonnementer, <strong>Gode</strong> uden binding, <strong>Svagere</strong> med binding.</td></tr>
+<tr><th scope="row">Netværk</th><td>Vurderes ikke med et ord, fordi dækningen afhænger af
+adressen. Vi oplyser nettet.</td></tr>
+<tr><th scope="row">Gennemsigtighed</th><td><strong>Høj</strong> med faste priser og ingen
+registrerede prisstigninger. <strong>Middel</strong>, hvis normalprisen er mindst 2,5 gange
+introprisen, eller hvis vi har registreret en prisstigning. Ellers <strong>God</strong>.</td></tr>
+<tr><th scope="row">Kundeservice</th><td><strong>God</strong> med åbent i weekenden eller
+chat døgnet rundt, <strong>Tilstrækkelig</strong> med telefon på hverdage, <strong>Kun
+digital</strong> uden telefon. Oplysningerne kontrolleres på selskabets egen side.</td></tr>
+</tbody></table></div>
+</section>"""
+
+
 def main():
     # Popup'en ligger på hver side, så den skal bygges før noget andet
     skabelon.FIRMA = site.get("firma", {})
@@ -14943,7 +15211,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     byg_statisk("/metode/", "Vores metode — sådan sammenligner vi mobilabonnementer",
                 "Datagrundlag, beregninger og vurderingskriterier bag Telemobils "
                 "sammenligninger af mobilabonnementer.",
-                "Metode", "Sådan sammenligner vi", metode_krop() + metode_test_sektion(),
+                "Metode", "Sådan sammenligner vi", metode_krop() + metode_vurdering_sektion() + metode_test_sektion(),
                 prioritet="0.6")
 
     firma = site.get("firma", {})
