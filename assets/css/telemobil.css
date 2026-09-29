@@ -1184,7 +1184,6 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .gb-navigation a.aktiv{background:var(--blaek);border-color:var(--blaek);color:#fff}
 
 /* Strammere footer */
-.fod-gitter{grid-template-columns:1.5fr 1fr 1fr 1fr;gap:2.4rem;margin-bottom:2rem}
 .fod-om p{font-size:.88rem;line-height:1.6}
 .fod-om .logo{margin-bottom:.8rem}
 .fod-adresse{font-size:.84rem;color:#8892BC;line-height:1.7}
@@ -1796,7 +1795,7 @@ body{overflow-x:clip;max-width:100%;position:relative}
   box-shadow:var(--skygge-loft);overflow:hidden}
 .hp-hoved{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;
   padding:1.2rem 1.3rem .9rem;border-bottom:1px solid var(--graa-lys)}
-.hp-hoved h2{font-size:1.15rem;margin:0 0 .2rem;letter-spacing:-.02em}
+.hp-hoved h2,.hp-hoved .hp-titel{font-size:1.15rem;font-weight:700;margin:0 0 .2rem;letter-spacing:-.02em;font-family:var(--font-display)}
 .hp-hoved p{margin:0;font-size:.78rem;color:var(--graa)}
 .hp-luk{width:34px;height:34px;flex-shrink:0;border-radius:50%;border:1px solid var(--graa-lys);
   background:#fff;font-size:1.3rem;line-height:1;color:var(--graa);cursor:pointer}
@@ -2156,3 +2155,29 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .bb-nu p{margin:0;flex:1 1 320px}
 .bb-nu-maerke{font-family:var(--font-tal);font-size:.72rem;font-weight:700;letter-spacing:.08em;
   text-transform:uppercase;background:var(--puls-dyb);color:#fff;padding:.25rem .6rem;border-radius:99px}
+@media (max-width:560px){
+  .hv-fod{flex-wrap:wrap;gap:.15rem .6rem}
+  .hv-fod span{white-space:normal}
+}
+@media (max-width:560px){ .hv-fod > span:first-child{display:none} }
+
+/* ---------- Footer: responsivt gitter ----------
+   Tidligere tvang en senere regel fire kolonner på alle skærme, så footeren
+   løb ud over kanten på mobil. Nu: én række på stor skærm, tre, to og til
+   sidst én kolonne. Står sidst, så den vinder over ældre regler. */
+.fod-gitter{display:grid;grid-template-columns:1.5fr repeat(5,minmax(0,1fr));gap:2rem;margin-bottom:2rem}
+.fod-gitter > *{min-width:0}
+.fod-gitter a{overflow-wrap:break-word;hyphens:auto}
+@media (max-width:1100px){
+  .fod-gitter{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fod-om{grid-column:1 / -1;max-width:60ch}
+}
+@media (max-width:700px){
+  .fod-gitter{grid-template-columns:repeat(2,minmax(0,1fr));gap:1.8rem 1.4rem}
+  .fod .fodtitel{font-size:.74rem;margin-bottom:.7rem}
+  .fod ul li{margin-bottom:.35rem}
+}
+@media (max-width:380px){
+  .fod-gitter{grid-template-columns:1fr}
+}
+.fod-bund{flex-wrap:wrap}

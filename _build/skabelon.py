@@ -398,6 +398,12 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 """
 
 
+# Ankertekster i footeren med det, folk søger på
+FOD_BB_NAVNE = {"/bredbaand/fibernet/": "Billigste fibernet",
+                "/bredbaand/5g/": "Billigste 5G internet",
+                "/bredbaand/kabel-internet/": "Billigste kabel-internet"}
+
+
 def bredbaandsfod():
     """Bredbåndskolonnen i footeren.
 
@@ -409,8 +415,8 @@ def bredbaandsfod():
     return f"""      <div>
         <div class="fodtitel">Bredbånd</div>
         <ul>
-          <li><a href="/bredbaand/">Alle bredbåndsabonnementer</a></li>
-          {"".join(f'<li><a href="{h}">{e(t)}</a></li>' for h, t in punkter)}
+          <li><a href="/bredbaand/">Billigste bredbånd</a></li>
+          {"".join(f'<li><a href="{h}">{e(FOD_BB_NAVNE.get(h, t))}</a></li>' for h, t in punkter)}
         </ul>
       </div>"""
 
@@ -483,25 +489,18 @@ def fod(opdateret):
       </div>
 
       <div>
-        <div class="fodtitel">Værktøjer</div>
-        <ul>
-          <li><a href="/netvaerk/">Mobilnetværk</a></li>
-          <li><a href="/mobilabonnement-med-streaming/tjenester/">Streaming pr. tjeneste</a></li>
-          <li><a href="/landekoder/">Landekoder</a></li>
-          <li><a href="/ordbog/">Teleordbog</a></li>
-          <li><a href="/pin-og-puk-kode/">PIN- og PUK-kode</a></li>
-        </ul>
-      </div>
-
-      <div>
         <div class="fodtitel">Værktøjer og guides</div>
         <ul>
           <li><a href="/guides/">Alle guides</a></li>
           <li><a href="/daekningskort/">Dækningstjek</a></li>
           <li><a href="/speedtest/">Hastighedstest</a></li>
-          <li><a href="/landekoder/">Landekoder</a></li>
+          <li><a href="/netvaerk/">Mobilnetværk</a></li>
           <li><a href="/hvem-ringer-til-mig/">Hvem ringer til mig?</a></li>
+          <li><a href="/landekoder/">Landekoder</a></li>
+          <li><a href="/pin-og-puk-kode/">PIN- og PUK-kode</a></li>
+          <li><a href="/mobilabonnement-med-streaming/tjenester/">Streaming pr. tjeneste</a></li>
           <li><a href="/ordbog/">Teleordbog</a></li>
+          <li><a href="/aabne-data/">Åbne prisdata</a></li>
         </ul>
       </div>
 
