@@ -60,6 +60,18 @@ def _logo_w(slug_, hoejde):
     return round(w * hoejde / h)
 
 
+_AMP = re.compile(r"&(?![a-zA-Z][a-zA-Z0-9]{1,31};|#[0-9]{1,7};|#[xX][0-9a-fA-F]{1,6};)")
+
+
+def _ret_ampersand(html):
+    """Et nøgent & i HTML (fx i en URL med &family=) er teknisk set en fejl.
+    Browsere tilgiver det, validatorer gør ikke. Rettes uden for script/style."""
+    dele = re.split(r"(<script\b.*?</script>|<style\b.*?</style>)", html, flags=re.S)
+    for i in range(0, len(dele), 2):
+        dele[i] = _AMP.sub("&amp;", dele[i])
+    return "".join(dele)
+
+
 def _pak_tabeller(html):
     """Tabeller uden egen ramme får en rullebar boks om sig.
 
@@ -89,6 +101,7 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     if "[[tabel_" in html or "[[gruppe_prisudvikling_fri]]" in html:
         html = indsaet_kattabeller(html)
     html = _pak_tabeller(html)
+    html = _ret_ampersand(html)
     mappe = os.path.join(ROD, sti.strip("/"))
     if sti == "/":
         filsti = os.path.join(ROD, "index.html")
@@ -13637,6 +13650,32 @@ digital</strong> uden telefon. Oplysningerne kontrolleres på selskabets egen si
 </section>"""
 
 
+def sidetype(sti):
+    """Sidetype til kritisk CSS. Skal matche TYPER i _build/kritisk_css.py."""
+    if sti == "/":
+        return "forside"
+    if sti.startswith("/udbydere/"):
+        return "udbyder"
+    if sti.startswith("/guides/") or sti in {g[0] for g in GUIDER}:
+        return "guide"
+    if sti.startswith("/bredbaand/"):
+        return "bredbaand"
+    if sti.startswith("/sammenlign/"):
+        return "sammenlign"
+    if sti.startswith("/kampagner") or sti == "/mobilabonnementer-black-friday/":
+        return "kampagner"
+    if sti in ("/prisarkiv/", "/prisudvikling/", "/aabne-data/", "/12-maaneders-prisen/"):
+        return "data"
+    if sti.startswith(("/speedtest/", "/daekningskort/", "/landekoder/", "/hvem-ringer-til-mig/",
+                       "/ordbog/", "/pin-og-puk-kode/", "/netvaerk/", "/driftsstatus/",
+                       "/telemobil-score/")):
+        return "vaerktoej"
+    if sti.startswith(("/om", "/metode/", "/kontakt/", "/presse/", "/privatlivspolitik/",
+                       "/cookiepolitik/", "/saadan-tjener-vi-penge/", "/annonce", "/404")):
+        return "statisk"
+    return "kategori"
+
+
 def main():
     # Popup'en ligger på hver side, så den skal bygges før noget andet
     skabelon.FIRMA = site.get("firma", {})
@@ -13668,6 +13707,26 @@ def main():
     skabelon.HURTIGPRIS = hurtigpris_dialog()
     skabelon.CSS_INLINE = minificer_css(
         open(os.path.join(ROD, "assets", "css", "telemobil.css"), encoding="utf-8").read())
+    # Hele stylesheetet som minificeret, cachet fil (hentes asynkront)
+    with open(os.path.join(ROD, "assets", "css", "telemobil.min.css"), "w", encoding="utf-8") as f:
+        f.write(skabelon.CSS_INLINE)
+    # Kritisk CSS pr. sidetype, beregnet af _build/kritisk_css.py. Findes den
+    # ikke, eller er stylesheetet ændret siden, falder vi tilbage til alt inline.
+    _km = os.path.join(ROD, "assets", "css", "kritisk")
+    _stat = os.path.join(_km, "_stat.json")
+    if os.path.exists(_stat):
+        try:
+            _passer = any(v[1] == len(skabelon.CSS_INLINE)
+                          for v in json.load(open(_stat)).values())
+        except (ValueError, OSError):
+            _passer = False
+        if _passer:
+            for _f in os.listdir(_km):
+                if _f.endswith(".css"):
+                    skabelon.KRITISK[_f[:-4]] = open(os.path.join(_km, _f), encoding="utf-8").read()
+        else:
+            print("  ! kritisk CSS er forældet — kør _build/kritisk_css.py (bruger fuld CSS inline)")
+    skabelon.KRITISK_VAELGER = sidetype
     byg_forside()
     byg_billigste()
     byg_fridata()

@@ -121,6 +121,16 @@ def _filversion(relativ_sti):
 
 CSS_INLINE = ""
 CSS_V = _filversion("assets/css/telemobil.css")
+KRITISK = {}          # sidetype -> kritisk CSS (udfyldes af build)
+KRITISK_VAELGER = None  # funktion sti -> sidetype (sættes af build)
+
+
+def kritisk_css(sti):
+    """Den CSS, der lægges direkte i siden. Kun det, sidetypen bruger; resten
+    hentes asynkront som en cachet fil. Findes der ingen beregnet kritisk CSS
+    for typen, bruges hele stylesheetet som før."""
+    typ = KRITISK_VAELGER(sti) if KRITISK_VAELGER else None
+    return KRITISK.get(typ) or CSS_INLINE
 JS_V = _filversion("assets/js/telemobil.js")
 
 
@@ -363,9 +373,11 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <script>document.documentElement.className+=" js";</script>
-<style>{CSS_INLINE}</style>
+<style>{kritisk_css(sti)}</style>
+<link rel="preload" href="/assets/css/telemobil.min.css?v={CSS_V}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="/assets/css/telemobil.min.css?v={CSS_V}"></noscript>
 {ekstra_hoved}
-{blokke}</head>
+</head>
 <body>
 <a class="spring" href="#indhold">Spring til indhold</a>
 
@@ -392,7 +404,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 
 {fod(opdateret)}
 {HURTIGPRIS}
-<script src="/assets/js/telemobil.js?v={JS_V}" defer></script>
+{blokke}<script src="/assets/js/telemobil.js?v={JS_V}" defer></script>
 </body>
 </html>
 """

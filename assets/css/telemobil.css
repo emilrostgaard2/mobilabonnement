@@ -18,7 +18,7 @@
   --signal-dyb:#2438D8;
   --berry:#7C4DFF;
   --puls:#00D18F;
-  --puls-dyb:#00A873;
+  --puls-dyb:#007A55;
   --sol:#FFC53D;
   --koral:#FF5C7A;
 
@@ -1999,8 +1999,8 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .tmscore:hover{border-color:currentColor}
 .score-top b{background:var(--puls-dyb)}   .score-top span{color:var(--puls-dyb)}
 .score-god b{background:var(--signal)}     .score-god span{color:var(--signal-dyb)}
-.score-ok  b{background:#B07A1E}           .score-ok span{color:#8A5F14}
-.score-lav b{background:#9AA3B8}           .score-lav span{color:var(--graa)}
+.score-ok  b{background:#8A5F14}           .score-ok span{color:#8A5F14}
+.score-lav b{background:#6B7590}           .score-lav span{color:var(--graa)}
 
 /* Forfatternavnet i gennemgangslinjen skal se klikbart ud uden at støje */
 .gennemgang a[rel="author"]{color:inherit;text-decoration:underline;
