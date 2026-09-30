@@ -26,13 +26,13 @@
   --grad-puls:linear-gradient(103deg,#00D18F 0%,#3D5AFE 100%);
   --grad-nat:linear-gradient(168deg,#0B1026 0%,#171F47 55%,#241A4D 100%);
 
-  --r-s:8px; --r-m:14px; --r-l:22px; --r-xl:32px;
-  --skygge-blod:0 1px 2px rgba(19,23,53,.06),0 8px 24px -8px rgba(19,23,53,.12);
+  --r-s:6px; --r-m:10px; --r-l:14px; --r-xl:18px;
+  --skygge-blod:0 1px 2px rgba(19,23,53,.05),0 4px 14px -6px rgba(19,23,53,.08);
   --skygge-loft:0 2px 4px rgba(19,23,53,.06),0 18px 44px -12px rgba(19,23,53,.22);
   --maks:1200px;
   --font-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
   --font-brod:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --font-tal:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --font-tal:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -2235,3 +2235,70 @@ body{overflow-x:clip;max-width:100%;position:relative}
   body{font-size:17px}
 }
 .pk-cta{white-space:nowrap;font-size:.9rem}
+
+
+/* ==========================================================================
+   Skarpere, mere professionelt udtryk
+   - tal i samme skrift som teksten (tabulære cifre), ingen monospace
+   - små etiketter i sentence case, ingen spatieret VERSAL
+   - færre og mindre skygger, ingen svævende hover på kort
+   ========================================================================== */
+body{font-variant-numeric:tabular-nums}
+.etiket{font-family:var(--font-brod);font-size:.82rem;letter-spacing:0;text-transform:none;
+  font-weight:600;color:var(--graa);gap:.4rem}
+.etiket::before{width:8px;height:8px;border-radius:50%;background:var(--puls)}
+.lg-titel,.logobaand-titel{font-family:var(--font-brod);font-size:.9rem;letter-spacing:0;
+  text-transform:none;font-weight:600;color:var(--blaek)}
+.datatabel thead th,table.pris thead th{font-family:var(--font-brod);text-transform:none;
+  letter-spacing:0;font-size:.8rem;font-weight:600}
+.bb-nu-maerke,.pg-maerke,.valg-spar,.valg-fakta b,.pk-stat b,.pk-tal b,.valg-pris,.hero-tal b,
+.ks-raekke dd a[href^="tel:"],.pg-kort b,.hv-dato,.pk-formel{font-family:var(--font-brod)}
+.bb-nu-maerke{letter-spacing:0;text-transform:none;font-size:.78rem}
+.valgkort:hover{transform:none;box-shadow:var(--skygge-blod)}
+.plan:hover{transform:none}
+
+/* Logo-gitter: centreret, ingen ensom logo i sidste række */
+.lg-logoer{display:flex;flex-wrap:wrap;justify-content:center;gap:.6rem;max-width:960px;margin:0 auto}
+.lg-logo{flex:0 0 calc(20% - .6rem);min-height:52px}
+@media (max-width:900px){.lg-logo{flex-basis:calc(25% - .6rem)}}
+@media (max-width:560px){.lg-logo{flex-basis:calc(33.333% - .6rem);min-height:46px}
+  .lg-logoer{gap:.45rem}}
+
+/* Fire hurtigvalg: lavere, smallere, roligere */
+.hurtigvalg{gap:.9rem;margin-top:1.6rem}
+.valgkort{padding:1.15rem 1rem 1rem;border:1px solid var(--graa-lys);box-shadow:none;border-radius:var(--r-l)}
+.valg-badge{font-size:.72rem;padding:.22rem .6rem;border-radius:6px}
+.valg-top{margin-bottom:.5rem}
+.valg-logo img{height:22px;max-width:96px}
+.valg-navn{font-size:.95rem;margin-bottom:.4rem;font-family:var(--font-brod);letter-spacing:0}
+.valg-pris{font-size:1.7rem;font-weight:700;letter-spacing:-.02em}
+.valg-under{font-size:.76rem;margin-top:.2rem;min-height:0}
+.valg-spar{margin-top:.55rem;font-size:.74rem;padding:.22rem .6rem;font-weight:600}
+.valg-fakta{margin:.7rem 0 .8rem}
+.valg-fakta li{padding:.3rem 0;font-size:.8rem}
+.valg-fakta b{font-size:.8rem}
+.valg-knap{padding:.55rem .9rem;font-size:.86rem;min-height:40px;border-radius:8px}
+.valg-hvorfor{font-size:.72rem}
+
+/* Abonnementsrækker: tættere, skarpere */
+.plan{border-radius:var(--r-l);box-shadow:none;border:1px solid var(--graa-lys)}
+.plan.fremhaev{box-shadow:0 0 0 1px var(--puls)}
+.pk-raekke{padding:1rem 1.1rem;gap:1rem}
+.pk-flag{font-size:.72rem;padding:.2rem .55rem;border-radius:6px;margin-bottom:.45rem}
+.pk-navn{font-family:var(--font-brod);letter-spacing:-.01em;font-size:1.05rem;margin:0 0 .45rem}
+.pk-stats{gap:.35rem}
+.pk-stat{padding:.42rem .5rem;border-radius:8px;background:#F7F9FD;border:1px solid #EAEFF9}
+.pk-stat b{font-size:.9rem;font-weight:700}
+.pk-stat span{font-size:.66rem}
+.pk-chips{margin-top:.5rem;gap:.35rem}
+.pk-chip{font-size:.74rem;padding:.2rem .55rem;border-radius:6px;background:#EEF9F4;border:1px solid #CFEFE0}
+.pk-pris{border-radius:var(--r-m);padding:.85rem .9rem}
+.pk-tal b{font-size:1.9rem;font-weight:700}
+.pk-under{font-size:.76rem}
+.pk-cta{border-radius:8px;margin-top:.55rem}
+.pk-detaljer{font-size:.82rem}
+.pk-panel{border-radius:0 0 var(--r-l) var(--r-l)}
+.plan{padding:0}
+.pk-raekke{padding:.9rem 1.1rem}
+.pk-spar,.pk-under{white-space:normal;overflow:visible;text-overflow:clip}
+.pk-pris{min-width:186px}

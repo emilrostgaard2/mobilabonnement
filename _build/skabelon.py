@@ -309,7 +309,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
   </button>
   <div class="nav-menu nav-menu-logoer" id="menu-udbydere">
     {udbyder_punkter}
-    <a href="/udbydere/" class="nav-alle">Se alle udbydere og anmeldelser →</a>
+    <a href="/udbydere/" class="nav-alle">Se alle udbydere og anmeldelser</a>
   </div>
 </div>'''
     for href, tekst in MENU:
@@ -713,8 +713,9 @@ def _kortnavn(a, u):
         n = n[len(u["navn"]):].strip(" –-·")
     if not n:
         n = gb_tekst(a["data_gb"])
-    tale = "Fri tale" if a["tale"] == "fri" else f'{a["tale"]} tale'
-    return n if tale.lower() in n.lower() else f"{n} · {tale}"
+    if "tale" in n.lower():
+        return n
+    return f"{n} med fri tale" if a["tale"] == "fri" else f'{n}, {a["tale"]} tale'
 
 
 def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
@@ -850,7 +851,6 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
   data-tp="{(u.get('trustpilot') or {}).get('score') or 0}"
   data-score="{SCORETAL(a) if SCORETAL else 0}"
   data-udbyder="{e(u['navn'])}">
-  {flag}
   <div class="pk-raekke">
     <div class="pk-ident">
       <img src="{logo}" alt="{e(u['navn'])} logo" loading="lazy"
@@ -859,6 +859,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
       {stjerner(u, kompakt=True)}
     </div>
     <div class="pk-midt">
+      {flag}
       <h3 class="pk-navn">{e(_kortnavn(a, u))}</h3>
       <div class="pk-stats">{statbokse}</div>
       <div class="pk-chips">{chips}</div>
@@ -879,7 +880,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
     {advarhtml}
     <div class="pk-panelfod">
       <span class="pk-formel" title="Sådan er gennemsnittet beregnet">{formel}</span>
-      <a href="/udbydere/{u['slug']}/">Læs vores gennemgang af {e(u['navn'])} →</a>
+      <a href="/udbydere/{u['slug']}/">Læs vores gennemgang af {e(u['navn'])}</a>
     </div>
   </div>
 </article>"""

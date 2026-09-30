@@ -1131,7 +1131,7 @@ def hurtigvalg():
       loading="lazy" width="{round(u['logo_w'] * 26 / u['logo_h'])}" height="26" decoding="async"></span>
     {stjerne}
   </div>
-  <b class="valg-navn">{e(u['navn'])} · {e(skabelon._kortnavn(a, u))}</b>
+  <b class="valg-navn">{e(u['navn'])} {e(skabelon._kortnavn(a, u))}</b>
   <div class="valg-pris">{kr(vist)}<span> kr./md.</span></div>
   <div class="valg-under">{under}</div>
   {spar}
@@ -1141,7 +1141,7 @@ def hurtigvalg():
     <li><span>Binding</span><b>{e(binding)}</b></li>
     <li><span>Netværk</span><b>{netlabel(u)}</b></li>
   </ul>
-  <a class="knap knap-primaer valg-knap" href="/udbydere/{u['slug']}/">Se abonnementet</a>
+  <a class="knap knap-primaer valg-knap" href="/udbydere/{u['slug']}/">Se {e(u['navn'])}s priser</a>
   <small class="valg-hvorfor">{e(detalje)}</small>
 </div>"""
 
@@ -2532,8 +2532,8 @@ def redaktionens_valg():
   <p>{e(tekst)}</p>
   <div class="rv-links">
     <a href="{a['link']}" rel="sponsored nofollow noopener" target="_blank"
-       data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}">Se hos {e(u['navn'])} →</a>
-    <a href="/udbydere/{u['slug']}/">Læs vores gennemgang →</a>
+       data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}">Se hos {e(u['navn'])}</a>
+    <a href="/udbydere/{u['slug']}/">Læs vores gennemgang</a>
   </div>
 </div>"""
 
@@ -9143,7 +9143,7 @@ def drift_logo(u):
        height="40" loading="eager" decoding="async" class="dk-logo">
   <div class="dk-net"><span>Kører på</span><b>{e(net)}</b></div>
   <a class="dk-knap" href="{e(DRIFT_SIDER[u['slug']][0])}"
-     rel="nofollow noopener" target="_blank">Åbn {e(u['navn'])}s hjemmeside →</a>
+     rel="nofollow noopener" target="_blank">Åbn {e(u['navn'])}s hjemmeside</a>
   <p class="dk-note">Driftsinfo står under Kundeservice eller Hjælp</p>
 </div>"""
 
@@ -9164,7 +9164,7 @@ def drifttabel():
       <span class="tabel-under">{e(u['navn'])}</span></a></td>
   <td>{e(net)}</td>
   <td><a href="{e(url)}" rel="nofollow noopener" target="_blank">{e(u['navn'])}s
-      hjemmeside →</a></td>
+      hjemmeside</a></td>
 </tr>"""
     return f"""<div class="tabelramme">
 <table class="datatabel">
@@ -10137,7 +10137,7 @@ def guidepaginering(nu, i_alt):
             led += f'<a href="{_guidesti(n)}">{n}</a>'
     if nu < i_alt:
         led += (f'<a class="pg-pil" href="{_guidesti(nu + 1)}" rel="next">'
-                f'Ældre <span aria-hidden="true">→</span></a>')
+                f'Ældre <span aria-hidden="true"></span></a>')
     return f'<nav class="paginering" aria-label="Flere guides">{led}</nav>'
 
 
@@ -10157,7 +10157,7 @@ def _byg_guideside(udvalg, nu, i_alt, i_alt_guides):
     <span class="ak-fod">
       <span class="ak-tid"><time datetime="{sidst_aendret(h)[0]}">{e(sidst_aendret(h)[1])}</time>
         · {min} min. læsning</span>
-      <span class="ak-laes">Læs <span aria-hidden="true">→</span></span></span>
+      <span class="ak-laes">Læs <span aria-hidden="true"></span></span></span>
   </span>
 </a>"""
 
@@ -11511,13 +11511,13 @@ def byg_404():
 # Q4 2026 — Black Friday-siden og tre guides
 #
 # Afgrænsning mod hovedsiderne, så de ikke konkurrerer om samme søgning:
-#   /mobilabonnementer-black-friday/      → "black friday mobilabonnement"
+#   /mobilabonnementer-black-friday/ "black friday mobilabonnement"
 #                                            (kampagner/ ejer "tilbud" året rundt)
-#   /guides/mistet-telefon/               → "mistet/stjålet telefon" (ingen hovedside)
-#   /guides/studierabat-mobilabonnement/  → "studierabat" og SU-regnestykket
+#   /guides/mistet-telefon/ "mistet/stjålet telefon" (ingen hovedside)
+#   /guides/studierabat-mobilabonnement/ "studierabat" og SU-regnestykket
 #                                            (/mobilabonnement-til-unge/ ejer
 #                                             "mobilabonnement til studerende")
-#   /guides/barnets-foerste-mobil/        → "barnets første mobil", alder, opsætning
+#   /guides/barnets-foerste-mobil/ "barnets første mobil", alder, opsætning
 #                                            (/mobilabonnement-til-boern/ ejer
 #                                             "mobilabonnement til børn")
 # Guiderne linker til hovedsiden med hovedsidens søgeord som ankertekst.
