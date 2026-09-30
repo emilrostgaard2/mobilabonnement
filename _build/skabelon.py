@@ -346,7 +346,8 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
                 led += f'<li><a href="{href}">{e(tekst)}</a></li>'
             else:
                 led += f'<li>{e(tekst)}</li>'
-        krummehtml = f'<nav class="krumme baand" aria-label="Brødkrumme"><ol>{led}</ol></nav>'
+        if len(krumme) > 1:  # forsiden har ingen sti at vise
+            krummehtml = f'<nav class="krumme baand" aria-label="Brødkrumme"><ol>{led}</ol></nav>'
 
     return f"""<!DOCTYPE html>
 <html lang="da">

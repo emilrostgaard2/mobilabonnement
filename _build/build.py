@@ -751,8 +751,7 @@ def datavaelger():
   <h2>Hvor meget data bruger du?</h2>
   <p>Vælg, og se de billigste abonnementer i den størrelse.</p>
   <div class="dv-valg">{knapper}</div>
-  <small>Priserne er gennemsnittet det første år inkl. intropris og oprettelse.
-  Ved du ikke, hvor meget du bruger? <a href="/guides/hvor-meget-data/">Find det på et minut</a>.</small>
+  <small>Snitpris det første år. <a href="/guides/hvor-meget-data/">Ved du ikke, hvor meget du bruger?</a></small>
 </div>"""
 
 
@@ -789,27 +788,78 @@ def hero_forside():
         h = 22 + round(78 * a["pris"] / hoejest)
         mast += (f'<b data-navn="{e(u["navn"].split()[0])}" data-pris="{a["pris"]} kr."'
                  f' style="height:{h}%;background:linear-gradient(180deg,{farver[i]}bb,{farver[i]})"></b>')
-    return f"""<section class="hero hero-lys">
+    return f"""<section class="hero hero-lys hero-vaelger">
   <div class="baand">
-    <div class="hl-gitter">
-      <div>
-        <h1>Sammenlign mobilabonnementer fra danske udbydere</h1>
-        <p class="led">Vi sammenligner {D['antal']} abonnementer fra {D['antal_udbydere']} selskaber
-        på, hvad de koster over 12 måneder – ikke kun de første tre.</p>
-        <div class="hl-knapper">
-          <a href="#sammenlign" class="knap knap-primaer">Se alle priser</a>
-          <a href="/metode/" class="knap knap-linje">Sådan regner vi</a>
-        </div>
-        <ul class="hf-tillid">
-          <li>Priser hentet fra selskaberne {e(OPDATERET)}</li>
-          <li>Ingen betalt placering</li>
-          <li>Gratis at bruge</li>
-        </ul>
-      </div>
-      {datavaelger()}
-    </div>
+    <h1>Sammenlign mobilabonnementer fra danske udbydere</h1>
+    <p class="led">Vælg, hvor meget data du bruger. Så viser vi de billigste abonnementer
+    regnet på hele året.</p>
+    {vaelger()}
+    <p class="hv-tillid">Opdateret {e(OPDATERET)}<span>·</span>{D['antal']} abonnementer fra
+    {D['antal_udbydere']} selskaber<span>·</span>Ingen betalt placering</p>
   </div>
 </section>"""
+
+
+VAELGER_TRIN = [("u10", "Under 10 GB", 1, 10, "/mobilabonnement-1-10-gb/"),
+                ("u30", "10–30 GB", 11, 30, "/mobilabonnement-10-30-gb/"),
+                ("u100", "30–100 GB", 31, 9998, "/mobilabonnement-50-gb/"),
+                ("fri", "Fri data", 9999, 10 ** 9, "/mobilabonnement-med-fri-data/")]
+
+
+def _vaelger_kort(lab, a):
+    u = UMAP[a["udbyder"]]
+    intro = a.get("intro_pris") is not None and a.get("intro_mdr")
+    pris = kr(a["intro_pris"]) if intro else kr(a["pris"])
+    enhed = f" kr./md. i {a['intro_mdr']} md{'r' if a['intro_mdr'] != 1 else ''}." if intro else " kr./md."
+    linje = (f"Herefter {kr(a['pris'])} kr." if intro else "Fast pris hele året.")
+    linje += " Ingen binding." if not a["binding"] else f" {a['binding']} mdr. binding."
+    return f"""<div class="vk">
+  <span class="vk-lab">{e(lab)}</span>
+  <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" width="{round(u['logo_w'] * 22 / u['logo_h'])}" height="22" decoding="async">
+  <b class="vk-navn">{e(skabelon._kortnavn(a, u))}</b>
+  <div class="vk-pris">{pris}<span>{e(enhed)}</span></div>
+  <p class="vk-linje">{e(linje)}</p>
+  <a class="knap knap-primaer vk-knap" href="{a['link']}" rel="sponsored nofollow noopener"
+    target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}">Gå til {e(u['navn'])}</a>
+</div>"""
+
+
+def vaelger():
+    """Ét spørgsmål, fire svar, tre resultater. Standard: 10–30 GB, som de
+    fleste bruger. Uden JavaScript vises standardgruppen, og knapperne linker
+    til kategorisiderne."""
+    knapper, grupper = "", ""
+    for noegle, navn, lo, hi, sti in VAELGER_TRIN:
+        k = [a for a in _betalte() if lo <= a["data_gb"] <= hi]
+        if not k:
+            continue
+        fra = min(gns12(a) for a in k)
+        on = " on" if noegle == "u30" else ""
+        knapper += (f'<a href="{sti}" class="seg-knap{on}" data-vaelg="{noegle}" role="tab" '
+                    f'aria-selected="{"true" if on else "false"}"><b>{e(navn)}</b>'
+                    f'<small>fra {kr(round(fra))} kr.</small></a>')
+        billigst = min(k, key=gns12)
+        start = min(k, key=visningspris)
+        tdc = [a for a in k if UMAP[a["udbyder"]].get("netvaerk") == "TDC NET"]
+        daek = min(tdc, key=gns12) if tdc else None
+        valgte, kort = set(), []
+        for lab, a in [("Billigst over 12 måneder", billigst),
+                       ("Laveste startpris", start),
+                       ("Bedst dækning", daek)]:
+            if a and a["id"] not in valgte:
+                valgte.add(a["id"])
+                kort.append(_vaelger_kort(lab, a))
+        for a in sorted(k, key=gns12):
+            if len(kort) >= 3:
+                break
+            if a["id"] not in valgte:
+                valgte.add(a["id"])
+                kort.append(_vaelger_kort("Også billig", a))
+        alle_txt = "fri data" if navn.startswith("Fri") else navn[0].lower() + navn[1:]
+        grupper += (f'<div class="seg-res{on}" data-gruppe="{noegle}" role="tabpanel">'
+                    f'{"".join(kort)}<a class="seg-alle" href="{sti}">Se alle abonnementer med '
+                    f'{e(alle_txt)}</a></div>')
+    return f'<div class="seg" role="tablist">{knapper}</div>{grupper}'
 
 
 def guidebillede(navn, alt, prioritet=False, mappe="guides"):
@@ -1176,22 +1226,19 @@ def hurtigvalg():
   </div>
   <b class="valg-navn">{e(skabelon._kortnavn(a, u))}</b>
   <div class="valg-pris">{kr(vist)}<span> kr./md.</span></div>
-  <div class="valg-under">{e(linje)}</div>
-  <ul class="valg-fakta">
-    <li><span>Data</span><b>{gb_tekst(a['data_gb'])}</b></li>
-    <li><span>Binding</span><b>{e(binding)}</b></li>
-  </ul>
+  <div class="valg-under">{e(linje)} {e(binding)}.</div>
   <a class="knap knap-primaer valg-knap" href="{a['link']}" rel="sponsored nofollow noopener"
     target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}">Se abonnementet</a>
-  <small class="valg-hvorfor">{e(detalje)}</small>
 </div>"""
 
     return f"""<section class="sektion baand hv-sektion">
   <h2>Anbefalede abonnementer lige nu</h2>
-  <p class="led">Valgt efter prisen over 12 måneder. Opdateret {e(OPDATERET)}.</p>
   <div class="hurtigvalg">{kort}</div>
-</section>
-<section class="hf-hvordan"><div class="baand hf-hvordan-indre">
+</section>"""
+
+
+def hf_hvordan():
+    return """<section class="hf-hvordan"><div class="baand hf-hvordan-indre">
   <div><h3>Regnet på hele året</h3><p>Intropris, normalpris og oprettelse lægges sammen, så du ser, hvad det reelt koster.</p></div>
   <div><h3>Priser fra selskaberne selv</h3><p>Hentet automatisk to gange i døgnet fra selskabernes egne produktdata.</p></div>
   <div><h3>Ingen kan købe sig til toppen</h3><p>Vi får provision, når du bestiller via et link. Det ændrer ikke rækkefølgen.</p></div>
@@ -2769,96 +2816,45 @@ def byg_forside():
     krumme = [(None, "Forside")]
 
     krop = f"""
-{hurtigvalg()}
-
 {pristabel(ABON, UMAP,
            titel=f"Alle mobilabonnementer sammenlignet",
            undertitel=f"{D['antal']} abonnementer fra {D['antal_udbydere']} udbydere, sorteret efter laveste månedspris. "
                       "Klik på en overskrift for at sortere efter data, pris pr. GB eller pris.",
            billigst_id=bedste_pr_gb['id'])}
 
+{hf_hvordan()}
+
 {quiz()}
 
-<section class="sektion baand">
-  <div class="todelt afslør">
-    <div class="todelt-billede">{guidebillede("forside", "Par sammenligner mobilabonnementer på telefonen i Nyhavn i København")}</div>
-    <div class="todelt-tekst">
-      <span class="etiket">Uafhængig sammenligning</span>
-      <h2>Vi regner den pris ud, udbyderne ikke viser</h2>
-      <p>Næsten alle abonnementer sælges på en intropris, der gælder i to til seks måneder.
-      Bagefter stiger den. Vi lægger intropris, normalpris og oprettelse sammen og viser
-      gennemsnittet over 12 måneder — det tal, du reelt kommer til at betale.</p>
-      <p>Tabellerne sorteres altid efter pris, aldrig efter hvad vi tjener. Vi skriver også
-      ulemperne ved hver udbyder, og ingen kan købe sig til en bedre placering.</p>
-      <div class="todelt-knapper">
-        <a href="/metode/" class="knap knap-linje">Sådan beregner vi</a>
-        <a href="/saadan-tjener-vi-penge/" class="knap knap-linje">Sådan tjener vi penge</a>
-      </div>
-    </div>
-  </div>
-</section>
 
-<section class="sektion baand-smal">{erfaring("forside")}</section>
-
-<section class="sektion baand-smal artikel">
-  {gennemgangslinje(OPDATERET)}
-  <h2>Sådan bruger du sammenligningen</h2>
-  <p>Tabellen ovenfor viser alle abonnementer, vi følger, sorteret efter laveste månedspris.
-  Men den billigste række er ikke automatisk det rigtige valg for dig. Tre kolonner er
-  vigtigere end prisen alene:</p>
-  <ul>
-    <li><strong>Data</strong> — vælg efter dit faktiske forbrug de seneste tre måneder, ikke
-    efter hvad du tror. <a href="/guides/hvor-meget-data/">Sådan finder du tallet</a>.</li>
-    <li><strong>Pris pr. GB</strong> — det eneste tal, der gør abonnementer direkte
-    sammenlignelige på tværs af størrelser.</li>
-    <li><strong>Netværk</strong> — står under udbydernavnet. Bor du uden for de større byer,
-    betyder det mere end 30 kr. i prisforskel. <a href="/guides/daekning-og-netvaerk/">Læs om
-    de tre net</a>.</li>
-  </ul>
-  <div class="tip">
-    <h3>Den hurtige version</h3>
-    <p>Bor du i en by og bruger under 30 GB: tag den billigste række, der dækker dit forbrug.
-    Bor du på landet eller pendler langt: sortér efter pris, men vælg det billigste abonnement
-    på TDC NET frem for det billigste i alt.</p>
-  </div>
-</section>
-
-<section class="sektion sektion-hvid">
-  <div class="baand">
-    <div class="sektion-hoved midt afslør">
-      <span class="etiket">Kategorier</span>
-      <h2>Find abonnementet efter dit behov</h2>
-      <p class="led">Vi har lavet dedikerede sammenligninger til de mest almindelige situationer.</p>
-    </div>
-    <div class="kortgitter kg-4 afslør">
-      <a class="kort" href="/billigste-mobilabonnement/" style="text-decoration:none;color:inherit">
-        <div class="ikon">💰</div><h3>Billigste abonnement</h3>
-        <p>Hele markedet sorteret efter pris, med gennemgang af de skjulte omkostninger.</p></a>
-      <a class="kort" href="/mobilabonnement-med-fri-data/" style="text-decoration:none;color:inherit">
-        <div class="ikon">∞</div><h3>Fri data</h3>
-        <p>Hvad fri data koster — og hvorfor de fleste ikke har brug for det.</p></a>
-      <a class="kort" href="/mobilabonnement-til-unge/" style="text-decoration:none;color:inherit">
-        <div class="ikon">🎓</div><h3>Unge og studerende</h3>
-        <p>Meget data, lav pris og ingen binding, så du kan skifte når du flytter.</p></a>
-      <a class="kort" href="/mobilabonnement-uden-binding/" style="text-decoration:none;color:inherit">
-        <div class="ikon">🔓</div><h3>Uden binding</h3>
-        <p>Abonnementer du kan opsige med kort varsel, hvis behovet ændrer sig.</p></a>
-    </div>
+<section class="sektion baand behov">
+  <h2>Find abonnementet efter dit behov</h2>
+  <div class="behov-gitter">
+    {"".join(f'<a class="behov-flise" href="{h}"><b>{e(t)}</b><span>{e(u)}</span></a>' for h, t, u in [
+      ("/billigste-mobilabonnement/", "Billigste", "Laveste pris over hele året"),
+      ("/mobilabonnement-med-fri-data/", "Fri data", "Streaming og hotspot uden loft"),
+      ("/mobilabonnement-med-fri-tale/", "Fri tale", "Ring så meget, du vil"),
+      ("/mobilabonnement-uden-binding/", "Uden binding", "Skift, når du vil"),
+      ("/mobilabonnement-til-boern/", "Til børn", "Datastop og lav pris"),
+      ("/mobilabonnement-til-aeldre/", "Til ældre", "Enkelt og billigt"),
+      ("/mobilabonnement-med-streaming/", "Med streaming", "Netflix, Viaplay og HBO Max"),
+      ("/bredbaand/", "Bredbånd", "Fiber, 5G og kabel"),
+    ])}
   </div>
 </section>
 
 <section class="sektion baand">
   <div class="sektion-hoved afslør">
-    <span class="etiket">Udbydere</span>
-    <h2>De {D['antal_udbydere']} udbydere vi følger</h2>
-    <p class="led">Uafhængige gennemgange med både fordele og ulemper. Vi skriver også, hvem
-    udbyderen <em>ikke</em> passer til.</p>
+    <h2>De {D['antal_udbydere']} selskaber vi følger</h2>
+    <p class="led">Gennemgange med både fordele og ulemper, og hvem selskabet ikke passer til.</p>
   </div>
   <div class="kortgitter kg-3 afslør">
     {"".join(udbyderkort(u) for u in UDBYDERE)}
   </div>
 </section>
 
+
+<section class="sektion baand-smal">{erfaring("forside")}</section>
 
 <section class="sektion baand-smal">
   {forfatterboks()}
@@ -2867,7 +2863,7 @@ def byg_forside():
 """
 
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
+        sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET, toc=False,
         hero=hero_forside(), efter_hero=logolinje(), krumme=krumme,
         indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, TJENESTE, PERSON, WEBSITE, krummeld(krumme), faqld(faq),

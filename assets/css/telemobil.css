@@ -2388,3 +2388,70 @@ body{font-variant-numeric:tabular-nums}
   width:auto;height:auto;line-height:1.4}
 .hurtigvalg .valgkort{padding-top:1.3rem}
 .valg-tp{white-space:nowrap}
+
+/* Forside: mindre støj */
+.hero-lys{padding:3rem 0 2.6rem}
+.hero-lys .led{margin-bottom:1.2rem}
+.hf-tillid{margin-top:1.1rem}
+.dv-kort{padding:1.4rem}
+.dv-kort p{margin-bottom:.8rem}
+.dv-valg a{padding:.75rem .9rem}
+.dv-kort small{margin-top:.7rem}
+.logolinje{padding:1rem 0}
+.hv-sektion{padding-top:2.4rem;padding-bottom:1rem}
+.hv-sektion h2{font-size:1.45rem;margin-bottom:1.1rem}
+.hurtigvalg{gap:.9rem}
+.hurtigvalg .valgkort{padding:1.1rem 1.1rem 1.1rem}
+.hurtigvalg .valgkort .valg-badge{margin-bottom:.6rem}
+.valg-top{margin-bottom:.55rem}
+.valg-navn{font-size:.98rem;margin-bottom:.25rem}
+.valg-pris{font-size:1.9rem}
+.valg-under{margin:.35rem 0 .9rem;font-size:.84rem}
+.hf-hvordan{padding:2.2rem 0;margin-top:1.2rem}
+
+/* Behovs-fliser */
+.behov h2{font-size:1.45rem;margin:0 0 1rem}
+.behov-gitter{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+.behov-flise{display:block;background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);
+  padding:1rem 1.1rem;text-decoration:none;color:var(--blaek);transition:border-color .15s}
+.behov-flise:hover,.behov-flise:focus-visible{border-color:var(--blaek)}
+.behov-flise b{display:block;font-size:1rem;font-weight:600;margin-bottom:.15rem}
+.behov-flise span{font-size:.84rem;color:var(--graa)}
+@media (max-width:900px){.behov-gitter{grid-template-columns:repeat(2,1fr)}}
+.quiz-tael{font-family:var(--font-brod);letter-spacing:0;text-transform:none;font-size:.8rem}
+.quiz{border-radius:var(--r-l)}
+
+/* ==========================================================================
+   Forside: vælgeren (ét spørgsmål, tre svar)
+   ========================================================================== */
+.hero-vaelger{text-align:center;padding:3.2rem 0 2.4rem}
+.hero-vaelger h1{max-width:20ch;margin:0 auto .6rem;font-size:clamp(1.9rem,3.6vw,2.7rem)}
+.hero-vaelger .led{margin:0 auto 1.6rem;max-width:56ch;font-size:1.08rem}
+.seg{display:inline-flex;background:#fff;border:1px solid var(--graa-lys);border-radius:12px;padding:6px;gap:4px;
+  box-shadow:0 10px 30px -20px rgba(19,23,53,.3)}
+.seg-knap{padding:.8rem 1.5rem;border-radius:8px;font-weight:600;font-size:1rem;color:var(--blaek);
+  text-decoration:none;line-height:1.2}
+.seg-knap small{display:block;font-weight:500;font-size:.8rem;color:var(--graa);margin-top:.15rem}
+.seg-knap.on{background:var(--blaek);color:#fff}.seg-knap.on small{color:#CFD4E6}
+.seg-knap:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.seg-res{display:none;grid-template-columns:repeat(3,1fr);gap:.9rem;max-width:960px;margin:1.6rem auto 0;text-align:left}
+.seg-res.on{display:grid}
+.vk{background:#fff;border:1px solid var(--graa-lys);border-radius:12px;padding:1.1rem 1.1rem 1rem;display:flex;flex-direction:column}
+.vk-lab{font-size:.78rem;color:var(--puls-dyb);font-weight:600;margin-bottom:.7rem}
+.vk img{height:22px;width:auto;max-width:96px;object-fit:contain;object-position:left center}
+.vk-navn{display:block;font-weight:600;font-size:1rem;margin:.65rem 0 .2rem}
+.vk-pris{font-family:var(--font-display);font-size:1.8rem;font-weight:800;line-height:1.1}
+.vk-pris span{font-family:var(--font-brod);font-size:.82rem;color:var(--graa);font-weight:500}
+.vk-linje{font-size:.84rem;color:var(--graa);margin:.3rem 0 .85rem}
+.vk-knap{margin-top:auto;min-height:44px;font-size:.92rem;border-radius:8px;background:var(--puls-dyb);border-color:var(--puls-dyb);color:#fff}
+.vk-knap:hover{background:#00634A}
+.seg-alle{grid-column:1 / -1;text-align:center;font-size:.92rem;color:var(--signal-dyb);text-decoration:underline;margin-top:.2rem}
+.hv-tillid{font-size:.84rem;color:var(--graa);margin:1.4rem 0 0}.hv-tillid span{margin:0 .6rem}
+@media (max-width:700px){
+  .hero-vaelger{text-align:left;padding:2rem 0 1.8rem}
+  .hero-vaelger h1,.hero-vaelger .led{margin-left:0}
+  .seg{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .seg-knap{padding:.7rem .8rem;text-align:center}
+  .seg-res{grid-template-columns:1fr}
+  .hv-tillid span{display:block;height:0;overflow:hidden;margin:0}
+}

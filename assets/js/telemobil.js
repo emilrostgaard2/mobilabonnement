@@ -1131,3 +1131,27 @@
 
     opdater();
   })();
+
+/* Forsidens vælger: skift gruppe uden at forlade siden. Uden JS er knapperne
+   almindelige links til kategorisiderne. */
+(function () {
+  var seg = document.querySelector(".seg");
+  if (!seg) return;
+  seg.addEventListener("click", function (e) {
+    var k = e.target.closest("[data-vaelg]");
+    if (!k) return;
+    e.preventDefault();
+    var n = k.getAttribute("data-vaelg");
+    seg.querySelectorAll("[data-vaelg]").forEach(function (x) {
+      var on = x === k;
+      x.classList.toggle("on", on);
+      x.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    document.querySelectorAll(".seg-res").forEach(function (r) {
+      r.classList.toggle("on", r.getAttribute("data-gruppe") === n);
+    });
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "vaelger", { gruppe: n });
+    }
+  });
+})();
