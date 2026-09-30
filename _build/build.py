@@ -563,6 +563,18 @@ def listeld(abonnementer, navn):
 
 # --------------------------------------------------------------- komponenter
 
+def logolinje():
+    """Én stille linje: 'Priser fra 10 selskaber' og logoerne. Til forsiden."""
+    logoer = "".join(
+        f'<a href="/udbydere/{u["slug"]}/" aria-label="{e(u["navn"])}">'
+        f'<img src="/assets/img/logoer/{u["logo"]}" alt="{e(u["navn"])}" loading="lazy"'
+        f' width="{round(u["logo_w"] * 22 / u["logo_h"])}" height="22" decoding="async"></a>'
+        for u in sorted(UDBYDERE, key=lambda x: x["navn"].lower()))
+    return f"""<div class="logolinje"><div class="baand ll-indre">
+  <p>Priser fra {len(UDBYDERE)} selskaber</p><div class="ll-logoer">{logoer}</div>
+</div></div>"""
+
+
 def logobaand(titel="Vi sammenligner priser fra"):
     """Stille logo-gitter i stedet for en rullende karrusel.
 
@@ -723,6 +735,27 @@ def regningstjek():
 </div>"""
 
 
+def datavaelger():
+    """Det spørgsmål, folk faktisk har: hvor meget data bruger jeg? Fire store
+    knapper med prisen fra i hver — virker uden indtastning for alle aldre."""
+    trin = [("Under 10 GB", 1, 10, "/mobilabonnement-1-10-gb/"),
+            ("10–30 GB", 11, 30, "/mobilabonnement-10-30-gb/"),
+            ("30–100 GB", 31, 9998, "/mobilabonnement-50-gb/"),
+            ("Fri data", 9999, 10 ** 9, "/mobilabonnement-med-fri-data/")]
+    knapper = ""
+    for navn, lo, hi, sti in trin:
+        a = _billigst_i(lo, hi)
+        pris = f"fra <em>{kr(round(gns12(a)))} kr./md.</em>" if a else "se priser"
+        knapper += f'<a href="{sti}"><b>{e(navn)}</b><span>{pris}</span></a>'
+    return f"""<div class="dv-kort">
+  <h2>Hvor meget data bruger du?</h2>
+  <p>Vælg, og se de billigste abonnementer i den størrelse.</p>
+  <div class="dv-valg">{knapper}</div>
+  <small>Priserne er gennemsnittet det første år inkl. intropris og oprettelse.
+  Ved du ikke, hvor meget du bruger? <a href="/guides/hvor-meget-data/">Find det på et minut</a>.</small>
+</div>"""
+
+
 def hero_forside():
     # Prisspredningen mellem udbydere. Vi prøver først et snævert datainterval,
     # men udvider automatisk, indtil mindst fire udbydere er repræsenteret —
@@ -760,17 +793,20 @@ def hero_forside():
   <div class="baand">
     <div class="hl-gitter">
       <div>
-        <span class="etiket">Opdateret {e(OPDATERET)}</span>
         <h1>Sammenlign mobilabonnementer fra danske udbydere</h1>
-        <p class="led">{D['antal']} abonnementer fra {D['antal_udbydere']} udbydere,
-        sorteret efter pris. Ingen oprettelse, ingen formular.</p>
+        <p class="led">Vi sammenligner {D['antal']} abonnementer fra {D['antal_udbydere']} selskaber
+        på, hvad de koster over 12 måneder – ikke kun de første tre.</p>
         <div class="hl-knapper">
           <a href="#sammenlign" class="knap knap-primaer">Se alle priser</a>
-          <a href="/guides/hvor-meget-data/" class="knap knap-linje">Hvor meget data har jeg brug for?</a>
+          <a href="/metode/" class="knap knap-linje">Sådan regner vi</a>
         </div>
-        {tillidsbaand()}
+        <ul class="hf-tillid">
+          <li>Priser hentet fra selskaberne {e(OPDATERET)}</li>
+          <li>Ingen betalt placering</li>
+          <li>Gratis at bruge</li>
+        </ul>
       </div>
-      {regningstjek()}
+      {datavaelger()}
     </div>
   </div>
 </section>"""
@@ -1124,28 +1160,42 @@ def hurtigvalg():
         binding = "Ingen binding" if a["binding"] == 0 else f'{a["binding"]} mdr. binding'
         stjerne = stjerner(u, kompakt=True)
 
+        tp = (u.get("trustpilot") or {}).get("score")
+        tp_html = (f'<span class="valg-tp"><b>{str(tp).replace(".", ",")}</b> Trustpilot</span>'
+                   if tp else "")
+        if a.get("intro_pris") is not None and a.get("intro_mdr"):
+            linje = f'I {a["intro_mdr"]} måneder, herefter {kr(a["pris"])} kr.'
+        else:
+            linje = f'Fast pris. {kr(round(g * 12))} kr. på et år.' if g else "Fast pris."
         kort += f"""<div class="valgkort v{i}">
   <span class="valg-badge">{e(kat)}</span>
   <div class="valg-top">
     <span class="valg-logo"><img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}"
-      loading="lazy" width="{round(u['logo_w'] * 26 / u['logo_h'])}" height="26" decoding="async"></span>
-    {stjerne}
+      loading="lazy" width="{round(u['logo_w'] * 22 / u['logo_h'])}" height="22" decoding="async"></span>
+    {tp_html}
   </div>
-  <b class="valg-navn">{e(u['navn'])} {e(skabelon._kortnavn(a, u))}</b>
+  <b class="valg-navn">{e(skabelon._kortnavn(a, u))}</b>
   <div class="valg-pris">{kr(vist)}<span> kr./md.</span></div>
-  <div class="valg-under">{under}</div>
-  {spar}
+  <div class="valg-under">{e(linje)}</div>
   <ul class="valg-fakta">
     <li><span>Data</span><b>{gb_tekst(a['data_gb'])}</b></li>
-    <li><span>Pris pr. GB</span><b>{pr_gb}</b></li>
     <li><span>Binding</span><b>{e(binding)}</b></li>
-    <li><span>Netværk</span><b>{netlabel(u)}</b></li>
   </ul>
-  <a class="knap knap-primaer valg-knap" href="/udbydere/{u['slug']}/">Se {e(u['navn'])}s priser</a>
+  <a class="knap knap-primaer valg-knap" href="{a['link']}" rel="sponsored nofollow noopener"
+    target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}">Se abonnementet</a>
   <small class="valg-hvorfor">{e(detalje)}</small>
 </div>"""
 
-    return f'<div class="baand"><div class="hurtigvalg">{kort}</div></div>'
+    return f"""<section class="sektion baand hv-sektion">
+  <h2>Anbefalede abonnementer lige nu</h2>
+  <p class="led">Valgt efter prisen over 12 måneder. Opdateret {e(OPDATERET)}.</p>
+  <div class="hurtigvalg">{kort}</div>
+</section>
+<section class="hf-hvordan"><div class="baand hf-hvordan-indre">
+  <div><h3>Regnet på hele året</h3><p>Intropris, normalpris og oprettelse lægges sammen, så du ser, hvad det reelt koster.</p></div>
+  <div><h3>Priser fra selskaberne selv</h3><p>Hentet automatisk to gange i døgnet fra selskabernes egne produktdata.</p></div>
+  <div><h3>Ingen kan købe sig til toppen</h3><p>Vi får provision, når du bestiller via et link. Det ændrer ikke rækkefølgen.</p></div>
+</div></section>"""
 
 
 # --------------------------------------------------------------- ekstra tabeller
@@ -2739,7 +2789,7 @@ def byg_forside():
       Bagefter stiger den. Vi lægger intropris, normalpris og oprettelse sammen og viser
       gennemsnittet over 12 måneder — det tal, du reelt kommer til at betale.</p>
       <p>Tabellerne sorteres altid efter pris, aldrig efter hvad vi tjener. Vi skriver også
-      ulemperne ved hver udbyder, og vi tager udbydere med, vi ikke har en aftale med.</p>
+      ulemperne ved hver udbyder, og ingen kan købe sig til en bedre placering.</p>
       <div class="todelt-knapper">
         <a href="/metode/" class="knap knap-linje">Sådan beregner vi</a>
         <a href="/saadan-tjener-vi-penge/" class="knap knap-linje">Sådan tjener vi penge</a>
@@ -2818,7 +2868,7 @@ def byg_forside():
 
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk, opdateret=OPDATERET,
-        hero=hero_forside(), efter_hero=logobaand(), krumme=krumme,
+        hero=hero_forside(), efter_hero=logolinje(), krumme=krumme,
         indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, TJENESTE, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      listeld(ABON, "Mobilabonnementer i Danmark"))],

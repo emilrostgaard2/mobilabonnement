@@ -2322,3 +2322,69 @@ body{font-variant-numeric:tabular-nums}
   .hero-selskaber .lg-logo{flex-basis:calc(33.333% - .45rem);min-height:42px}
   .hero-selskaber .lg-tillid{grid-template-columns:1fr}
 }
+
+
+/* ==========================================================================
+   Forside: rolig hero, datavælger, logolinje, anbefalede kort
+   ========================================================================== */
+.hero-lys .hl-gitter{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:3.2rem;align-items:center}
+.hero-lys h1{font-size:clamp(1.9rem,3.6vw,2.7rem);max-width:16ch}
+.hero-lys .led{font-size:1.1rem;max-width:52ch}
+.hf-tillid{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin:1.5rem 0 0;padding:0;
+  font-size:.86rem;color:var(--graa)}
+.hf-tillid li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--puls-dyb);margin-right:.5rem;vertical-align:2px}
+.dv-kort{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);padding:1.6rem;
+  box-shadow:0 8px 30px -20px rgba(19,23,53,.25)}
+.dv-kort h2{font-size:1.2rem;margin:0 0 .3rem;letter-spacing:-.01em}
+.dv-kort p{margin:0 0 1rem;color:var(--graa);font-size:.92rem}
+.dv-valg{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.dv-valg a{display:block;border:1px solid var(--graa-lys);border-radius:10px;padding:.85rem 1rem;
+  text-decoration:none;color:var(--blaek);transition:border-color .15s}
+.dv-valg a:hover,.dv-valg a:focus-visible{border-color:var(--blaek)}
+.dv-valg b{display:block;font-size:1.02rem;font-weight:600}
+.dv-valg span{font-size:.86rem;color:var(--graa)}
+.dv-valg em{font-style:normal;color:var(--puls-dyb);font-weight:600}
+.dv-kort small{display:block;margin-top:.9rem;font-size:.8rem;color:var(--graa);line-height:1.45}
+.dv-kort small a{color:var(--signal-dyb)}
+.logolinje{border-bottom:1px solid var(--graa-lys);background:#fff;padding:1.2rem 0}
+.ll-indre{display:flex;align-items:center;gap:1.6rem}
+.ll-indre p{margin:0;font-size:.86rem;color:var(--graa);white-space:nowrap}
+.ll-logoer{display:flex;flex:1;justify-content:space-between;align-items:center;gap:1.4rem}
+.ll-logoer img{height:22px;width:auto;max-width:92px;object-fit:contain}
+.hv-sektion{padding-top:3rem}
+.hv-sektion h2{font-size:1.8rem;margin:0}
+.hv-sektion .led{color:var(--graa);margin:.4rem 0 1.4rem;font-size:1rem}
+.hurtigvalg{margin-top:0}
+.valgkort{padding:1.3rem 1.2rem 1.2rem;position:static}
+.valg-badge{position:static;display:block;background:none;color:var(--puls-dyb);font-size:.8rem;
+  font-weight:600;padding:0;margin:0 0 .8rem;border-radius:0;letter-spacing:0;text-transform:none}
+.valg-top{margin-bottom:.7rem}
+.valg-tp{font-size:.8rem;color:var(--graa)}.valg-tp b{color:var(--blaek)}
+.valg-navn{font-size:1.02rem;margin-bottom:.35rem}
+.valg-pris{font-family:var(--font-display);font-size:2.1rem;font-weight:800}
+.valg-under{font-size:.86rem;color:var(--graa);margin:.45rem 0 .9rem}
+.valg-fakta{margin:0 0 1rem;border-top:1px solid var(--graa-lys)}
+.valg-fakta li{padding:.4rem 0;font-size:.86rem}
+.valg-knap{background:var(--puls-dyb);color:#fff;border-color:var(--puls-dyb);min-height:44px;font-size:.92rem}
+.valg-knap:hover{background:#00634A}
+.valgkort:hover .valg-knap{color:#fff;border-color:var(--puls-dyb)}
+.valg-hvorfor{margin-top:.55rem;text-align:center}
+.hf-hvordan{background:#F5F7FB;padding:2.6rem 0;margin-top:1.5rem}
+.hf-hvordan-indre{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem}
+.hf-hvordan h3{font-size:1.02rem;margin:0 0 .3rem}
+.hf-hvordan p{margin:0;color:var(--graa);font-size:.92rem}
+@media (max-width:900px){
+  .hero-lys .hl-gitter{grid-template-columns:1fr;gap:1.8rem}
+  .ll-indre{flex-direction:column;align-items:flex-start;gap:.8rem}
+  .ll-logoer{flex-wrap:wrap;justify-content:flex-start;gap:.8rem 1.2rem}
+  .ll-logoer img{height:18px}
+  .hf-hvordan-indre{grid-template-columns:1fr;gap:1.3rem}
+}
+.hurtigvalg .valgkort .valg-badge,.hurtigvalg .valgkort.v0 .valg-badge,.hurtigvalg .valgkort.v1 .valg-badge,
+.hurtigvalg .valgkort.v2 .valg-badge,.hurtigvalg .valgkort.v3 .valg-badge{
+  background:none;color:var(--puls-dyb);padding:0;border:0;box-shadow:none;position:static;transform:none;
+  font-size:.8rem;font-weight:600;letter-spacing:0;text-transform:none;display:block;margin:0 0 .8rem;
+  width:auto;height:auto;line-height:1.4}
+.hurtigvalg .valgkort{padding-top:1.3rem}
+.valg-tp{white-space:nowrap}
