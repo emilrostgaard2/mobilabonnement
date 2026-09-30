@@ -1,9 +1,9 @@
 {
  "_kilde": "Adtraction data feed",
- "_hentet": "2026-09-27",
+ "_hentet": "2026-09-30",
  "_advarsel": "Genereret automatisk af _build/adtraction.py ved hvert build. Redigér ikke i hånden, og overskriv ikke filen med en ældre version — så mister du de nyeste priser.",
  "kilde": "adtraction",
- "opdateret": "2026-09-27",
+ "opdateret": "2026-09-30",
  "abonnementer": [
   {
    "id": "lebara-1",
@@ -626,6 +626,26 @@
    "link": "https://go.adt284.net/t/t?a=1666103641&as=2102885611&t=2&tk=1&url=https://www.oister.dk/mobilabonnement/"
   },
   {
+   "id": "cbb-mobil-196855",
+   "udbyder": "cbb-mobil",
+   "navn": "CBB 60 GB",
+   "data_gb": 60,
+   "pris": 129,
+   "intro_pris": 39,
+   "intro_mdr": 2,
+   "tale": "fri",
+   "sms": "fri",
+   "binding": 0,
+   "oprettelse": 0,
+   "eu_gb": 30,
+   "femg": true,
+   "esim": true,
+   "streaming": [],
+   "forbrugsafregnet": false,
+   "badge": null,
+   "link": "https://on.cbb.dk/t/t?a=1700024858&as=2102885611&t=2&tk=1&url=https://www.cbb.dk/shop/mobilabonnementer/"
+  },
+  {
    "id": "duka-82490221",
    "udbyder": "duka",
    "navn": "Duka 200 GB",
@@ -666,6 +686,26 @@
    "link": "https://on.eesy.dk/t/t?a=1700040947&as=2102885611&t=2&tk=1&url=https://eesy.dk/"
   },
   {
+   "id": "cbb-mobil-843484",
+   "udbyder": "cbb-mobil",
+   "navn": "CBB 80 GB",
+   "data_gb": 80,
+   "pris": 139,
+   "intro_pris": 39,
+   "intro_mdr": 2,
+   "tale": "fri",
+   "sms": "fri",
+   "binding": 0,
+   "oprettelse": 0,
+   "eu_gb": 30,
+   "femg": true,
+   "esim": true,
+   "streaming": [],
+   "forbrugsafregnet": false,
+   "badge": null,
+   "link": "https://on.cbb.dk/t/t?a=1700024858&as=2102885611&t=2&tk=1&url=https://www.cbb.dk/shop/mobilabonnementer/"
+  },
+  {
    "id": "flexii-51392033",
    "udbyder": "flexii",
    "navn": "Flexii Fri Data",
@@ -684,6 +724,26 @@
    "forbrugsafregnet": false,
    "badge": null,
    "link": "https://go.adt256.com/t/t?a=1751759538&as=2102885611&t=2&tk=1&url=https://www.flexii.dk/mobilabonnement"
+  },
+  {
+   "id": "cbb-mobil-8753857",
+   "udbyder": "cbb-mobil",
+   "navn": "CBB 200 GB",
+   "data_gb": 200,
+   "pris": 149,
+   "intro_pris": 39,
+   "intro_mdr": 2,
+   "tale": "fri",
+   "sms": "fri",
+   "binding": 0,
+   "oprettelse": 0,
+   "eu_gb": 30,
+   "femg": true,
+   "esim": true,
+   "streaming": [],
+   "forbrugsafregnet": false,
+   "badge": null,
+   "link": "https://on.cbb.dk/t/t?a=1700024858&as=2102885611&t=2&tk=1&url=https://www.cbb.dk/shop/mobilabonnementer/"
   },
   {
    "id": "duka-98765",
@@ -888,6 +948,26 @@
    "link": "https://ion.dukatale.dk/t/t?a=1666106721&as=2102885611&t=2&tk=1&url=https://www.dukatale.dk/mobilabonnementer"
   },
   {
+   "id": "cbb-mobil-598743",
+   "udbyder": "cbb-mobil",
+   "navn": "CBB Fri Data",
+   "data_gb": 9999,
+   "pris": 219,
+   "intro_pris": 49,
+   "intro_mdr": 2,
+   "tale": "fri",
+   "sms": "fri",
+   "binding": 0,
+   "oprettelse": 0,
+   "eu_gb": 50,
+   "femg": true,
+   "esim": true,
+   "streaming": [],
+   "forbrugsafregnet": false,
+   "badge": null,
+   "link": "https://on.cbb.dk/t/t?a=1700024858&as=2102885611&t=2&tk=1&url=https://www.cbb.dk/shop/mobilabonnementer/"
+  },
+  {
    "id": "yousee-835",
    "udbyder": "yousee",
    "navn": "Yousee 50 GB",
@@ -972,6 +1052,52 @@
    "link": "https://at.yousee.dk/t/t?a=1697234454&as=2102885611&t=2&tk=1&url=https://yousee.dk/mobil/abonnementer/80gb/"
   },
   {
+   "id": "cbb-mobil-833338",
+   "udbyder": "cbb-mobil",
+   "navn": "CBB 200 GB",
+   "data_gb": 200,
+   "pris": 279,
+   "intro_pris": 149,
+   "intro_mdr": 2,
+   "tale": "fri",
+   "sms": "fri",
+   "binding": 0,
+   "oprettelse": 0,
+   "eu_gb": 30,
+   "femg": true,
+   "esim": true,
+   "streaming": [
+    "Streaming inkluderet",
+    "Musik"
+   ],
+   "forbrugsafregnet": false,
+   "badge": null,
+   "link": "https://on.cbb.dk/t/t?a=1700024858&as=2102885611&t=2&tk=1&url=https://www.cbb.dk/shop/mobilabonnement-med-streaming/"
+  },
+  {
+   "id": "cbb-mobil-833336",
+   "udbyder": "cbb-mobil",
+   "navn": "CBB  100 GB",
+   "data_gb": 100,
+   "pris": 279,
+   "intro_pris": 139,
+   "intro_mdr": 2,
+   "tale": "fri",
+   "sms": "fri",
+   "binding": 0,
+   "oprettelse": 0,
+   "eu_gb": 30,
+   "femg": true,
+   "esim": true,
+   "streaming": [
+    "Streaming inkluderet",
+    "Musik"
+   ],
+   "forbrugsafregnet": false,
+   "badge": null,
+   "link": "https://on.cbb.dk/t/t?a=1700024858&as=2102885611&t=2&tk=1&url=https://www.cbb.dk/shop/mobilabonnement-med-streaming/"
+  },
+  {
    "id": "lyca-mobile-7896547",
    "udbyder": "lyca-mobile",
    "navn": "Lyca Mobile  500 GB",
@@ -1012,6 +1138,29 @@
    "forbrugsafregnet": false,
    "badge": null,
    "link": "https://at.yousee.dk/t/t?a=1697234454&as=2102885611&t=2&tk=1&url=https://yousee.dk/mobil/abonnementer/fri/"
+  },
+  {
+   "id": "cbb-mobil-833331",
+   "udbyder": "cbb-mobil",
+   "navn": "CBB Fri Data",
+   "data_gb": 9999,
+   "pris": 309,
+   "intro_pris": 164,
+   "intro_mdr": 2,
+   "tale": "fri",
+   "sms": "fri",
+   "binding": 0,
+   "oprettelse": 0,
+   "eu_gb": 30,
+   "femg": true,
+   "esim": true,
+   "streaming": [
+    "Streaming inkluderet",
+    "Musik"
+   ],
+   "forbrugsafregnet": false,
+   "badge": null,
+   "link": "https://on.cbb.dk/t/t?a=1700024858&as=2102885611&t=2&tk=1&url=https://www.cbb.dk/shop/mobilabonnement-med-streaming/"
   },
   {
    "id": "telmore-478282",
