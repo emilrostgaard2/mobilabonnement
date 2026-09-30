@@ -564,16 +564,30 @@ def listeld(abonnementer, navn):
 # --------------------------------------------------------------- komponenter
 
 def logobaand(titel="Vi sammenligner priser fra"):
+    """Stille logo-gitter i stedet for en rullende karrusel.
+
+    Bevægelse tæt på indholdet trækker øjet væk fra det, man skal læse, og
+    for ældre brugere er det direkte forstyrrende. Hvert logo linker til vores
+    gennemgang af selskabet — ti interne links fra de vigtigste sider."""
+    betalte = [a for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")]
+    fra = min((visningspris(a) for a in betalte), default=None)
     logoer = "".join(
+        f'<a href="/udbydere/{u["slug"]}/" class="lg-logo" aria-label="Se vores gennemgang af {e(u["navn"])}">'
         f'<img src="/assets/img/logoer/{u["logo"]}" alt="{e(u["navn"])}" loading="lazy"'
-        f' width="{round(u["logo_w"] * 30 / u["logo_h"])}" height="30" decoding="async">'
-        for u in UDBYDERE
+        f' width="{round(u["logo_w"] * 28 / u["logo_h"])}" height="28" decoding="async"></a>'
+        for u in sorted(UDBYDERE, key=lambda x: x["navn"].lower())
     )
-    overskrift = f'<div class="logobaand-titel">{e(titel)}</div>' if titel else ""
-    return f"""<div class="logobaand">
-  {overskrift}
-  <div class="logobaand-indre">
-    <div class="logospor" aria-hidden="true">{logoer}{logoer}</div>
+    tillid = "".join(f"<li>{e(t)}</li>" for t in [
+        f"Fra {kr(fra)} kr./md." if fra else "Alle priser samlet ét sted",
+        "Normalpris, ikke kun intropris",
+        f"Opdateret {OPDATERET}",
+        "Ingen betalt placering",
+    ])
+    return f"""<div class="logogitter" aria-label="Selskaber i sammenligningen">
+  <div class="lg-indre">
+    <p class="lg-titel">Vi sammenligner {len(UDBYDERE)} selskaber</p>
+    <div class="lg-logoer">{logoer}</div>
+    <ul class="lg-tillid">{tillid}</ul>
   </div>
 </div>"""
 
@@ -1117,7 +1131,7 @@ def hurtigvalg():
       loading="lazy" width="{round(u['logo_w'] * 26 / u['logo_h'])}" height="26" decoding="async"></span>
     {stjerne}
   </div>
-  <b class="valg-navn">{e(u['navn'])} {e(a['navn'])}</b>
+  <b class="valg-navn">{e(u['navn'])} · {e(skabelon._kortnavn(a, u))}</b>
   <div class="valg-pris">{kr(vist)}<span> kr./md.</span></div>
   <div class="valg-under">{under}</div>
   {spar}
@@ -9930,7 +9944,19 @@ def prisarkiv_selskaber(aendringer):
 def byg_prisarkiv():
     med, aendringer = _prisarkiv_data()
     if len(med) < 2:
-        print("  Springer /prisarkiv/ over — kræver mindst to målinger")
+        # Siden bygges altid, så links til den aldrig dør — heller ikke hvis
+        # historikken mangler. Den fortæller så, at målingerne er i gang.
+        print("  /prisarkiv/ bygges i midlertidig udgave — under to målinger")
+        byg_statisk("/prisarkiv/", "Prisarkiv — alle målte prisændringer på mobilabonnementer",
+                    "Vi gemmer priserne på alle mobilabonnementer dagligt og viser hver "
+                    "ændring med dato. Arkivet fyldes automatisk.",
+                    "Prisarkiv", "Prisarkiv", """<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort fortalt:</strong> Vi gemmer priserne på alle abonnementer
+i vores sammenligning to gange i døgnet. Prisarkivet viser hver enkelt prisændring med dato,
+så snart vi har mere end én måling. Kig forbi igen i morgen.</p></div>
+<p>Indtil da kan du se <a href="/prisudvikling/">prisudviklingen</a> og de aktuelle priser
+under <a href="/billigste-mobilabonnement/">billigste mobilabonnement</a>.</p>
+</section>""", prioritet="0.5")
         return
 
     dage = (date.fromisoformat(med[-1]["dato"]) - date.fromisoformat(med[0]["dato"])).days

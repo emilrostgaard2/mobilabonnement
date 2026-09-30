@@ -706,6 +706,17 @@ def stjerner(u, *, kompakt=False):
             f'<span><strong>{tal} af 5</strong> på Trustpilot{an}.{da}</span></p>')
 
 
+def _kortnavn(a, u):
+    """'Oister – Oister 12 GB' → '12 GB · Fri tale'. Selskabet står i logoet."""
+    n = " ".join(a["navn"].split())
+    if n.lower().startswith(u["navn"].lower()):
+        n = n[len(u["navn"]):].strip(" –-·")
+    if not n:
+        n = gb_tekst(a["data_gb"])
+    tale = "Fri tale" if a["tale"] == "fri" else f'{a["tale"]} tale'
+    return n if tale.lower() in n.lower() else f"{n} · {tale}"
+
+
 def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
               score=""):
     """Ét abonnement som kompakt rækkekort med foldbare detaljer."""
@@ -743,22 +754,23 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
             if flagtekst else "")
 
     # ---- Fire nøgletal — det folk faktisk scanner efter ------------------
+    _eu = ("—" if a["data_gb"] == 0 else "Fri" if a.get("eu_gb", 0) >= 9999
+           else "Ingen" if not a.get("eu_gb") else f'{a["eu_gb"]} GB')
     stats = [
         (gb_tekst(a["data_gb"]), "data i Danmark"),
         ("Fri" if a["tale"] == "fri" else e(a["tale"]), "tale"),
+        (_eu, "EU-data"),
         ("Ingen" if a["binding"] == 0 else f'{a["binding"]} mdr.', "binding"),
-        (f'{kr(a.get("oprettelse", 0))} kr.', "oprettelse"),
     ]
     statbokse = "".join(f'<div class="pk-stat"><b>{v}</b><span>{t}</span></div>'
                         for v, t in stats)
 
     # ---- Højst tre plusser, så rækken ikke svulmer op -------------------
     plus = []
-    if a["data_gb"] >= 9999:
-        plus.append("Fri data")
-    elif a["data_gb"] > 0:
-        plus.append(f'{a["data_gb"]} GB data')
-    plus.append("Ingen binding" if a["binding"] == 0 else f'{a["binding"]} mdr. binding')
+    if a["binding"] == 0:
+        plus.append("Ingen binding")
+    if not a.get("oprettelse"):
+        plus.append("Ingen oprettelse")
     if a.get("femg") and a["data_gb"] > 0:
         plus.append("5G")
     if a.get("esim"):
@@ -775,7 +787,8 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
     if a["data_gb"] > 0 and not a.get("eu_gb"):
         advarsler.append("Ingen EU-data inkluderet — data i udlandet koster ekstra.")
     if a.get("sms") and a["sms"] != "fri":
-        advarsler.append(f'Sms er begrænset til {e(a["sms"])}.')
+        advarsler.append("Sms er begrænset." if a["sms"].lower().startswith("begr")
+                         else f'Sms er begrænset til {e(a["sms"])}.')
     if a.get("oprettelse"):
         advarsler.append(f'Oprettelse på {kr(a["oprettelse"])} kr. betales én gang.')
     advarhtml = ("<ul class=\"pk-advar\">"
@@ -801,7 +814,8 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
                     '<div class="pk-under">+ takst pr. minut og sms</div>')
     elif intro:
         prisblok = (f'<div class="pk-tal"><b>{kr(a["intro_pris"])}</b><span>kr.</span></div>'
-                    f'<div class="pk-under">Herefter {kr(a["pris"])} kr./md.</div>')
+                    f'<div class="pk-under">Herefter {kr(a["pris"])} kr./md.'
+                    f'{f" · snit {kr(g)} kr./md. første år" if g is not None else ""}</div>')
     else:
         prisblok = (f'<div class="pk-tal"><b>{kr(a["pris"])}</b><span>kr.</span></div>'
                     f'<div class="pk-under">{kr(aar)} kr. samlet på 12 mdr.</div>')
@@ -845,8 +859,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
       {stjerner(u, kompakt=True)}
     </div>
     <div class="pk-midt">
-      <h3 class="pk-navn">{e(u['navn'])} – {e(a['navn'])}</h3>
-      {score}
+      <h3 class="pk-navn">{e(_kortnavn(a, u))}</h3>
       <div class="pk-stats">{statbokse}</div>
       <div class="pk-chips">{chips}</div>
     </div>
@@ -857,10 +870,11 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
         aria-controls="{panel_id}">Se detaljer</button>
       <a class="knap knap-primaer pk-cta" href="{a['link']}" rel="sponsored nofollow noopener"
         target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
-        aria-label="Se tilbud på {e(a['navn'])} hos {e(u['navn'])}">Se tilbud</a>
+        aria-label="Gå til {e(u['navn'])} og se {e(a['navn'])}">Gå til {e(u['navn'])}</a>
     </div>
   </div>
   <div class="pk-panel" id="{panel_id}" hidden>
+    {score}
     <dl class="pk-fakta">{faktahtml}</dl>
     {advarhtml}
     <div class="pk-panelfod">
