@@ -2302,3 +2302,23 @@ body{font-variant-numeric:tabular-nums}
 .pk-raekke{padding:.9rem 1.1rem}
 .pk-spar,.pk-under{white-space:normal;overflow:visible;text-overflow:clip}
 .pk-pris{min-width:186px}
+
+
+/* ---------- Selskaberne i hero'ens højre side ---------- */
+.hl-gitter-logoer{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);align-items:center}
+.hero-selskaber{background:#fff;border:1px solid var(--graa-lys);border-radius:var(--r-l);padding:1.15rem 1.15rem 1rem}
+.hero-selskaber .lg-titel{margin-bottom:.75rem;font-size:.86rem}
+.hero-selskaber .lg-logoer{gap:.45rem;max-width:none}
+.hero-selskaber .lg-logo{flex-basis:calc(20% - .45rem);min-height:46px;padding:.35rem .4rem}
+.hero-selskaber .lg-logo img{max-height:22px}
+.hero-selskaber .lg-tillid{display:grid;grid-template-columns:1fr 1fr;gap:.25rem .8rem;margin-top:.8rem;
+  font-size:.82rem;justify-content:start;text-align:left}
+@media (max-width:900px){
+  .hl-gitter-logoer{grid-template-columns:1fr}
+  .hero-selskaber{margin-top:1.4rem}
+  .hero-selskaber .lg-logo{flex-basis:calc(20% - .45rem)}
+}
+@media (max-width:560px){
+  .hero-selskaber .lg-logo{flex-basis:calc(33.333% - .45rem);min-height:42px}
+  .hero-selskaber .lg-tillid{grid-template-columns:1fr}
+}

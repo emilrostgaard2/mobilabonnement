@@ -237,6 +237,24 @@ UDEN_LOGOBAAND = (
 )
 
 
+def _logoer_i_hero(hero, efter_hero):
+    """På sider, hvor hero'en ellers står tom til højre, flyttes logo-gitteret
+    op i hero'en. Så er der ikke et tomt felt, og selskaberne er det første,
+    man ser. Forsiden og sider med billede beholder deres egen højre side."""
+    if not (efter_hero and 'class="logogitter"' in efter_hero and hero
+            and "hl-gitter" not in hero and '<div class="">' in hero):
+        return hero, efter_hero
+    start = efter_hero.index('<div class="lg-indre">') + len('<div class="lg-indre">')
+    slut = efter_hero.rindex("</div>\n</div>")
+    indre = efter_hero[start:slut]
+    hero = hero.replace('<div class="">', '<div class="hl-gitter hl-gitter-logoer">', 1)
+    tom = "      </div>\n      \n    </div>\n  </div>\n</section>"
+    if tom not in hero:
+        return hero, efter_hero
+    hero = hero.replace(tom, f'      </div>\n      <div class="hero-selskaber">{indre}</div>\n    </div>\n  </div>\n</section>')
+    return hero, ""
+
+
 def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
           hero=None, efter_hero="", opdateret="", ekstra_hoved="", toc=True,
           og_billede=None):
@@ -253,6 +271,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
     """Bygger en komplet HTML-side."""
     kanonisk = DOMAENE + sti
     blokke = ""
+    hero, efter_hero = _logoer_i_hero(hero, efter_hero)
     for blok in (jsonld or []):
         blokke += ('<script type="application/ld+json">'
                    + json.dumps(blok, ensure_ascii=False, separators=(",", ":"))
