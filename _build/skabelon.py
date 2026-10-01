@@ -893,6 +893,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
       <button type="button" class="pk-detaljer" aria-expanded="false"
         aria-controls="{panel_id}">Se detaljer</button>
       <label class="pk-sml"><input type="checkbox" class="sml-boks" value="{e(a['id'])}"> Sammenlign</label>
+      <small class="pk-kilde">Pris fra {e(u['navn'])}s datafeed, hentet {e(OPDATERET_GLOBAL)}</small>
       <a class="knap knap-primaer pk-cta" href="{a['link']}" rel="sponsored nofollow noopener"
         target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
         aria-label="Gå til {e(u['navn'])} og se {e(a['navn'])}">Gå til {e(u['navn'])}</a>

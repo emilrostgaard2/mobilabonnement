@@ -2955,6 +2955,8 @@ def byg_billigste():
     krop = f"""
 {hurtigvalg()}
 
+{billigste_pr_behov()}
+
 {pristabel(ABON, UMAP,
            titel="Billigste mobilabonnementer lige nu",
            undertitel="Sorteret efter laveste månedspris. Brug filtrene til at se kun de "
@@ -3021,14 +3023,16 @@ def byg_fridata():
          "sv": f"Fri data koster fra {D['pris_fri']} kr. om måneden i vores sammenligning. Prisen varierer "
                "især med, hvilket netværk udbyderen kører på, og hvor meget data der er inkluderet i EU."},
         {"sp": "Er fri data virkelig ubegrænset?",
-         "sv": "I Danmark er der som regel ingen grænse for datamængden. Til gengæld er der næsten altid et loft "
-               "for, hvor meget du kan bruge i EU, og de fleste abonnementer har vilkår om rimeligt forbrug."},
+         "sv": "Nej, ikke helt. Hos de selskaber, vi har kontrolleret, er der en månedlig fair use-grænse: "
+               "2 TB hos Flexii og Oister og 1.000 GB hos Telmore og YouSee. Derudover er der altid et loft "
+               "for, hvor meget du kan bruge i EU."},
         {"sp": "Hvornår kan fri data betale sig?",
          "sv": "Når du fast bruger over cirka 80-100 GB om måneden, eller når mobilen er din eneste "
                "internetforbindelse. Bruger du under 60 GB, er et almindeligt stort abonnement billigere."},
-        {"sp": "Har fri data hastighedsbegrænsning?",
-         "sv": "Nogle abonnementer har et hastighedsloft eller lavere prioritet i myldretiden. Det fremgår af "
-               "abonnementsvilkårene og er værd at tjekke, hvis du streamer i høj opløsning."},
+        {"sp": "Hvad sker der, når man rammer fair use-grænsen?",
+         "sv": "Hastigheden sættes ned resten af måneden: til 128 Kbit/s hos Telmore og Flexii og til 1 Mbit/s "
+               "hos YouSee, ifølge selskabernes egne vilkår. 128 Kbit/s rækker kun til beskeder, mens 1 Mbit/s "
+               "også kan bruges til mail og musik."},
         {"sp": "Kan jeg bruge fri data som hotspot?",
          "sv": "Hos de fleste danske udbydere ja, men tjek vilkårene. Nogle abonnementer begrænser deling til "
                "andre enheder, og hotspot til en laptop bruger langt mere data end telefonen selv."},
@@ -3051,6 +3055,7 @@ def byg_fridata():
     '<h2>Hvad bruger man egentlig data på?</h2>',
     erfaring('fri_data')
     + mobil_maalgrupper([a for a in ABON if a["data_gb"] >= 9999], "mobilabonnement med fri data")
+    + tabel_fri_data_betaler_sig() + tabel_fair_use()
     + tabel_pr_datamaengde() + '<h2>Hvad bruger man egentlig data på?</h2>', 1
 ).replace('</section>', tabel_prgb_rangliste() + fejllink() + begrebslink() + '</section>', 1)}
 
@@ -3750,6 +3755,8 @@ def byg_netvaerksoversigt():
     <thead><tr><th></th>{"".join(f"<th>{e(n['navn'])}</th>" for n in NETVAERK)}</tr></thead>
     <tbody>{sml}</tbody>
   </table>
+
+  {netvaerk_maaling_sektion()}
 
   <h2>Nettet bestemmer dækningen — ikke prisen</h2>
   <p>Det er den vigtigste enkeltindsigt om det danske mobilmarked, og den bliver
@@ -5094,6 +5101,8 @@ def byg_udbyderoversigt():
 
   {prisfordeling()}
 
+  {loyalty_tabel()}
+
   <h2>Sådan vælger du mellem selskaberne</h2>
   <ol class="trin">
     <li><strong>Afgør først om netværket betyder noget for dig</strong>
@@ -5263,6 +5272,7 @@ def byg_udbyder(u):
   {udbyder_faktaboks(u, egne)}
 
   {vores_vurdering(u, egne)}
+  {loyalty_udbyder(u)}
 
   <h2>{e(uq.get("h2_vurdering", f"{u['navn']} i praksis").replace(" vurderet:", " i praksis:"))}</h2>
   {afsnit}
@@ -14068,6 +14078,207 @@ Prisændringer fra selskaberne er ikke rettelser — dem finder du i <a href="/p
                 "Rettelser", "Rettelser", brod, prioritet="0.4")
 
 
+# ======================================================================
+# Fair use på fri data — kun det, vi har kontrolleret i selskabernes egne
+# kilder. Hver række har kilde og kontroldato. Står et selskab ikke her, har
+# vi ikke kunnet finde grænsen i dets offentlige vilkår.
+# ======================================================================
+FAIR_USE = [
+    {"udbyder": "flexii", "graense": "2 TB", "efter": "Hastigheden sættes ned til 128 Kbit/s resten af måneden",
+     "kilde": "Flexii: produktsiden og abonnementsvilkår (version 1.17)",
+     "url": "https://www.flexii.dk/fri-tale-fri-data"},
+    {"udbyder": "oister", "graense": "2 TB", "efter": "Ikke oplyst på produktsiden",
+     "kilde": "Oister: produktsiden for Fri tale / Fri GB",
+     "url": "https://www.oister.dk/mobilabonnement/oister-mobil-fri-tale-fri-gb/"},
+    {"udbyder": "telmore", "graense": "1.000 GB", "efter": "Hastigheden sættes ned til 128 Kbit/s",
+     "kilde": "Telmore: tillægsvilkår for pakke-abonnement og produktsiden",
+     "url": "https://www.telmore.dk/mobilabonnement/mobilabonnement-med-fri-tale"},
+    {"udbyder": "yousee", "graense": "1.000 GB", "efter": "Hastigheden sættes ned til 1 Mbit/s",
+     "kilde": "YouSee: tillægsvilkår for mobilabonnementer",
+     "url": "https://yousee.dk/shop/mobilabonnement/YouSee-Mobil-Fri-Data"},
+]
+FAIR_USE_KONTROLLERET = "2026-10-01"
+
+
+def tabel_fair_use():
+    rk = ""
+    for r in FAIR_USE:
+        u = UMAP.get(r["udbyder"])
+        if not u:
+            continue
+        rk += (f'<tr><td><a href="/udbydere/{u["slug"]}/"><strong>{e(u["navn"])}</strong></a></td>'
+               f'<td class="tal"><strong>{e(r["graense"])}</strong> pr. måned</td><td>{e(r["efter"])}</td>'
+               f'<td class="tabel-under"><a href="{e(r["url"])}" rel="nofollow noopener" target="_blank">'
+               f'{e(r["kilde"])}</a></td></tr>')
+    andre = sorted({UMAP[a["udbyder"]]["navn"] for a in ABON if a["data_gb"] >= 9999}
+                   - {UMAP[r["udbyder"]]["navn"] for r in FAIR_USE if r["udbyder"] in UMAP})
+    return f"""<h2 id="fair-use">Er fri data ubegrænset? Fair use-grænserne</h2>
+<p class="citat-fakta">Fri data i Danmark har en månedlig fair use-grænse hos de selskaber, vi har
+kontrolleret: 2 TB hos Flexii og Oister og 1.000 GB hos Telmore og YouSee. Når grænsen nås, sættes
+hastigheden ned — hos Telmore og Flexii til 128 Kbit/s og hos YouSee til 1 Mbit/s. Kontrolleret i
+selskabernes egne vilkår {e(dansk_dato(date.fromisoformat(FAIR_USE_KONTROLLERET)))}.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Fair use-grænser på fri data, kontrolleret i selskabernes egne vilkår og produktsider.</caption>
+<thead><tr><th scope="col">Selskab</th><th scope="col">Grænse</th><th scope="col">Når grænsen nås</th>
+<th scope="col">Kilde</th></tr></thead><tbody>{rk}</tbody></table></div>
+<p>1.000 GB svarer til flere hundrede timers video i HD om måneden, så langt de fleste rammer aldrig
+grænsen. Den har først betydning, hvis mobilen er hele husstandens internet.
+{f"For {_oprems(andre)} har vi ikke kunnet finde en grænse i de offentlige vilkår — spørg selskabet, før du bestiller, hvis du bruger meget data." if andre else ""}</p>"""
+
+
+def tabel_fri_data_betaler_sig():
+    """Hvornår betaler fri data sig — regnet på dagens priser."""
+    alle = _betalte()
+    fri = [a for a in alle if a["data_gb"] >= 9999]
+    if not fri:
+        return ""
+    bf = min(fri, key=gns12)
+    trin = [("Under 10 GB", "Stort set kun wi-fi, beskeder og kort", 1, 10, "/mobilabonnement-1-10-gb/"),
+            ("10–30 GB", "Sociale medier og musik på farten", 11, 30, "/mobilabonnement-10-30-gb/"),
+            ("30–100 GB", "Video på farten og lidt hotspot", 31, 100, "/mobilabonnement-50-gb/"),
+            ("Over 100 GB", "Mobilen er også internet derhjemme", 101, 9998, "/mobilabonnement-100-gb/")]
+    rk = ""
+    for navn, brug, lo, hi, sti in trin:
+        k = [a for a in alle if lo <= a["data_gb"] <= hi]
+        if not k:
+            continue
+        b = min(k, key=gns12)
+        forskel = round((gns12(bf) - gns12(b)) * 12)
+        if forskel > 0:
+            dom = f"Nej — fri data koster {kr(forskel)} kr. mere om året"
+        else:
+            dom = "Ja — fri data er lige så billigt eller billigere"
+        rk += (f'<tr><td><a href="{sti}"><strong>{e(navn)}</strong></a><br><span class="tabel-under">{e(brug)}</span></td>'
+               f'<td>{e(UMAP[b["udbyder"]]["navn"])} {e(skabelon._kortnavn(b, UMAP[b["udbyder"]]))}</td>'
+               f'<td class="tal"><strong>{kr(round(gns12(b)))} kr.</strong></td><td>{e(dom)}</td></tr>')
+    return f"""<h2 id="betaler-sig">Hvornår betaler fri data sig?</h2>
+<p>Billigste fri data koster lige nu {kr(round(gns12(bf)))} kr. om måneden i snit over 12 måneder
+({e(UMAP[bf["udbyder"]]["navn"])}). Tabellen viser, hvad det billigste alternativ koster på hvert
+forbrugsniveau, og om fri data kan betale sig. Find dit forbrug i telefonens indstillinger under
+mobildata.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Billigste abonnement pr. forbrugsniveau mod billigste fri data, snit over 12 måneder.</caption>
+<thead><tr><th scope="col">Dit forbrug pr. måned</th><th scope="col">Billigste valg</th>
+<th scope="col">Snit pr. md.</th><th scope="col">Betaler fri data sig?</th></tr></thead>
+<tbody>{rk}</tbody></table></div>"""
+
+
+def billigste_pr_behov():
+    """Fire korte, citérbare svar på billigste-siden."""
+    def svar(navn, f, kw):
+        k = [a for a in _betalte() if f(a)]
+        if not k:
+            return ""
+        a = min(k, key=gns12)
+        u = UMAP[a["udbyder"]]
+        return (f'<h2>Billigste mobilabonnement {e(navn)}</h2>'
+                f'<p class="citat-fakta">Det billigste {e(kw)} er {e(u["navn"])} '
+                f'{e(skabelon._kortnavn(a, u))}: {e(_prisled(a))}, svarende til '
+                f'{kr(round(gns12(a)))} kr. om måneden i snit det første år. Det viser Telemobils '
+                f'sammenligning af {len(k)} abonnementer pr. {e(OPDATERET)}.</p>')
+    return ('<section class="sektion baand-smal artikel" id="pr-behov">'
+            + svar("med fri tale", lambda a: a["tale"] == "fri", "mobilabonnement med fri tale")
+            + '<p><a href="/mobilabonnement-med-fri-tale/">Se alle med fri tale</a></p>'
+            + svar("med fri data", lambda a: a["data_gb"] >= 9999, "mobilabonnement med fri data")
+            + '<p><a href="/mobilabonnement-med-fri-data/">Se alle med fri data</a></p>'
+            + svar("uden binding", lambda a: not a["binding"], "mobilabonnement uden binding")
+            + '<p><a href="/mobilabonnement-uden-binding/">Se alle uden binding</a></p>'
+            + svar("under 100 kr.", lambda a: a["pris"] < 100, "mobilabonnement under 100 kr.")
+            + '<p><a href="/mobilabonnement-under-100-kr/">Se alle under 100 kr.</a></p>'
+            + "</section>")
+
+
+# Uafhængige netværksmålinger — Teknologisk Institut, bestilt af TDC NET
+NET_MAALING = {
+    "aar": 2025, "periode": "februar–marts 2025", "steder": 691,
+    "fejlfri": {"TDC NET": 85, "Telia (Norlys)": 81, "Telenor": 78, "3": 70},
+    "fem_g": {"TDC NET": 99.7, "3": 99.7, "Telia (Norlys)": 99.3, "Telenor": 99.1},
+    "kilde": "https://xn--5g-netvrk-m3a.dk/2025/04/25/undersoegelse-tdc-net-har-igen-danmarks-bedste-mobilnet/",
+}
+
+
+def netvaerk_maaling_sektion():
+    m = NET_MAALING
+    rk = "".join(f'<tr><td><strong>{e(n)}</strong></td><td class="tal">{v} %</td>'
+                 f'<td class="tal">{str(m["fem_g"].get(n, "–")).replace(".", ",")} %</td></tr>'
+                 for n, v in sorted(m["fejlfri"].items(), key=lambda x: -x[1]))
+    return f"""<h2 id="maalinger">Teknologisk Instituts målinger af de danske mobilnet</h2>
+<p class="citat-fakta">Ifølge Teknologisk Instituts måling fra {e(m['periode'])} på {m['steder']}
+målesteder havde TDC NET den bedste samlede mobilnetværksoplevelse med {m['fejlfri']['TDC NET']} %
+fejlfri oplevelse, foran Telia (Norlys) med {m['fejlfri']['Telia (Norlys)']} %, Telenor med
+{m['fejlfri']['Telenor']} % og 3 med {m['fejlfri']['3']} %. Målingen er bestilt af TDC NET.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Teknologisk Institut {m['aar']}: andel fejlfri mobilnetværksoplevelse og adgang til 5G på landsplan.</caption>
+<thead><tr><th scope="col">Net</th><th scope="col">Fejlfri oplevelse</th><th scope="col">Adgang til 5G</th></tr></thead>
+<tbody>{rk}</tbody></table></div>
+<p>To forbehold: målingen er bestilt og betalt af TDC NET, og tallene er landsgennemsnit. Opkald
+og videostreaming er næsten fejlfri på alle fire net — forskellen ligger især i hastighed på
+download og upload. I Teknologisk Instituts måling fra februar–marts 2026 var TDC NET igen samlet
+bedst. Dækningen på din egen adresse betyder mere end landsgennemsnittet, så tjek
+<a href="/daekningskort/">dækningskortet</a>.
+<a href="{e(m['kilde'])}" rel="nofollow noopener" target="_blank">Kilde for 2025-tallene</a>.</p>"""
+
+
+# ======================================================================
+# Kundeloyalitet: Loyalty Group, BrancheIndex™ Mobil 2026
+# Kilde: loyaltygroup.dk, 3.315 svar fra danske mobilkunder, marts 2026.
+# Selskaber, der ikke indgår i undersøgelsen, får ingen score.
+# ======================================================================
+LOYALTY = {
+    "aar": 2026, "svar": 3315, "periode": "marts 2026",
+    "url": "https://loyaltygroup.dk/brancheanalyser/brancheindex/brancheindex-mobil/",
+    "score": {"CBB Mobil": 78, "Oister": 77, "3 Mobil": 75, "eesy": 68, "Telmore": 67,
+              "Call me": 64, "YouSee": 63, "Telenor": 60, "Telia": 56},
+    "slug": {"cbb-mobil": "CBB Mobil", "oister": "Oister", "eesy": "eesy",
+             "telmore": "Telmore", "yousee": "YouSee"},
+}
+
+
+def loyalty_placering(navn):
+    rk = sorted(LOYALTY["score"].items(), key=lambda x: -x[1])
+    return next(i for i, (n, _) in enumerate(rk, 1) if n == navn), len(rk)
+
+
+def loyalty_udbyder(u):
+    m = LOYALTY
+    navn = m["slug"].get(u["slug"])
+    if not navn:
+        return (f'<p class="loy-linje"><strong>Kundeloyalitet:</strong> {e(u["navn"])} indgår ikke i '
+                f'Loyalty Groups BrancheIndex Mobil {m["aar"]}, som ikke måler alle selskaber. '
+                f'Se <a href="/bedste-mobilabonnement/#loyalitet">hvordan selskaberne i undersøgelsen '
+                f'klarer sig</a>.</p>')
+    s = m["score"][navn]
+    plads, n = loyalty_placering(navn)
+    return (f'<p class="citat-fakta">I Loyalty Groups BrancheIndex Mobil {m["aar"]} har {e(u["navn"])} '
+            f'et loyalitetsindeks på {s} ud af 100 og ligger nr. {plads} af de {n} målte '
+            f'mobilselskaber. Undersøgelsen bygger på {kr(m["svar"])} svar fra danske mobilkunder '
+            f'indsamlet i {e(m["periode"])}. <a href="{e(m["url"])}" rel="nofollow noopener" '
+            f'target="_blank">Kilde: Loyalty Group</a>.</p>')
+
+
+def loyalty_tabel():
+    m = LOYALTY
+    omvendt = {v: k for k, v in m["slug"].items()}
+    rk = ""
+    for i, (n, s) in enumerate(sorted(m["score"].items(), key=lambda x: -x[1]), 1):
+        lnk = (f'<a href="/udbydere/{omvendt[n]}/"><strong>{e(n)}</strong></a>'
+               if n in omvendt else f"<strong>{e(n)}</strong>")
+        rk += f'<tr><td class="tal">{i}</td><td>{lnk}</td><td class="tal"><strong>{s}</strong></td></tr>'
+    return f"""<h2 id="loyalitet">Hvilke mobilselskaber har de mest loyale kunder?</h2>
+<p class="citat-fakta">CBB Mobil har de mest loyale kunder blandt de danske mobilselskaber med et
+loyalitetsindeks på {m['score']['CBB Mobil']} ud af 100, foran Oister med {m['score']['Oister']} og
+3 Mobil med {m['score']['3 Mobil']}, ifølge Loyalty Groups BrancheIndex Mobil {m['aar']}, der bygger på
+{kr(m['svar'])} svar fra danske mobilkunder.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Loyalty Group, BrancheIndex™ Mobil {m['aar']}: loyalitetsindeks 0–100. Selskaber uden for
+undersøgelsen (bl.a. Lebara, Lyca Mobile, Duka, Flexii og Greentel) er ikke målt.</caption>
+<thead><tr><th scope="col">#</th><th scope="col">Selskab</th><th scope="col">Loyalitetsindeks</th></tr></thead>
+<tbody>{rk}</tbody></table></div>
+<p>Indekset måler, hvor loyale kunderne er over for deres eget selskab — ikke pris eller dækning.
+Det bygger på spørgsmål om bl.a. produktkvalitet, service, værdi for pengene og klagehåndtering.
+<a href="{e(m['url'])}" rel="nofollow noopener" target="_blank">Kilde: Loyalty Group</a>.</p>"""
+
+
 def main():
     # Popup'en ligger på hver side, så den skal bygges før noget andet
     skabelon.FIRMA = site.get("firma", {})
@@ -14281,7 +14492,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         udvalg=bedste_udvalg, tekstfunktion=sider.bedste,
         chips=[("Vurderet på", "5 kriterier"), ("Udbydere", str(D['antal_udbydere'])), ("Fra", f"{D['min_pris']} kr.")],
         tabeltitel="Bedste værdi for pengene lige nu",
-        ekstra_tabeller=[redaktionens_valg(), prisfordeling(), tabel_billigst_pr_udbyder(),
+        ekstra_tabeller=[loyalty_tabel(), redaktionens_valg(), prisfordeling(), tabel_billigst_pr_udbyder(),
                          tabel_prgb_rangliste(), overforbrug(),
                          udbydergitter(), fejltabel(), begrebstabel(), vejviser('/bedste-mobilabonnement/')],
         faq=[
