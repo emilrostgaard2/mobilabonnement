@@ -89,13 +89,22 @@ def introperiode(post):
     Derfor dækker vi alle de former, feedet faktisk indeholder."""
     t = post.get("promotionText") or ""
 
-    # "første ÅR", "resten af året", "frem til 31.3.2027" → tolv måneder
+    # "første ÅR" → tolv måneder fra oprettelse
     if re.search(r"(første|hele)\s*(1\s*)?år\b", t, re.I):
         return 12
-    if re.search(r"resten af året", t, re.I):
-        return 12
-    if re.search(r"frem til\s+\d", t, re.I):
-        return 12
+    # "resten af året" er en kalenderdato, ikke et år: fra i dag til 31. december.
+    # Tidligere blev det læst som 12 måneder, hvilket fik kampagner til at se
+    # langt bedre ud end de er (fx 18 kr. "i 12 mdr." i oktober = reelt 3 mdr.).
+    idag = date.today()
+    if re.search(r"resten af (året|år)", t, re.I):
+        return 12 - idag.month + 1
+    # "frem til 31.3.2027" → antal kalendermåneder fra i dag til og med slutmåneden
+    m = re.search(r"frem til\s+(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{2,4})", t, re.I)
+    if m:
+        d, mm, aa = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        aa = aa + 2000 if aa < 100 else aa
+        mdr = (aa - idag.year) * 12 + (mm - idag.month) + 1
+        return max(1, min(mdr, 24))
 
     # "første md.", "første måned" uden tal → én måned
     if re.search(r"første\s+(md\.?|måned)\b", t, re.I):

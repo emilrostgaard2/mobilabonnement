@@ -60,6 +60,40 @@ def _logo_w(slug_, hoejde):
     return round(w * hoejde / h)
 
 
+def _indsaet_citat(sti, html):
+    """Sider med abonnementskort får den citérbare sætning øverst i indholdet,
+    beregnet ud fra præcis de abonnementer, siden viser."""
+    if 'class="citat-fakta"' in html:
+        return html
+    if sti.startswith(("/sammenlign/", "/kampagner", "/guides/", "/mobilabonnementer-black-friday")):
+        return html
+    set_, k = set(), []
+    for a in skabelon.UDVALG_SIDE:
+        if a["id"] not in set_:
+            set_.add(a["id"])
+            k.append(a)
+    f = CITAT_FILTER.get(sti)
+    if f:
+        # Siden kan vise et bredere udvalg end søgeordet (fx "relaterede"), så
+        # påstanden afgrænses altid til præcis det, søgeordet lover.
+        k = [a for a in (k or ABON) if f(a)] or [a for a in ABON if f(a)]
+    if not k:
+        tj = next((t for t, m in TJENESTER_META.items()
+                   if sti == f"/mobilabonnement-med-{m[0]}/"), None)
+        if not tj:
+            return html
+        n = len(_betalte())
+        c = (f'<p class="citat-fakta">Mobilabonnement med {e(tj)} fås hos '
+             f'{e(TJENESTE_UDBYDERE.get(tj, "enkelte selskaber"))}. Selskaberne oplyser ikke '
+             f'pakker med {e(tj)} i deres prisdata, så de indgår ikke i Telemobils '
+             f'sammenligning af {n} abonnementer pr. {e(OPDATERET)}.</p>')
+    else:
+        c = citat_for_side(sti, k)
+    if not c:
+        return html
+    return html.replace('<main id="indhold">', f'<main id="indhold">\n<div class="baand">{c}</div>', 1)
+
+
 _AMP = re.compile(r"&(?![a-zA-Z][a-zA-Z0-9]{1,31};|#[0-9]{1,7};|#[xX][0-9a-fA-F]{1,6};)")
 
 
@@ -101,6 +135,8 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     if "[[tabel_" in html or "[[gruppe_prisudvikling_fri]]" in html:
         html = indsaet_kattabeller(html)
     html = _pak_tabeller(html)
+    html = _indsaet_citat(sti, html)
+    skabelon.UDVALG_SIDE.clear()
     html = _ret_ampersand(html)
     mappe = os.path.join(ROD, sti.strip("/"))
     if sti == "/":
@@ -2817,7 +2853,6 @@ def byg_forside():
     krumme = [(None, "Forside")]
 
     krop = f"""
-<div class="baand">{citat(ABON)}</div>
 {pristabel(ABON, UMAP,
            titel=f"Alle mobilabonnementer sammenlignet",
            undertitel=f"{D['antal']} abonnementer fra {D['antal_udbydere']} udbydere, sorteret efter laveste månedspris. "
@@ -2918,7 +2953,6 @@ def byg_billigste():
     ]
 
     krop = f"""
-<div class="baand">{citat(ABON)}</div>
 {hurtigvalg()}
 
 {pristabel(ABON, UMAP,
@@ -3083,7 +3117,6 @@ def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
         brod = brod.replace("</section>", "".join(ekstra_tabeller) + "</section>")
 
     krop = f"""
-<div class="baand">{citat(udvalg, etiket.lower())}</div>
 {pristabel(udvalg, UMAP, titel=tabeltitel or f"{etiket} — sammenlignet på pris",
            undertitel=intro, billigst_id=udvalg[0]['id'] if udvalg else None,
            forvalg=forvalg)}
@@ -7458,6 +7491,7 @@ def byg_bredbaand():
 regnes med. Startpriserne begynder ved {kr(min(bb_start(a) for a in BB))} kr./md.
 Hurtigste er {hurtigst['ned']} Mbit/s hos {e(hurtigst['udbyder_navn'])}.
 Fiber er den bedste forbindelse, 5G den hurtigste at få installeret.</p></div>
+{bb_citat(BB, "bredbånd")}
 {bb_nu_linje(BB, "bredbånd")}
 {bb_noegletal(BB)}
 
@@ -7735,6 +7769,7 @@ forbindelse føles langsommere klokken 20 end klokken 10.</p>""",
 {kr(round(bb_aarspris(billigst) / 12))} kr. om måneden i snit det første år. Startpriserne
 begynder ved {kr(min(bb_start(a) for a in udvalg))} kr./md. Hurtigste er
 {e(hurtigst['udbyder_navn'])} med {hurtigst['ned']} Mbit/s ned. {e(besk)}</p></div>
+{bb_citat(udvalg, seo["kw"])}
 {bb_nu_linje(udvalg, seo["kw"])}
 {bb_noegletal(udvalg)}
 
@@ -13762,18 +13797,108 @@ def sidetype(sti):
 TELEMOBIL_LINKEDIN = "https://www.linkedin.com/company/telemobil-dk/"
 
 
-def citat(udvalg, hvad=None):
-    """Én dateret, citérbar sætning med kilde — den form AI-svar løfter ud."""
-    k = [a for a in udvalg if a["pris"] > 0 and not a.get("forbrugsafregnet")]
+CITAT_KW = {
+    "/": "mobilabonnement",
+    "/billigste-mobilabonnement/": "mobilabonnement",
+    "/mobilabonnement-1-10-gb/": "mobilabonnement med 1–10 GB",
+    "/mobilabonnement-10-30-gb/": "mobilabonnement med 10–30 GB",
+    "/mobilabonnement-30-50-gb/": "mobilabonnement med 30–50 GB",
+    "/mobilabonnement-50-gb/": "mobilabonnement med 50–99 GB",
+    "/mobilabonnement-100-gb/": "mobilabonnement med 100 GB eller mere",
+    "/mobilabonnement-med-fri-data/": "mobilabonnement med fri data",
+    "/mobilabonnement-med-fri-tale/": "mobilabonnement med fri tale",
+    "/mobilabonnement-med-esim/": "mobilabonnement med eSIM",
+    "/mobilabonnement-med-telefon/": "mobilabonnement med telefon",
+    "/mobilabonnement-med-streaming/": "mobilabonnement med streaming",
+    "/mobilabonnement-med-netflix/": "mobilabonnement med Netflix",
+    "/mobilabonnement-med-hbo-max/": "mobilabonnement med HBO Max",
+    "/mobilabonnement-med-disney-plus/": "mobilabonnement med Disney+",
+    "/mobilabonnement-med-viaplay/": "mobilabonnement med Viaplay",
+    "/mobilabonnement-med-tv2-play/": "mobilabonnement med TV 2 Play",
+    "/mobilabonnement-med-musik/": "mobilabonnement med musik",
+    "/mobilabonnement-med-lydbog/": "mobilabonnement med lydbøger",
+    "/mobilabonnement-til-aeldre/": "mobilabonnement til ældre",
+    "/mobilabonnement-til-boern/": "mobilabonnement til børn",
+    "/mobilabonnement-til-erhverv/": "mobilabonnement til erhverv",
+    "/mobilabonnement-til-familie/": "mobilabonnement til familien",
+    "/mobilabonnement-til-unge/": "mobilabonnement til unge",
+    "/mobilabonnement-uden-binding/": "mobilabonnement uden binding",
+    "/mobilabonnement-uden-data/": "mobilabonnement uden data",
+    "/mobilabonnement-under-100-kr/": "mobilabonnement under 100 kr.",
+}
+
+
+CITAT_FILTER = {
+    "/mobilabonnement-med-fri-data/": lambda a: a["data_gb"] >= 9999,
+    "/mobilabonnement-med-fri-tale/": lambda a: a["tale"] == "fri",
+    "/mobilabonnement-uden-binding/": lambda a: not a["binding"],
+    "/mobilabonnement-med-esim/": lambda a: bool(a.get("esim")),
+    "/mobilabonnement-uden-data/": lambda a: a["data_gb"] == 0,
+    "/mobilabonnement-1-10-gb/": lambda a: 1 <= a["data_gb"] <= 10,
+    "/mobilabonnement-10-30-gb/": lambda a: 10 <= a["data_gb"] <= 30,
+    "/mobilabonnement-30-50-gb/": lambda a: 30 <= a["data_gb"] <= 50,
+    "/mobilabonnement-50-gb/": lambda a: 50 <= a["data_gb"] <= 99,
+    "/mobilabonnement-100-gb/": lambda a: 100 <= a["data_gb"] < 9999,
+    "/mobilabonnement-under-100-kr/": lambda a: a["pris"] < 100,
+    "/mobilabonnement-med-streaming/": lambda a: bool(a.get("streaming")),
+    "/mobilabonnement-med-musik/": lambda a: "Musik" in (a.get("streaming") or []),
+    "/mobilabonnement-med-lydbog/": lambda a: "Lydbøger" in (a.get("streaming") or []),
+}
+
+
+def _prisled(a):
+    intro = a.get("intro_pris") is not None and a.get("intro_mdr")
+    if intro:
+        return (f"{kr(a['intro_pris'])} kr. om måneden i {a['intro_mdr']} "
+                f"måned{'er' if a['intro_mdr'] != 1 else ''} og derefter {kr(a['pris'])} kr.")
+    return f"{kr(a['pris'])} kr. om måneden i fast pris"
+
+
+def citat_for_side(sti, k):
+    """Citérbar sætning med sidens søgeord forrest. Bruges på alle sider, der
+    viser abonnementer. Påstanden gælder vores sammenligning, ikke hele markedet."""
+    k = [a for a in k if a["pris"] > 0 and not a.get("forbrugsafregnet")]
     if not k:
         return ""
+    selsk = len({x["udbyder"] for x in k})
+    kilde = (f"ifølge Telemobils sammenligning af {len(k)} abonnementer fra {selsk} "
+             f"selskab{'er' if selsk != 1 else ''} pr. {OPDATERET}")
+    if sti == "/bedste-mobilabonnement/":
+        a = max(k, key=telemobil_score)
+        u = UMAP[a["udbyder"]]
+        return (f'<p class="citat-fakta">Det bedste mobilabonnement målt på pris, data og vilkår '
+                f'er {e(u["navn"])} {e(skabelon._kortnavn(a, u))} med en Telemobil-score på '
+                f'{telemobil_score(a)} af 100: {e(_prisled(a))}, '
+                f'{"ingen binding" if not a["binding"] else str(a["binding"]) + " mdr. binding"}, '
+                f'{e(kilde)}.</p>')
     a = min(k, key=gns12)
     u = UMAP[a["udbyder"]]
-    emne = (f"Det billigste mobilabonnement i Danmark" if not hvad
-            else f"Det billigste abonnement i kategorien {hvad}")
-    return (f'<p class="citat-fakta">{emne} koster {kr(round(gns12(a)))} kr. om måneden i snit '
-            f'over 12 måneder ({e(u["navn"])}, {e(skabelon._kortnavn(a, u))}) pr. {e(OPDATERET)}, '
-            f'ifølge Telemobils sammenligning af {len(k)} abonnementer.</p>')
+    if sti.startswith("/udbydere/") and sti.count("/") == 3:
+        emne = f"Det billigste {u['navn']}-abonnement"
+    else:
+        emne = f"Det billigste {CITAT_KW.get(sti, 'mobilabonnement')}"
+    return (f'<p class="citat-fakta">{e(emne)} er {e(u["navn"])} {e(skabelon._kortnavn(a, u))}: '
+            f'{e(_prisled(a))}, svarende til {kr(round(gns12(a)))} kr. om måneden i snit det '
+            f'første år, {e(kilde)}.</p>')
+
+
+def bb_citat(udvalg, kw):
+    if not udvalg:
+        return ""
+    a = min(udvalg, key=bb_aarspris)
+    selsk = len({x["udbyder"] for x in udvalg})
+    pris = (f"{kr(a['intro_pris'])} kr. om måneden i {a['intro_mdr']} måneder og derefter "
+            f"{kr(a['pris'])} kr." if a.get("intro_pris") and a.get("intro_mdr")
+            else f"{kr(a['pris'])} kr. om måneden i fast pris")
+    return (f'<p class="citat-fakta">Det billigste {e(kw)} er {e(a["udbyder_navn"])} med '
+            f'{kr(a["ned"])}/{kr(a["op"])} Mbit/s: {e(pris)}, svarende til '
+            f'{kr(round(bb_aarspris(a) / 12))} kr. om måneden i snit det første år inkl. '
+            f'oprettelse, ifølge Telemobils sammenligning af {len(udvalg)} abonnementer fra '
+            f'{selsk} selskaber pr. {e(OPDATERET)}.</p>')
+
+
+def citat(udvalg, hvad=None):
+    return citat_for_side("/", udvalg)
 
 
 def _median(v):

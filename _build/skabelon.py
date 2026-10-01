@@ -970,9 +970,13 @@ def filterbar(abonnementer, udbydere_map, forvalg=None):
 </div>"""
 
 
+UDVALG_SIDE = []
+
+
 def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
               billigst_id=None, id_attr="sammenlign", vis=10, opdateret=None,
               forvalg=None):
+    UDVALG_SIDE.extend(abonnementer)  # bruges til sidens citérbare sætning
     if opdateret is None:
         opdateret = OPDATERET_GLOBAL
     betalte = [gns12(x) for x in abonnementer if x["pris"] > 0 and not x.get("forbrugsafregnet")]
