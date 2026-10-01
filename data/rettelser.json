@@ -1,12 +1,55 @@
 {
  "_om": "Offentlig rettelseslog. Skriv kun faktiske rettelser — dato, side og hvad der var forkert.",
  "rettelser": [
-  {"dato": "2026-09-30", "side": "/", "tekst": "Forsiden skrev, at vi også viser selskaber, vi ikke har en aftale med. Det var ikke længere korrekt og er fjernet."},
-  {"dato": "2026-09-30", "side": "/billigste-mobilabonnement/", "tekst": "Detaljerne på nogle abonnementer viste \"Sms er begrænset til begrænset\". Rettet til \"Sms er begrænset\"."},
-  {"dato": "2026-09-30", "side": "/prisarkiv/", "tekst": "Prisarkivet var utilgængeligt i nogle timer, fordi prishistorikken var forsvundet ved en opdatering. Historikken er gendannet."},
-  {"dato": "2026-09-29", "side": "/bredbaand/", "tekst": "Teksten skrev, at fem abonnementer koster 99 kr., og at oprettelse svinger fra 0 til 299 kr. Tallene var skrevet ind i hånden og passede ikke længere. De beregnes nu fra priserne."},
-  {"dato": "2026-09-28", "side": "/metode/", "tekst": "Metodesiden beskrev, at priserne kontrolleres manuelt ved hver opdatering. De hentes automatisk fra selskabernes datafeeds. Siden er skrevet om, så den beskriver den faktiske metode."},
-  {"dato": "2026-09-28", "side": "/saadan-tjener-vi-penge/", "tekst": "Siden skrev, at vi også viser selskaber uden provisionsaftale. I dag kommer alle priser fra selskaber med en aftale. Rettet."},
-  {"dato": "2026-09-28", "side": "/udbydere/", "tekst": "Kundeservice-oplysninger manglede på alle udbydersider. De er nu udfyldt og kontrolleret på selskabernes egne sider."}
+  {
+   "dato": "2026-10-01",
+   "side": "/om-os/",
+   "tekst": "Om os, Billigste mobilabonnement og 12-måneders-prisen skrev, at priserne kontrolleres manuelt. De hentes automatisk fra selskabernes datafeeds. Teksterne er rettet."
+  },
+  {
+   "dato": "2026-10-01",
+   "side": "/mobilabonnement-med-fri-data/",
+   "tekst": "Spørgsmålet om fri data skrev, at der som regel ingen grænse er. Fair use-grænserne er kontrolleret i selskabernes vilkår og står nu på siden."
+  },
+  {
+   "dato": "2026-10-01",
+   "side": "/udbydere/oister/",
+   "tekst": "Kampagner med 'resten af året' blev regnet som 12 måneder. De gælder til 31. december og regnes nu sådan. Det ændrede den billigste pris over 12 måneder."
+  },
+  {
+   "dato": "2026-09-30",
+   "side": "/",
+   "tekst": "Forsiden skrev, at vi også viser selskaber, vi ikke har en aftale med. Det var ikke længere korrekt og er fjernet."
+  },
+  {
+   "dato": "2026-09-30",
+   "side": "/billigste-mobilabonnement/",
+   "tekst": "Detaljerne på nogle abonnementer viste \"Sms er begrænset til begrænset\". Rettet til \"Sms er begrænset\"."
+  },
+  {
+   "dato": "2026-09-30",
+   "side": "/prisarkiv/",
+   "tekst": "Prisarkivet var utilgængeligt i nogle timer, fordi prishistorikken var forsvundet ved en opdatering. Historikken er gendannet."
+  },
+  {
+   "dato": "2026-09-29",
+   "side": "/bredbaand/",
+   "tekst": "Teksten skrev, at fem abonnementer koster 99 kr., og at oprettelse svinger fra 0 til 299 kr. Tallene var skrevet ind i hånden og passede ikke længere. De beregnes nu fra priserne."
+  },
+  {
+   "dato": "2026-09-28",
+   "side": "/metode/",
+   "tekst": "Metodesiden beskrev, at priserne kontrolleres manuelt ved hver opdatering. De hentes automatisk fra selskabernes datafeeds. Siden er skrevet om, så den beskriver den faktiske metode."
+  },
+  {
+   "dato": "2026-09-28",
+   "side": "/saadan-tjener-vi-penge/",
+   "tekst": "Siden skrev, at vi også viser selskaber uden provisionsaftale. I dag kommer alle priser fra selskaber med en aftale. Rettet."
+  },
+  {
+   "dato": "2026-09-28",
+   "side": "/udbydere/",
+   "tekst": "Kundeservice-oplysninger manglede på alle udbydersider. De er nu udfyldt og kontrolleret på selskabernes egne sider."
+  }
  ]
 }

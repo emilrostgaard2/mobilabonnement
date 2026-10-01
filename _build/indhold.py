@@ -14,7 +14,7 @@ def billigste_brodtekst(d):
 <section class="sektion baand-smal artikel">
 
 <div class="udtag">
-<p><strong>Kort svar:</strong> Det billigste mobilabonnement i Danmark koster
+<p><strong>Kort svar:</strong> Det billigste mobilabonnement i vores sammenligning koster
 {kr(d['min_pris'])} kr. om måneden — det er et taleabonnement uden data. Vil du have
 mobildata med, starter priserne ved {kr(d['min_pris_data'])} kr. for {d['min_data_gb']} GB
 med fri tale og fri sms uden binding. Skal du bruge over 50 GB, starter priserne omkring
@@ -247,9 +247,9 @@ tager fem minutter og forhindrer en ubehagelig slutregning.</p>
 er fremkommet. Derfor lægger vi metoden åbent frem.</p>
 
 <ul>
-<li><strong>Datagrundlag.</strong> Priser og vilkår hentes fra udbydernes egne offentlige
-prislister og kontrolleres manuelt. Vi bruger normalpriser, hvor en kampagnepris udløber
-inden for tolv måneder, og oplyser begge dele, hvor det er relevant.</li>
+<li><strong>Datagrundlag.</strong> Priserne hentes automatisk fra udbydernes egne datafeeds
+to gange i døgnet. Vilkår som fair use og kundeservice kontrollerer vi selv på selskabernes
+sider. Vi regner på hele året, så både intropris og normalpris tæller med.</li>
 <li><strong>Sortering.</strong> Alle tabeller sorteres som udgangspunkt efter laveste
 månedspris. Provision påvirker ikke rækkefølgen, og udbydere kan ikke købe sig til en
 placering.</li>
@@ -583,8 +583,8 @@ produkt — også når vi tjener mere på det dyre.</p>
 <h2>Sådan arbejder vi</h2>
 
 <ul>
-<li><strong>Vi henter priser fra kilden.</strong> Alle priser stammer fra udbydernes egne
-offentlige prislister og kontrolleres manuelt ved hver opdatering.</li>
+<li><strong>Vi henter priser fra kilden.</strong> Alle priser hentes automatisk fra udbydernes
+egne datafeeds to gange i døgnet, og hver prisændring gemmes med dato i prisarkivet.</li>
 <li><strong>Vi sorterer efter pris — altid.</strong> Provision påvirker ikke rækkefølgen.
 Ingen udbyder kan købe sig til en placering eller en anbefaling.</li>
 <li><strong>Vi skriver også ulemperne.</strong> Hver udbyderomtale indeholder en liste over,
@@ -684,9 +684,9 @@ METODE = """
 
 <h2>Datagrundlag</h2>
 
-<p>Vores priser stammer fra udbydernes egne offentligt tilgængelige prislister. Hver
-opdatering kontrolleres manuelt mod udbyderens produktside, og opdateringsdatoen fremgår
-øverst på hver side.</p>
+<p>Vores priser hentes automatisk fra udbydernes egne datafeeds to gange i døgnet, og
+opdateringsdatoen fremgår øverst på hver side. Vilkår, der ikke står i feedet — fx fair use
+og kundeservice — kontrollerer vi selv på selskabernes sider og skriver datoen ved.</p>
 
 <p>Hvor en udbyder markedsfører en tidsbegrænset kampagnepris, viser vi både kampagneprisen
 og normalprisen, når begge er oplyst. Er kampagneperioden kortere end tolv måneder,

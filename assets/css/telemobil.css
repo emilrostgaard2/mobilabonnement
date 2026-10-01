@@ -2570,3 +2570,6 @@ body{font-variant-numeric:tabular-nums}
   .plan .pk-pris .pk-sml{display:inline-flex;margin-top:.25rem}
   .plan .pk-raekke{grid-template-columns:120px minmax(0,1fr) 320px}
 }
+.adr-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ordbog dt{margin-top:1rem;font-size:1.02rem}
+.ordbog dd{margin:.2rem 0 0;color:var(--graa)}

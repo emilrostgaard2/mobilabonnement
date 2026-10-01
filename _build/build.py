@@ -1748,7 +1748,7 @@ def mobil_maalgrupper(udvalg, hvad, *, vis_streaming=True):
 <table class="datatabel">
   <thead><tr><th scope="col">#</th><th scope="col">Abonnement</th>
     <th scope="col">Pr. md.</th><th scope="col">Snit 12 mdr.</th>
-    <th scope="col"></th></tr></thead>
+    <th scope="col"><span class="adr-sr">Tilbud</span></th></tr></thead>
   <tbody>{raekker}</tbody>
 </table>
 </div>"""
@@ -2959,8 +2959,6 @@ def byg_billigste():
     krop = f"""
 {hurtigvalg()}
 
-{billigste_pr_behov()}
-
 {pristabel(ABON, UMAP,
            titel="Billigste mobilabonnementer lige nu",
            undertitel="Sorteret efter laveste månedspris. Brug filtrene til at se kun de "
@@ -3756,7 +3754,7 @@ def byg_netvaerksoversigt():
 
   <h2>De tre net stillet direkte op mod hinanden</h2>
   <table>
-    <thead><tr><th></th>{"".join(f"<th>{e(n['navn'])}</th>" for n in NETVAERK)}</tr></thead>
+    <thead><tr><th scope="col"><span class="adr-sr">Emne</span></th>{"".join(f"<th>{e(n['navn'])}</th>" for n in NETVAERK)}</tr></thead>
     <tbody>{sml}</tbody>
   </table>
 
@@ -4274,7 +4272,7 @@ def byg_vs(slug_a, slug_b):
 
   <h2>{e(ua['navn'])} mod {e(ub['navn'])} på tal</h2>
   <table>
-    <thead><tr><th></th><th>{e(ua['navn'])}</th><th>{e(ub['navn'])}</th></tr></thead>
+    <thead><tr><th scope="col"><span class="adr-sr">Emne</span></th><th>{e(ua['navn'])}</th><th>{e(ub['navn'])}</th></tr></thead>
     <tbody>{tabel}</tbody>
   </table>
 
@@ -4579,7 +4577,7 @@ def byg_landekoder():
   <p>Det er den forveksling, der koster flest danskere penge, og den er værd at få helt på
   plads.</p>
   <table>
-  <thead><tr><th></th><th>Roaming</th><th>Udlandsopkald</th></tr></thead>
+  <thead><tr><th scope="col"><span class="adr-sr">Emne</span></th><th>Roaming</th><th>Udlandsopkald</th></tr></thead>
   <tbody>
   <tr><td><strong>Hvor er du?</strong></td><td>I udlandet</td><td>I Danmark</td></tr>
   <tr><td><strong>Hvem ringer du til?</strong></td><td>Typisk danske numre</td><td>Et udenlandsk nummer</td></tr>
@@ -5318,6 +5316,7 @@ def byg_udbyder(u):
   <p>Se hele markedet i vores <a href="/billigste-mobilabonnement/">sammenligning af
   billigste mobilabonnement</a>.</p>
   {vs_links(u)}
+  {f'<p>Se også <a href="/kampagner/{u["slug"]}/">{e(u["navn"])}s aktuelle kampagner</a> regnet om til pris over 12 måneder.</p>' if u["slug"] in KAMPAGNE_UDBYDERE else ""}
   {(lambda bb_u: f'<p>{e(u["navn"])} sælger også internet derhjemme. Se {e(u["navn"])}s '
     f'{len(bb_u)} bredbåndstilbud sammenlignet med resten af markedet under '
     f'<a href="/bredbaand/">billigste bredbånd</a>.</p>' if bb_u else "")(
@@ -6342,7 +6341,7 @@ def bb_tabel(udvalg, *, titel):
     <th scope="col">Udbyder</th><th scope="col">Type</th>
     <th scope="col">Ned/op</th><th scope="col">Pris</th>
     <th scope="col">Snit 6 mdr.</th><th scope="col">Binding</th>
-    <th scope="col"></th>
+    <th scope="col"><span class="adr-sr">Tilbud</span></th>
   </tr></thead>
   <tbody>{raekker}</tbody>
 </table>
@@ -6759,7 +6758,7 @@ def bb_minitabel(udvalg, *, maks=4):
 <table class="datatabel">
   <thead><tr><th scope="col">#</th><th scope="col">Abonnement</th>
     <th scope="col">Ned/op</th><th scope="col">Pris</th>
-    <th scope="col">Snit 1. år</th><th scope="col"></th></tr></thead>
+    <th scope="col">Snit 1. år</th><th scope="col"><span class="adr-sr">Tilbud</span></th></tr></thead>
   <tbody>{raekker}</tbody>
 </table>
 </div>"""
@@ -7314,7 +7313,7 @@ def bb_tabel_pr_selskab(udvalg, hvad):
 Opdateret {OPDATERET}.</caption>
 <thead><tr><th scope="col">#</th><th scope="col">Selskab</th><th scope="col">Startpris</th>
 <th scope="col">Derefter</th><th scope="col">Mindstepris 6 mdr.</th>
-<th scope="col">Snit år 1</th><th scope="col"></th></tr></thead>
+<th scope="col">Snit år 1</th><th scope="col"><span class="adr-sr">Tilbud</span></th></tr></thead>
 <tbody>{rk}</tbody></table></div>"""
 
 
@@ -9243,7 +9242,7 @@ def drift_logo(u):
     net = DRIFT_SIDER.get(u["slug"], ("", ""))[1]
     return f"""<div class="driftkort">
   <img src="/assets/img/logoer/{u['slug']}.webp" alt="{e(u['navn'])} logo"
-       height="40" loading="eager" decoding="async" class="dk-logo">
+       width="{_logo_w(u['slug'], 40)}" height="40" loading="eager" decoding="async" class="dk-logo">
   <div class="dk-net"><span>Kører på</span><b>{e(net)}</b></div>
   <a class="dk-knap" href="{e(DRIFT_SIDER[u['slug']][0])}"
      rel="nofollow noopener" target="_blank">Åbn {e(u['navn'])}s hjemmeside</a>
@@ -10343,7 +10342,7 @@ def _byg_guideside(udvalg, nu, i_alt, i_alt_guides):
                      f"Side {nu} af vores guides om mobilabonnement, dataforbrug, "
                      f"netværk og hvordan du skifter selskab. Nyeste øverst."),
         opdateret=OPDATERET,
-        hero=hero_side("Guides", "Guides til mobilabonnement",
+        hero=hero_side("Guides", "Guides til mobilabonnement" + (f" — side {nu}" if nu > 1 else ""),
                        "Det du skal vide, før du vælger — skrevet i almindeligt dansk.",
                        "", [("Guides", str(i_alt_guides)), ("Værktøjer", "4"),
                             ("Pris", "gratis")]),
@@ -11506,6 +11505,8 @@ def byg_robots():
 Allow: /
 Disallow: /_build/
 Disallow: /data/
+# Rådata til adressetjekket hentes af siden selv — ikke noget at indeksere
+Disallow: /assets/adr/
 
 # Sitet er statisk og let at crawle — ingen grund til at bremse
 User-agent: Googlebot
@@ -11608,7 +11609,9 @@ def byg_404():
                  hero=hero_side("404", "Vi kunne ikke finde siden", "Men vi kan finde et billigt abonnement til dig."),
                  indhold=krop)
     with open(os.path.join(ROD, "404.html"), "w", encoding="utf-8") as f:
-        f.write(html)
+        f.write(_ret_ampersand(_pak_tabeller(html)).replace(
+            '<meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">',
+            '<meta name="robots" content="noindex,follow">', 1))
 
 
 # --------------------------------------------------------------- kør
@@ -11770,7 +11773,7 @@ def _bf_kampagnetabel(maks=12):
   <thead><tr><th scope="col">#</th><th scope="col">Abonnement</th>
     <th scope="col">Kampagnepris</th><th scope="col">Derefter</th>
     <th scope="col">Snit 12 mdr.</th><th scope="col">Sparet år 1</th>
-    <th scope="col">Binding</th><th scope="col"></th></tr></thead>
+    <th scope="col">Binding</th><th scope="col"><span class="adr-sr">Tilbud</span></th></tr></thead>
   <tbody>{raekker}</tbody>
 </table>
 </div>"""
@@ -11797,7 +11800,7 @@ def _bf_kategoritabel():
   — intropris og oprettelse er regnet med. Klik på datastørrelsen for hele listen.</caption>
   <thead><tr><th scope="col">Datamængde</th><th scope="col">Billigst over 12 mdr.</th>
     <th scope="col">Pris nu</th><th scope="col">Snit pr. md.</th>
-    <th scope="col">Hele året</th><th scope="col"></th></tr></thead>
+    <th scope="col">Hele året</th><th scope="col"><span class="adr-sr">Tilbud</span></th></tr></thead>
   <tbody>{raekker}</tbody>
 </table>
 </div>"""
@@ -14034,7 +14037,7 @@ døgnet. Se <a href="/metode/">vores metode</a>, hent rådata under
 <a href="/aabne-data/">åbne data</a>, og se hver enkelt ændring i
 <a href="/prisarkiv/">prisarkivet</a>.</p>
 </section>"""
-    byg_statisk(sti, f"Mobilpriser i Danmark {maaned} {aar} — nøgletal og billigste pr. datamængde",
+    byg_statisk(sti, f"Mobilpriser i Danmark {maaned} {aar} — nøgletal og priser",
                 f"Mobilpriser i Danmark pr. {OPDATERET}: billigste abonnement pr. datamængde, typiske "
                 f"normalpriser, vilkår og seneste prisændringer. {len(N['alle'])} abonnementer.",
                 "Nøgletal", "Mobilpriser i Danmark lige nu", brod, prioritet="0.8",
@@ -14085,7 +14088,7 @@ Prisændringer fra selskaberne er ikke rettelser — dem finder du i <a href="/p
 <p>Har du fundet en fejl? <a href="/kontakt/">Skriv til os</a> med et link til selskabets side.</p>
 </section>"""
     byg_statisk("/rettelser/", "Rettelser — fejl vi har rettet på Telemobil",
-                "Offentlig log over fejl, vi har fundet og rettet på telemobil.dk, med dato og side.",
+                "Offentlig log over fejl, vi har fundet og rettet på telemobil.dk — med dato, side og hvad der var forkert.",
                 "Rettelser", "Rettelser", brod, prioritet="0.4")
 
 
@@ -14455,6 +14458,37 @@ def gem_bb_prishistorik():
     json.dump(h, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 
 
+ORDBOG_PRIS = [
+    ("Intropris", "Den nedsatte pris de første måneder af et abonnement. Bagefter stiger prisen til normalprisen.", "/12-maaneders-prisen/"),
+    ("Normalpris", "Den pris, abonnementet koster, når introprisen er udløbet. Det er den, du betaler det meste af tiden.", None),
+    ("12-måneders-prisen", "Telemobils snitpris: intropris, normalpris og oprettelse lagt sammen over et år og delt med 12.", "/12-maaneders-prisen/"),
+    ("Mindstepris", "Det, et abonnement som minimum koster i hele bindingsperioden inkl. oprettelse. Selskaberne skal oplyse den.", None),
+    ("Binding", "Den periode, du ikke kan opsige abonnementet i. For private må den højst være seks måneder.", "/mobilabonnement-uden-binding/"),
+    ("Oprettelse", "Et engangsbeløb, nogle selskaber opkræver, når abonnementet oprettes.", None),
+    ("Fair use", "En grænse for 'fri' data eller roaming. Rammer du den, sættes hastigheden typisk ned resten af måneden.", "/mobilabonnement-med-fri-data/#fair-use"),
+    ("EU-data", "Den mængde data, du kan bruge i EU uden ekstra betaling. Fri data i Danmark gælder ikke i udlandet.", None),
+    ("Nummerflytning", "Når du tager dit nummer med til et nyt selskab. Det nye selskab opsiger det gamle for dig.", "/guides/skift-mobilselskab/"),
+    ("Datastop", "En spærring, der stopper data, når den inkluderede mængde er brugt, så du ikke får en ekstraregning.", None),
+]
+ORDBOG_NET = [
+    ("Fiber (FTTH)", "Bredbånd via glasfiber helt ind i boligen. Samme hastighed op og ned og lavest svartid.", "/bredbaand/fibernet/"),
+    ("Kabel-tv (coax)", "Bredbånd gennem antennestikket. Hurtig download, men typisk lavere upload end fiber.", "/bredbaand/kabel-internet/"),
+    ("5G-internet", "Bredbånd via mobilnettet med en router i stikkontakten. Ingen gravearbejde eller tekniker.", "/bredbaand/5g/"),
+    ("xDSL", "Bredbånd via den gamle kobbertelefonledning. Langsommere og under udfasning.", None),
+    ("Netejer", "Selskabet, der ejer kablerne i jorden. Det afgør, hvilke udbydere der kan levere på din adresse.", None),
+    ("Ping (svartid)", "Hvor lang tid et signal er om at nå frem og tilbage, målt i millisekunder. Vigtigt for spil og videomøder.", "/guides/ping-og-svartid/"),
+    ("Bredbåndskortlægningen", "Digitaliseringsstyrelsens årlige opgørelse af, hvilke hastigheder der kan fås på hver adresse i Danmark.", "/bredbaand/#daekning"),
+    ("TDC NET, Telenor/Telia og 3", "De tre fysiske mobilnet i Danmark. Alle mobilselskaber kører på ét af dem.", "/netvaerk/"),
+]
+
+
+def ordbog_dl(titel, liste):
+    rk = "".join(f'<dt id="{re.sub(r"[^a-z0-9]+", "-", t.lower()).strip("-")}"><strong>{e(t)}</strong></dt>'
+                 f'<dd>{e(d)}{f" <a href={chr(34)}{l}{chr(34)}>Læs mere</a>" if l else ""}</dd>'
+                 for t, d, l in liste)
+    return f'<h2>{e(titel)}</h2><dl class="ordbog">{rk}</dl>'
+
+
 def main():
     # Popup'en ligger på hver side, så den skal bygges før noget andet
     skabelon.FIRMA = site.get("firma", {})
@@ -14700,7 +14734,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_kategori(
         sti="/mobilabonnement-uden-data/", etiket="Uden data",
         h1="Mobilabonnement uden data",
-        titel=f"Mobilabonnement uden data{fra(D['pris_udendata'], ' — priser fra ')}",
+        titel=med_maaned(f"Mobilabonnement uden data{fra(D['pris_udendata'], ' — fra ') or ' — kun tale og sms'}"),
         besk=("Sammenlign mobilabonnementer uden data." + fra(D['pris_udendata'], " Priser fra ") + " "
               "Se også hvorfor et lille dataabonnement ofte er billigere."),
         intro=("Abonnementer med tale og sms, men uden mobildata. Bemærk at forbrugsafregnede "
@@ -15565,7 +15599,9 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
              "sv": "Hvis du ikke kan lægge pengene ud nu, eller hvis telefonen reelt sælges under "
                    "kontantpris som del af pakken. Regn efter — det tager fem minutter."},
         ],
-        links=[("/mobilabonnement-uden-binding/", "Alle abonnementer uden binding"),
+        links=([("/kampagner/hoeretelefoner/", "Kampagner med høretelefoner")]
+               if "hoeretelefoner" in KAMPAGNE_AKTIVE_KAT else []) + [
+               ("/mobilabonnement-uden-binding/", "Alle abonnementer uden binding"),
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
                ("/mobilabonnement-til-aeldre/", "Mobilabonnement til ældre"),
                ("/guides/esim/", "eSIM — tjek om din telefon understøtter det")])
@@ -15936,7 +15972,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
           ["Formlen er vores egen. Vi har ikke set andre danske sammenligningssider "
            "beregne og sortere efter den, men de fleste viser normalprisen ved siden af "
            "introprisen.",
-           "Priser hentes fra udbydernes offentlige prislister og kontrolleres manuelt."])}
+           "Priser hentes automatisk fra udbydernes egne datafeeds to gange i døgnet."])}
 </section>"""
     byg_statisk("/12-maaneders-prisen/",
                 "12-måneders-prisen — sådan beregner vi den reelle pris",
@@ -15965,12 +16001,18 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
   <tr><td><strong>Roaming</strong></td><td>—</td><td>At bruge dit abonnement, mens du er i udlandet</td></tr>
   </tbody>
   </table>
+  {ordbog_dl("Pris og vilkår", ORDBOG_PRIS)}
+  {ordbog_dl("Bredbånd og net", ORDBOG_NET)}
   <p>Mangler der et ord? <a href="/kontakt/">Skriv til os</a>, så tilføjer vi det.</p>
 </section>"""
     byg_statisk("/ordbog/", "Teleordbog — mobilbegreber forklaret på dansk",
                 "Alle de begreber du møder, når du vælger mobilabonnement — fra MVNO og "
                 "eSIM til PUK og VoWiFi, forklaret i almindeligt dansk.",
-                "Ordbog", "Teleordbog", ordbog_krop, prioritet="0.5")
+                "Ordbog", "Teleordbog", ordbog_krop, prioritet="0.5",
+                jsonld_ekstra={"@type": "DefinedTermSet", "name": "Teleordbog", "url": DOMAENE + "/ordbog/",
+                               "inLanguage": "da-DK",
+                               "hasDefinedTerm": [{"@type": "DefinedTerm", "name": t, "description": d}
+                                                  for t, d, _ in ORDBOG_PRIS + ORDBOG_NET]})
 
     pin_krop = """<section class="sektion baand-smal artikel">
   <div class="udtag">
@@ -15982,7 +16024,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
 
   <h2>Forskellen på PIN og PUK</h2>
   <table>
-  <thead><tr><th></th><th>PIN</th><th>PUK</th></tr></thead>
+  <thead><tr><th scope="col"><span class="adr-sr">Emne</span></th><th>PIN</th><th>PUK</th></tr></thead>
   <tbody>
   <tr><td><strong>Cifre</strong></td><td>4 (kan ofte ændres til 8)</td><td>8</td></tr>
   <tr><td><strong>Bruges til</strong></td><td>At låse simkortet op ved opstart</td><td>At låse op efter tre forkerte PIN</td></tr>
@@ -16207,7 +16249,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
   <a href="/saadan-tjener-vi-penge/">hvordan vi tjener penge</a>.</p>
 </section>"""
     byg_statisk("/cookiepolitik/", "Cookiepolitik — sådan bruger Telemobil cookies",
-                "Se hvilke cookies Telemobil bruger, hvad de gør, og hvordan du sletter dem.",
+                "Se hvilke cookies Telemobil bruger, hvad de hver især gør, hvor længe de gemmes, og hvordan du sletter dem igen.",
                 "Cookies", "Cookiepolitik", cookie_krop, prioritet="0.3")
 
     presse_krop = """<section class="sektion baand-smal artikel">
@@ -16236,8 +16278,8 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     <li><strong>Metode:</strong> <a href="/metode/">Sådan sammenligner vi</a></li>
   </ul>
 </section>"""
-    byg_statisk("/presse/", "Presse — Telemobil",
-                "Information til journalister om Telemobil, vores data og brug af vores tal.",
+    byg_statisk("/presse/", "Presse — data og fakta om mobilpriser fra Telemobil",
+                "Information til journalister om Telemobil: vores prisdata, nøgletal, metode og hvordan du må citere og bruge vores tal.",
                 "Presse", "Presse og fakta", presse_krop, prioritet="0.3")
 
     privat_krop = """<section class="sektion baand-smal artikel">
@@ -16262,7 +16304,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
   kilde. Telemobil er ikke part i den aftale, du indgår med en udbyder.</p>
 </section>"""
     byg_statisk("/privatlivspolitik/", "Privatliv og cookies — sådan behandler vi data",
-                "Sådan behandler Telemobil cookies, affiliatesporing og personoplysninger.",
+                "Sådan behandler Telemobil cookies, affiliatesporing og personoplysninger, og hvilke rettigheder du har efter GDPR.",
                 "Privatliv", "Privatliv og cookies", privat_krop, prioritet="0.3")
 
     # Filer
