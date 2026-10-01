@@ -6652,14 +6652,14 @@ def bb_raekke(a, *, billigst=False, gnsnit_aar=None):
   data-ned="{a['ned']}" data-op="{a['op']}" data-binding="{a['binding']}"
   data-slug="{e(a['udbyder'])}" data-tilbud="{1 if intro else 0}"
   data-ekstra="{' '.join(ekstra)}" data-udbyder="{e(a['udbyder_navn'])}">
-  {flag}
   <div class="pk-raekke">
     <div class="pk-ident">
       {logohtml}
       <span class="pk-tag">{e(TEK_NAVN.get(a['teknologi'], a['teknologi']))}</span>
     </div>
     <div class="pk-midt">
-      <h3 class="pk-navn">{e(a['udbyder_navn'])} – {e(a['navn'])}</h3>
+      {flag}
+      <h3 class="pk-navn">{e(a['udbyder_navn'])} {e(a['navn'])}</h3>
       <div class="pk-stats">{statbokse}</div>
       <div class="pk-chips">{chips}</div>
     </div>
@@ -6671,7 +6671,7 @@ def bb_raekke(a, *, billigst=False, gnsnit_aar=None):
       <a class="knap knap-primaer pk-cta" href="{a['link']}"
         rel="sponsored nofollow noopener" target="_blank"
         data-udgaaende="{e(a['udbyder'])}"
-        aria-label="Se tilbud på {e(a['navn'])} hos {e(a['udbyder_navn'])}">Se tilbud</a>
+        aria-label="Gå til {e(a['udbyder_navn'])} og se {e(a['navn'])}">Gå til {e(a['udbyder_navn'])}</a>
     </div>
   </div>
   <div class="pk-panel" id="{panel_id}" hidden>
@@ -14376,6 +14376,14 @@ def _bb_hero_kort(lab, a):
 </div>"""
 
 
+def _fil_v(sti):
+    import hashlib
+    try:
+        return hashlib.md5(open(os.path.join(ROD, sti), "rb").read()).hexdigest()[:8]
+    except OSError:
+        return "1"
+
+
 def bb_hero(h1, led, udvalg, fokus=None):
     """Hero som på forsiden — men med adressetjek i stedet for datavælgeren."""
     kort, set_ = [], set()
@@ -14423,6 +14431,7 @@ def bb_hero(h1, led, udvalg, fokus=None):
     <div class="seg-res on adr-standard">{"".join(kort)}</div>
     <p class="hv-tillid">Adressedata fra Digitaliseringsstyrelsens Bredbåndskortlægning {BBK['aar']}<span>·</span>Priser opdateret {e(OPDATERET)}<span>·</span>Ingen betalt placering</p>
   </div>
+  <script src="/assets/js/adressetjek.js?v={_fil_v('assets/js/adressetjek.js')}" defer></script>
   <script type="application/json" id="bb-data">{json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")}</script>
 </section>"""
 
