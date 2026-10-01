@@ -1,7 +1,7 @@
 {
  "/": {
   "dato": "2026-10-01",
-  "hash": "342fe3f1d682af07"
+  "hash": "0d2f474ec1da8b12"
  },
  "/12-maaneders-prisen/": {
   "dato": "2026-10-01",
@@ -17,27 +17,27 @@
  },
  "/bedste-mobilabonnement/": {
   "dato": "2026-10-01",
-  "hash": "056476471a5f8b71"
+  "hash": "b9940ae833b90d8f"
  },
  "/billigste-mobilabonnement/": {
   "dato": "2026-10-01",
-  "hash": "f45af0177d8da36f"
+  "hash": "9fa1ee65e9563111"
  },
  "/bredbaand/": {
   "dato": "2026-10-01",
-  "hash": "577e6507edd77e5c"
+  "hash": "e1d9740c7ca604da"
  },
  "/bredbaand/5g/": {
   "dato": "2026-10-01",
-  "hash": "7b4ddbc081edbc0f"
+  "hash": "2269b90b8c4208f3"
  },
  "/bredbaand/fibernet/": {
   "dato": "2026-10-01",
-  "hash": "4513938ccfb0b04c"
+  "hash": "dca1953cd7705b2d"
  },
  "/bredbaand/kabel-internet/": {
   "dato": "2026-10-01",
-  "hash": "22515ef904ab0782"
+  "hash": "7a296699e6eeccb8"
  },
  "/cookiepolitik/": {
   "dato": "2026-10-01",
@@ -281,7 +281,7 @@
  },
  "/mobilabonnement-med-fri-data/": {
   "dato": "2026-10-01",
-  "hash": "1351344ebd5f8611"
+  "hash": "e4b7906766ac748c"
  },
  "/mobilabonnement-med-fri-tale/": {
   "dato": "2026-10-01",
@@ -369,11 +369,11 @@
  },
  "/mobilabonnementer-black-friday/": {
   "dato": "2026-10-01",
-  "hash": "2d75a06fb42b76bb"
+  "hash": "ba578a3186247c48"
  },
  "/mobilpriser/": {
   "dato": "2026-10-01",
-  "hash": "bea676e9cc4aec23"
+  "hash": "90eea68dddff1b7b"
  },
  "/netvaerk/": {
   "dato": "2026-10-01",
@@ -413,11 +413,11 @@
  },
  "/prisarkiv/": {
   "dato": "2026-10-01",
-  "hash": "d46fc164f775832c"
+  "hash": "c13bc438873159b4"
  },
  "/prisudvikling/": {
   "dato": "2026-10-01",
-  "hash": "207c4972c51a6a85"
+  "hash": "b64ac20fc7bb22fd"
  },
  "/privatlivspolitik/": {
   "dato": "2026-10-01",
@@ -517,42 +517,42 @@
  },
  "/udbydere/cbb-mobil/": {
   "dato": "2026-10-01",
-  "hash": "09e453323584157c"
+  "hash": "3930baaefd790a06"
  },
  "/udbydere/duka/": {
   "dato": "2026-10-01",
-  "hash": "e16c61a7c8d1f59e"
+  "hash": "832296a258c30cc6"
  },
  "/udbydere/eesy/": {
   "dato": "2026-10-01",
-  "hash": "3d8a6f480f43640c"
+  "hash": "909aa286afcc5cbd"
  },
  "/udbydere/flexii/": {
   "dato": "2026-10-01",
-  "hash": "23438f8ba03effe1"
+  "hash": "2319a409b9d61504"
  },
  "/udbydere/greentel/": {
   "dato": "2026-10-01",
-  "hash": "35c661646c4462c0"
+  "hash": "fba6a60f6a7707db"
  },
  "/udbydere/lebara/": {
   "dato": "2026-10-01",
-  "hash": "dec5312ed341a969"
+  "hash": "4006719878b8858e"
  },
  "/udbydere/lyca-mobile/": {
   "dato": "2026-10-01",
-  "hash": "5e2bce57d3f3f4d7"
+  "hash": "4d75f7c4fa6bd466"
  },
  "/udbydere/oister/": {
   "dato": "2026-10-01",
-  "hash": "1d0ab38912b5a4de"
+  "hash": "b5b2828e085c9106"
  },
  "/udbydere/telmore/": {
   "dato": "2026-10-01",
-  "hash": "2728c5067638c22e"
+  "hash": "5c47091f51ec8aef"
  },
  "/udbydere/yousee/": {
   "dato": "2026-10-01",
-  "hash": "9f20edfc9f23dabe"
+  "hash": "ff6448fbbd388abc"
  }
 }
