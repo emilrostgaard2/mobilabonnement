@@ -2455,3 +2455,36 @@ body{font-variant-numeric:tabular-nums}
   .seg-res{grid-template-columns:1fr}
   .hv-tillid span{display:block;height:0;overflow:hidden;margin:0}
 }
+
+/* Citérbar faktalinje */
+.citat-fakta{margin:1.4rem 0 0;padding:.85rem 1.1rem;background:#fff;border:1px solid var(--graa-lys);
+  border-left:3px solid var(--puls-dyb);border-radius:var(--r-m);font-size:.95rem;color:var(--blaek)}
+
+/* Sammenlign valgte */
+.pk-sml{display:inline-flex;align-items:center;gap:.4rem;font-size:.82rem;color:var(--graa);
+  cursor:pointer;margin-top:.35rem;min-height:32px;user-select:none}
+.pk-sml input{width:18px;height:18px;accent-color:var(--puls-dyb);margin:0}
+.pk-sml:has(input:disabled){opacity:.45;cursor:not-allowed}
+.sml-bar{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:300;display:flex;
+  align-items:center;gap:.8rem;background:var(--blaek);color:#fff;padding:.6rem .7rem .6rem 1.1rem;
+  border-radius:12px;box-shadow:0 12px 40px -12px rgba(0,0,0,.45);font-size:.92rem;max-width:calc(100% - 2rem)}
+.sml-bar[hidden]{display:none}
+.sml-ryd{background:none;border:0;color:#CFD4E6;text-decoration:underline;cursor:pointer;font:inherit;padding:.4rem}
+.sml-vis{min-height:40px;padding:.5rem 1rem;background:var(--puls-dyb);border-color:var(--puls-dyb);color:#fff}
+.sml-vis:disabled{opacity:.5;cursor:not-allowed}
+.sml-dlg{border:0;border-radius:var(--r-l);padding:0;max-width:min(960px,calc(100% - 2rem));width:100%;
+  box-shadow:0 30px 80px -20px rgba(0,0,0,.5)}
+.sml-dlg::backdrop{background:rgba(11,16,38,.55)}
+.sml-hoved{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.2rem;border-bottom:1px solid var(--graa-lys)}
+.sml-hoved h2{font-size:1.15rem;margin:0}
+.sml-luk{background:none;border:1px solid var(--graa-lys);border-radius:8px;padding:.45rem .8rem;cursor:pointer;font:inherit}
+.sml-rul{overflow-x:auto;max-height:75vh}
+.sml-tabel{width:100%;border-collapse:collapse;min-width:520px}
+.sml-tabel th,.sml-tabel td{padding:.7rem 1rem;border-bottom:1px solid var(--graa-lys);text-align:left;vertical-align:top;font-size:.92rem}
+.sml-tabel thead th{background:#F7F9FD;font-weight:600}
+.sml-tabel thead img{display:block;height:22px;width:auto;max-width:100px;margin-bottom:.4rem}
+.sml-tabel tbody th{color:var(--graa);font-weight:500;white-space:nowrap;width:9rem}
+.sml-pris{font-family:var(--font-display);font-size:1.4rem}
+.sml-tabel .knap{min-height:42px;font-size:.88rem;background:var(--puls-dyb);border-color:var(--puls-dyb);color:#fff}
+@media (max-width:560px){.sml-bar{left:1rem;right:1rem;transform:none;justify-content:space-between}}
+.sml-tabel .knap{white-space:nowrap}

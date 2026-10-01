@@ -547,6 +547,9 @@ def fod(opdateret):
           <li><a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></li>
           <li><a href="/kontakt/">Kontakt</a></li>
           <li><a href="/presse/">Presse</a></li>
+          <li><a href="/mobilpriser/">Mobilpriser i tal</a></li>
+          <li><a href="/rettelser/">Rettelser</a></li>
+          <li><a href="https://www.linkedin.com/company/telemobil-dk/" rel="me noopener" target="_blank">Telemobil på LinkedIn</a></li>
         </ul>
       </div>
     </div>
@@ -889,6 +892,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
       {spar}
       <button type="button" class="pk-detaljer" aria-expanded="false"
         aria-controls="{panel_id}">Se detaljer</button>
+      <label class="pk-sml"><input type="checkbox" class="sml-boks" value="{e(a['id'])}"> Sammenlign</label>
       <a class="knap knap-primaer pk-cta" href="{a['link']}" rel="sponsored nofollow noopener"
         target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
         aria-label="Gå til {e(u['navn'])} og se {e(a['navn'])}">Gå til {e(u['navn'])}</a>

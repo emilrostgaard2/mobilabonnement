@@ -1155,3 +1155,85 @@
     }
   });
 })();
+
+/* Sammenlign op til tre abonnementer side om side. Alt læses fra kortene, så
+   der er ingen ekstra data at holde opdateret. */
+(function () {
+  var bokse = document.querySelectorAll(".sml-boks");
+  if (!bokse.length) return;
+  var MAKS = 3;
+  var bar = document.createElement("div");
+  bar.className = "sml-bar";
+  bar.hidden = true;
+  bar.innerHTML = '<span class="sml-tal"></span>' +
+    '<button type="button" class="sml-ryd">Ryd</button>' +
+    '<button type="button" class="knap knap-primaer sml-vis">Sammenlign</button>';
+  document.body.appendChild(bar);
+  var dlg = document.createElement("dialog");
+  dlg.className = "sml-dlg";
+  dlg.setAttribute("aria-label", "Sammenligning af valgte abonnementer");
+  document.body.appendChild(dlg);
+
+  function valgte() {
+    return Array.prototype.filter.call(bokse, function (b) { return b.checked; });
+  }
+  function opdater() {
+    var v = valgte();
+    bar.hidden = v.length === 0;
+    bar.querySelector(".sml-tal").textContent = v.length === 1
+      ? "1 valgt — vælg mindst ét mere" : v.length + " valgt";
+    bar.querySelector(".sml-vis").disabled = v.length < 2;
+    bokse.forEach(function (b) { b.disabled = !b.checked && v.length >= MAKS; });
+  }
+  function tekst(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function kort(b) {
+    var p = b.closest(".plan");
+    var stats = {};
+    p.querySelectorAll(".pk-stat").forEach(function (s) {
+      stats[tekst(s.querySelector("span"))] = tekst(s.querySelector("b"));
+    });
+    var img = p.querySelector(".pk-ident img");
+    var cta = p.querySelector(".pk-cta");
+    return {
+      logo: img ? img.outerHTML : "", navn: tekst(p.querySelector(".pk-navn")),
+      pris: tekst(p.querySelector(".pk-tal b")), under: tekst(p.querySelector(".pk-under")),
+      stats: stats, href: cta ? cta.getAttribute("href") : "#", knap: tekst(cta),
+      udbyder: cta ? cta.getAttribute("data-udgaaende") : ""
+    };
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function vis() {
+    var k = valgte().map(kort);
+    var noegler = [];
+    k.forEach(function (x) { Object.keys(x.stats).forEach(function (n) {
+      if (noegler.indexOf(n) < 0) noegler.push(n); }); });
+    var r = function (lab, f) {
+      return "<tr><th scope=\"row\">" + lab + "</th>" + k.map(function (x) {
+        return "<td>" + f(x) + "</td>"; }).join("") + "</tr>";
+    };
+    dlg.innerHTML = '<div class="sml-hoved"><h2>Sammenlign abonnementer</h2>' +
+      '<button type="button" class="sml-luk" aria-label="Luk">Luk</button></div>' +
+      '<div class="sml-rul"><table class="sml-tabel"><thead><tr><th></th>' +
+      k.map(function (x) { return "<th>" + x.logo + "<b>" + esc(x.navn) + "</b></th>"; }).join("") +
+      "</tr></thead><tbody>" +
+      r("Pris pr. md.", function (x) { return "<strong class=\"sml-pris\">" + esc(x.pris) + " kr.</strong>"; }) +
+      r("Prisen", function (x) { return esc(x.under); }) +
+      noegler.map(function (n) {
+        return r(esc(n.charAt(0).toUpperCase() + n.slice(1)), function (x) { return esc(x.stats[n] || "—"); });
+      }).join("") +
+      r("", function (x) {
+        return '<a class="knap knap-primaer" href="' + esc(x.href) + '" rel="sponsored nofollow noopener" target="_blank" data-udgaaende="' + esc(x.udbyder) + '">' + esc(x.knap) + "</a>";
+      }) +
+      "</tbody></table></div>";
+    dlg.querySelector(".sml-luk").addEventListener("click", function () { dlg.close(); });
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+    if (typeof window.gtag === "function") window.gtag("event", "sammenlign", { antal: k.length });
+  }
+  bokse.forEach(function (b) { b.addEventListener("change", opdater); });
+  bar.querySelector(".sml-ryd").addEventListener("click", function () {
+    bokse.forEach(function (b) { b.checked = false; }); opdater();
+  });
+  bar.querySelector(".sml-vis").addEventListener("click", vis);
+  dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
+})();

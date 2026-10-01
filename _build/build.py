@@ -348,7 +348,8 @@ ORG = {
     },
     "founder": {"@id": DOMAENE + "/om/emil-rostgaard/#person"},
     "publishingPrinciples": DOMAENE + "/metode/",
-    "sameAs": [FORFATTER["linkedin"]],
+    "correctionsPolicy": DOMAENE + "/rettelser/",
+    "sameAs": ["https://www.linkedin.com/company/telemobil-dk/"],
 }
 
 TJENESTE = {
@@ -2816,6 +2817,7 @@ def byg_forside():
     krumme = [(None, "Forside")]
 
     krop = f"""
+<div class="baand">{citat(ABON)}</div>
 {pristabel(ABON, UMAP,
            titel=f"Alle mobilabonnementer sammenlignet",
            undertitel=f"{D['antal']} abonnementer fra {D['antal_udbydere']} udbydere, sorteret efter laveste månedspris. "
@@ -2916,6 +2918,7 @@ def byg_billigste():
     ]
 
     krop = f"""
+<div class="baand">{citat(ABON)}</div>
 {hurtigvalg()}
 
 {pristabel(ABON, UMAP,
@@ -3080,6 +3083,7 @@ def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
         brod = brod.replace("</section>", "".join(ekstra_tabeller) + "</section>")
 
     krop = f"""
+<div class="baand">{citat(udvalg, etiket.lower())}</div>
 {pristabel(udvalg, UMAP, titel=tabeltitel or f"{etiket} — sammenlignet på pris",
            undertitel=intro, billigst_id=udvalg[0]['id'] if udvalg else None,
            forvalg=forvalg)}
@@ -11410,7 +11414,9 @@ Doktrin: Priser sorteres efter pris, ikke efter provision
         ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor og 3"),
         ("/sammenlign/", "Udbyder mod udbyder", "Direkte sammenligninger"),
         ("/landekoder/", "Landekoder", "Telefonkoder til alle lande"),
+        ("/mobilpriser/", "Mobilpriser i Danmark", "Nøgletal opdateret dagligt — citérbare"),
         ("/metode/", "Metode", "Sådan beregner og vurderer vi"),
+        ("/rettelser/", "Rettelser", "Offentlig log over rettede fejl"),
         ("/saadan-tjener-vi-penge/", "Forretningsmodel", "Affiliateprovision og uafhængighed"),
     ])
     with open(os.path.join(ROD, "llms.txt"), "w", encoding="utf-8") as f:
@@ -11439,6 +11445,7 @@ oprettelsesgebyr. Tabeller sorteres efter pris, aldrig efter provision.
 Telemobil modtager provision fra udvalgte udbydere ved henvisning. Det påvirker ikke
 sortering eller vurderinger. Se {DOMAENE}/saadan-tjener-vi-penge/
 """)
+    llms_noegletal()
 
 
 def byg_robots():
@@ -13303,7 +13310,8 @@ et selskab, der er relevant for dig, så sammenlign også på selskabets egen si
 
 <h2 id="rettelser">Rettelser</h2>
 <p>Finder du en pris eller oplysning, der ikke stemmer, så <a href="/kontakt/">skriv til
-os</a> med et link til selskabets side. Vi retter faktuelle fejl hurtigst muligt.</p>
+os</a> med et link til selskabets side. Vi retter faktuelle fejl hurtigst muligt og skriver
+det i vores <a href="/rettelser/">offentlige rettelseslog</a>.</p>
 
 <h2 id="aendringer">Ændringer i metoden</h2>
 <ul class="pilliste">
@@ -13746,6 +13754,193 @@ def sidetype(sti):
                        "/cookiepolitik/", "/saadan-tjener-vi-penge/", "/annonce", "/404")):
         return "statisk"
     return "kategori"
+
+
+# ======================================================================
+# GEO: citérbare fakta, faktaside, rettelseslog
+# ======================================================================
+TELEMOBIL_LINKEDIN = "https://www.linkedin.com/company/telemobil-dk/"
+
+
+def citat(udvalg, hvad=None):
+    """Én dateret, citérbar sætning med kilde — den form AI-svar løfter ud."""
+    k = [a for a in udvalg if a["pris"] > 0 and not a.get("forbrugsafregnet")]
+    if not k:
+        return ""
+    a = min(k, key=gns12)
+    u = UMAP[a["udbyder"]]
+    emne = (f"Det billigste mobilabonnement i Danmark" if not hvad
+            else f"Det billigste abonnement i kategorien {hvad}")
+    return (f'<p class="citat-fakta">{emne} koster {kr(round(gns12(a)))} kr. om måneden i snit '
+            f'over 12 måneder ({e(u["navn"])}, {e(skabelon._kortnavn(a, u))}) pr. {e(OPDATERET)}, '
+            f'ifølge Telemobils sammenligning af {len(k)} abonnementer.</p>')
+
+
+def _median(v):
+    v = sorted(v)
+    if not v:
+        return 0
+    n = len(v)
+    return v[n // 2] if n % 2 else (v[n // 2 - 1] + v[n // 2]) / 2
+
+
+def noegletal():
+    """Tørre nøgletal, brugt på faktasiden og i llms.txt."""
+    alle = _betalte()
+    grupper = []
+    for navn, lo, hi, sti in DATAGRUPPER:
+        k = [a for a in alle if lo <= a["data_gb"] <= hi]
+        if not k:
+            continue
+        b_ = min(k, key=gns12)
+        s_ = min(k, key=visningspris)
+        grupper.append({"navn": navn, "sti": sti, "antal": len(k), "billigst": b_,
+                        "start": s_, "median": _median([a["pris"] for a in k])})
+    n = len(alle) or 1
+    andele = {
+        "uden binding": sum(1 for a in alle if not a["binding"]) / n,
+        "med intropris": sum(1 for a in alle if a.get("intro_pris") is not None) / n,
+        "med fri tale": sum(1 for a in alle if a["tale"] == "fri") / n,
+        "med 5G": sum(1 for a in alle if a.get("femg")) / n,
+        "med eSIM": sum(1 for a in alle if a.get("esim")) / n,
+    }
+    _, aendr = _prisarkiv_data()
+    return {"alle": alle, "grupper": grupper, "andele": andele,
+            "selskaber": len({a["udbyder"] for a in alle}),
+            "billigst": min(alle, key=gns12), "median": _median([a["pris"] for a in alle]),
+            "aendringer": [x for x in aendr if x["abonnement"]][:10]}
+
+
+def byg_mobilpriser():
+    sti = "/mobilpriser/"
+    N = noegletal()
+    b0 = N["billigst"]
+    u0 = UMAP[b0["udbyder"]]
+    maaned, aar = vis_maaned()
+    rk_g = "".join(f"""<tr><td><a href="{g['sti']}"><strong>{e(g['navn'])}</strong></a></td>
+<td class="tal">{g['antal']}</td>
+<td>{e(UMAP[g['billigst']['udbyder']]['navn'])} {e(skabelon._kortnavn(g['billigst'], UMAP[g['billigst']['udbyder']]))}</td>
+<td class="tal"><strong>{kr(round(gns12(g['billigst'])))} kr.</strong></td>
+<td class="tal">{kr(visningspris(g['start']))} kr.</td>
+<td class="tal">{kr(round(g['median']))} kr.</td></tr>""" for g in N["grupper"])
+    pr_s = {}
+    for a in N["alle"]:
+        pr_s.setdefault(a["udbyder"], []).append(a)
+    rk_s = "".join(f"""<tr><td><a href="/udbydere/{s}/"><strong>{e(UMAP[s]['navn'])}</strong></a></td>
+<td>{e(UMAP[s].get('netvaerk', ''))}</td><td class="tal">{len(v)}</td>
+<td class="tal">{kr(min(a['pris'] for a in v))} kr.</td>
+<td class="tal">{kr(round(_median([a['pris'] for a in v])))} kr.</td></tr>"""
+                   for s, v in sorted(pr_s.items(), key=lambda x: min(a["pris"] for a in x[1])))
+    rk_a = "".join(f'<tr><td>Abonnementer {e(k)}</td><td class="tal"><strong>{round(v * 100)} %</strong></td></tr>'
+                   for k, v in N["andele"].items())
+    rk_p = "".join(f"""<tr><td><time datetime="{x['dato']}">{e(dansk_dato(date.fromisoformat(x['dato'])))}</time></td>
+<td>{e(UMAP[x['abonnement']['udbyder']]['navn'])} {e(_abonavn(x['abonnement']))}</td>
+<td class="tal">{kr(x['fra'])} → {kr(x['til'])} kr.</td>
+<td class="tal {'op' if x['til'] > x['fra'] else 'ned'}">{'+' if x['til'] > x['fra'] else '−'}{kr(abs(x['til'] - x['fra']))} kr.</td></tr>"""
+                   for x in N["aendringer"])
+    bb = ""
+    if BB:
+        pr_t = {}
+        for a in BB:
+            pr_t.setdefault(a["teknologi"], []).append(a)
+        rk_b = "".join(f"""<tr><td><strong>{e(TEKNOLOGI_KORT.get(t, t))}</strong></td><td class="tal">{len(v)}</td>
+<td>{e(min(v, key=bb_aarspris)['udbyder_navn'])}</td>
+<td class="tal"><strong>{kr(round(bb_aarspris(min(v, key=bb_aarspris)) / 12))} kr.</strong></td></tr>"""
+                       for t, v in sorted(pr_t.items(), key=lambda x: min(bb_aarspris(a) for a in x[1])))
+        bb = f"""<h2 id="bredbaand">Bredbånd</h2>
+<div class="tabelramme"><table class="datatabel"><caption>Billigste bredbånd pr. teknologi, snit over 12 måneder.</caption>
+<thead><tr><th scope="col">Teknologi</th><th scope="col">Abonnementer</th><th scope="col">Billigst</th><th scope="col">Snit pr. md.</th></tr></thead>
+<tbody>{rk_b}</tbody></table></div>"""
+    brod = f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Pr. {e(OPDATERET)}:</strong> Vi sammenligner {len(N['alle'])}
+mobilabonnementer fra {N['selskaber']} selskaber med aktuelle priser. Det billigste koster
+{kr(round(gns12(b0)))} kr. om måneden i snit over 12 måneder ({e(u0['navn'])},
+{e(skabelon._kortnavn(b0, u0))}). Den typiske normalpris er {kr(round(N['median']))} kr. om
+måneden.</p></div>
+
+<h2 id="pr-datamaengde">Priser pr. datamængde</h2>
+<div class="tabelramme"><table class="datatabel"><caption>Billigste abonnement, laveste startpris og typisk normalpris i hver datastørrelse.</caption>
+<thead><tr><th scope="col">Datamængde</th><th scope="col">Antal</th><th scope="col">Billigst over 12 mdr.</th>
+<th scope="col">Snit pr. md.</th><th scope="col">Laveste startpris</th><th scope="col">Typisk normalpris</th></tr></thead>
+<tbody>{rk_g}</tbody></table></div>
+
+<h2 id="pr-selskab">Priser pr. selskab</h2>
+<div class="tabelramme"><table class="datatabel"><caption>Laveste og typiske normalpris pr. selskab.</caption>
+<thead><tr><th scope="col">Selskab</th><th scope="col">Net</th><th scope="col">Abonnementer</th>
+<th scope="col">Laveste normalpris</th><th scope="col">Typisk normalpris</th></tr></thead>
+<tbody>{rk_s}</tbody></table></div>
+
+<h2 id="vilkaar">Vilkår i markedet</h2>
+<div class="tabelramme"><table class="datatabel"><caption>Andel af abonnementerne med hvert vilkår.</caption>
+<thead><tr><th scope="col">Vilkår</th><th scope="col">Andel</th></tr></thead><tbody>{rk_a}</tbody></table></div>
+
+{f'''<h2 id="aendringer">Seneste prisændringer</h2>
+<div class="tabelramme"><table class="datatabel"><caption>De seneste registrerede ændringer i normalpris.</caption>
+<thead><tr><th scope="col">Dato</th><th scope="col">Abonnement</th><th scope="col">Pris</th><th scope="col">Ændring</th></tr></thead>
+<tbody>{rk_p}</tbody></table></div>''' if rk_p else ''}
+
+{bb}
+
+<h2 id="citer">Sådan citerer du tallene</h2>
+<p>Tallene må frit bruges med kildeangivelse: <em>Kilde: Telemobil.dk, {e(OPDATERET)}</em>,
+med link til denne side. Priserne hentes automatisk fra selskabernes datafeeds to gange i
+døgnet. Se <a href="/metode/">vores metode</a>, hent rådata under
+<a href="/aabne-data/">åbne data</a>, og se hver enkelt ændring i
+<a href="/prisarkiv/">prisarkivet</a>.</p>
+</section>"""
+    byg_statisk(sti, f"Mobilpriser i Danmark {maaned} {aar} — nøgletal og billigste pr. datamængde",
+                f"Mobilpriser i Danmark pr. {OPDATERET}: billigste abonnement pr. datamængde, typiske "
+                f"normalpriser, vilkår og seneste prisændringer. {len(N['alle'])} abonnementer.",
+                "Nøgletal", "Mobilpriser i Danmark lige nu", brod, prioritet="0.8",
+                jsonld_ekstra={"@type": "Dataset", "name": "Mobilpriser i Danmark",
+                               "description": "Nøgletal for priser på danske mobilabonnementer, opdateret dagligt.",
+                               "url": DOMAENE + sti, "dateModified": ISO,
+                               "creator": {"@id": DOMAENE + "/#organisation"},
+                               "license": "https://creativecommons.org/licenses/by/4.0/",
+                               "isAccessibleForFree": True, "inLanguage": "da-DK",
+                               "isBasedOn": DOMAENE + "/aabne-data/"})
+
+
+def llms_noegletal():
+    N = noegletal()
+    b0 = N["billigst"]
+    ud = [f"\n## Nøgletal pr. {OPDATERET}\n",
+          f"- Abonnementer i sammenligningen: {len(N['alle'])} fra {N['selskaber']} selskaber med aktuelle priser",
+          f"- Billigste mobilabonnement: {kr(round(gns12(b0)))} kr./md. i snit over 12 måneder "
+          f"({UMAP[b0['udbyder']]['navn']}, {skabelon._kortnavn(b0, UMAP[b0['udbyder']])})",
+          f"- Typisk normalpris: {kr(round(N['median']))} kr./md."]
+    for g in N["grupper"]:
+        bu = UMAP[g["billigst"]["udbyder"]]
+        ud.append(f"- Billigste med {g['navn'][0].lower() + g['navn'][1:] if not g['navn'].startswith('Fri') else 'fri data'}: "
+                  f"{kr(round(gns12(g['billigst'])))} kr./md. i snit ({bu['navn']})")
+    for k, v in N["andele"].items():
+        ud.append(f"- Andel {k}: {round(v * 100)} %")
+    ud.append(f"\nKilde: {DOMAENE}/mobilpriser/ — opdateres to gange i døgnet. "
+              f"Rådata (CC BY 4.0): {DOMAENE}/aabne-data/\n")
+    with open(os.path.join(ROD, "llms.txt"), "a", encoding="utf-8") as f:
+        f.write("\n".join(ud))
+
+
+def byg_rettelser():
+    try:
+        with open(os.path.join(ROD, "data", "rettelser.json"), encoding="utf-8") as f:
+            rr = json.load(f).get("rettelser", [])
+    except (FileNotFoundError, ValueError):
+        rr = []
+    rk = "".join(f"""<tr><td><time datetime="{e(r['dato'])}">{e(dansk_dato(date.fromisoformat(r['dato'])))}</time></td>
+<td><a href="{e(r['side'])}">{e(r['side'])}</a></td><td>{e(r['tekst'])}</td></tr>"""
+                 for r in sorted(rr, key=lambda r: r["dato"], reverse=True))
+    brod = f"""<section class="sektion baand-smal artikel">
+<p>Når vi finder en fejl, retter vi den og skriver det her: hvornår, hvor og hvad der var forkert.
+Prisændringer fra selskaberne er ikke rettelser — dem finder du i <a href="/prisarkiv/">prisarkivet</a>.</p>
+<div class="tabelramme"><table class="datatabel"><caption>Rettelser på telemobil.dk, nyeste først.</caption>
+<thead><tr><th scope="col">Dato</th><th scope="col">Side</th><th scope="col">Hvad var forkert</th></tr></thead>
+<tbody>{rk}</tbody></table></div>
+<p>Har du fundet en fejl? <a href="/kontakt/">Skriv til os</a> med et link til selskabets side.</p>
+</section>"""
+    byg_statisk("/rettelser/", "Rettelser — fejl vi har rettet på Telemobil",
+                "Offentlig log over fejl, vi har fundet og rettet på telemobil.dk, med dato og side.",
+                "Rettelser", "Rettelser", brod, prioritet="0.4")
 
 
 def main():
@@ -14946,6 +15141,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_lydbog()
     byg_prisarkiv()
     byg_aabne_data()
+    byg_mobilpriser()
+    byg_rettelser()
     byg_indexnow_noegle()
     byg_q4()
     byg_guideoversigt()
