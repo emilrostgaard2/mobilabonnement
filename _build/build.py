@@ -63,9 +63,13 @@ def _logo_w(slug_, hoejde):
 def _indsaet_citat(sti, html):
     """Sider med abonnementskort får den citérbare sætning øverst i indholdet,
     beregnet ud fra præcis de abonnementer, siden viser."""
-    if 'class="citat-fakta"' in html:
+    if 'class="citat-fakta"' in html[:html.find('<main id="indhold">') + 400]:
         return html
-    if sti.startswith(("/sammenlign/", "/kampagner", "/guides/", "/mobilabonnementer-black-friday")):
+    if SIDE_CITAT.get(sti):
+        return html.replace('<main id="indhold">',
+                            f'<main id="indhold">\n<div class="baand">{SIDE_CITAT[sti]}</div>', 1)
+    if sti == "/" or sti.startswith(("/sammenlign/", "/kampagner", "/guides/", "/mobilabonnementer-black-friday")):
+        # Forsiden får ingen: sætningen ville være identisk med billigste-sidens
         return html
     set_, k = set(), []
     for a in skabelon.UDVALG_SIDE:
@@ -7472,6 +7476,8 @@ def bb_listeld(udvalg, navn):
 
 
 def byg_bredbaand():
+    gem_bb_prishistorik()
+    SIDE_CITAT["/bredbaand/"] = bb_citat(BB, "bredbånd") if BB else ""
     """Bredbåndssektionen. Bygges kun, når der er data."""
     if not BB:
         print("  Springer bredbånd over — data/bredbaand.json er tom")
@@ -7501,9 +7507,10 @@ def byg_bredbaand():
 regnes med. Startpriserne begynder ved {kr(min(bb_start(a) for a in BB))} kr./md.
 Hurtigste er {hurtigst['ned']} Mbit/s hos {e(hurtigst['udbyder_navn'])}.
 Fiber er den bedste forbindelse, 5G den hurtigste at få installeret.</p></div>
-{bb_citat(BB, "bredbånd")}
 {bb_nu_linje(BB, "bredbånd")}
 {bb_noegletal(BB)}
+
+{bb_officielle_tal()}
 
 <h2 id="pr-selskab">Billigste bredbånd fra hvert selskab</h2>
 <p>Her er det billigste abonnement hos hvert selskab, uanset teknologi. <strong>Mindstepris
@@ -7671,10 +7678,9 @@ ikke har adgang til priser for. Læs mere om
         beskrivelse=(f"Billigste bredbånd i {vis_maaned()[0]} {vis_maaned()[1]}: {len(BB)} tilbud "
                      f"på fiber, 5G og coax fra {selskaber} selskaber, sorteret efter reel pris "
                      f"det første år. Fra {kr(min(bb_start(a) for a in BB))} kr./md."),
-        hero=hero_side("Bredbånd", "Billigste bredbånd",
-                       f"{len(BB)} abonnementer fra {selskaber} selskaber, sorteret efter "
-                       f"hvad de koster det første år — ikke efter tilbudsprisen.",
-                       billede=bb_herovisual(BB)),
+        hero=bb_hero("Billigste bredbånd",
+                     "Skriv din adresse, og se om du kan få fiber, kabel eller 5G — og hvad det "
+                     "billigste koster regnet på hele året.", BB),
         efter_hero="", krumme=[("/", "Forside"), (None, "Bredbånd")],
         indhold=krop + faqblok(faq), toc=False,
         jsonld=[graf(ORG, PERSON, WEBSITE,
@@ -7698,6 +7704,7 @@ ikke har adgang til priser for. Læs mere om
 def byg_bredbaand_type(noegle, navn, sti, besk, udvalg):
     """Underside pr. teknologi."""
     fra = min(bb_mdr_pris(a) for a in udvalg)
+    SIDE_CITAT[f"/bredbaand/{sti}/"] = bb_citat(udvalg, BB_SEO.get(noegle, {}).get("kw", navn.lower()))
     seo = BB_SEO.get(noegle, {"kw": navn.lower(), "h1": f"Billigste {navn.lower()}",
                               "titel": "Billigste " + navn.lower() + " {m} {a} — fra {p} kr./md.",
                               "besk": "{n} tilbud fra {s} selskaber. Fra {p} kr./md."})
@@ -7779,7 +7786,6 @@ forbindelse føles langsommere klokken 20 end klokken 10.</p>""",
 {kr(round(bb_aarspris(billigst) / 12))} kr. om måneden i snit det første år. Startpriserne
 begynder ved {kr(min(bb_start(a) for a in udvalg))} kr./md. Hurtigste er
 {e(hurtigst['udbyder_navn'])} med {hurtigst['ned']} Mbit/s ned. {e(besk)}</p></div>
-{bb_citat(udvalg, seo["kw"])}
 {bb_nu_linje(udvalg, seo["kw"])}
 {bb_noegletal(udvalg)}
 
@@ -7787,6 +7793,8 @@ begynder ved {kr(min(bb_start(a) for a in udvalg))} kr./md. Hurtigste er
 <p>Det billigste {e(seo["kw"])}-abonnement hos hvert selskab. Sammenlign på
 <strong>snit år 1</strong> — startprisen gælder kun i kampagneperioden.</p>
 {bb_tabel_pr_selskab(udvalg, seo["kw"])}
+
+{bb_officielle_tal(noegle)}
 
 {('<h2 id="hastighed">Billigste ' + e(seo["kw"]) + ' pr. hastighed</h2>' + bb_tabel_trin(udvalg)) if bb_tabel_trin(udvalg) else ""}
 
@@ -7869,8 +7877,8 @@ hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
         sti=f"/bredbaand/{sti}/",
         titel=seo["titel"].format(**_fmt),
         beskrivelse=seo["besk"].format(**_fmt),
-        hero=hero_side(navn, seo["h1"], besk,
-                       billede=bb_herovisual(udvalg)),
+        hero=bb_hero(seo["h1"], "Skriv din adresse, og se hvilken hastighed du kan få, og hvad det "
+                     "billigste koster regnet på hele året.", udvalg, fokus=noegle),
         efter_hero="", krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, f"Spørgsmål om {seo['kw']}"),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
@@ -13892,6 +13900,9 @@ def citat_for_side(sti, k):
             f'første år, {e(kilde)}.</p>')
 
 
+SIDE_CITAT = {}  # sti -> færdig citat-HTML (fx bredbånd, som ikke bruger abonnementskort)
+
+
 def bb_citat(udvalg, kw):
     if not udvalg:
         return ""
@@ -14277,6 +14288,162 @@ undersøgelsen (bl.a. Lebara, Lyca Mobile, Duka, Flexii og Greentel) er ikke må
 <p>Indekset måler, hvor loyale kunderne er over for deres eget selskab — ikke pris eller dækning.
 Det bygger på spørgsmål om bl.a. produktkvalitet, service, værdi for pengene og klagehåndtering.
 <a href="{e(m['url'])}" rel="nofollow noopener" target="_blank">Kilde: Loyalty Group</a>.</p>"""
+
+
+# ======================================================================
+# Bredbånd: adressetjek (Bredbåndskortlægning 2026), officielle tal,
+# teknologitabel og daglig prishistorik
+# ======================================================================
+BBK = {
+    "aar": 2026,
+    "kilde": "Digitaliseringsstyrelsen, Bredbåndskortlægning 2026",
+    "tjek": "https://tjekditnet.dk/",
+    # Landsplan, boliger og virksomheder (baggrundsdata_landsplan.xlsx, ark 1)
+    "100_30": 99.2, "1000": 98.2, "1000_1000": 92.5,
+    "fiber": 92.3, "kabel": 55.1, "xdsl": 9.6, "fast": 7.6,
+    # Boliger alene (ark 2) og sommerhuse (ark 4)
+    "boliger_fiber": 91.9, "boliger_kabel": 59.7, "sommerhus_fiber": 96.3, "sommerhus_100_30": 98.2,
+    # Telemobils egen analyse af adressefilen (udbudte hastigheder til private, 2.447.514 adresser)
+    "adresser": 2447514, "mobil_100": 97.5, "mobil_500": 61.1, "mobil_1000": 39.7, "kun_mobil": 1.5,
+    "fiber_over_1000": 38.8,
+}
+
+
+def _pct(v):
+    return f"{str(v).replace('.', ',')} %"
+
+
+def bb_officielle_tal(fokus=None):
+    b = BBK
+    tek = {}
+    for a in (BB or []):
+        tek.setdefault(a["teknologi"], []).append(a)
+    def raekke(navn, tk, daek, note):
+        k = tek.get(tk, [])
+        if k:
+            bil = min(k, key=bb_aarspris)
+            hurt = max(a["ned"] for a in k)
+            pris = f"{kr(round(bb_aarspris(bil) / 12))} kr."
+            ant, ned = str(len(k)), f"{kr(hurt)} Mbit/s"
+        else:
+            pris = ant = ned = "–"
+        return (f'<tr><td><strong>{e(navn)}</strong><br><span class="tabel-under">{e(note)}</span></td>'
+                f'<td class="tal">{e(daek)}</td><td class="tal">{ant}</td><td class="tal">{ned}</td>'
+                f'<td class="tal">{pris}</td></tr>')
+    rk = (raekke("Fiber", "fiber", _pct(b["fiber"]), "Samme hastighed begge veje, lavest svartid")
+          + raekke("Kabel-tv (coax)", "coax", _pct(b["kabel"]), "Hurtig download, lavere upload")
+          + raekke("5G-internet", "5g", f"{_pct(b['mobil_100'])}*", "Router i stikkontakten, ingen tekniker")
+          + raekke("4G-internet", "4g", "–", "Til sommerhus og som nødløsning"))
+    cit = {
+        None: (f"{_pct(b['fiber'])} af alle boliger og virksomheder i Danmark kan få fiber, og "
+               f"{_pct(b['1000'])} kan få mindst 1 Gbit/s download, ifølge Digitaliseringsstyrelsens "
+               f"Bredbåndskortlægning {b['aar']}. {_pct(b['kabel'])} kan få bredbånd via kabel-tv-nettet."),
+        "fiber": (f"{_pct(b['fiber'])} af alle boliger og virksomheder i Danmark kan få fibernet, og "
+                  f"{_pct(b['1000_1000'])} kan få 1000/1000 Mbit/s, ifølge Digitaliseringsstyrelsens "
+                  f"Bredbåndskortlægning {b['aar']}. Blandt sommerhusene er andelen {_pct(b['sommerhus_fiber'])}."),
+        "5g": (f"{_pct(b['mobil_100'])} af danske adresser kan få mobilt internet på mindst 100 Mbit/s, "
+               f"og {_pct(b['mobil_500'])} kan få mindst 500 Mbit/s. Det viser Telemobils analyse af "
+               f"Bredbåndskortlægningen {b['aar']} for {kr(b['adresser'])} adresser."),
+        "coax": (f"{_pct(b['kabel'])} af alle boliger og virksomheder i Danmark kan få bredbånd via "
+                 f"kabel-tv-stikket, og blandt boligerne alene er andelen {_pct(b['boliger_kabel'])}, ifølge "
+                 f"Digitaliseringsstyrelsens Bredbåndskortlægning {b['aar']}."),
+    }[fokus if fokus in ("fiber", "5g", "coax") else None]
+    return f"""<h2 id="daekning">Hvor mange kan få fiber, kabel og 5G?</h2>
+<p class="citat-fakta">{e(cit)}</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Dækning i Danmark ({e(b['kilde'])}) og tilbuddene i vores sammenligning i dag.</caption>
+<thead><tr><th scope="col">Teknologi</th><th scope="col">Dækning</th><th scope="col">Tilbud hos os</th>
+<th scope="col">Op til</th><th scope="col">Billigst, snit år 1</th></tr></thead>
+<tbody>{rk}</tbody></table></div>
+<p class="tabel-under">Dækning for fiber og kabel er andelen af boliger og virksomheder ifølge
+Digitaliseringsstyrelsen. *For 5G: andelen af adresser med mindst 100 Mbit/s via mobilnettet,
+beregnet af Telemobil ud fra kortlægningens adressedata.</p>
+<h3>Tjek din egen adresse</h3>
+<p>Brug adressetjekket øverst på siden, eller Digitaliseringsstyrelsens officielle værktøj
+<a href="{e(b['tjek'])}" rel="noopener" target="_blank">tjekditnet.dk</a>, som viser de samme data
+med kort. Kortlægningen viser, hvilke hastigheder der udbydes på adressen — ikke hvilke selskaber
+der leverer dem. Det bekræfter du altid på selskabets eget adressetjek.</p>"""
+
+
+def _bb_hero_kort(lab, a):
+    return f"""<div class="vk">
+  <span class="vk-lab">{e(lab)}</span>
+  <img src="/assets/img/logoer/{a['udbyder']}.webp" alt="{e(a['udbyder_navn'])}" width="{_logo_w(a['udbyder'], 22)}" height="22" decoding="async">
+  <b class="vk-navn">{e(TEKNOLOGI_KORT.get(a['teknologi'], a['teknologi']))} {kr(a['ned'])}/{kr(a['op'])} Mbit/s</b>
+  <div class="vk-pris">{kr(bb_start(a))}<span> kr./md.{f" i {a['intro_mdr']} mdr." if a.get('intro_pris') else ""}</span></div>
+  <p class="vk-linje">{"Herefter " + kr(a["pris"]) + " kr. " if a.get("intro_pris") else "Fast pris. "}Snit {kr(round(bb_aarspris(a) / 12))} kr./md. år 1.</p>
+  <a class="knap knap-primaer vk-knap" href="{e(a['link'])}" rel="sponsored nofollow noopener" target="_blank" data-udgaaende="{e(a['udbyder'])}">Gå til {e(a['udbyder_navn'])}</a>
+</div>"""
+
+
+def bb_hero(h1, led, udvalg, fokus=None):
+    """Hero som på forsiden — men med adressetjek i stedet for datavælgeren."""
+    kort, set_ = [], set()
+    if fokus:
+        valg = [("Billigst over 12 måneder", min(udvalg, key=bb_aarspris)),
+                ("Laveste startpris", min(udvalg, key=bb_start)),
+                ("Hurtigst", max(udvalg, key=lambda a: (a["ned"], -bb_aarspris(a))))]
+    else:
+        valg = []
+        for t, lab in (("fiber", "Billigste fibernet"), ("5g", "Billigste 5G-internet"), ("coax", "Billigste kabel-internet")):
+            k = [a for a in udvalg if a["teknologi"] == t]
+            if k:
+                valg.append((lab, min(k, key=bb_aarspris)))
+    for lab, a in valg:
+        if a["id"] not in set_:
+            set_.add(a["id"])
+            kort.append(_bb_hero_kort(lab, a))
+    for a in sorted(udvalg, key=bb_aarspris):
+        if len(kort) >= 3:
+            break
+        if a["id"] not in set_:
+            set_.add(a["id"])
+            kort.append(_bb_hero_kort("Også billig", a))
+    data = [{"u": a["udbyder_navn"], "s": a["udbyder"], "w": _logo_w(a["udbyder"], 22),
+             "t": a["teknologi"], "n": a["ned"], "o": a["op"], "p": a["pris"],
+             "i": a.get("intro_pris") or 0, "m": a.get("intro_mdr") or 0,
+             "a": round(bb_aarspris(a) / 12), "l": a["link"]} for a in (BB or [])]
+    eks = ["Jægergårdsgade 90A, 8000 Aarhus", "Nørrebrogade 12, 2200 København",
+           "Vestergade 5, 5000 Odense", "Algade 20, 9000 Aalborg"]
+    return f"""<section class="hero hero-lys hero-vaelger hero-adr" data-fokus="{e(fokus or '')}">
+  <div class="baand">
+    <h1>{e(h1)}</h1>
+    <p class="led">{e(led)}</p>
+    <div class="adr" role="search">
+      <label for="adr-felt" class="adr-sr">Skriv din adresse</label>
+      <div class="adr-boks">
+        <input id="adr-felt" type="text" autocomplete="off" spellcheck="false" inputmode="search"
+          placeholder="Skriv din adresse" data-eksempler='{json.dumps(eks, ensure_ascii=False)}'
+          role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="adr-forslag">
+        <button type="button" class="knap knap-primaer adr-knap">Tjek adresse</button>
+      </div>
+      <ul id="adr-forslag" class="adr-forslag" role="listbox" hidden></ul>
+    </div>
+    <div class="adr-resultat" aria-live="polite" hidden></div>
+    <div class="seg-res on adr-standard">{"".join(kort)}</div>
+    <p class="hv-tillid">Adressedata fra Digitaliseringsstyrelsens Bredbåndskortlægning {BBK['aar']}<span>·</span>Priser opdateret {e(OPDATERET)}<span>·</span>Ingen betalt placering</p>
+  </div>
+  <script type="application/json" id="bb-data">{json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")}</script>
+</section>"""
+
+
+def gem_bb_prishistorik():
+    """Bredbåndspriserne gemmes dagligt, så vi kan vise prisudvikling på bredbånd."""
+    if not BB:
+        return
+    p = os.path.join(ROD, "data", "bb_prishistorik.json")
+    try:
+        h = json.load(open(p, encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        h = {"maalinger": []}
+    dato = (BREDBAAND.get("hentet") or ISO)[:10]
+    if any(m["dato"] == dato for m in h["maalinger"]):
+        return
+    h["maalinger"].append({"dato": dato, "priser": {a["id"]: {"pris": a["pris"], "intro": a.get("intro_pris"),
+                                                            "mdr": a.get("intro_mdr"), "tek": a["teknologi"],
+                                                            "udbyder": a["udbyder"]} for a in BB}})
+    h["maalinger"].sort(key=lambda m: m["dato"])
+    json.dump(h, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 
 
 def main():
