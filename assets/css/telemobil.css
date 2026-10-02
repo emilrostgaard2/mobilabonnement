@@ -2573,3 +2573,15 @@ body{font-variant-numeric:tabular-nums}
 .adr-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .ordbog dt{margin-top:1rem;font-size:1.02rem}
 .ordbog dd{margin:.2rem 0 0;color:var(--graa)}
+
+/* ---------- Logo A: én farve og én grøn søjle ---------- */
+.logo-maerke{gap:3px;height:22px}
+.logo-maerke i{width:5px;border-radius:1.5px;background:var(--blaek)}
+.logo-maerke i:nth-child(1){height:7px}
+.logo-maerke i:nth-child(2){height:12px}
+.logo-maerke i:nth-child(3){height:17px}
+.logo-maerke i:nth-child(4){height:22px;background:var(--puls-dyb)}
+.logo em{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:inherit}
+.fod .logo-maerke i{background:#fff}
+.fod .logo-maerke i:nth-child(4){background:#2EE6A6}
+.fod .fodtitel{font-family:var(--font-brod);text-transform:none;letter-spacing:0;font-size:.92rem;font-weight:600;color:#fff}

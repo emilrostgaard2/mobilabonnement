@@ -354,8 +354,8 @@ ORG = {
     "description": ("Uafhængig dansk prissammenligning af mobilabonnementer. Vi gennemgår "
                     "udbydernes vilkår, beregner den reelle pris over 12 måneder og skriver "
                     "både fordele og ulemper."),
-    "logo": {"@type": "ImageObject", "url": DOMAENE + "/assets/img/telemobil-social.png",
-             "width": 1200, "height": 630},
+    "logo": {"@type": "ImageObject", "url": DOMAENE + "/assets/img/telemobil-logo.png",
+             "width": 512, "height": 512},
     "image": DOMAENE + "/assets/img/telemobil-social.png",
     "email": "kontakt@telemobil.dk",
     # CVR som maskinlæsbart felt. Et registreret selskab bag sitet er et af de
@@ -11520,14 +11520,11 @@ Sitemap: {DOMAENE}/sitemap.xml
 
 def byg_favicon():
     svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-<defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0">
-<stop offset="0" stop-color="#00D18F"/><stop offset="55%" stop-color="#3D5AFE"/>
-<stop offset="100%" stop-color="#7C4DFF"/></linearGradient></defs>
-<rect width="64" height="64" rx="14" fill="#0B1026"/>
-<rect x="12" y="38" width="8" height="14" rx="3" fill="url(#g)"/>
-<rect x="24" y="30" width="8" height="22" rx="3" fill="url(#g)"/>
-<rect x="36" y="22" width="8" height="30" rx="3" fill="url(#g)"/>
-<rect x="48" y="12" width="8" height="40" rx="3" fill="url(#g)"/>
+<rect width="64" height="64" rx="14" fill="#131735"/>
+<rect x="12" y="38" width="8" height="14" rx="2.5" fill="#fff"/>
+<rect x="24" y="30" width="8" height="22" rx="2.5" fill="#fff"/>
+<rect x="36" y="22" width="8" height="30" rx="2.5" fill="#fff"/>
+<rect x="48" y="12" width="8" height="40" rx="2.5" fill="#2EE6A6"/>
 </svg>"""
     with open(os.path.join(ROD, "favicon.svg"), "w", encoding="utf-8") as f:
         f.write(svg)
