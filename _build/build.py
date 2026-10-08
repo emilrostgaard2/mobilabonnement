@@ -11764,6 +11764,8 @@ ErrorDocument 404 /404.html
   # RewriteRule frem for "Redirect": mod_alias inde i en mod_rewrite-blok
   # blev ikke udført på serveren (siden gav 404).
   RewriteRule ^mobilabonnement-uden-kreditvurdering/?$ https://telemobil.dk/guides/mobilabonnement-uden-kreditvurdering/ [R=301,L]
+  # CSV-filerne er flyttet fra /assets/data/ til /aabne-data/
+  RewriteRule ^assets/data/([a-z0-9-]+\.csv)$ https://telemobil.dk/aabne-data/$1 [R=301,L]
   # /side/index.html -> /side/ (undgår dobbelt indhold)
   RewriteCond %{THE_REQUEST} \s/+(.*/)?index\.html[\s?] [NC]
   RewriteRule ^(.*/)?index\.html$ https://telemobil.dk/$1 [R=301,L]
@@ -13628,7 +13630,9 @@ det i vores <a href="/rettelser/">offentlige rettelseslog</a>.</p>
 def byg_aabne_data():
     """Priserne som CSV under CC BY 4.0. Rådata er det, journalister og andre
     sider linker til — og det kan ingen konkurrent tilbyde."""
-    mappe = os.path.join(ROD, "assets", "data")
+    # Ligger i sidens egen mappe. Under /aabne-data/ blev filerne aldrig lagt
+    # op, fordi upload-robotten springer mapper med navnet "data" over.
+    mappe = os.path.join(ROD, "aabne-data")
     os.makedirs(mappe, exist_ok=True)
     import csv
     betalte = sorted(_betalte(), key=lambda a: (a["udbyder"], a["pris"]))
@@ -13672,10 +13676,10 @@ med et link til telemobil.dk. Filerne opdateres to gange i døgnet.</p></div>
 <caption>Download som CSV (UTF-8, komma-separeret). Opdateret {OPDATERET}.</caption>
 <thead><tr><th scope="col">Fil</th><th scope="col">Indhold</th><th scope="col">Periode</th></tr></thead>
 <tbody>
-<tr><td><a href="/assets/data/mobilabonnementer.csv" download><strong>mobilabonnementer.csv</strong></a></td>
+<tr><td><a href="/aabne-data/mobilabonnementer.csv" download><strong>mobilabonnementer.csv</strong></a></td>
 <td>Alle {_antal_ab(len(betalte))} med normalpris, intropris, oprettelse, binding og snit over 12 måneder</td>
 <td>I dag</td></tr>
-<tr><td><a href="/assets/data/prisudvikling-pr-selskab.csv" download><strong>prisudvikling-pr-selskab.csv</strong></a></td>
+<tr><td><a href="/aabne-data/prisudvikling-pr-selskab.csv" download><strong>prisudvikling-pr-selskab.csv</strong></a></td>
 <td>Laveste, typiske og højeste normalpris pr. selskab, dag for dag</td>
 <td>Fra {e(dansk_dato(date.fromisoformat(start)))}</td></tr>
 </tbody></table></div>
@@ -13712,9 +13716,9 @@ Priser kan ændre sig mellem to opdateringer, og selskabets egen side er altid g
           "keywords": ["mobilabonnement", "priser", "Danmark", "telekommunikation"],
           "distribution": [
               {"@type": "DataDownload", "encodingFormat": "text/csv",
-               "contentUrl": DOMAENE + "/assets/data/mobilabonnementer.csv"},
+               "contentUrl": DOMAENE + "/aabne-data/mobilabonnementer.csv"},
               {"@type": "DataDownload", "encodingFormat": "text/csv",
-               "contentUrl": DOMAENE + "/assets/data/prisudvikling-pr-selskab.csv"}]}
+               "contentUrl": DOMAENE + "/aabne-data/prisudvikling-pr-selskab.csv"}]}
     byg_statisk("/aabne-data/", "Åbne prisdata for mobilabonnementer — gratis CSV",
                 "Hent priser på danske mobilabonnementer som CSV. Opdateres to gange i "
                 "døgnet og må bruges frit med kildeangivelse (CC BY 4.0).",
