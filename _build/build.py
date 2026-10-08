@@ -13673,13 +13673,15 @@ med et link til telemobil.dk. Filerne opdateres to gange i døgnet.</p></div>
 
 <h2>Datasæt</h2>
 <div class="tabelramme"><table class="datatabel">
-<caption>Download som CSV (UTF-8, komma-separeret). Opdateret {OPDATERET}.</caption>
+<caption>Download som CSV (UTF-8, komma-separeret) — eller Excel-udgaven, der åbner direkte i dansk Excel. Opdateret {OPDATERET}.</caption>
 <thead><tr><th scope="col">Fil</th><th scope="col">Indhold</th><th scope="col">Periode</th></tr></thead>
 <tbody>
-<tr><td><a href="/aabne-data/mobilabonnementer.csv" download><strong>mobilabonnementer.csv</strong></a></td>
+<tr><td><a href="/aabne-data/mobilabonnementer.csv" download><strong>mobilabonnementer.csv</strong></a><br>
+<a href="/aabne-data/mobilabonnementer-excel.csv" download>Excel-udgave</a></td>
 <td>Alle {_antal_ab(len(betalte))} med normalpris, intropris, oprettelse, binding og snit over 12 måneder</td>
 <td>I dag</td></tr>
-<tr><td><a href="/aabne-data/prisudvikling-pr-selskab.csv" download><strong>prisudvikling-pr-selskab.csv</strong></a></td>
+<tr><td><a href="/aabne-data/prisudvikling-pr-selskab.csv" download><strong>prisudvikling-pr-selskab.csv</strong></a><br>
+<a href="/aabne-data/prisudvikling-pr-selskab-excel.csv" download>Excel-udgave</a></td>
 <td>Laveste, typiske og højeste normalpris pr. selskab, dag for dag</td>
 <td>Fra {e(dansk_dato(date.fromisoformat(start)))}</td></tr>
 </tbody></table></div>
@@ -13719,6 +13721,27 @@ Priser kan ændre sig mellem to opdateringer, og selskabets egen side er altid g
                "contentUrl": DOMAENE + "/aabne-data/mobilabonnementer.csv"},
               {"@type": "DataDownload", "encodingFormat": "text/csv",
                "contentUrl": DOMAENE + "/aabne-data/prisudvikling-pr-selskab.csv"}]}
+    # Excel-udgaver: dansk Excel forventer semikolon og decimalkomma, og BOM
+    # for at vise æøå rigtigt. Standardfilerne beholdes til maskiner og AI.
+    for navn in ("mobilabonnementer", "prisudvikling-pr-selskab"):
+        with open(os.path.join(mappe, navn + ".csv"), encoding="utf-8", newline="") as f:
+            raekker = list(csv.reader(f))
+        with open(os.path.join(mappe, navn + "-excel.csv"), "w", encoding="utf-8-sig", newline="") as f:
+            w = csv.writer(f, delimiter=";")
+            ovs = {"dato": "Dato", "selskab": "Selskab", "abonnement": "Abonnement",
+                   "data_gb": "Data (GB)", "tale": "Tale", "normalpris_kr": "Normalpris (kr./md.)",
+                   "intropris_kr": "Intropris (kr./md.)", "intro_maaneder": "Intropris i antal mdr.",
+                   "oprettelse_kr": "Oprettelse (kr.)", "binding_mdr": "Binding (mdr.)",
+                   "snit_12_mdr_kr": "Snit første år (kr./md.)", "esim": "eSIM", "5g": "5G",
+                   "antal_abonnementer": "Antal abonnementer",
+                   "laveste_normalpris_kr": "Laveste normalpris (kr./md.)",
+                   "median_normalpris_kr": "Typisk normalpris (kr./md.)",
+                   "hoejeste_normalpris_kr": "Højeste normalpris (kr./md.)"}
+            if raekker:
+                raekker[0] = [ovs.get(c, c.replace("_", " ").capitalize()) for c in raekker[0]]
+            for r in raekker:
+                w.writerow([c.replace(".", ",") if re.fullmatch(r"-?\d+\.\d+", c) else c for c in r])
+
     byg_statisk("/aabne-data/", "Åbne prisdata for mobilabonnementer — gratis CSV",
                 "Hent priser på danske mobilabonnementer som CSV. Opdateres to gange i "
                 "døgnet og må bruges frit med kildeangivelse (CC BY 4.0).",
@@ -14317,7 +14340,9 @@ def llms_noegletal():
     for k, v in N["andele"].items():
         ud.append(f"- Andel {k}: {round(v * 100)} %")
     ud.append(f"\nKilde: {DOMAENE}/mobilpriser/ — opdateres to gange i døgnet. "
-              f"Rådata (CC BY 4.0): {DOMAENE}/aabne-data/\n")
+              f"Rådata (CC BY 4.0): {DOMAENE}/aabne-data/ — alle priser som CSV: "
+              f"{DOMAENE}/aabne-data/mobilabonnementer.csv og prisudvikling pr. selskab: "
+              f"{DOMAENE}/aabne-data/prisudvikling-pr-selskab.csv\n")
     with open(os.path.join(ROD, "llms.txt"), "a", encoding="utf-8") as f:
         f.write("\n".join(ud))
 
