@@ -161,6 +161,12 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     skabelon.UDVALG_SIDE.clear()
     html = _ret_ampersand(html)
     html = _fjern_dobbelt_maerke(html).replace("[[FRI_BEV]]", str(D["fri_bev"]))
+    if _tynd_side(sti):
+        # Search Console (okt. 2026): Google crawlede ikke disse sider. De er
+        # næsten ens skabeloner (driftsstatus) eller sideinddeling (guides/side-2).
+        # noindex,follow: linkene følges stadig, men de tæller ikke som tynde sider.
+        html = html.replace('<meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">',
+                            '<meta name="robots" content="noindex,follow">', 1)
     mappe = os.path.join(ROD, sti.strip("/"))
     if sti == "/":
         filsti = os.path.join(ROD, "index.html")
@@ -200,6 +206,11 @@ def _fjern_dobbelt_maerke(html):
                           + re.escape(dele[0]) + r"\s+(?=[0-9A-ZÆØÅa-zæøå])",
                           lambda m: m.group(1) + m.group(2) + m.group(3) + m.group(4), html)
     return html
+
+def _tynd_side(sti):
+    return ((sti.startswith("/driftsstatus/") and sti != "/driftsstatus/")
+            or re.fullmatch(r"/guides/side-\d+/", sti) is not None)
+
 
 def sidst_aendret(sti):
     """Hvornår sidens indhold sidst ændrede sig — ikke dagens dato.
@@ -11632,6 +11643,8 @@ def ryd_forældede():
 def byg_sitemap():
     poster = ""
     for sti, pri, hyp, dato in SIDER:
+        if _tynd_side(sti):
+            continue  # noindex-sider hører ikke i sitemappet
         poster += (f"  <url><loc>{DOMAENE}{sti}</loc><lastmod>{dato}</lastmod>"
                    f"<changefreq>{hyp}</changefreq><priority>{pri}</priority></url>\n")
     xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
