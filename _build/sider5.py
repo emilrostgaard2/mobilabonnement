@@ -312,10 +312,11 @@ fleste tilfælde vinder de separate abonnementer.</p>
 
 <div class="tip">
 <h3>Et eksempel</h3>
-<p>To voksne med 30-50 GB og to børn med 5-10 GB. Vælger du separate abonnementer fra den
-billige ende, lander I typisk på 200-280 kr. samlet om måneden. En familiepakke med
-tilsvarende data hos en premiumudbyder ligger ofte over 500 kr. Forskellen er 3.000 kr. om
-året — for den samme dækning, fordi begge kører på et af landets tre net.</p>
+<p>To voksne med mindst 30 GB og to børn med 5-10 GB. Vælger du de billigste separate
+abonnementer i vores sammenligning, koster det {D['familie_sum']} kr. samlet om måneden i snit
+det første år (pr. {D['opdateret']}). Læg det ved siden af jeres nuværende regning — især hvis
+I har en familiepakke hos et af de dyrere selskaber. Dækningen afhænger af nettet, ikke af prisen:
+alle selskaber kører på et af landets tre mobilnet.</p>
 </div>
 
 <h2>Hvornår giver en familiepakke alligevel mening?</h2>

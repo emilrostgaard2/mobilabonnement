@@ -107,6 +107,10 @@ OPDATERET_GLOBAL = ""
 
 # Uden en versionsnøgle ville browsere holde fast i den gamle CSS og JS i et år,
 # fordi .htaccess sætter Cache-Control: immutable. Nøglen skifter, når filen gør.
+# Skrifterne ligger på vores egen server. Google Fonts sendte hver besøgendes
+# IP-adresse til Google (GDPR) og kostede to ekstra forbindelser.
+SKRIFTER = "@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:200 800;font-display:swap;src:url(/assets/fonts/bricolage-grotesque.woff2) format('woff2-variations'),url(/assets/fonts/bricolage-grotesque.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(/assets/fonts/inter-400.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url(/assets/fonts/inter-500.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(/assets/fonts/inter-600.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url(/assets/fonts/inter-700.woff2) format('woff2')}"
+
 def _filversion(relativ_sti):
     import hashlib
     import os as _os
@@ -361,8 +365,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <link rel="alternate" hreflang="x-default" href="{kanonisk}">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
 <meta name="author" content="{e(FORFATTER['navn'])}">
-<meta name="twitter:label1" content="Estimeret læsetid">
-<meta name="twitter:data1" content="{minutter} minutter">
+{"" if sti == "/" else f'<meta name="twitter:label1" content="Estimeret læsetid"><meta name="twitter:data1" content="{minutter} minutter">'}
 <meta property="og:image:width" content="{og_billede[1] if og_billede else 1200}">
 <meta property="og:image:height" content="{og_billede[2] if og_billede else 630}">
 <meta name="geo.region" content="DK">
@@ -372,7 +375,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <meta property="article:modified_time" content="{opdateret_iso}">
 <meta name="rating" content="general">
 <meta name="geo.placename" content="Aarhus, Danmark">
-<meta property="og:type" content="website">
+<meta property="og:type" content="{"website" if sti in ("/", "/404.html") else "article"}">
 <meta property="og:locale" content="da_DK">
 <meta property="og:site_name" content="{SITENAVN}">
 <meta property="og:title" content="{e(titel)}">
@@ -386,14 +389,8 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0B1026">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Inter:wght@400;500;600;700&display=swap">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <script>document.documentElement.className+=" js";</script>
-<style>{kritisk_css(sti)}</style>
+<style>{SKRIFTER}{kritisk_css(sti)}</style>
 <link rel="preload" href="/assets/css/telemobil.min.css?v={CSS_V}" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="/assets/css/telemobil.min.css?v={CSS_V}"></noscript>
 {ekstra_hoved}
@@ -576,12 +573,12 @@ def afsloering(kort=False):
     if kort:
         return ('<p class="afsloering"><strong>Sådan tjener vi penge:</strong> Telemobil '
                 'modtager provision, når du bestiller via vores links. Det påvirker ikke '
-                'rækkefølgen i tabellerne, som altid sorteres efter pris. '
+                'rækkefølgen i tabellerne, som sorteres efter den metode, der står over tabellen — aldrig efter provision. '
                 '<a href="/saadan-tjener-vi-penge/">Læs mere</a>.</p>')
     return ('<p class="afsloering"><strong>Annoncørinformation:</strong> Telemobil er gratis at '
             'bruge. Vi modtager provision fra udvalgte udbydere, når du klikker videre og '
             'bestiller. Det koster dig ikke ekstra, og det ændrer ikke sorteringen i vores '
-            'tabeller, som altid er efter pris. Udbydere kan ikke betale sig til en bedre '
+            'tabeller, som aldrig sker efter provision. Udbydere kan ikke betale sig til en bedre '
             'placering eller en bedre omtale. <a href="/saadan-tjener-vi-penge/">Se hele '
             'forretningsmodellen</a>.</p>')
 
@@ -712,6 +709,12 @@ def stjerner(u, *, kompakt=False):
     score, antal, hentet = tp.get("score"), tp.get("antal"), tp.get("hentet")
     if not score:
         return ""
+    try:
+        from datetime import date as _d
+        _h = _d.fromisoformat(hentet)
+        hentet = f"{_h.day}. {('januar februar marts april maj juni juli august september oktober november december').split()[_h.month - 1]} {_h.year}"
+    except (TypeError, ValueError):
+        pass
     pct = max(0, min(100, round(score / 5 * 100)))
     tal = f"{score:.1f}".replace(".", ",")
     graf = (f'<span class="tp-stjerner" role="img" aria-label="{tal} af 5 stjerner">'
@@ -732,8 +735,10 @@ def stjerner(u, *, kompakt=False):
 def _kortnavn(a, u):
     """'Oister – Oister 12 GB' → '12 GB · Fri tale'. Selskabet står i logoet."""
     n = " ".join(a["navn"].split())
-    if n.lower().startswith(u["navn"].lower()):
-        n = n[len(u["navn"]):].strip(" –-·")
+    for praefiks in (u["navn"], u["navn"].split()[0]):
+        if n.lower().startswith(praefiks.lower() + " ") or n.lower() == praefiks.lower():
+            n = n[len(praefiks):].strip(" –-·")
+            break
     if not n:
         n = gb_tekst(a["data_gb"])
     if "tale" in n.lower():
@@ -781,7 +786,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
     _eu = ("—" if a["data_gb"] == 0 else "Fri" if a.get("eu_gb", 0) >= 9999
            else "Ingen" if not a.get("eu_gb") else f'{a["eu_gb"]} GB')
     stats = [
-        (gb_tekst(a["data_gb"]), "data i Danmark"),
+        (gb_tekst(a["data_gb"]), "data i DK"),
         ("Fri" if a["tale"] == "fri" else e(a["tale"]), "tale"),
         (_eu, "EU-data"),
         ("Ingen" if a["binding"] == 0 else f'{a["binding"]} mdr.', "binding"),
@@ -837,16 +842,17 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
         prisblok = ('<div class="pk-tal"><b>0</b><span>kr.</span></div>'
                     '<div class="pk-under">+ takst pr. minut og sms</div>')
     elif intro:
-        prisblok = (f'<div class="pk-tal"><b>{kr(a["intro_pris"])}</b><span>kr.</span></div>'
+        prisblok = (f'<div class="pk-tal"><b>{kr(a["intro_pris"])}</b><span>kr./md.</span></div>'
                     f'<div class="pk-under">Herefter {kr(a["pris"])} kr./md.'
                     f'{f" · snit {kr(g)} kr./md. første år" if g is not None else ""}</div>')
     else:
-        prisblok = (f'<div class="pk-tal"><b>{kr(a["pris"])}</b><span>kr.</span></div>'
-                    f'<div class="pk-under">{kr(aar)} kr. samlet på 12 mdr.</div>')
+        prisblok = (f'<div class="pk-tal"><b>{kr(a["pris"])}</b><span>kr./md.</span></div>'
+                    f'<div class="pk-under">Fast pris'
+                    f'{f" · snit {kr(g)} kr./md. første år" if g is not None else ""}</div>')
 
     spar = ""
     if gnsnit_aar and not forbrug and aar and aar < gnsnit_aar:
-        spar = f'<div class="pk-spar">{kr((gnsnit_aar - aar) / 12)} kr./md. under snittet</div>'
+        spar = f'<div class="pk-spar">{kr((gnsnit_aar - aar) / 12)} kr./md. under listens gennemsnit</div>'
 
     # ---- Filterflag ------------------------------------------------------
     ekstra = []
@@ -924,7 +930,26 @@ def _drop(navn, noegle, valg, ikon=""):
     </div>"""
 
 
-def filterbar(abonnementer, udbydere_map, forvalg=None):
+def _find_orden(abonnementer):
+    """Hvilken sortering listen faktisk har fra serveren — så sorteringsfeltet
+    aldrig påstår "Pris: lav til høj" om en liste, der er sorteret efter noget andet."""
+    b = [a for a in abonnementer if a["pris"] > 0]
+    if len(b) < 2:
+        return "pris"
+    def stigende(f):
+        v = [f(a) for a in b]
+        return all(x <= y + 1e-9 for x, y in zip(v, v[1:]))
+    vist = lambda a: a["intro_pris"] if (a.get("intro_pris") is not None and a.get("intro_mdr")) else a["pris"]
+    if stigende(lambda a: (gns12(a) or 9e9)):
+        return "aar"
+    if stigende(vist):
+        return "pris"
+    if SCORETAL and stigende(lambda a: -SCORETAL(a)):
+        return "score"
+    return "std"
+
+
+def filterbar(abonnementer, udbydere_map, forvalg=None, orden="pris"):
     """Kompakt filterlinje med foldemenuer — samme højde som én knap."""
     selskaber, net = {}, {}
     for a in abonnementer:
@@ -955,11 +980,12 @@ def filterbar(abonnementer, udbydere_map, forvalg=None):
     <div class="fb-grp fb-sortgrp">
       <label class="visuelt-skjult" for="fb-sorter">Sortér efter</label>
       <select id="fb-sorter" class="fb-sorter" data-sorter>
-        <option value="pris">Pris: lav til høj</option>
-        <option value="aar">Gns. 12 mdr.: lav til høj</option>
+        {'<option value="std" selected>Sidens rækkefølge</option>' if orden == "std" else ""}
+        <option value="aar"{" selected" if orden == "aar" else ""}>Billigst over 12 mdr.</option>
+        <option value="pris"{" selected" if orden == "pris" else ""}>Laveste startpris</option>
         <option value="prgb">Pris pr. GB: lav til høj</option>
         <option value="gb">Mest data først</option>
-        <option value="score">Telemobil-score: høj til lav</option>
+        <option value="score"{" selected" if orden == "score" else ""}>Telemobil-score: høj til lav</option>
         <option value="tp">Bedst bedømt først</option>
       </select>
     </div>
@@ -985,14 +1011,16 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     gnsnit_aar = (sum(betalte) / len(betalte) * 12) if betalte else None
 
     dyn = beregn_maerker(abonnementer)
+    orden = _find_orden(abonnementer)
     kort = ""
     for i, a in enumerate(abonnementer):
         u = udbydere_map[a["udbyder"]]
         r = prisrække(a, u, billigst_pr_gb=(a["id"] == billigst_id),
                       gnsnit_aar=gnsnit_aar, dyn=dyn,
                       score=SCOREMAERKAT(a) if SCOREMAERKAT else "")
+        r = r.replace('<article class="plan', f'<article data-i="{i}" class="plan', 1)
         if vis and i >= vis:
-            r = r.replace('<article class="plan', '<article hidden class="plan', 1)
+            r = r.replace('<article data-i', '<article hidden data-i', 1)
         kort += r
 
     resten = max(0, len(abonnementer) - vis) if vis else 0
@@ -1000,10 +1028,10 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     if resten:
         visflere = (f'<div class="vis-flere">'
                     f'<button type="button" class="knap knap-linje" data-vis-flere>'
-                    f'Vis {min(10, resten)} abonnementer mere</button>'
-                    f'<small data-resterende>{resten} abonnementer tilbage</small></div>')
+                    f'Vis {min(10, resten)} {"abonnement" if min(10, resten) == 1 else "abonnementer"} mere</button>'
+                    f'<small data-resterende>{resten} {"abonnement" if resten == 1 else "abonnementer"} tilbage</small></div>')
 
-    filterhtml = filterbar(abonnementer, udbydere_map, forvalg) if filtre else ""
+    filterhtml = filterbar(abonnementer, udbydere_map, forvalg, orden) if filtre else ""
 
     return f"""<section class="sektion baand" id="{id_attr}">
   <div class="sektion-hoved afslør">
@@ -1014,12 +1042,15 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     </div>
     <p class="opdateret-stribe">
       <span class="op-prik" aria-hidden="true"></span>
-      <span><strong>Opdateret {e(opdateret)}</strong> · {len(abonnementer)} abonnementer
+      <span><strong>Opdateret {e(opdateret)}</strong> · {len(abonnementer)} {"abonnement" if len(abonnementer) == 1 else "abonnementer"}
       hentet automatisk fra udbydernes datafeed</span>
     </p>
   </div>
   {filterhtml}
   <div class="listeramme afslør">
+    <p class="liste-afsloering"><strong>Reklamelinks:</strong> Vi får provision, når du bestiller via
+    knapperne. Det koster ikke ekstra og påvirker aldrig rækkefølgen.
+    <a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></p>
     <div class="planliste">{kort}</div>
     <p class="pk-tom" data-tom hidden>Ingen abonnementer matcher filtrene.
       <button type="button" class="knap knap-linje knap-lille" data-nulstil>Nulstil filtre</button></p>
@@ -1027,7 +1058,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     <div class="listefod">
       <span>Klik <strong>Se detaljer</strong> for EU-data, pris pr. GB og den reelle
       12-måneders pris, hvor intropris, normalpris og oprettelse regnes sammen.</span>
-      <span>Kilde: udbydernes egne prislister</span>
+      <span>Kilde: udbydernes egne datafeeds</span>
     </div>
   </div>
   {afsloering(kort=True)}

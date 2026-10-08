@@ -53,14 +53,21 @@
   var burger = document.querySelector(".burger");
   var nav = document.querySelector(".nav");
   if (burger && nav) {
-    burger.addEventListener("click", function () {
-      var aaben = nav.classList.toggle("aaben");
+    var saetMenu = function (aaben) {
+      nav.classList.toggle("aaben", aaben);
       burger.setAttribute("aria-expanded", aaben ? "true" : "false");
+      burger.setAttribute("aria-label", aaben ? "Luk menu" : "Åbn menu");
+    };
+    burger.addEventListener("click", function () {
+      saetMenu(!nav.classList.contains("aaben"));
     });
     nav.addEventListener("click", function (e) {
-      if (e.target.tagName === "A") {
-        nav.classList.remove("aaben");
-        burger.setAttribute("aria-expanded", "false");
+      if (e.target.tagName === "A") saetMenu(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && nav.classList.contains("aaben")) {
+        saetMenu(false);
+        burger.focus();
       }
     });
   }
@@ -251,6 +258,7 @@
     }
 
     function sorter(noegle) {
+      if (noegle === "std") noegle = "i";
       var faldende = noegle === "gb" || noegle === "tp" || noegle === "score";
       planer.sort(function (a, b) {
         var va = tal(a, noegle), vb = tal(b, noegle);
@@ -393,6 +401,11 @@
       } catch (e) { /* et ugyldigt forvalg må ikke vælte listen */ }
     }
 
+    // Listen skal altid stå i den rækkefølge, sorteringsfeltet viser
+    if (bar) {
+      var sv0 = bar.querySelector("[data-sorter]");
+      if (sv0) sorter(sv0.value);
+    }
     opdater();
   })();
 
@@ -710,7 +723,7 @@
         '</div>' +
         '<div class="cb-knapper">' +
           '<button type="button" class="knap knap-linje" data-cb="noedvendige">Kun nødvendige</button>' +
-          '<button type="button" class="knap knap-primaer" data-cb="alle">Tillad alle</button>' +
+          '<button type="button" class="knap knap-linje" data-cb="alle">Tillad alle</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(b);
@@ -985,6 +998,33 @@
     var kunTilbud = false;
     var valgt = { fart: [], tek: [], pris: [], binding: [], slug: [], ekstra: [] };
 
+    /* Foldemenuerne skal åbnes her — mobilmotoren springer bredbåndslisten over */
+    function lukBB(undtagen) {
+      if (!bar) return;
+      Array.prototype.forEach.call(bar.querySelectorAll(".fb-grp"), function (g) {
+        if (g === undtagen) return;
+        var k = g.querySelector(".fb-knap"), m = g.querySelector(".fb-menu");
+        if (k) k.setAttribute("aria-expanded", "false");
+        if (m) m.hidden = true;
+      });
+    }
+    if (bar) {
+      Array.prototype.forEach.call(bar.querySelectorAll(".fb-grp[data-gruppe]"), function (grp) {
+        var knap = grp.querySelector(".fb-knap"), menu = grp.querySelector(".fb-menu");
+        if (!knap || !menu) return;
+        knap.addEventListener("click", function (ev) {
+          ev.stopPropagation();
+          var aaben = knap.getAttribute("aria-expanded") === "true";
+          lukBB(grp);
+          knap.setAttribute("aria-expanded", aaben ? "false" : "true");
+          menu.hidden = aaben;
+        });
+        menu.addEventListener("click", function (ev) { ev.stopPropagation(); });
+      });
+      document.addEventListener("click", function () { lukBB(null); });
+      document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") lukBB(null); });
+    }
+
     function tal(p, n) { return parseFloat(p.getAttribute("data-" + n)) || 0; }
 
     function iPris(p, v) {
@@ -1132,6 +1172,7 @@
       });
     }
 
+    if (sortVaelger) sorter(sortVaelger.value);
     opdater();
   })();
 
@@ -1220,8 +1261,8 @@
       '<div class="sml-rul"><table class="sml-tabel"><thead><tr><th></th>' +
       k.map(function (x) { return "<th>" + x.logo + "<b>" + esc(x.navn) + "</b></th>"; }).join("") +
       "</tr></thead><tbody>" +
-      r("Pris pr. md.", function (x) { return "<strong class=\"sml-pris\">" + esc(x.pris) + " kr.</strong>"; }) +
-      r("Prisen", function (x) { return esc(x.under); }) +
+      r("Startpris pr. md.", function (x) { return "<strong class=\"sml-pris\">" + esc(x.pris) + " kr.</strong>"; }) +
+      r("Herefter / snit år 1", function (x) { return esc(x.under); }) +
       noegler.map(function (n) {
         return r(esc(n.charAt(0).toUpperCase() + n.slice(1)), function (x) { return esc(x.stats[n] || "—"); });
       }).join("") +

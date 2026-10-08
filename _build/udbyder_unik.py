@@ -10,7 +10,7 @@ UNIK = {
         "h2_hvem": "Er CBB Mobil det rigtige valg for dig?",
         "h2_sammenlign": "CBB Mobil mod de andre discountselskaber",
         "h2_skift": "Fra dit nuværende selskab til CBB Mobil",
-        "net_note": ("CBB Mobil er ejet af Telenor og kører på Telenors eget net. Det er "
+        "net_note": ("CBB Mobil er ejet af Telenor og kører på TN-Network, som Telenor ejer sammen med Norlys. Det er "
                      "en anden situation end de fleste discountselskaber, fordi der ikke er "
                      "tale om en lejeaftale mellem to uafhængige parter, men om et prisbrand "
                      "inden for samme koncern. I praksis betyder det, at CBB-kunder ikke "
@@ -55,7 +55,7 @@ UNIK = {
         "h2_hvem": "Hvornår er YouSee pengene værd?",
         "h2_sammenlign": "YouSee mod billigere abonnementer på samme net",
         "h2_skift": "Sådan bliver du YouSee-kunde",
-        "net_note": ("YouSee er en del af Nuuday og kører på TDC NET, som gennem en årrække "
+        "net_note": ("YouSee er en del af TDC Brands (tidligere Nuuday) og kører på TDC NET, som gennem en årrække "
                      "har klaret sig bedst i uafhængige målinger af dansk netkvalitet. Nettet "
                      "er det mest finmaskede i landet, og forskellen mærkes særligt i "
                      "landdistrikter, sommerhusområder, langs jernbanen og indendørs i ældre "
@@ -97,7 +97,7 @@ UNIK = {
         "h2_hvem": "Hvem får noget ud af Telmore Play?",
         "h2_sammenlign": "Telmore mod et billigt abonnement plus egne streamingtjenester",
         "h2_skift": "Sådan skifter du til Telmore",
-        "net_note": ("Telmore er som YouSee en del af Nuuday og kører på TDC NET. Dækningen "
+        "net_note": ("Telmore er som YouSee en del af TDC Brands og kører på TDC NET. Dækningen "
                      "er derfor identisk med YouSees — det er præcis det samme net og de "
                      "samme master. Vælger du mellem Telmore og YouSee, vælger du altså ikke "
                      "mellem to netværk, men mellem to produktpakker og to kundeserviceoplevelser."),

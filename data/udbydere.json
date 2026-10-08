@@ -42,8 +42,8 @@
    ],
    "trustpilot": {
     "score": 4.5,
-    "antal": 67000,
-    "hentet": "2026-06-11"
+    "antal": 67894,
+    "hentet": "2026-10-08"
    },
    "ejer_note": "CBB Mobil ejes af Telenor og kører på TN-Network, det fælles mobilnet Telenor og Norlys ejer 50/50.",
    "kundeservice": {
@@ -62,12 +62,12 @@
    "navn": "YouSee",
    "logo": "yousee.webp",
    "netvaerk": "TDC NET",
-   "ejer": "Nuuday (TDC Group)",
+   "ejer": "TDC Brands (TDC Group)",
    "hjemmeside": "https://yousee.dk",
    "grundlagt": 2007,
    "tagline": "Danmarks bredeste dækning — hvis du vil betale for den",
    "kort": "YouSee er premium-valget. Landets mest udbyggede net, musik og streaming inkluderet i flere abonnementer, og fysiske butikker du kan gå ind i.",
-   "anmeldelse": "YouSee er det abonnement, folk vælger, når dækning betyder mere end pris. Selskabet er en del af Nuuday og kører på TDC NET, som gennem årtier er blevet udbygget til at være det mest finmaskede mobilnet i Danmark. I byerne mærker du sjældent forskel på de tre net. Det gør du derimod på Vestjyllands sommerhusområder, i toget over Storebælt, på Bornholm og i kældre og parkeringshuse, hvor TDC NET typisk har en fordel.\n\nPrismæssigt ligger YouSee i den dyre ende, og det er der ingen grund til at pakke ind. Til gengæld får du noget for pengene ud over dækningen. Flere abonnementer inkluderer musikstreaming, og YouSee-kunder får adgang til en række fordele, der har reel værdi, hvis du bruger dem. Det er netop pointen: fordelene er kun penge værd, hvis de erstatter noget, du ellers betaler for. Gør de ikke det, betaler du for luft.\n\nYouSee har desuden noget, ingen discountudbyder kan matche — fysiske butikker. Går din telefon i stykker, eller kan du ikke få et eSIM til at virke, kan du gå ind ad en dør og få hjælp af et menneske. For teknisk usikre brugere og for ældre er det ofte den enkeltfaktor, der betyder mest, og den er svær at værdisætte i en pristabel.\n\nUlempen ud over prisen er, at YouSee historisk har haft en tendens til at prisregulere. Har du haft samme abonnement i tre år uden at kigge på det, er der god sandsynlighed for, at du betaler mere end nye kunder for det samme. Tjek din regning mindst en gang om året.",
+   "anmeldelse": "YouSee er det abonnement, folk vælger, når dækning betyder mere end pris. Selskabet er en del af TDC Brands (tidligere Nuuday) og kører på TDC NET, som gennem årtier er blevet udbygget til at være det mest finmaskede mobilnet i Danmark. I byerne mærker du sjældent forskel på de tre net. Det gør du derimod på Vestjyllands sommerhusområder, i toget over Storebælt, på Bornholm og i kældre og parkeringshuse, hvor TDC NET typisk har en fordel.\n\nPrismæssigt ligger YouSee i den dyre ende, og det er der ingen grund til at pakke ind. Til gengæld får du noget for pengene ud over dækningen. Flere abonnementer inkluderer musikstreaming, og YouSee-kunder får adgang til en række fordele, der har reel værdi, hvis du bruger dem. Det er netop pointen: fordelene er kun penge værd, hvis de erstatter noget, du ellers betaler for. Gør de ikke det, betaler du for luft.\n\nYouSee har desuden noget, ingen discountudbyder kan matche — fysiske butikker. Går din telefon i stykker, eller kan du ikke få et eSIM til at virke, kan du gå ind ad en dør og få hjælp af et menneske. For teknisk usikre brugere og for ældre er det ofte den enkeltfaktor, der betyder mest, og den er svær at værdisætte i en pristabel.\n\nUlempen ud over prisen er, at YouSee historisk har haft en tendens til at prisregulere. Har du haft samme abonnement i tre år uden at kigge på det, er der god sandsynlighed for, at du betaler mere end nye kunder for det samme. Tjek din regning mindst en gang om året.",
    "fordele": [
     "Danmarks mest udbyggede mobilnet via TDC NET",
     "Streaming og musik inkluderet i flere abonnementer",
@@ -93,15 +93,15 @@
     },
     {
      "sp": "Hvem ejer YouSee?",
-     "sv": "YouSee er en del af Nuuday, som også står bag Telmore. Netværket drives af TDC NET."
+     "sv": "YouSee er en del af TDC Brands (tidligere Nuuday), som også står bag Telmore. Netværket drives af TDC NET."
     }
    ],
    "trustpilot": {
-    "score": 2.4,
-    "antal": 69406,
-    "hentet": "2026-07-14"
+    "score": 2.5,
+    "antal": 70462,
+    "hentet": "2026-10-08"
    },
-   "ejer_note": "YouSee er en del af Nuuday, TDC Groups kundevendte selskab. Samme koncern ejer Telmore og eesy — de tre kører alle på TDC NET.",
+   "ejer_note": "YouSee er en del af TDC Brands (indtil april 2026 Nuuday), TDC Groups kundevendte selskab. Samme koncern ejer Telmore og eesy — de tre kører alle på TDC NET.",
    "kundeservice": {
     "tlf": "70 70 40 40",
     "tider": null,
@@ -118,12 +118,12 @@
    "navn": "Telmore",
    "logo": "telmore.webp",
    "netvaerk": "TDC NET",
-   "ejer": "Nuuday (TDC Group)",
+   "ejer": "TDC Brands (TDC Group)",
    "hjemmeside": "https://telmore.dk",
    "grundlagt": 2000,
    "tagline": "Streaming samlet i mobilregningen",
    "kort": "Telmore kører på TDC NET og har bygget hele sin identitet på at pakke streamingtjenester ind i abonnementet. Regnestykket afhænger helt af, hvad du allerede betaler for.",
-   "anmeldelse": "Telmore er det mest interessante abonnement på det danske marked at regne på, fordi prisen sjældent kan sammenlignes direkte med andres. Selskabet er som YouSee en del af Nuuday og kører på TDC NET, så dækningen er i topklasse. Men den egentlige forskel ligger i Telmore Play-konceptet, hvor streamingtjenester indgår i abonnementsprisen.\n\nRegnestykket er enkelt og bør laves før bestilling, ikke efter. Læg sammen, hvad du i dag betaler for de tjenester, der indgår. Betaler du allerede for tre af dem, og indgår de i pakken, kan et Telmore-abonnement til en tilsyneladende høj månedspris reelt være billigere end et discountabonnement plus separate abonnementer. Betaler du derimod for streamingtjenester, du ikke bruger, eller deler du familieabonnementer med andre, forsvinder fordelen, og så betaler du mest for dækning.\n\nDet er værd at være opmærksom på, at pakker og indhold ændrer sig. En streamingtjeneste kan ryge ud af pakken ved en aftaleudløb, og så står du med et abonnement, du valgte af én grund, som ikke længere gælder. Sæt en påmindelse i kalenderen en gang om året og genberegn.\n\nTelmore er som resten af Nuuday-familien ikke billigst på rå data. Vil du have 50 GB og intet andet, findes der abonnementer til under det halve. Det er ikke en kritik af Telmore — det er bare to forskellige produkter, der tilfældigvis begge hedder mobilabonnement.",
+   "anmeldelse": "Telmore er det mest interessante abonnement på det danske marked at regne på, fordi prisen sjældent kan sammenlignes direkte med andres. Selskabet er som YouSee en del af TDC Brands og kører på TDC NET, så dækningen er i topklasse. Men den egentlige forskel ligger i Telmore Play-konceptet, hvor streamingtjenester indgår i abonnementsprisen.\n\nRegnestykket er enkelt og bør laves før bestilling, ikke efter. Læg sammen, hvad du i dag betaler for de tjenester, der indgår. Betaler du allerede for tre af dem, og indgår de i pakken, kan et Telmore-abonnement til en tilsyneladende høj månedspris reelt være billigere end et discountabonnement plus separate abonnementer. Betaler du derimod for streamingtjenester, du ikke bruger, eller deler du familieabonnementer med andre, forsvinder fordelen, og så betaler du mest for dækning.\n\nDet er værd at være opmærksom på, at pakker og indhold ændrer sig. En streamingtjeneste kan ryge ud af pakken ved en aftaleudløb, og så står du med et abonnement, du valgte af én grund, som ikke længere gælder. Sæt en påmindelse i kalenderen en gang om året og genberegn.\n\nTelmore er som resten af TDC Brands-familien ikke billigst på rå data. Vil du have 50 GB og intet andet, findes der abonnementer til under det halve. Det er ikke en kritik af Telmore — det er bare to forskellige produkter, der tilfældigvis begge hedder mobilabonnement.",
    "fordele": [
     "Kører på TDC NET med meget stærk dækning",
     "Streamingtjenester inkluderet kan give reel besparelse",
@@ -148,15 +148,15 @@
     },
     {
      "sp": "Er Telmore og YouSee det samme?",
-     "sv": "De er søsterselskaber under Nuuday og deler netværk, men de er separate brands med forskellige abonnementer, priser og kundeservice."
+     "sv": "De er søsterselskaber under TDC Brands og deler netværk, men de er separate brands med forskellige abonnementer, priser og kundeservice."
     }
    ],
    "trustpilot": {
-    "score": 4.1,
-    "antal": 61354,
-    "hentet": "2026-08-01"
+    "score": 4.0,
+    "antal": 63061,
+    "hentet": "2026-10-08"
    },
-   "ejer_note": "Telmore blev grundlagt i 2000 som Danmarks første rent onlinebaserede mobilselskab og opkøbt af TDC i 2003. I dag ejet af Nuuday sammen med YouSee og eesy.",
+   "ejer_note": "Telmore blev grundlagt i 2000 som Danmarks første rent onlinebaserede mobilselskab og helt overtaget af TDC i januar 2004. I dag ejet af TDC Brands (tidligere Nuuday) sammen med YouSee og eesy.",
    "kundeservice": {
     "tlf": "70 21 89 00",
     "tider": "Mandag–fredag kl. 9–16. Lukket weekend og helligdage",
@@ -208,8 +208,8 @@
    ],
    "trustpilot": {
     "score": 4.1,
-    "antal": 29000,
-    "hentet": "2026-06-11"
+    "antal": 28999,
+    "hentet": "2026-10-08"
    },
    "ejer_note": "Oister ejes af Hi3G, samme selskab som står bag 3, og kører på 3's net.",
    "kundeservice": {
@@ -263,8 +263,8 @@
    ],
    "trustpilot": {
     "score": 4.9,
-    "antal": 15000,
-    "hentet": "2026-06-11"
+    "antal": 16017,
+    "hentet": "2026-10-08"
    },
    "ejer_note": null,
    "kundeservice": {
@@ -318,8 +318,8 @@
    ],
    "trustpilot": {
     "score": 4.3,
-    "antal": 959,
-    "hentet": "2026-06-11"
+    "antal": 967,
+    "hentet": "2026-10-08"
    },
    "ejer_note": null,
    "kundeservice": {
@@ -373,8 +373,8 @@
    ],
    "trustpilot": {
     "score": 4.7,
-    "antal": 3979,
-    "hentet": "2026-07-01"
+    "antal": 4105,
+    "hentet": "2026-10-08"
    },
    "ejer_note": null,
    "kundeservice": {
@@ -427,9 +427,9 @@
     }
    ],
    "trustpilot": {
-    "score": 2.5,
-    "antal": 2000,
-    "hentet": "2025-10-06"
+    "score": 2.7,
+    "antal": 2608,
+    "hentet": "2026-10-08"
    },
    "ejer_note": null,
    "kundeservice": {
@@ -449,7 +449,7 @@
    "navn": "eesy",
    "logo": "eesy.webp",
    "netvaerk": "TDC NET",
-   "ejer": "Nuuday (TDC Group)",
+   "ejer": "TDC Brands (TDC Group)",
    "hjemmeside": "https://eesy.dk",
    "grundlagt": 2018,
    "tagline": "Digitalt først, billigt hele vejen",
@@ -483,11 +483,11 @@
     }
    ],
    "trustpilot": {
-    "score": 4.0,
-    "antal": 9000,
-    "hentet": "2026-07-01"
+    "score": 4.1,
+    "antal": 9581,
+    "hentet": "2026-10-08"
    },
-   "ejer_note": "eesy blev stiftet af Nuuday i september 2020 som koncernens lavprisselskab. Samme ejer som YouSee og Telmore, samme net.",
+   "ejer_note": "eesy blev stiftet af Nuuday (i dag TDC Brands) i september 2020 som koncernens lavprisselskab. Samme ejer som YouSee og Telmore, samme net.",
    "kundeservice": {
     "tlf": null,
     "tider": null,
@@ -540,8 +540,8 @@
    ],
    "trustpilot": {
     "score": 4.1,
-    "antal": 2000,
-    "hentet": "2026-06-11"
+    "antal": 2526,
+    "hentet": "2026-10-08"
    },
    "ejer_note": null,
    "kundeservice": {

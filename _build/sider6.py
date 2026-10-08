@@ -305,8 +305,8 @@ def koeb_telefon(D, t):
 
 <div class="udtag">
 <p><strong>Kort svar:</strong> Køb telefonen kontant eller brugt, og abonnementet separat.
-Et samlet tilbud binder dig typisk i 24-36 måneder, og restgælden skal indfries, hvis du vil
-skifte. Regner du hele perioden igennem, er kontantkøb plus et discountabonnement næsten
+Afbetalingen på et samlet tilbud løber typisk 24-36 måneder. Abonnementet må højst binde dig
+i 6 måneder, men telefonen skal betales færdig, også hvis du skifter. Regner du hele perioden igennem, er kontantkøb plus et discountabonnement næsten
 altid billigere.</p>
 </div>
 

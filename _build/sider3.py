@@ -233,8 +233,8 @@ def telefon(D, t):
 
 <div class="udtag">
 <p><strong>Kort svar:</strong> Køb telefonen og abonnementet hver for sig. Et samlet tilbud
-ser billigere ud, men binder dig i typisk 24–36 måneder til ét selskab, og restgælden skal
-indfries, hvis du vil skifte. Regner du hele perioden igennem, er kontantkøb plus et
+ser billigere ud, men afbetalingen løber typisk 24–36 måneder, og telefonen skal betales
+færdig, også hvis du skifter selskab. Regner du hele perioden igennem, er kontantkøb plus et
 discountabonnement næsten altid billigere. Abonnementer uden binding starter ved
 {kr(D['min_pris'])} kr. om måneden.</p>
 </div>

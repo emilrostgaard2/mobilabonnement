@@ -139,7 +139,7 @@ def main():
         beskrivelser[p.beskrivelse] = url
 
         # Kanonisk
-        if not p.kanonisk:
+        if not p.kanonisk and not url.endswith("404.html"):
             fejl.append(f"{url}: mangler canonical")
 
         # H1
@@ -165,7 +165,7 @@ def main():
             if href.startswith(("http", "mailto:", "tel:", "#")):
                 if href.startswith("http") and "telemobil.dk" not in href:
                     rel = a.get("rel", "")
-                    if "nofollow" not in rel and "sponsored" not in rel:
+                    if "nofollow" not in rel and "sponsored" not in rel and "me" not in rel.split():
                         advarsler.append(f"{url}: eksternt link uden rel-attribut: {href}")
                     # Dybe links til andres sider dør, når de omlægger deres site.
                     # Forsiden gør ikke. Stabile identifikatorer er undtaget.

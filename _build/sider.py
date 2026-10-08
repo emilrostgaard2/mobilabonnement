@@ -293,9 +293,9 @@ læses med forbehold. Folk skriver anmeldelser, når noget går galt eller går 
 godt, og sjældent når alt bare virker. En udbyder med få anmeldelser og høj score er ikke
 nødvendigvis bedre end en med mange anmeldelser og lidt lavere score.</p>
 
-<p>Vi bruger ikke anmeldelsesscorer som rangeringskriterium i vores tabeller, fordi de
-ikke er sammenlignelige på tværs af selskaber med meget forskellige kundeantal. Vi bruger
-dem som baggrundsviden, når vi skriver om det enkelte selskab.</p>
+<p>Derfor vejer anmeldelser kun 10 % i <a href="/telemobil-score/">Telemobil-scoren</a>,
+og scoren vægtes efter, hvor mange anmeldelser selskabet har. Pris, data og vilkår afgør
+resten.</p>
 
 <h2>Sådan finder du dit bedste abonnement på ti minutter</h2>
 

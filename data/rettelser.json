@@ -2,6 +2,41 @@
  "_om": "Offentlig rettelseslog. Skriv kun faktiske rettelser — dato, side og hvad der var forkert.",
  "rettelser": [
   {
+   "dato": "2026-10-08",
+   "side": "/netvaerk/",
+   "tekst": "Teknologisk Instituts netværksmåling er opdateret fra 2025 til 2026-rapporten (TDC NET 96 %, Norlys 94 %, Telenor 93 %, 3 91 %). Vi skriver nu også, at testen blev skærpet i 2026, så tallene ikke kan sammenlignes direkte med 2025."
+  },
+  {
+   "dato": "2026-10-08",
+   "side": "/udbydere/",
+   "tekst": "Fire selskabssider skrev, at nettet hed \"TT-netværket (Telenor og Telia)\". Telia Danmark blev overtaget af Norlys i april 2024, og nettet hedder TN-Network. Rettet på selskabssider, driftsstatus og ordbogen."
+  },
+  {
+   "dato": "2026-10-08",
+   "side": "/udbydere/yousee/",
+   "tekst": "Nuuday skiftede navn til TDC Brands den 8. april 2026. Ejerforholdet for YouSee, Telmore og eesy er rettet."
+  },
+  {
+   "dato": "2026-10-08",
+   "side": "/mobilabonnement-med-fri-data/",
+   "tekst": "Sitet brugte tre forskellige tal for danskernes dataforbrug uden kilde. De er erstattet af Digitaliseringsstyrelsens tal: 26,9 GB pr. abonnement om måneden i andet halvår 2024."
+  },
+  {
+   "dato": "2026-10-08",
+   "side": "/mobilabonnement-med-telefon/",
+   "tekst": "Flere sider skrev, at telefon på afbetaling \"binder dig i 24-36 måneder\". Abonnementet må højst binde en forbruger i 6 måneder; det er afbetalingen på telefonen, der løber 24-36 måneder. Teksterne er præciseret."
+  },
+  {
+   "dato": "2026-10-08",
+   "side": "/mobilabonnement-til-familie/",
+   "tekst": "Eksemplet med en familie på fire brugte faste beløb (200-280 kr. og over 500 kr.), som ikke kom fra vores data. Beløbet regnes nu ud fra de aktuelle priser."
+  },
+  {
+   "dato": "2026-10-08",
+   "side": "/udbydere/lyca-mobile/",
+   "tekst": "Trustpilot-scoren for Lyca Mobile var hentet i oktober 2025. Alle ti selskabers Trustpilot-tal er hentet igen 8. oktober 2026."
+  },
+  {
    "dato": "2026-10-01",
    "side": "/om-os/",
    "tekst": "Om os, Billigste mobilabonnement og 12-måneders-prisen skrev, at priserne kontrolleres manuelt. De hentes automatisk fra selskabernes datafeeds. Teksterne er rettet."

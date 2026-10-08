@@ -2,6 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /_build/
 Disallow: /data/
+# Rådata til adressetjekket hentes af siden selv — ikke noget at indeksere
+Disallow: /assets/adr/
 
 # Sitet er statisk og let at crawle — ingen grund til at bremse
 User-agent: Googlebot

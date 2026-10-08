@@ -108,7 +108,7 @@ nyhed er, at du slet ikke har brug for den.</p>
 
 <p>En brugt eller renoveret telefon fra et par år tilbage koster typisk halvdelen af en ny
 og fungerer fint til alt almindeligt brug. Køber du den kontant, undgår du både
-kreditvurderingen og en bindingsperiode på 24-36 måneder. Se regnestykket i vores gennemgang
+kreditvurderingen og en afbetaling, der løber 24-36 måneder. Se regnestykket i vores gennemgang
 af <a href="/mobilabonnement-med-telefon/">telefon på afbetaling</a>.</p>
 
 <h2>Dine rettigheder</h2>

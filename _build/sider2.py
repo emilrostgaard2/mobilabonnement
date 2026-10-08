@@ -284,8 +284,9 @@ opsætning.</p>
 
 <h2>Binding, telefon og den samlede regning</h2>
 
-<p>Køb ikke telefon på afbetaling sammen med barnets abonnement. Det binder jer i typisk
-24 eller 36 måneder til et selskab, og restgælden skal indfries, hvis I vil skifte. Børns
+<p>Køb ikke telefon på afbetaling sammen med barnets abonnement. Afbetalingen løber typisk
+24 eller 36 måneder, og telefonen skal betales færdig, selv om I skifter selskab efter de
+højst 6 måneders binding, loven tillader på selve abonnementet. Børns
 telefoner går i stykker, bliver væk og skal skiftes, og en bindingsperiode gør alle de
 situationer dyrere.</p>
 

@@ -2585,3 +2585,74 @@ body{font-variant-numeric:tabular-nums}
 .fod .logo-maerke i{background:#fff}
 .fod .logo-maerke i:nth-child(4){background:#2EE6A6}
 .fod .fodtitel{font-family:var(--font-brod);text-transform:none;letter-spacing:0;font-size:.92rem;font-weight:600;color:#fff}
+
+/* ==========================================================================
+   Oktober 2026: læsbarhed, trykflader og mobil-filtre
+   Målgruppen går op til 60+. Ingen tekst på kortene under ca. 11,5 px,
+   og alle knapper mindst 44 px høje på mobil (WCAG 2.5.5 / Apples HIG).
+   ========================================================================== */
+.plan .pk-stat b{font-size:.9rem}
+.plan .pk-stat span{font-size:.72rem;white-space:nowrap}
+.plan .pk-flag{font-size:.74rem}
+.plan .pk-under{font-size:.8rem}
+.plan .pk-spar{font-size:.75rem}
+.plan .pk-detaljer{font-size:.84rem;min-height:36px;padding:.3rem 0}
+.plan .pk-cta{min-height:46px;font-size:.95rem}
+.plan .pk-sml{min-height:36px;font-size:.8rem}
+.plan .pk-sml .sml-boks{width:20px;height:20px}
+.plan .pk-kilde{font-size:.7rem}
+.plan .pk-chip{font-size:.74rem}
+.liste-afsloering{margin:0 0 .7rem;font-size:.8rem;line-height:1.45;color:var(--graa)}
+.liste-afsloering a{color:inherit;text-decoration:underline}
+.burger{height:44px}
+@media (max-width:700px){
+  .plan .pk-stat b{font-size:.86rem}
+  .plan .pk-stat span{font-size:.7rem}
+  .plan .pk-cta{min-height:46px;padding:.5rem 1rem}
+  .fb-knap,.fb-sorter,.fb-toggle,.fb-nulstil{min-height:40px}
+  .hl-knapper .knap{min-height:46px}
+  /* Filtermenuen åbner som et ark fra bunden af skærmen — før blev den
+     placeret langt under skærmen og var usynlig */
+  .fb-menu{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;min-width:0;
+    max-height:70vh;overflow:auto;z-index:300;border-radius:16px 16px 0 0;
+    padding:.8rem .8rem calc(1rem + env(safe-area-inset-bottom));
+    box-shadow:0 -12px 40px rgba(11,16,38,.25)}
+  .fb-menu label{min-height:44px}
+  .fb-menu input{width:20px;height:20px}
+  /* Logoerne i hero'en fylder en hel skærm på mobil og skubber priserne
+     ned. Her bliver de til én rullebar række, så første pris kommer op. */
+  .hero-selskaber{padding:.7rem .75rem;margin-top:1rem}
+  .hero-selskaber .lg-titel{margin-bottom:.45rem;font-size:.8rem}
+  .hero-selskaber .lg-logoer{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:.4rem;
+    scrollbar-width:none;-ms-overflow-style:none}
+  .hero-selskaber .lg-logoer::-webkit-scrollbar{display:none}
+  .hero-selskaber .lg-logo{flex:0 0 auto;min-height:40px;padding:.3rem .55rem}
+  .hero-selskaber .lg-logo img{max-height:18px}
+  .hero-selskaber .lg-tillid{display:none}
+}
+@media (max-width:700px){
+  .sektion-hoved .led{font-size:1rem;line-height:1.5}
+}
+@media (max-width:700px){
+  .sml-tabel{min-width:0}
+  .sml-tabel th,.sml-tabel td{padding:.55rem .55rem;font-size:.84rem}
+  .sml-tabel tbody th{position:sticky;left:0;z-index:1;background:#fff;width:6.2rem;white-space:normal;font-size:.78rem}
+  .sml-tabel thead th:first-child{position:sticky;left:0;z-index:1}
+  .sml-tabel thead img{max-width:76px;height:18px}
+  .sml-tabel .knap{padding:.55rem .7rem;font-size:.82rem;min-height:44px}
+}
+/* Samme vægt til "Kun nødvendige" og "Tillad alle" — Datatilsynets krav om,
+   at det skal være lige så let at sige nej som ja */
+.cb-knapper .knap{background:#fff;color:var(--blaek);border:1.5px solid var(--blaek);min-height:44px}
+.cb-knapper .knap:hover{background:var(--blaek);color:#fff}
+/* Skjulte "vis flere"-bokse må ikke vises, fordi display:flex overtrumfer [hidden] */
+.vis-flere[hidden]{display:none}
+/* Prislisten er sidens vigtigste indhold: den må ikke være usynlig, mens den toner frem */
+.js .listeramme.afslør,.js .sektion-hoved.afslør{opacity:1;transform:none;transition:none}
+@media (max-width:700px){
+  /* Filterarket skal ligge over cookiebanneret (z-index 900) */
+  .fb-menu{z-index:1000}
+}
+/* Filterlinjen har z-index:20 og er dermed sin egen stablingskontekst — ellers ville
+   arket fra bunden ligge under cookiebanneret. Løft hele linjen, mens en menu er åben. */
+.filterbar:has(.fb-menu:not([hidden])){z-index:1001}

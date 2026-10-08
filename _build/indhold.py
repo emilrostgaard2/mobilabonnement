@@ -14,25 +14,18 @@ def billigste_brodtekst(d):
 <section class="sektion baand-smal artikel">
 
 <div class="udtag">
-<p><strong>Kort svar:</strong> Det billigste mobilabonnement i vores sammenligning koster
-{kr(d['min_pris'])} kr. om måneden — det er et taleabonnement uden data. Vil du have
-mobildata med, starter priserne ved {kr(d['min_pris_data'])} kr. for {d['min_data_gb']} GB
-med fri tale og fri sms uden binding. Skal du bruge over 50 GB, starter priserne omkring
-{kr(d['pris_stor'])} kr., og fri data fås fra {kr(d['pris_fri'])} kr. om måneden.
-Prisforskellen mellem billigste og dyreste abonnement med samme indhold er ofte over
-100 kr. om måneden — altså mere end 1.200 kr. om året for præcis det samme.</p>
+<p><strong>Kort svar:</strong> {d['kort_svar_billigste']}</p>
 </div>
 
 <h2>Hvad koster et mobilabonnement i Danmark i dag?</h2>
 
-<p>Det danske mobilmarked er et af Europas billigste, og det skyldes en usædvanlig hård
-konkurrence mellem tre netværksejere og et stort antal selskaber, der lejer sig ind på
-deres master. Resultatet er, at prisen for det samme produkt varierer voldsomt afhængigt
+<p>Det danske mobilmarked har hård konkurrence mellem tre netværksejere og et stort antal
+selskaber, der lejer sig ind på deres master. Resultatet er, at prisen for det samme produkt varierer voldsomt afhængigt
 af, hvilket brand der står på regningen — ikke af hvilken kvalitet du får.</p>
 
-<p>For at give et realistisk billede har vi delt markedet op i fire prisniveauer. Langt de
-fleste danskere befinder sig i de to midterste, men betaler priser fra det øverste, fordi
-de aldrig har skiftet.</p>
+<p>For at give et realistisk billede har vi delt markedet op i fire prisniveauer. Har du
+haft det samme abonnement i flere år uden at skifte, er det værd at tjekke, hvilket niveau
+du betaler for — og hvilket du har brug for.</p>
 
 <table>
 <thead><tr><th>Niveau</th><th>Pris pr. md.</th><th>Typisk indhold</th><th>Passer til</th></tr></thead>
@@ -96,7 +89,7 @@ under et minut at aktivere og er den mest oversete indstilling på hele markedet
 
 <h2>De tre netværk — og hvorfor de afgør, hvad du bør betale</h2>
 
-<p>Der findes kun tre mobilnetværk i Danmark: TDC NET, Telenor og 3. Alle andre selskaber
+<p>Der findes kun tre mobilnetværk i Danmark: TDC NET, TN-Network (Telenor og Norlys) og 3. Alle andre selskaber
 lejer sig ind hos en af dem. Det betyder, at et discountselskab bruger de samme master som
 et premiumselskab, og at spørgsmålet aldrig er, om nettet er "rigtigt" — kun hvilket net
 udbyderen lejer sig ind på, og på hvilke vilkår.</p>
@@ -190,8 +183,9 @@ dataroaming fra og bruge et lokalt eSIM i stedet.</p>
   <div class="kort">
     <h3>Pendler</h3>
     <p>Du bruger telefonen i tog og bil dagligt, hvor dækningen svinger. Her betaler
-    netværket sig: TDC NET har historisk den bedste dækning langs jernbanen. Vælg 50 GB
-    eller derover.</p>
+    netværket sig: TDC NET havde den højeste andel fejlfri oplevelse i Teknologisk
+    Instituts måling 2026, som også omfattede kørsel (målingen er bestilt af TDC NET).
+    Vælg 50 GB eller derover.</p>
   </div>
   <div class="kort">
     <h3>Senior eller let bruger</h3>
@@ -329,8 +323,9 @@ skal bare vide det på forhånd.</p>
 <div class="tip">
 <h3>Regn det efter, før du vælger fri data</h3>
 <p>Tag dit højeste dataforbrug de seneste seks måneder. Læg 30 procent til. Er tallet
-under 80 GB, er et abonnement med fast datamængde næsten altid billigere — også når du
-regner en enkelt overforbrugsmåned med. Er tallet over 120 GB, vælg fri data.</p>
+under {d['fri_bev']} GB, findes der i dag et abonnement med fast datamængde, der er billigere
+end den billigste fri data. Er tallet over, eller er mobilen husstandens eneste
+internetforbindelse, så vælg fri data.</p>
 </div>
 
 <h2>Fri data mod stort abonnement — hvad kan bedst betale sig?</h2>
@@ -525,8 +520,8 @@ billede. Tag det højeste af de tre og læg 20 procent til.</p>
 <tr><td>Under 4 GB</td><td>5–10 GB</td><td>Marginalprisen for at gå op er så lav, at bufferen er gratis tryghed</td></tr>
 <tr><td>4–12 GB</td><td>15–20 GB</td><td>Plads til en travl måned uden at skulle tænke over det</td></tr>
 <tr><td>12–25 GB</td><td>30–50 GB</td><td>Prisspringet er lille, og du undgår overforbrug helt</td></tr>
-<tr><td>25–60 GB</td><td>100 GB</td><td>Her er pris pr. GB typisk lavest på hele markedet</td></tr>
-<tr><td>Over 80 GB</td><td>Fri data</td><td>Nu bliver det billigere end at betale for overforbrug</td></tr>
+<tr><td>25 GB–[[FRI_BEV]] GB</td><td>100 GB eller mere med loft</td><td>Her er pris pr. GB typisk lavest på hele markedet</td></tr>
+<tr><td>Over [[FRI_BEV]] GB</td><td>Fri data</td><td>Over den grænse er fri data billigere end et abonnement med loft (beregnet på dagens priser)</td></tr>
 </tbody>
 </table>
 

@@ -117,10 +117,29 @@
   function vælg(x) {
     if (!x) return;
     if (x.type === "vej") {
+      // Har brugeren allerede skrevet husnummeret, bruger vi det i stedet for at spørge igen
+      var skrevet = felt.value.replace(/,.*$/, "").replace(/\b\d{4}\b.*$/, "");
+      var hm = skrevet.match(/\s(\d+\s?[A-Za-zÆØÅæøå]?)\s*$/);
+      var husnr = hm ? hm[1].replace(/\s+/g, "") : "";
       valgt = { vej: x.vej, p: x.p, k: x.k };
-      felt.value = x.vej + " ";
+      felt.value = x.vej + " " + husnr;
       felt.focus();
-      husForslag(felt.value);
+      if (!husnr) return husForslag(felt.value);
+      hent("/assets/adr/p/" + valgt.p + ".json").then(function (d) {
+        var v = d.v.filter(function (y) { return y[0] === valgt.vej; })[0];
+        var fundet = null;
+        if (v) v[1].split(" ").forEach(function (h) {
+          var i = h.lastIndexOf(":");
+          if (h.slice(0, i).toLowerCase() === husnr.toLowerCase()) fundet = [h.slice(0, i), +h.slice(i + 1)];
+        });
+        if (fundet) {
+          felt.value = valgt.vej + " " + fundet[0] + ", " + valgt.p + " " + valgt.k;
+          vis([]);
+          resultat(d.f[fundet[1]]);
+        } else {
+          husForslag(felt.value);
+        }
+      }).catch(fejl);
     } else {
       felt.value = valgt.vej + " " + x.hus + ", " + valgt.p + " " + valgt.k;
       vis([]);
@@ -130,7 +149,8 @@
 
   function kortHtml(lab, a) {
     return '<div class="vk"><span class="vk-lab">' + esc(lab) + "</span>" +
-      '<img src="/assets/img/logoer/' + esc(a.s) + '.webp" alt="' + esc(a.u) + '" width="' + a.w + '" height="22">' +
+      '<img src="/assets/img/logoer/' + esc(a.s) + '.webp" alt="' + esc(a.u) + '" width="' + a.w + '" height="22" ' +
+      'onerror="var b=document.createElement(\'strong\');b.textContent=this.alt;this.replaceWith(b)">' +
       '<b class="vk-navn">' + ({ fiber: "Fiber", coax: "Kabel (coax)", "5g": "5G", "4g": "4G" }[a.t] || a.t) +
       " " + kr(a.n) + "/" + kr(a.o) + " Mbit/s</b>" +
       '<div class="vk-pris">' + kr(a.i || a.p) + "<span> kr./md." + (a.i ? " i " + a.m + " mdr." : "") + "</span></div>" +
