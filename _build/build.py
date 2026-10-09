@@ -167,6 +167,7 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
         # noindex,follow: linkene følges stadig, men de tæller ikke som tynde sider.
         html = html.replace('<meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">',
                             '<meta name="robots" content="noindex,follow">', 1)
+        html = re.sub(r'<link rel="alternate" hreflang="[^"]+" href="[^"]+">\n?', '', html)
     mappe = os.path.join(ROD, sti.strip("/"))
     if sti == "/":
         filsti = os.path.join(ROD, "index.html")
@@ -322,12 +323,14 @@ IDAG = date.today()
 MAANED_AAR = f"{MAANEDER[IDAG.month - 1]} {IDAG.year}"
 
 
-def med_maaned(titel, maks=65):
+def med_maaned(titel, maks=58):
     """Sætter måned og år på en titel, hvis der er plads.
 
     Titler over 65 tegn bliver afkortet i søgeresultatet, og så er tilføjelsen
     værre end ingenting. Vi prøver den lange form først, så den korte."""
-    for suffiks in (f" ({MAANED_AAR})", f" {IDAG.year}"):
+    # 58 tegn ≈ Googles grænse på ca. 560 pixel (Screaming Frog, okt. 2026)
+    kort = MAANED_AAR.split()[0][:3] + ". " + MAANED_AAR.split()[-1] if " " in MAANED_AAR else MAANED_AAR
+    for suffiks in (f" ({MAANED_AAR})", f" ({kort})", f" {IDAG.year}"):
         if len(titel) + len(suffiks) <= maks:
             return titel + suffiks
     return titel
@@ -1033,8 +1036,7 @@ SIDEBILLEDER = {
         "link": ("/mobilabonnement-til-boern/", "Mobilabonnement til børn"),
     },
     "billigste": {
-        "alt": "To personer sammenligner priser på mobilabonnementer på deres telefoner "
-               "ved et cafébord i en dansk by",
+        "alt": "To personer sammenligner priser på mobilabonnementer ved et cafébord",
         "h2": "Billigst på skiltet er ikke altid billigst på årsregningen",
         "tekst": [
             "Et abonnement til 49 kr. med intropris i tre måneder og 39 kr. i oprettelse "
@@ -1048,8 +1050,7 @@ SIDEBILLEDER = {
         "link": ("/12-maaneders-prisen/", "Sådan regner vi 12-måneders-prisen"),
     },
     "bedste": {
-        "alt": "Fire venner kigger sammen på mobiltelefoner og en tablet ved et bord "
-               "udenfor på en brostensbelagt gade",
+        "alt": "Fire venner kigger på mobiltelefoner ved et bord på en brostensgade",
         "h2": "Der findes ikke ét bedste abonnement — kun det bedste til dig",
         "tekst": [
             "En studerende, der streamer i toget hver dag, og en pensionist, der bruger "
@@ -2927,7 +2928,7 @@ def binding_tekst(a):
 def byg_forside():
     sti = "/"
     titel = med_maaned(f"Sammenlign mobilabonnementer — fra {D['min_normalpris']} kr./md.")
-    besk = (f"Sammenlign {D['antal']} mobilabonnementer fra {D['antal_udbydere']} udbydere på ét sted. "
+    besk = (f"Sammenlign {D['antal']} mobilabonnementer fra {D['antal_udbydere']} udbydere. "
             f"Normalpris fra {D['min_normalpris']} kr./md. – vi viser altid prisen efter introtilbuddet. Opdateret {OPDATERET}.")
 
     faq = [
@@ -3978,7 +3979,7 @@ def byg_netvaerksoversigt():
 </section>
 """
     return skriv(sti, shell(
-        sti=sti, titel="Mobilnetværk i Danmark — TDC NET, Telenor og 3 sammenlignet",
+        sti=sti, titel="Mobilnetværk i Danmark: TDC NET, Telenor og 3",
         beskrivelse=("Der findes kun tre mobilnet i Danmark. Se forskellen på TDC NET, "
                      "Telenor og 3 — og hvornår netværket betyder mere end prisen."),
         opdateret=OPDATERET,
@@ -6321,7 +6322,7 @@ og læs vilkårene for udland hos de selskaber, der ligger øverst.</p>
         byg_guide(
             "/guides/er-5g-pengene-vaerd/", "Er 5G pengene værd?",
             "Er 5G pengene værd?",
-            f"Er 5G pengene værd? — {_antal_ab(len(med5g))} med 5G sammenlignet",
+            f"Er 5G pengene værd? {_antal_ab(len(med5g))} sammenlignet",
             f"Hvad 5G koster ekstra i praksis, hvornår du mærker forskellen, "
             f"og hvornår du betaler for noget, du ikke bruger.",
             f"""<section class="sektion baand-smal artikel">
@@ -7618,7 +7619,7 @@ BB_SEO = {
            "besk": "Billigste 5G internet i {m} {a}: {n} tilbud fra {s} selskaber med net, "
                    "hastighed og reel årspris. Startpris fra {p} kr./md. Ingen gravearbejde."},
     "coax": {"kw": "kabel-internet", "h1": "Billigste kabel-internet",
-             "titel": "Billigste kabel-internet (coax) {m} {a} — fra {p} kr./md.",
+             "titel": "Billigste kabel-internet {m} {a} — fra {p} kr./md.",
              "besk": "Billigste internet via kabel-tv-stik i {m} {a}: {n} coax-tilbud sorteret "
                      "efter reel pris det første år. Startpris fra {p} kr./md."},
 }
@@ -7850,7 +7851,7 @@ ikke har adgang til priser for. Læs mere om
     skriv("/bredbaand/", shell(
         sti="/bredbaand/",
         titel=(f"Billigste bredbånd {vis_maaned()[0]} {vis_maaned()[1]} — fra "
-               f"{kr(min(bb_start(a) for a in BB))} kr./md. ({len(BB)} tilbud)"),
+               f"{kr(min(bb_start(a) for a in BB))} kr./md."),
         beskrivelse=(f"Billigste bredbånd i {vis_maaned()[0]} {vis_maaned()[1]}: {len(BB)} tilbud "
                      f"på fiber, 5G og coax fra {selskaber} selskaber, sorteret efter reel pris "
                      f"det første år. Fra {kr(min(bb_start(a) for a in BB))} kr./md."),
@@ -10700,7 +10701,7 @@ fra i mellemtiden.</p>
 def byg_prisudvikling():
     sti = "/prisudvikling/"
     maalinger = _historik()
-    titel = "Prisudvikling på mobilabonnementer i Danmark"
+    titel = "Prisudvikling på mobilabonnementer — målt hver dag"
     besk = ("Se hvordan priserne på mobilabonnementer har udviklet sig. Vi måler "
             "median- og gennemsnitspris pr. datastørrelse to gange dagligt og "
             "gemmer hver måling.")
@@ -10780,7 +10781,7 @@ tager højde for det.</p>
 
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk,
-        hero=hero_side("Prisudvikling", titel,
+        hero=hero_side("Prisudvikling", "Prisudvikling på mobilabonnementer i Danmark",
                        "Vi gemmer priserne to gange i døgnet, så du kan se, hvordan "
                        "markedet flytter sig — ikke bare hvad det koster i dag.",
                        '<a href="#udvikling" class="knap knap-primaer">Se udviklingen</a>'),
@@ -11054,9 +11055,9 @@ KAMPAGNE_KATEGORIER = {
         "navn": "Høretelefoner",
         "h1": "Mobilabonnement med høretelefoner",
         "soeg": "AirPods og andre høretelefoner",
-        "intro": "AirPods er den mest efterspurgte gave i danske mobilkampagner. "
-                 "Her er de aktuelle tilbud — og regnestykket, der afgør, om de "
-                 "er billigere end at købe dem selv.",
+        "intro": "Mobilabonnementer med AirPods og andre høretelefoner: de aktuelle "
+                 "tilbud og regnestykket, der viser, om de er billigere end at "
+                 "købe dem selv.",
         "tekst": """<h2>Hvornår er høretelefoner med i abonnementet en god handel?</h2>
 <p>Høretelefoner er den gave, der oftest kan betale sig, fordi de fleste
 alligevel bruger dem dagligt. Men prisen afhænger af tre ting, som sjældent
@@ -11823,6 +11824,9 @@ ErrorDocument 404 /404.html
   <FilesMatch "\\.(html|xml|txt|csv)$">
     Header set Cache-Control "public, max-age=0, must-revalidate"
   </FilesMatch>
+  # Sikker basis-CSP, der ikke kan bryde siden: ingen indlejring hos fremmede,
+  # ingen plugins, ingen <base>-kapring, og alt hentes over https
+  Header always set Content-Security-Policy "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
   Header always set Strict-Transport-Security "max-age=31536000"
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
@@ -12203,7 +12207,7 @@ def byg_black_friday():
         status = (f"Det er Black Week lige nu. Tabellerne herunder opdateres to gange i "
                   f"døgnet og viser de aktuelle kampagnepriser regnet om til årspris.")
 
-    titel = f"Black Friday mobilabonnement {aar} — tilbud regnet over 12 mdr."
+    titel = f"Black Friday mobilabonnement {aar} — tilbud over 12 mdr."
     besk = (f"De bedste Black Friday-tilbud på mobilabonnement i {aar}, regnet om til "
             f"reel pris over 12 måneder og tjekket mod priser, vi har målt dagligt.")
     h1 = f"Black Friday mobilabonnement {aar}"
@@ -14372,6 +14376,7 @@ def byg_rettelser():
     brod = f"""<section class="sektion baand-smal artikel">
 <p>Når vi finder en fejl, retter vi den og skriver det her: hvornår, hvor og hvad der var forkert.
 Prisændringer fra selskaberne er ikke rettelser — dem finder du i <a href="/prisarkiv/">prisarkivet</a>.</p>
+<h2>Alle rettelser, nyeste først</h2>
 <div class="tabelramme"><table class="datatabel"><caption>Rettelser på telemobil.dk, nyeste først.</caption>
 <thead><tr><th scope="col">Dato</th><th scope="col">Side</th><th scope="col">Hvad var forkert</th></tr></thead>
 <tbody>{rk}</tbody></table></div>
@@ -15433,7 +15438,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
 
     skriv(hk_sti, shell(
         sti=hk_sti,
-        titel=f"Hvad koster et mobilabonnement? Gennemsnit {S['gns']} kr./md. i {IDAG.year}",
+        titel=f"Hvad koster et mobilabonnement? Snit {S['gns']} kr./md. ({IDAG.year})",
         beskrivelse=(f"Et mobilabonnement koster i gennemsnit {S['gns']} kr./md. i Danmark. "
                      f"Median {S['median']} kr. Se beregnede tal på {S['antal']} abonnementer."),
         opdateret=OPDATERET,
@@ -15504,7 +15509,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
 
     byg_guide("/mobilabonnement-til-familie/", "Til familien",
               "Mobilabonnement til familien",
-              "Mobilabonnement til familien — er familierabat pengene værd?",
+              "Mobilabonnement til familien — betaler familierabat sig?",
               "Familiepakker lyder billigere end de er. Se regnestykket for fire separate "
               "abonnementer mod én familiepakke, og hvornår puljen giver mening.",
               sider5.familie({**D, "familie_sum": kr(_familie_sum()), "opdateret": OPDATERET}, {
@@ -15545,7 +15550,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
 
     byg_guide("/guides/opsig-mobilabonnement/", "Opsigelse",
               "Sådan opsiger du dit mobilabonnement",
-              "Opsig mobilabonnement — sådan gør du uden at miste nummeret",
+              "Opsig mobilabonnement — og behold dit nummer",
               "Skifter du selskab, skal du ikke opsige selv. Se forskellen på opsigelse og "
               "nummerflytning, og hvad det koster at komme ud.",
               sider5.opsigelse(D, {
@@ -16075,7 +16080,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
 
     byg_guide("/guides/hvor-meget-data/", "Hvor meget data",
               "Hvor meget data har jeg brug for?",
-              f"Hvor meget data har jeg brug for? Sådan finder du dit forbrug",
+              f"Hvor meget data har jeg brug for? Find dit forbrug",
               "Find dit faktiske dataforbrug på to minutter, og se præcis hvilket "
               "abonnement der matcher. Med forbrugstal for streaming, sociale medier og video.",
               indhold.GUIDE_DATA,
@@ -16110,7 +16115,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
 
     byg_guide("/guides/daekning-og-netvaerk/", "Dækning og netværk",
               "Dækning og netværk i Danmark",
-              f"Mobildækning i Danmark — TDC NET, Telenor og 3 sammenlignet",
+              f"Mobildækning i Danmark: TDC NET, Telenor og 3",
               "Der findes kun tre mobilnetværk i Danmark. Her er forskellen på dem, og "
               "hvornår den betyder noget for dit valg af abonnement.",
               """<section class="sektion baand-smal artikel">
@@ -16191,7 +16196,7 @@ kælderen — mens du stadig kan fortryde.</p></div>
                            "Vi laver ikke egne hastigheds- eller dækningsmålinger og foregiver ikke andet."])])
 
     byg_guide("/guides/esim/", "eSIM", "eSIM forklaret",
-              f"eSIM i Danmark — sådan virker det, og hvornår det betaler sig",
+              f"eSIM i Danmark — sådan virker det, og hvad det koster",
               "Hvad et eSIM er, hvilke telefoner der understøtter det, og hvordan du "
               "kommer i gang på få minutter.",
               """<section class="sektion baand-smal artikel">
@@ -16425,7 +16430,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
                 "Hjælp", "PIN- og PUK-kode", pin_krop, prioritet="0.5")
 
     # Om-sider
-    byg_statisk("/om-os/", "Om Telemobil — uafhængig sammenligning af mobilabonnementer",
+    byg_statisk("/om-os/", "Om Telemobil — uafhængig sammenligning af mobilpriser",
                 "Telemobil sammenligner danske mobilabonnementer uafhængigt. Læs om vores "
                 "metode, redaktionelle principper og hvem der står bag.",
                 "Om os", "Om Telemobil", indhold.OM_OS, prioritet="0.6")
