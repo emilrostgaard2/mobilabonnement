@@ -1,5 +1,5 @@
 {
- "hentet": "2026-10-11",
+ "hentet": "2026-10-12",
  "abonnementer": [
   {
    "id": "bb-891414",
@@ -215,6 +215,55 @@
    "kampagnetekst": "149 kr/md første 3 mdr",
    "logo_url": "https://adtraction.com/image.htm?imgId=1697234449",
    "link": "https://at.yousee.dk/t/t?a=1697234454&as=2102885611&t=2&tk=1&url=https://yousee.dk/shop/internet/5g-internet"
+  },
+  {
+   "id": "bb-734340",
+   "udbyder": "bornfiber",
+   "udbyder_navn": "Bornfiber",
+   "navn": "Fiber 1000/1000",
+   "teknologi": "fiber",
+   "ned": 1000,
+   "op": 1000,
+   "pris": 299,
+   "intro_pris": 149,
+   "intro_mdr": 6,
+   "oprettelse": 0,
+   "binding": 6,
+   "seks_maaneder": 1794,
+   "seks_maaneder_tilbud": 894,
+   "net": "Bornfiber",
+   "fordele": [
+    "Garanteret 900/900",
+    "Wifi 6",
+    "En fremtidssikret forbindelse"
+   ],
+   "kampagnetekst": "Fra 149 kr/md i 6 mdr",
+   "logo_url": "https://adtraction.com/image.htm?imgId=1832135798",
+   "link": "https://pin.bornfiber.dk/t/t?a=1832135802&as=2102885611&t=2&tk=1&url=https://bornfiber.dk/"
+  },
+  {
+   "id": "bb-895935",
+   "udbyder": "bornfiber",
+   "udbyder_navn": "Bornfiber",
+   "navn": "Fiber 500/500",
+   "teknologi": "fiber",
+   "ned": 500,
+   "op": 500,
+   "pris": 289,
+   "intro_pris": 149,
+   "intro_mdr": 6,
+   "oprettelse": 0,
+   "binding": 6,
+   "seks_maaneder": 1734,
+   "seks_maaneder_tilbud": 894,
+   "net": "Bornfiber",
+   "fordele": [
+    "En fremtidssikret forbindelse",
+    "Wifi 6"
+   ],
+   "kampagnetekst": "Fra 149 kr/md første 6 mdr",
+   "logo_url": "https://adtraction.com/image.htm?imgId=1832135798",
+   "link": "https://pin.bornfiber.dk/t/t?a=1832135802&as=2102885611&t=2&tk=1&url=https://bornfiber.dk/"
   },
   {
    "id": "bb-123843",
