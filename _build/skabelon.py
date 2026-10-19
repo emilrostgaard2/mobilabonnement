@@ -477,7 +477,7 @@ def fod(opdateret):
           <span class="logo-maerke" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <span class="logo-tekst">Tele<em>mobil</em></span>
         </a>
-        <p>Uafhængig dansk sammenligning af mobilabonnementer. Vi beregner
+        <p>Dansk sammenligning af mobilabonnementer. Vi beregner
         <a href="/12-maaneders-prisen/">12-måneders-prisen</a> — den reelle pris, når
         intropris, normalpris og oprettelse regnes sammen.</p>
         <p class="fod-adresse">

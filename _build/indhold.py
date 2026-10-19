@@ -712,7 +712,7 @@ angives særskilt, hvor det afviger.</li>
 </tbody>
 </table>
 
-<h2>Uafhængighed</h2>
+<h2>Provision og redaktionelle principper</h2>
 
 <p>Udbydere har ingen indflydelse på vores indhold og ser det ikke før udgivelse.
 Provisionsaftaler påvirker hverken sortering, vurdering eller ordvalg. Læs mere om

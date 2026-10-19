@@ -56,7 +56,7 @@ UNIK = {
         "h2_sammenlign": "YouSee mod billigere abonnementer på samme net",
         "h2_skift": "Sådan bliver du YouSee-kunde",
         "net_note": ("YouSee er en del af TDC Brands (tidligere Nuuday) og kører på TDC NET, som gennem en årrække "
-                     "har klaret sig bedst i uafhængige målinger af dansk netkvalitet. Nettet "
+                     "har klaret sig bedst i målinger af dansk netkvalitet. Nettet "
                      "er det mest finmaskede i landet, og forskellen mærkes særligt i "
                      "landdistrikter, sommerhusområder, langs jernbanen og indendørs i ældre "
                      "bygninger. I byerne er forskellen til de to andre net lille."),

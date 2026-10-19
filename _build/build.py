@@ -427,7 +427,7 @@ ORG = {
     "name": SITENAVN,
     "alternateName": "telemobil.dk",
     "url": DOMAENE + "/",
-    "description": ("Uafhængig dansk prissammenligning af mobilabonnementer. Vi gennemgår "
+    "description": ("Dansk prissammenligning af mobilabonnementer, finansieret af provision. Vi gennemgår "
                     "udbydernes vilkår, beregner den reelle pris over 12 måneder og skriver "
                     "både fordele og ulemper."),
     "logo": {"@type": "ImageObject", "url": DOMAENE + "/assets/img/telemobil-logo.png",
@@ -759,8 +759,8 @@ def tillidsbaand():
     else:
         punkter.append(("0 kr.", "og ingen formular",
                         "vi beder aldrig om dine oplysninger"))
-    punkter.append(("100 %", "uafhængig",
-                    "udbydere kan ikke betale sig til en placering"))
+    punkter.append(("0 kr.", "for placering",
+                    "vi får provision, men selskaberne kan ikke købe en bedre placering"))
 
     return f"""<div class="tillid">{"".join(
         f'<div class="ti-punkt"><b>{t}</b><span>{e(n)}</span>'
@@ -2974,8 +2974,8 @@ def byg_forside():
          "sv": "Højst 6 måneder for privatkunder. Det står i bekendtgørelsen om slutbrugerrettigheder på "
                "teleområdet (§ 7). De fleste abonnementer i vores sammenligning har ingen binding, men en "
                "telefon på afbetaling skal stadig betales færdig."},
-        {"sp": "Er Telemobil uafhængig?",
-         "sv": "Vi får provision, når du bestiller via vores links, men rækkefølgen bestemmes af prisen eller "
+        {"sp": "Tjener Telemobil penge på abonnementerne?",
+         "sv": "Ja. Vi får provision, når du bestiller via vores links. Rækkefølgen bestemmes af prisen eller "
                "af Telemobil-scoren — aldrig af provisionen. Priserne hentes automatisk fra selskabernes "
                "datafeeds to gange i døgnet, og vi har en offentlig rettelseslog."},
     ]
@@ -3445,7 +3445,7 @@ NETVAERK = [
     {
         "slug": "tdc-net", "navn": "TDC NET", "kort": "Danmarks mest udbyggede mobilnet",
         "styrke": ("TDC NET er det mest finmaskede mobilnet i Danmark og har gennem en "
-                   "årrække klaret sig bedst i uafhængige målinger af netkvalitet. Nettet "
+                   "årrække klaret sig bedst i målinger af netkvalitet. Nettet "
                    "står særligt stærkt i landdistrikter, sommerhusområder, langs jernbanen "
                    "og indendørs i ældre bygninger med tykke mure."),
         "svaghed": ("Brands, der kører på TDC NET, ligger typisk højere i pris end "
@@ -5171,7 +5171,7 @@ def byg_speedtest():
 def byg_udbyderoversigt():
     sti = "/udbydere/"
     titel = med_maaned(f"Mobilselskaber i Danmark — {D['antal_udbydere']} udbydere sammenlignet")
-    besk = ("Uafhængig gennemgang af alle danske mobilselskaber. Se netværk, priser, "
+    besk = ("Gennemgang af alle danske mobilselskaber. Se netværk, priser, "
             "ejerforhold og hvem der passer til hvad — med fordele og ulemper.")
     krumme = [("/", "Forside"), (None, "Udbydere")]
 
@@ -7082,6 +7082,9 @@ def bb_liste(udvalg, *, titel, undertitel, vis=12):
       {len(udvalg)} produkter hentet automatisk fra udbydernes datafeed</span></p>
   </div>
   {bb_filterbar(sorteret)}
+  <p class="liste-afsloering"><strong>Reklamelinks:</strong> Vi får provision, når du bestiller via
+  knapperne. Det koster ikke ekstra og påvirker aldrig rækkefølgen.
+  <a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></p>
   <div class="planliste">{kort}</div>
   <p class="liste-tom" data-bb-tom hidden>Ingen abonnementer matcher filtrene.
     Prøv at fjerne et af dem.</p>
@@ -7116,6 +7119,9 @@ def bb_liste(udvalg, *, titel, undertitel, vis=12):
       {len(udvalg)} produkter hentet automatisk fra udbydernes datafeed</span></p>
   </div>
   {bb_filterbar(sorteret)}
+  <p class="liste-afsloering"><strong>Reklamelinks:</strong> Vi får provision, når du bestiller via
+  knapperne. Det koster ikke ekstra og påvirker aldrig rækkefølgen.
+  <a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></p>
   <div class="planliste">{kort}</div>
   <p class="liste-tom" data-bb-tom hidden>Ingen abonnementer matcher filtrene.
     Prøv at fjerne et af dem.</p>
@@ -9910,12 +9916,13 @@ før du vælger efter pris alene.</p>
                     f"netværk og kundetilfredshed. Ingen betalt placering.",
         hero=hero_side("Anmeldelser", "Anmeldelser af mobilselskaber",
                        f"{len(med_data)} danske selskaber vurderet på pris, vilkår, "
-                       f"netværk og kundetilfredshed."),
+                       f"netværk og kundetilfredshed. Vurderingerne bygger på data og "
+                       f"offentlige målinger — vi har ikke testet abonnementerne i praksis."),
         efter_hero="", krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, "Spørgsmål om anmeldelserne"),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld("/anmeldelser/", "Anmeldelser af mobilselskaber",
-                               "Uafhængig vurdering af danske mobilselskaber på "
+                               "Vurdering af danske mobilselskaber ud fra data om "
                                "pris, vilkår, netværk og kundetilfredshed."))],
     ), prioritet="0.8", hyppighed="weekly")
 
@@ -11695,12 +11702,12 @@ Doktrin: Priser sorteres efter pris, ikke efter provision
         ("/mobilpriser/", "Mobilpriser i Danmark", "Nøgletal opdateret dagligt — citérbare"),
         ("/metode/", "Metode", "Sådan beregner og vurderer vi"),
         ("/rettelser/", "Rettelser", "Offentlig log over rettede fejl"),
-        ("/saadan-tjener-vi-penge/", "Forretningsmodel", "Affiliateprovision og uafhængighed"),
+        ("/saadan-tjener-vi-penge/", "Forretningsmodel", "Affiliateprovision, og hvad den ikke påvirker"),
     ])
     with open(os.path.join(ROD, "llms.txt"), "w", encoding="utf-8") as f:
         f.write(f"""# Telemobil
 
-> Uafhængig dansk prissammenligning af mobilabonnementer. Vi beregner den reelle
+> Dansk prissammenligning af mobilabonnementer, finansieret af affiliateprovision. Vi beregner den reelle
 > månedspris over 12 måneder inklusive intropris, normalpris og oprettelse — ikke kun
 > den intropris, udbyderne markedsfører.
 
@@ -15062,7 +15069,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                    "ind hos en af dem. Du betaler ekstra for dækning på det mest udbyggede net, kundeservice og "
                    "tillægsydelser — ikke for et bedre mobilnet."},
             {"sp": "Hvilket mobilnet er bedst i Danmark?",
-             "sv": "TDC NET er det mest udbyggede og har gennem en årrække klaret sig bedst i uafhængige målinger "
+             "sv": "TDC NET er det mest udbyggede og har gennem en årrække klaret sig bedst i Teknologisk Instituts målinger (bestilt af TDC NET) "
                    "af netkvalitet. I byerne er forskellen til Telenor og 3 dog lille i praksis."},
             {"sp": "Hvordan vurderer I abonnementerne?",
              "sv": "Med Telemobil-scoren fra 0 til 100: " + ", ".join(
@@ -16430,13 +16437,13 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
                 "Hjælp", "PIN- og PUK-kode", pin_krop, prioritet="0.5")
 
     # Om-sider
-    byg_statisk("/om-os/", "Om Telemobil — uafhængig sammenligning af mobilpriser",
-                "Telemobil sammenligner danske mobilabonnementer uafhængigt. Læs om vores "
+    byg_statisk("/om-os/", "Om Telemobil — sådan sammenligner vi mobilpriser",
+                "Telemobil sammenligner danske mobilabonnementer. Læs om vores "
                 "metode, redaktionelle principper og hvem der står bag.",
                 "Om os", "Om Telemobil", indhold.OM_OS, prioritet="0.6")
 
     byg_statisk("/saadan-tjener-vi-penge/",
-                "Sådan tjener Telemobil penge — provision og uafhængighed",
+                "Sådan tjener Telemobil penge — provision og placering",
                 "Telemobil modtager provision fra udvalgte udbydere. Her forklarer vi "
                 "præcis hvordan det fungerer, og hvad det ikke påvirker.",
                 "Forretningsmodel", "Sådan tjener vi penge", indhold.TJENER_PENGE, prioritet="0.6")
@@ -16492,7 +16499,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     stemmer, så skriv via <a href="/kontakt/">kontaktsiden</a>.</li>
   </ul>
 
-  <h2>Uafhængighed og provision</h2>
+  <h2>Provision og placering</h2>
   <p>Telemobil er gratis at bruge og finansieres af provision: Når du klikker videre til et
   selskab og bestiller, kan jeg modtage betaling fra selskabet. Det koster dig ikke noget, og
   links til selskaberne er markeret som kommercielle. Selskaberne kan ikke købe en bedre
@@ -16540,7 +16547,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     _f = site.get("firma", {})
     kontakt_krop = f"""<section class="sektion baand-smal artikel">
   <div class="advarsel"><p><strong>Leder du efter dit teleselskab?</strong> Telemobil er en
-  uafhængig sammenligningstjeneste og kan ikke hjælpe med dit abonnement, din regning eller
+  sammenligningstjeneste — ikke et teleselskab — og kan ikke hjælpe med dit abonnement, din regning eller
   spærring af simkort. Kontakt dit selskab direkte:</p>
   <ul class="pilliste">{_ks_li}</ul>
   <p>Har du mistet din telefon, så se <a href="/guides/mistet-telefon/">hvad du skal gøre
@@ -16605,7 +16612,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
 
     presse_krop = """<section class="sektion baand-smal artikel">
   <h2>Om Telemobil</h2>
-  <p>Telemobil er en uafhængig dansk prissammenligning for mobilabonnementer. Vi følger
+  <p>Telemobil er en dansk prissammenligning for mobilabonnementer, finansieret af affiliateprovision. Vi følger
   markedets udbydere, regner priserne om til sammenlignelige tal og skriver om, hvad
   forskellene betyder for forbrugeren.</p>
   <h2>Til journalister</h2>

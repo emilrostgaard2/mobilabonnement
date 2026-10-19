@@ -283,7 +283,7 @@ billigere net kan bruges der, hvor du faktisk er.</p>
 
 <h2>Hvad med tests og anmeldelser?</h2>
 
-<p>Der findes uafhængige tests af de danske mobilnet, og de er værd at kende. Teknologisk
+<p>Der findes målinger af de danske mobilnet, og de er værd at kende. Teknologisk
 Institut har gennem en årrække målt netkvalitet, og TDC NET har konsekvent klaret sig
 bedst i den type måling. Forbrugerrådet Tænk har lavet omfattende sammenligninger af
 abonnementer, om end de ikke opdateres løbende.</p>
