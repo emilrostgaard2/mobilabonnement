@@ -209,8 +209,9 @@ def _fjern_dobbelt_maerke(html):
     return html
 
 def _tynd_side(sti):
-    return ((sti.startswith("/driftsstatus/") and sti != "/driftsstatus/")
-            or re.fullmatch(r"/guides/side-\d+/", sti) is not None)
+    # Driftsstatus-siderne er IKKE længere noindex: Search Console viste klik på
+    # "er telmore nede"/"flexii driftsstatus" (okt. 2026). Kun sideinddeling.
+    return re.fullmatch(r"/guides/side-\d+/", sti) is not None
 
 
 def sidst_aendret(sti):
@@ -4757,7 +4758,7 @@ def byg_landekoder():
 </section>
 """
     return skriv(sti, shell(
-        sti=sti, titel=f"Landekoder — komplet oversigt over {len(LANDE)} telefonkoder",
+        sti=sti, titel=f"Landekoder: hvilket land er +33, +86, +39? Alle {len(LANDE)} koder",
         beskrivelse=(f"Søg blandt {len(LANDE)} landekoder til telefon. Danmarks landekode er +45. "
                      "Se ISO-koder, EU-takst og hvordan du ringer til udlandet."),
         opdateret=OPDATERET,
@@ -11060,7 +11061,7 @@ sikkerhedsventil, ikke en gratis prøveperiode.</p>
 KAMPAGNE_KATEGORIER = {
     "hoeretelefoner": {
         "navn": "Høretelefoner",
-        "h1": "Mobilabonnement med høretelefoner",
+        "h1": "Mobilabonnement med AirPods og høretelefoner",
         "soeg": "AirPods og andre høretelefoner",
         "intro": "Mobilabonnementer med AirPods og andre høretelefoner: de aktuelle "
                  "tilbud og regnestykket, der viser, om de er billigere end at "
@@ -11313,7 +11314,21 @@ def byg_kampagne_udbyder(u, kampagner):
     regnestykke = _kampagne_regnestykke(u, kampagner)
     billigst_mp = min(kampagner, key=mindstepris) if kampagner else None
 
+    # Search Console: folk søger på produktet ("telmore airpods pro 3"), ikke
+    # på "kampagne". Produktnavnene står derfor i titlen, når der er plads.
+    _prod = []
+    for k in kampagner:
+        n_ = re.sub(r"^(Apple|Samsung|JBL|Urbanista)\s+", "", k.get("produkt", ""))
+        n_ = n_.replace(" med aktiv støjreduktion", " ANC")
+        if n_ and n_ not in _prod and "gavekort" not in n_.lower():
+            _prod.append(n_)
     titel = f"{u['navn']} kampagne"
+    _prod = [p_ for p_ in _prod if not (p_.endswith(" ANC") and p_[:-4] in _prod)]
+    for i in range(len(_prod), 0, -1):
+        forslag = f"{u['navn']} kampagne: {', '.join(_prod[:i])}"
+        if len(forslag) <= 44:
+            titel = forslag
+            break
     h1 = f"{u['navn']} kampagner og tilbud"
     besk = (f"Aktuelle kampagner hos {u['navn']}. Vi regner mindsteprisen ud, så du "
             f"kan se, hvad tilbuddet reelt koster over bindingsperioden.")
@@ -11417,7 +11432,7 @@ det til {kr(g) if g is not None else "—"} kr./md.</p>
     ]
 
     return skriv(sti, shell(
-        sti=sti, titel=f"{titel} ({OPDATERET}) — tilbud og mindstepris",
+        sti=sti, titel=med_maaned(titel),
         beskrivelse=besk,
         hero=hero_side("Kampagne", h1, besk,
                        '<a href="#tilbud" class="knap knap-primaer">Se tilbuddene</a>'),
@@ -11501,6 +11516,17 @@ def byg_kampagne_undersider():
     # eksistere — den rangerer ikke, og brugeren får mindre end forventet.
     # Kampagnen forsvinder ikke: den vises stadig på hub og selskabsside.
     MINDST = 3
+    # Selskaber, hvis kampagner er udløbet, beholder deres side med en tom
+    # tilstand. Ellers bliver en gammel side med udløbne tilbud liggende på
+    # serveren (upload sletter ikke filer) — og den rangerer (Search Console:
+    # /kampagner/telmore/ havde flest klik i okt. 2026).
+    try:
+        with open(os.path.join(ROD, "data", "kampagner.json"), encoding="utf-8") as f:
+            for k in json.load(f).get("kampagner", []):
+                if k.get("udbyder") in UMAP:
+                    pr_udbyder.setdefault(k["udbyder"], [])
+    except (FileNotFoundError, ValueError):
+        pass
     KAMPAGNE_UDBYDERE = sorted(pr_udbyder)
     KAMPAGNE_AKTIVE_KAT = [n for n in KAMPAGNE_KATEGORIER
                            if len(pr_kategori.get(n, [])) >= MINDST]
