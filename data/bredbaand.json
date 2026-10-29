@@ -1,5 +1,5 @@
 {
- "hentet": "2026-10-28",
+ "hentet": "2026-10-29",
  "abonnementer": [
   {
    "id": "bb-891414",
@@ -386,30 +386,6 @@
    "link": "https://to.norlys.dk/t/t?a=1666136303&as=2102885611&t=2&tk=1&url=https://shop.norlys.dk/internet/5g-internet/"
   },
   {
-   "id": "bb-1238431",
-   "udbyder": "ewii",
-   "udbyder_navn": "Ewii",
-   "navn": "Fiber 1000/1000",
-   "teknologi": "fiber",
-   "ned": 1000,
-   "op": 1000,
-   "pris": 349,
-   "intro_pris": 199,
-   "intro_mdr": 3,
-   "oprettelse": 0,
-   "binding": 0,
-   "seks_maaneder": 2394,
-   "seks_maaneder_tilbud": null,
-   "net": "Ewii",
-   "fordele": [
-    "Ingen binding",
-    "Gratis oprettelse"
-   ],
-   "kampagnetekst": "Spar 150 kr/md første 3 mdr",
-   "logo_url": "https://adtraction.com/image.htm?imgId=1693093220",
-   "link": "https://go.ewii.dk/t/t?a=1693093225&as=2102885611&t=2&tk=1&url=https://www.ewii.dk/privat/internet/"
-  },
-  {
    "id": "bb-12384324",
    "udbyder": "3-internet",
    "udbyder_navn": "3 Internet",
@@ -549,6 +525,30 @@
     "Ingen binding",
     "Inkl gratis oprettelse",
     "Inkl router"
+   ],
+   "kampagnetekst": null,
+   "logo_url": "https://adtraction.com/image.htm?imgId=1693093220",
+   "link": "https://go.ewii.dk/t/t?a=1693093225&as=2102885611&t=2&tk=1&url=https://www.ewii.dk/privat/internet/"
+  },
+  {
+   "id": "bb-1238431",
+   "udbyder": "ewii",
+   "udbyder_navn": "Ewii",
+   "navn": "Fiber 1000/1000",
+   "teknologi": "fiber",
+   "ned": 1000,
+   "op": 1000,
+   "pris": 349,
+   "intro_pris": null,
+   "intro_mdr": 0,
+   "oprettelse": 0,
+   "binding": 0,
+   "seks_maaneder": 2394,
+   "seks_maaneder_tilbud": null,
+   "net": "Ewii",
+   "fordele": [
+    "Ingen binding",
+    "Gratis oprettelse"
    ],
    "kampagnetekst": null,
    "logo_url": "https://adtraction.com/image.htm?imgId=1693093220",
