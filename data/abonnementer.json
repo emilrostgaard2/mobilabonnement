@@ -1,9 +1,9 @@
 {
  "_kilde": "Adtraction data feed",
- "_hentet": "2026-10-21",
+ "_hentet": "2026-11-01",
  "_advarsel": "Genereret automatisk af _build/adtraction.py ved hvert build. Redigér ikke i hånden, og overskriv ikke filen med en ældre version — så mister du de nyeste priser.",
  "kilde": "adtraction",
- "opdateret": "2026-10-21",
+ "opdateret": "2026-11-01",
  "abonnementer": [
   {
    "id": "lebara-1",
@@ -652,7 +652,7 @@
    "data_gb": 200,
    "pris": 129,
    "intro_pris": 79,
-   "intro_mdr": 6,
+   "intro_mdr": 5,
    "tale": "fri",
    "sms": "fri",
    "binding": 0,
