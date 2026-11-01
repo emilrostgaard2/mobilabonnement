@@ -169,6 +169,24 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
         html = html.replace('<meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">',
                             '<meta name="robots" content="noindex,follow">', 1)
         html = re.sub(r'<link rel="alternate" hreflang="[^"]+" href="[^"]+">\n?', '', html)
+    dato = None
+    if i_sitemap and _er_artikel(sti):
+        # Guidens viste dato blev læst før siden blev bygget. Ændrede teksten
+        # sig netop nu, så ret datoen med det samme i stedet for ved næste kørsel.
+        # Mange guides skriver selv deres gennemgangslinje med dagens dato.
+        # Her sættes den rigtige ændringsdato ind ét sted for dem alle.
+        dato = sidedato(sti, html)
+        try:
+            dansk = dansk_dato(date.fromisoformat(dato))
+        except ValueError:
+            dansk = None
+        if dansk:
+            html = re.sub(r'(<div class="gennemgang[^"]*">.*?Opdateret <b>)[^<]*(</b>)',
+                          lambda m: m.group(1) + dansk + m.group(2), html, count=1, flags=re.S)
+            html = re.sub(r'(<meta property="article:modified_time" content=")[^"]*(")',
+                          lambda m: m.group(1) + dato + m.group(2), html, count=1)
+            html = re.sub(r'("dateModified":\s*")[^"]*(")',
+                          lambda m: m.group(1) + dato + m.group(2), html)
     mappe = os.path.join(ROD, sti.strip("/"))
     if sti == "/":
         filsti = os.path.join(ROD, "index.html")
@@ -178,7 +196,7 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     with open(filsti, "w", encoding="utf-8") as f:
         f.write(html)
     if i_sitemap:
-        SIDER.append((sti, prioritet, hyppighed, sidedato(sti, html)))
+        SIDER.append((sti, prioritet, hyppighed, dato or sidedato(sti, html)))
     return filsti
 
 
@@ -239,16 +257,49 @@ def sidedato(sti, html):
 
     Vi hasher indholdet uden de felter, der ændrer sig af sig selv (datoer,
     versionsnumre), så en ren genopbygning ikke tæller som en ændring."""
-    stabil = re.sub(r'\?v=[0-9a-f]+', '', html)
-    stabil = re.sub(r'<time[^>]*>.*?</time>', '', stabil, flags=re.S)
-    stabil = re.sub(r'\d{4}-\d{2}-\d{2}', '', stabil)
-    stabil = re.sub(r'\d{1,2}\. \w+ \d{4}', '', stabil)
+    if _er_artikel(sti):
+        stabil = _artikeltekst(html)
+    else:
+        stabil = re.sub(r'\?v=[0-9a-f]+', '', html)
+        stabil = re.sub(r'<time[^>]*>.*?</time>', '', stabil, flags=re.S)
+        stabil = re.sub(r'\d{4}-\d{2}-\d{2}', '', stabil)
+        stabil = re.sub(r'\d{1,2}\. \w+ \d{4}', '', stabil)
     fingeraftryk = hashlib.sha1(stabil.encode("utf-8")).hexdigest()[:16]
     tidligere = SIDEHISTORIK.get(sti)
     if tidligere and tidligere.get("hash") == fingeraftryk:
         return tidligere.get("dato", ISO)
-    SIDEHISTORIK[sti] = {"hash": fingeraftryk, "dato": ISO}
+    if tidligere and _er_artikel(sti) and tidligere.get("v") != 2:
+        # Første kørsel med den nye beregning: behold den gamle dato. Ellers
+        # ville skiftet i sig selv give alle guides dagens dato.
+        SIDEHISTORIK[sti] = {"hash": fingeraftryk, "dato": tidligere.get("dato", ISO), "v": 2}
+        return SIDEHISTORIK[sti]["dato"]
+    SIDEHISTORIK[sti] = {"hash": fingeraftryk, "dato": ISO, "v": 2 if _er_artikel(sti) else 1}
     return ISO
+
+
+def _er_artikel(sti):
+    return sti.startswith("/guides/") or sti in {g[0] for g in GUIDER}
+
+
+def _artikeltekst(html):
+    """Kun den redaktionelle tekst: titel, beskrivelse og artiklens brødtekst.
+
+    En guide må ikke få ny dato, fordi priserne i en tabel ændrede sig, en ny
+    guide kom på listen over "Flere guides", eller designet blev justeret. Så
+    tabeller, tal, links til andre guides og alt uden for artiklen tælles ikke."""
+    dele = re.findall(r"<title>(.*?)</title>", html, re.S)
+    dele += re.findall(r'<meta name="description" content="([^"]*)"', html)
+    dele += re.findall(r'<section class="sektion baand-smal artikel">(.*?)</section>', html, re.S)
+    if len(dele) < 3:
+        m = re.search(r"<main.*?</main>", html, re.S)
+        dele.append(m.group(0) if m else html)
+    t = " ".join(dele)
+    t = re.sub(r"<(table|script|style|time)\b.*?</\1>", " ", t, flags=re.S)
+    t = re.sub(r'<p class="krydslink">.*?</p>', " ", t, flags=re.S)
+    t = re.sub(r'<div class="gennemgang[^"]*">.*?</div>', " ", t, flags=re.S)
+    t = re.sub(r"<[^>]+>", " ", t)
+    t = re.sub(r"\d+", "#", t)
+    return re.sub(r"\s+", " ", t).strip()
 
 
 def indlaes(navn):
