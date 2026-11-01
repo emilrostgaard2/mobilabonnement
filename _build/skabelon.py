@@ -718,8 +718,8 @@ def stjerner(u, *, kompakt=False):
     pct = max(0, min(100, round(score / 5 * 100)))
     tal = f"{score:.1f}".replace(".", ",")
     graf = (f'<span class="tp-stjerner" role="img" aria-label="{tal} af 5 stjerner">'
-            f'<span class="tp-tom">★★★★★</span>'
-            f'<span class="tp-fyld" style="width:{pct}%">★★★★★</span></span>')
+            f'<span class="tp-tom" aria-hidden="true"></span>'
+            f'<span class="tp-fyld" aria-hidden="true" style="width:{pct}%"></span></span>')
     if kompakt:
         titel = (f"Trustpilot {tal} af 5"
                  + (f" · {kr(antal)} anmeldelser" if antal else "")
@@ -889,7 +889,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
     </div>
     <div class="pk-midt">
       {flag}
-      <h3 class="pk-navn">{e(_kortnavn(a, u))}</h3>
+      <h3 class="pk-navn"><span class="sr-only">{e(u['navn'])} </span>{e(_kortnavn(a, u))}</h3>
       <div class="pk-stats">{statbokse}</div>
       <div class="pk-chips">{chips}</div>
     </div>
@@ -1043,7 +1043,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     <p class="opdateret-stribe">
       <span class="op-prik" aria-hidden="true"></span>
       <span><strong>Opdateret {e(opdateret)}</strong> · {len(abonnementer)} {"abonnement" if len(abonnementer) == 1 else "abonnementer"}
-      hentet automatisk fra udbydernes datafeed</span>
+      fra {len({a.get("udbyder") for a in abonnementer})} selskaber, vi samarbejder med. Ikke hele markedet · <a href="/metode/">Sådan rangerer vi</a></span>
     </p>
   </div>
   {filterhtml}

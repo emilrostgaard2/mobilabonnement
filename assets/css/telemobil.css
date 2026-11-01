@@ -1622,6 +1622,7 @@ body{overflow-x:clip;max-width:100%;position:relative}
 .tp-stjerner{position:relative;display:inline-block;line-height:1;
   font-size:.95em;letter-spacing:.06em;white-space:nowrap;flex-shrink:0}
 .tp-tom{color:#D8DCEA}
+.tp-tom::before,.tp-fyld::before{content:"★★★★★"}
 .tp-fyld{position:absolute;left:0;top:0;overflow:hidden;color:#F5A524;
   white-space:nowrap;pointer-events:none}
 .tp-lille{display:inline-flex;flex-direction:column;align-items:flex-start;gap:.1rem;
@@ -2656,3 +2657,5 @@ body{font-variant-numeric:tabular-nums}
 /* Filterlinjen har z-index:20 og er dermed sin egen stablingskontekst — ellers ville
    arket fra bunden ligge under cookiebanneret. Løft hele linjen, mens en menu er åben. */
 .filterbar:has(.fb-menu:not([hidden])){z-index:1001}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

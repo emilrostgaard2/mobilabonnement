@@ -161,6 +161,7 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     skabelon.UDVALG_SIDE.clear()
     html = _ret_ampersand(html)
     html = _fjern_dobbelt_maerke(html).replace("[[FRI_BEV]]", str(D["fri_bev"]))
+    html = _indsaet_krydslinks(sti, html)
     if _tynd_side(sti):
         # Search Console (okt. 2026): Google crawlede ikke disse sider. De er
         # næsten ens skabeloner (driftsstatus) eller sideinddeling (guides/side-2).
@@ -276,6 +277,12 @@ def visningspris(a):
         return a["intro_pris"]
     return a["pris"]
 
+
+# Et feed kan angive "Fri Data" som fx 1000 GB. Så tæller det som et almindeligt
+# abonnement og får en absurd lav pris pr. GB. Navnet afgør: fri data er fri data.
+for _a in ab_data["abonnementer"]:
+    if "fri data" in (_a.get("navn") or "").lower() and 0 < _a.get("data_gb", 0) < 9999:
+        _a["data_gb"] = 9999
 
 ABON = sorted(ab_data["abonnementer"], key=visningspris)
 for a in ABON:
@@ -599,6 +606,10 @@ UDGIVET = {
     "/guides/mistet-telefon/": "2026-09-27",
     "/guides/studierabat-mobilabonnement/": "2026-09-27",
     "/guides/barnets-foerste-mobil/": "2026-09-27",
+    "/guides/fri-data-eller-100-gb/": "2026-11-01",
+    "/guides/nummerflytning/": "2026-11-01",
+    "/guides/betaler-du-for-meget/": "2026-11-01",
+    "/guides/hvad-koster-det-at-ringe/": "2026-11-01",
 }
 
 
@@ -1364,7 +1375,7 @@ def hf_hvordan():
     return """<section class="hf-hvordan"><div class="baand hf-hvordan-indre">
   <div><h3>Regnet på hele året</h3><p>Intropris, normalpris og oprettelse lægges sammen, så du ser, hvad det reelt koster.</p></div>
   <div><h3>Priser fra selskaberne selv</h3><p>Hentet automatisk to gange i døgnet fra selskabernes egne produktdata.</p></div>
-  <div><h3>Ingen kan købe sig til toppen</h3><p>Vi får provision, når du bestiller via et link. Det ændrer ikke rækkefølgen.</p></div>
+  <div><h3>Sorteret efter pris, ikke provision</h3><p>Vi får provision, når du bestiller via et link, og viser kun selskaber, vi samarbejder med. Provisionen ændrer ikke rækkefølgen.</p></div>
 </div></section>"""
 
 
@@ -2295,12 +2306,14 @@ def tabel_pr_datamaengde():
         kandidater = [a for a in ABON if lav <= a["data_gb"] <= hoej and a["pris"] > 0]
         if not kandidater:
             continue
-        bedst = min(kandidater, key=lambda a: a["pris"])
+        kandidater = [a for a in kandidater if gns12(a) is not None] or kandidater
+        bedst = min(kandidater, key=lambda a: gns12(a) if gns12(a) is not None else a["pris"])
         u = UMAP[bedst["udbyder"]]
         prgb = f'{bedst["pris"] / bedst["data_gb"]:.2f}'.replace(".", ",") + " kr." if 0 < bedst["data_gb"] < 9999 else "—"
+        _aar12 = round(gns12(bedst) * 12) if gns12(bedst) is not None else bedst["pris"] * 12
         raekker += (f'<tr><td><strong>{e(navn)}</strong></td>'
                     f'<td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> {e(bedst["navn"])}</td>'
-                    f'<td>{prgb}</td><td>{kr(bedst["pris"] * 12)} kr.</td>'
+                    f'<td>{prgb}</td><td>{kr(_aar12)} kr.</td>'
                     f'<td><strong>{kr(bedst["pris"])} kr.</strong></td></tr>')
     return f"""<h3>Billigste abonnement i hver datakategori</h3>
 <p>De fleste sammenligningssider viser kun den absolut laveste pris. Den er sjældent
@@ -2331,8 +2344,8 @@ def tabel_aarsomkostning(antal=10):
     raekker = ""
     for a in [x for x in ABON if x["data_gb"] > 0][:antal]:
         u = UMAP[a["udbyder"]]
-        aar = a["pris"] * 12 + a.get("oprettelse", 0)
-        besparelse = (max(x["pris"] for x in ABON) * 12) - aar
+        aar = round(gns12(a) * 12) if gns12(a) is not None else a["pris"] * 12 + a.get("oprettelse", 0)
+        besparelse = round(max(gns12(x) or 0 for x in ABON) * 12) - aar
         raekker += (f'<tr><td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> {e(_abonavn(a))}</td>'
                     f'<td>{kr(a["pris"])} kr.</td><td>{kr(a.get("oprettelse", 0))} kr.</td>'
                     f'<td><strong>{kr(aar)} kr.</strong></td>'
@@ -5606,7 +5619,8 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
     krumme.append((None, etiket))
     # Nogle brødtekster indeholder allerede gennemgangslinjen. Indsætter vi den
     # igen, står "Skrevet af Emil Rostgaard" to gange på siden.
-    gl = gennemgangslinje(OPDATERET)
+    _dato_tekst = sidst_aendret(sti)[1]
+    gl = gennemgangslinje(_dato_tekst)
     krop_tekst = brodtekst
     if "gennemgangslinje" not in krop_tekst and "Skrevet af" not in krop_tekst:
         krop_tekst = krop_tekst.replace(
@@ -5628,7 +5642,7 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
                                                f"{billede}.jpg")):
         og = (f"/assets/img/guides/og/{billede}.jpg", 1200, 630)
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk,
+        sti=sti, titel=titel, beskrivelse=besk, opdateret=_dato_tekst,
         hero=hero_side(etiket, h1, besk,
                        billede=guidebillede(billede, altbillede or h1, prioritet=True) if billede else None),
         efter_hero="", krumme=krumme, indhold=krop + faqblok(faq), og_billede=og,
@@ -5639,6 +5653,18 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
 
 
 GUIDER = [
+    ("/guides/fri-data-eller-100-gb/", "Fri data eller 100 GB?",
+     "Se prisforskellen i kroner, og hvornår ubegrænset data er pengene værd.",
+     "fri-data-eller-100-gb", "Kvinde på bænk ved kanalen bruger sin mobil", "Data", 6),
+    ("/guides/nummerflytning/", "Nummerflytning — tid, fejl og kompensation",
+     "Én arbejdsdag er fristen. Se de typiske fejl, og hvad du har krav på.",
+     "nummerflytning", "Mand på café venter på nummerflytning", "Rettigheder", 6),
+    ("/guides/betaler-du-for-meget/", "Betaler du for meget?",
+     "Så meget koster et gammelt abonnement over 5 år i forhold til markedet i dag.",
+     "betaler-du-for-meget", "Mand gennemgår sin mobilregning", "Analyse", 6),
+    ("/guides/hvad-koster-det-at-ringe/", "Hvad koster det at ringe uden fri tale?",
+     "Minutpriser, merprisen for fri tale og hvad fri tale ikke dækker.",
+     "ringe-uden-fri-tale", "Kvinde ringer fra et busstoppested", "Tale", 5),
     ("/guides/hvor-meget-data/", "Hvor meget data har jeg brug for?",
      "Find dit faktiske forbrug på to minutter, og se hvilket abonnement der matcher.",
      "hvor-meget-data", "Kvinde tjekker sit dataforbrug på telefonen", "Guide", 6),
@@ -9868,7 +9894,7 @@ vilkårene:</p>
   <li><strong>Kundetilfredshed</strong> — Trustpilot, vægtet efter antal
   anmeldelser</li>
 </ul>
-<p>Vægtningen står beskrevet i <a href="/telemobil-score/">Telemobil-scoren</a>.</p>
+<p>Vægtningen: {", ".join(f"{n.lower()} {v} %" for n, v, *_ in SCORE_VÆGTE)}. Hele beregningen står i <a href="/telemobil-score/">Telemobil-scoren</a>.</p>
 
 <h2>Hvorfor et lille selskab kan være bedre end et stort</h2>
 <p>Danmark har tre fysiske mobilnet. Alle andre selskaber lejer sig ind på et af
@@ -11812,7 +11838,7 @@ ErrorDocument 404 /404.html
   # blev ikke udført på serveren (siden gav 404).
   RewriteRule ^mobilabonnement-uden-kreditvurdering/?$ https://telemobil.dk/guides/mobilabonnement-uden-kreditvurdering/ [R=301,L]
   # CSV-filerne er flyttet fra /assets/data/ til /aabne-data/
-  RewriteRule ^assets/data/([a-z0-9-]+\.csv)$ https://telemobil.dk/aabne-data/$1 [R=301,L]
+  RewriteRule ^assets/data/([a-z0-9-]+[.]csv)$ https://telemobil.dk/aabne-data/$1 [R=301,L]
   # /side/index.html -> /side/ (undgår dobbelt indhold)
   RewriteCond %{THE_REQUEST} \s/+(.*/)?index\.html[\s?] [NC]
   RewriteRule ^(.*/)?index\.html$ https://telemobil.dk/$1 [R=301,L]
@@ -11973,7 +11999,7 @@ def _hvem(a):
     n = _abonavn(a)
     gb = gb_tekst(a["data_gb"])
     detalje = n if n.lower() == gb.lower() else f"{n} · {gb}"
-    tale = "fri tale" if a["tale"] == "fri" else f"{a['tale']} tale"
+    tale = "fri tale" if a["tale"] == "fri" else f"{a['tale']} tale".replace("1 timer", "1 time")
     return (f'<a href="/udbydere/{u["slug"]}/"><strong>{e(u["navn"])}</strong></a><br>'
             f'<span class="tabel-under">{e(detalje)} · {e(tale)}</span>')
 
@@ -12730,6 +12756,696 @@ tjekke ved brugt køb.</p>
                    "have mistet sin telefon")
 
 
+# ------------------------------------------------------------ NYE GUIDES (NOV. 2026)
+# Fire støtteartikler til pengesiderne. Alle tal beregnes fra feedet ved hver
+# kørsel, så teksten aldrig kan sige noget andet end tabellerne.
+
+KILDER.update({
+    "digst_portering": ("Digitaliseringsstyrelsen — Nummerportering",
+                        "https://digst.dk/tele/telefoni-og-internet/numre/nummerportering/",
+                        "Fristen på én arbejdsdag og retten til kompensation"),
+    "nummervejledning": ("Vejledning til den samlede danske nummerplan (VEJ nr. 9093 af 18/02/2025)",
+                         "https://www.retsinformation.dk/api/pdf/248171",
+                         "Afsnit 10 om 1-dagsportering og rimelig kompensation"),
+    "teleindu_portering": ("Teleindustrien — Nummerportabilitet",
+                           "https://www.teleindu.dk/branchesamarbejde/nummerportabilitet/",
+                           "Branchens aftale og den fælles nummerdatabase"),
+    "cbb_vilkaar": ("CBB Mobil — Generelle vilkår",
+                    "https://www.cbb.dk/lightbokse/signup-flow/aktivering/generelle-vilkar/",
+                    "Eksempel på kompensationssatser ved forsinket nummerflytning"),
+    "slutbrugerbek": ("Slutbrugerbekendtgørelsen (BEK nr. 566 af 24/05/2023), § 6",
+                      "https://www.lovguiden.dk/loven/slutbrugerbekendtgørelsen/kapitel-3",
+                      "Mindst 1 måneds varsel og ret til at opsige uden omkostninger"),
+    "greentel_priser": ("Greentel — Prislister",
+                        "https://www.greentel.dk/priser/",
+                        "Minutpris efter den inkluderede taletid"),
+})
+
+NYE_GUIDE_KRYDSLINKS = {
+    "/mobilabonnement-med-fri-data/": [
+        ("/guides/fri-data-eller-100-gb/", "Fri data eller 100 GB: hvornår betaler det sig?")],
+    "/mobilabonnement-100-gb/": [
+        ("/guides/fri-data-eller-100-gb/", "Fri data eller 100 GB: hvornår betaler det sig?")],
+    "/mobilabonnement-uden-binding/": [
+        ("/guides/nummerflytning/", "Hvor lang tid tager nummerflytning, og hvad hvis det går galt?")],
+    "/billigste-mobilabonnement/": [
+        ("/guides/betaler-du-for-meget/", "Betaler du for meget? Så meget koster et gammelt abonnement")],
+    "/mobilabonnement-med-fri-tale/": [
+        ("/guides/hvad-koster-det-at-ringe/", "Hvad koster det at ringe uden fri tale?")],
+    "/guides/skift-mobilselskab/": [
+        ("/guides/nummerflytning/", "Nummerflytning: tidsfrister, fejl og kompensation")],
+}
+
+
+def _indsaet_krydslinks(sti, html):
+    links = NYE_GUIDE_KRYDSLINKS.get(sti)
+    if not links:
+        return html
+    li = " · ".join(f'<a href="{h}">{e(t)}</a>' for h, t in links)
+    blok = (f'<section class="sektion baand-smal"><p class="krydslink">'
+            f'<strong>Læs også:</strong> {li}</p></section>')
+    mærke = '<section class="sektion baand-smal">\n  <h2>Ofte stillede spørgsmål</h2>'
+    if mærke in html:
+        return html.replace(mærke, blok + mærke, 1)
+    return html.replace("</main>", blok + "</main>", 1)
+
+
+def _tale_tekst(a):
+    t = a["tale"]
+    if t == "fri":
+        return "Fri tale"
+    return t.replace("1 timer", "1 time")
+
+
+def _snit(a):
+    g = gns12(a)
+    return round(g) if g is not None else a["pris"]
+
+
+def _tabel_rk(abon, kolonner, caption):
+    """Lille fælles tabel: kolonner er (overskrift, funktion(a) -> html, er_tal)."""
+    hoved = "".join(f'<th scope="col">{e(o)}</th>' for o, _, _ in kolonner)
+    krop = ""
+    for a in abon:
+        krop += "<tr>" + "".join(
+            f'<td class="tal">{f(a)}</td>' if tal else f"<td>{f(a)}</td>"
+            for _, f, tal in kolonner) + "</tr>"
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>{caption}</caption>
+  <thead><tr>{hoved}</tr></thead>
+  <tbody>{krop}</tbody>
+</table>
+</div>"""
+
+
+# ---------------------------------------------- 1) FRI DATA ELLER 100 GB
+
+def byg_fri_data_eller_100():
+    sti = "/guides/fri-data-eller-100-gb/"
+    b = _betalte()
+    fri = sorted([a for a in b if a["data_gb"] >= 9999], key=_snit)
+    store = sorted([a for a in b if 100 <= a["data_gb"] < 9999], key=_snit)
+    mellem = _billigst_i(50, 99)
+    fd, h = (fri[0] if fri else None), (store[0] if store else None)
+
+    if fd and h:
+        forskel = _snit(fd) - _snit(h)
+        if forskel > 0:
+            kort = (f"Det billigste abonnement med fri data koster i vores sammenligning "
+                    f"{kr(_snit(fd))} kr./md. i snit over 12 måneder, mens det billigste med "
+                    f"100 GB eller mere koster {kr(_snit(h))} kr./md. Fri data koster altså "
+                    f"{kr(forskel)} kr. mere om måneden, eller {kr(forskel * 12)} kr. om året. "
+                    f"Bruger du under 100 GB om måneden, er det penge, du ikke får noget for.")
+        else:
+            kort = (f"Lige nu er fri data ikke dyrere end 100 GB i vores sammenligning: det "
+                    f"billigste med fri data koster {kr(_snit(fd))} kr./md. i snit over 12 "
+                    f"måneder mod {kr(_snit(h))} kr./md. for det billigste med 100 GB eller "
+                    f"mere. Så er valget let — tag fri data, men tjek EU-data og binding.")
+    else:
+        forskel = 0
+        kort = ("Fri data giver kun mening, hvis du rammer loftet på et stort abonnement. "
+                "Se tallene herunder.")
+
+    kol = [
+        ("Abonnement", _hvem, False),
+        ("Data i DK", lambda a: e(gb_tekst(a["data_gb"])), False),
+        ("EU-data", lambda a: f'{a.get("eu_gb") or "—"} GB' if a.get("eu_gb") else "Ikke oplyst", True),
+        ("5G", lambda a: "Ja" if a.get("femg") else "Nej", False),
+        ("Snit 12 mdr.", lambda a: f"<strong>{kr(_snit(a))} kr.</strong>", True),
+    ]
+    tabel_fri = _tabel_rk(fri[:6], kol, f"De {min(6, len(fri))} billigste med fri data i vores "
+                          "sammenligning, sorteret efter snitpris over 12 måneder inkl. "
+                          "intropris og oprettelse.") if fri else ""
+    tabel_store = _tabel_rk(store[:6], kol, f"De {min(6, len(store))} billigste med 100 GB "
+                            "eller mere, samme beregning.") if store else ""
+
+    mellem_tekst = ""
+    if mellem and h:
+        mf = _snit(h) - _snit(mellem)
+        mellem_tekst = (f"<p>Og trinnet under: det billigste med 50–99 GB koster "
+                        f"{kr(_snit(mellem))} kr./md. ({_hvem_kort(mellem)}). "
+                        + (f"Det er {kr(mf)} kr. mindre end det billigste med 100 GB. "
+                           if mf > 0 else "")
+                        + "Ligger dit forbrug omkring gennemsnittet på 26,9 GB, er der stadig god plads.</p>")
+
+    eu_fri = [a.get("eu_gb") or 0 for a in fri if a.get("eu_gb")]
+    eu_tekst = ""
+    if eu_fri:
+        eu_tekst = (f"<p>Blandt abonnementerne med fri data i vores sammenligning ligger "
+                    f"EU-dataen mellem {min(eu_fri)} og {max(eu_fri)} GB om måneden. "
+                    f"Rejser du meget, kan et abonnement med 100 GB og en stor EU-pulje "
+                    f"derfor være bedre end fri data med en lille.</p>")
+
+    brod = f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> {kort}</p></div>
+
+<p>Spørgsmålet er altså ikke, om fri data er godt, men om du bruger nok til, at loftet på
+100 GB nogensinde betyder noget. Se alle priserne på
+<a href="/mobilabonnement-med-fri-data/">mobilabonnementer med fri data</a> og
+<a href="/mobilabonnement-100-gb/">mobilabonnementer med 100 GB eller mere</a>, eller læs
+med herunder, hvis du vil regne på dit eget forbrug først.</p>
+
+<h2>Så meget data bruger danskerne</h2>
+<p>Et gennemsnitligt dansk mobilabonnement brugte 26,9 GB om måneden i andet halvår 2024
+ifølge Digitaliseringsstyrelsens telestatistik. Det er under en tredjedel af 100 GB. Selv
+hvis du bruger dobbelt så meget som gennemsnittet, er der stadig luft.</p>
+<p>Gennemsnittet dækker dog over store forskelle. Dem, der rammer 100 GB, gør det næsten
+altid af én af tre grunde:</p>
+<ul class="pilliste">
+  <li><strong>Mobilen er internet derhjemme.</strong> Bruger du telefonen som hotspot til
+  bærbar eller tv, fordi du ikke har bredbånd, kan forbruget løbe op i flere hundrede GB.</li>
+  <li><strong>Meget video uden wi-fi.</strong> En times video i HD hver dag på mobilnettet
+  løber op i omkring 90 GB om måneden.</li>
+  <li><strong>Flere enheder deler forbindelsen.</strong> Familien på ferie i sommerhuset,
+  tablet i bilen eller en arbejdscomputer på farten.</li>
+</ul>
+<p>Er ingen af dem dig, er fri data en forsikring mod et forbrug, du ikke har. Find dit eget
+tal i telefonens indstillinger under mobildata, eller brug
+<a href="/guides/hvor-meget-data/">vores guide til, hvor meget data du har brug for</a>.</p>
+
+<h2>Prisforskellen i kroner</h2>
+{tabel_fri}
+{tabel_store}
+{mellem_tekst}
+
+<h2>Hvornår fri data betaler sig</h2>
+<ol class="nummerliste">
+  <li><strong>Du har ikke bredbånd.</strong> Så er fri data ofte billigere end et
+  abonnement plus bredbånd. Se også <a href="/guides/mobilt-bredbaand/">om mobilt bredbånd
+  kan erstatte fiber</a>.</li>
+  <li><strong>Du har ramt loftet flere gange.</strong> Kigger du på forbruget de seneste
+  tre måneder og ligger over 80 GB, er der ikke meget margin tilbage.</li>
+  <li><strong>Prisforskellen er lille.</strong> Er forskellen kun et par kroner om
+  måneden, er roen ved ikke at tænke på forbruget værd at betale for.</li>
+</ol>
+
+<h2>Hvornår 100 GB er det rigtige valg</h2>
+<ul class="pilliste">
+  <li><strong>Du er på wi-fi det meste af dagen</strong>, hjemme og på arbejde.</li>
+  <li><strong>Du rejser meget i EU.</strong> Fri data gælder kun i Danmark. I EU får du en
+  fast pulje, og den er ikke altid større på fri data.</li>
+  <li><strong>Du vil kunne skifte ned igen.</strong> Vælg et abonnement uden binding, så
+  kan du gå op eller ned, når forbruget ændrer sig.</li>
+</ul>
+{eu_tekst}
+
+<h2>Fri data er ikke helt fri</h2>
+<p>"Fri data" betyder ubegrænset data i Danmark. Tre ting er værd at kende, før du vælger:</p>
+<ul class="pilliste">
+  <li><strong>EU-data er begrænset.</strong> EU-reglerne om roaming tillader selskaberne at
+  sætte en grænse for data i udlandet på fri data-abonnementer.</li>
+  <li><strong>Rimeligt forbrug.</strong> Vilkårene forbyder typisk at bruge abonnementet som
+  fast internet for en hel virksomhed eller at videresælge det. Til en husstand er det
+  sjældent et problem.</li>
+  <li><strong>Hastigheden afhænger af nettet</strong>, ikke af datamængden. Fri data på et
+  4G-abonnement er ikke hurtigere end 100 GB på 5G. Se
+  <a href="/guides/er-5g-pengene-vaerd/">om 5G er pengene værd</a>.</li>
+</ul>
+
+<h2>Sådan vælger du på to minutter</h2>
+<ol class="nummerliste">
+  <li>Find dit forbrug de seneste tre måneder i telefonens indstillinger.</li>
+  <li>Ligger det under 50 GB, så kig på
+  <a href="/mobilabonnement-30-50-gb/">30–50 GB</a> eller
+  <a href="/mobilabonnement-50-gb/">50 GB</a> — det er her, de fleste sparer mest.</li>
+  <li>Ligger det mellem 50 og 100 GB, så vælg
+  <a href="/mobilabonnement-100-gb/">100 GB eller mere</a>.</li>
+  <li>Ligger det over 100 GB, eller er mobilen dit eneste internet, så vælg
+  <a href="/mobilabonnement-med-fri-data/">fri data</a>.</li>
+</ol>
+
+{kilder([],
+        ["Priser, datamængder, EU-data og 5G hentet fra selskabernes datafeeds to gange i "
+         "døgnet. Snitprisen er intropris, normalpris og oprettelse over 12 måneder delt med 12.",
+         "Dataforbrug: Digitaliseringsstyrelsens telestatistik for andet halvår 2024."])}
+</section>"""
+
+    faq = [
+        {"sp": "Er fri data dyrere end 100 GB?",
+         "sv": (f"I vores sammenligning koster det billigste med fri data {kr(_snit(fd))} kr./md. "
+                f"og det billigste med 100 GB eller mere {kr(_snit(h))} kr./md. i snit over 12 "
+                f"måneder. Tallet opdateres to gange i døgnet.") if fd and h else
+               "Det afhænger af de aktuelle tilbud. Se tabellerne i guiden."},
+        {"sp": "Hvor meget data bruger en dansker om måneden?",
+         "sv": "Et gennemsnitligt dansk mobilabonnement brugte 26,9 GB om måneden i andet halvår "
+               "2024 ifølge Digitaliseringsstyrelsens telestatistik."},
+        {"sp": "Gælder fri data også i udlandet?",
+         "sv": "Nej. Fri data gælder i Danmark. I EU får du en fast datapulje, som står i "
+               "abonnementets vilkår. Uden for EU koster data typisk ekstra."},
+        {"sp": "Kan jeg bruge fri data som hjemmeinternet?",
+         "sv": "Til en almindelig husstand er det normalt ikke et problem. Vilkårene forbyder "
+               "typisk videresalg og erhvervsmæssig brug, så tjek dit selskabs vilkår."},
+        {"sp": "Hvad sker der, når mine 100 GB er brugt?",
+         "sv": "Det afhænger af selskabet. Typisk stopper data, eller du kan købe ekstra. "
+               "Rammer du loftet hver måned, er fri data eller et større abonnement billigere."},
+    ]
+    byg_guide(
+        sti, "Fri data eller 100 GB", "Fri data eller 100 GB: hvornår betaler det sig?",
+        "Fri data eller 100 GB? Se hvornår det betaler sig",
+        "Fri data eller 100 GB? Se prisforskellen i kroner, hvor meget danskerne faktisk "
+        "bruger, og hvornår ubegrænset data er pengene værd.",
+        brod, faq,
+        [("/mobilabonnement-med-fri-data/", "Mobilabonnement med fri data"),
+         ("/mobilabonnement-100-gb/", "Mobilabonnement med 100 GB eller mere"),
+         ("/guides/hvor-meget-data/", "Hvor meget data har jeg brug for?"),
+         ("/guides/mobilt-bredbaand/", "Kan mobilt bredbånd erstatte fiber?")],
+        billede="fri-data-eller-100-gb",
+        altbillede="Smilende kvinde på en bænk ved kanalen bruger sin mobil med en kop kaffe "
+                   "ved siden af")
+
+
+def _hvem_kort(a):
+    u = UMAP[a["udbyder"]]
+    return f'<a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> {e(_abonavn(a))}'
+
+
+# ---------------------------------------------- 2) NUMMERFLYTNING
+
+def tabel_nummerflytning_fejl():
+    rk = [
+        ("Forkert simkortnummer eller kundenummer",
+         "Flytningen bliver afvist, og datoen rykker.",
+         "Tjek tallene på det gamle simkort eller fakturaen, og giv det nye selskab dem igen."),
+        ("Du har selv opsagt det gamle abonnement",
+         "Nummeret kan blive lukket, før flytningen er sket.",
+         "Du har ret til at flytte nummeret i mindst en måned efter opsigelsen. Kontakt det "
+         "nye selskab straks."),
+        ("Flytningen bliver forsinket",
+         "Du kører videre på det gamle abonnement.",
+         "Kontakt det nye selskab og bed om kompensation efter deres vilkår."),
+        ("Det nye simkort virker ikke på flyttedagen",
+         "Ingen opkald eller data.",
+         "Genstart telefonen, tjek at kortet er aktiveret og PIN-koden er rigtig. Ring derefter "
+         "til det nye selskab fra en anden telefon."),
+        ("Nummeret er flyttet uden din accept",
+         "Dit nummer er hos et andet selskab.",
+         "Kontakt dit eget selskab med det samme. Det kan kræve kompensation på dine vegne."),
+        ("Binding eller opsigelsesvarsel hos det gamle selskab",
+         "Du betaler for begge abonnementer en periode.",
+         "Vælg flyttedato efter bindingen, eller regn med den dobbelte udgift."),
+    ]
+    raekker = "".join(f"<tr><td><strong>{e(a)}</strong></td><td>{e(b)}</td><td>{e(c)}</td></tr>"
+                      for a, b, c in rk)
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>De typiske fejl ved nummerflytning, og hvad du gør.</caption>
+  <thead><tr><th scope="col">Hvad sker der</th><th scope="col">Konsekvens</th>
+    <th scope="col">Det gør du</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def byg_nummerflytning():
+    sti = "/guides/nummerflytning/"
+    b = _betalte()
+    uden = [a for a in b if not a["binding"]]
+    esim = len({a["udbyder"] for a in b if a.get("esim")})
+    antal_selsk = len({a["udbyder"] for a in b})
+
+    brod = f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> En nummerflytning skal kunne gennemføres
+på én arbejdsdag. Fristen løber fra det tidspunkt, dit gamle selskab modtager anmodningen,
+og slutter ved udgangen af næste arbejdsdag. I praksis aftaler du en dato med det nye
+selskab, og nummeret skifter den dag. Bliver flytningen forsinket, har du ret til en rimelig
+kompensation. Beløbet står i det nye selskabs vilkår.</p></div>
+
+<p>Det vigtigste er, at du ikke selv opsiger dit gamle abonnement. Det nye selskab gør det
+for dig, når nummeret flytter. {len(uden)} af {len(b)} abonnementer i vores sammenligning
+er uden binding, så du kan flytte nummeret videre igen, hvis du ikke er tilfreds. Se dem
+under <a href="/mobilabonnement-uden-binding/">mobilabonnementer uden binding</a>.</p>
+
+<h2>Sådan foregår en nummerflytning, dag for dag</h2>
+<ol class="nummerliste">
+  <li><strong>Dag 0: Du bestiller.</strong> Du vælger det nye abonnement og svarer ja til at
+  tage nummeret med. Du skal typisk oplyse dit nummer og enten simkortnummeret eller dit
+  kundenummer hos det gamle selskab.</li>
+  <li><strong>Du vælger en dato.</strong> Det tidligste er næste arbejdsdag. Har du binding
+  eller opsigelsesvarsel hos det gamle selskab, så vælg en dato efter, ellers betaler du for
+  begge.</li>
+  <li><strong>Det nye simkort kommer.</strong> Et fysisk kort kommer med posten. Med eSIM
+  får du en QR-kode på mail. {"Alle " + str(antal_selsk) if esim == antal_selsk else f"{esim} af de {antal_selsk}"} selskaber i vores
+  sammenligning tilbyder eSIM.</li>
+  <li><strong>Flyttedagen.</strong> Det gamle simkort holder op med at virke, og det nye
+  overtager nummeret. Sæt det nye kort i, så snart det gamle mister forbindelsen.</li>
+  <li><strong>Den gamle aftale lukkes.</strong> Det gamle selskab sender en slutfaktura.
+  Har du taletid eller forudbetalt saldo, så tjek, om du kan få den udbetalt, før du
+  flytter.</li>
+</ol>
+
+<h2>Reglerne: én arbejdsdag og ret til kompensation</h2>
+<p>Retten til at tage nummeret med står i teleloven, og Digitaliseringsstyrelsens
+nummervejledning beskriver fristen som 1-dagsportering: nummeret skal være flyttet senest
+ved udgangen af den næstfølgende arbejdsdag. Flytningen må ikke ske, før dit abonnement hos
+det nye selskab er begyndt.</p>
+<p>Går det galt, skal selskabet betale en rimelig kompensation. Loven fastsætter ikke et
+beløb. Hvert selskab skriver sine egne satser i abonnementsvilkårene, og
+Digitaliseringsstyrelsen fører ikke tilsyn med størrelsen.</p>
+<p>Et eksempel: CBB Mobils vilkår giver 50 kr. som engangsbeløb plus 5 kr. pr. hverdag ved
+forsinkelse, og 50 kr. plus 50 kr. pr. hverdag, hvis telefonien er afbrudt i mere end
+24 timer. Kravet skal sendes senest 30 dage efter, at fejlen er rettet. Andre selskaber har
+andre satser, så tjek vilkårene hos dit nye selskab.</p>
+
+<h2>Når det går galt</h2>
+{tabel_nummerflytning_fejl()}
+
+<h2>Fortrydelse og klage</h2>
+<p>Har du købt abonnementet online eller over telefonen, har du 14 dages fortrydelsesret.
+Fortryder du efter flytningen, kræver flere selskaber, at du selv sørger for, at et andet
+selskab overtager nummeret inden for fristen. Hos CBB Mobil skal det fx besluttes inden 14
+dage. Bed derfor dit gamle eller et tredje selskab om at flytte nummeret, før du fortryder.</p>
+<p>Får du ikke den kompensation, du mener, du har ret til, så klag først skriftligt til
+selskabet. Hjælper det ikke, kan du som forbruger klage til Teleankenævnet.</p>
+
+<h2>Fem ting, du skal have klar</h2>
+<ul class="pilliste">
+  <li><strong>Dit telefonnummer</strong> og hvem det står i navn på. Står det i en
+  arbejdsgivers eller forælders navn, skal de give lov.</li>
+  <li><strong>Simkortnummeret</strong> eller kundenummeret fra det gamle selskab.</li>
+  <li><strong>Bindingens udløbsdato</strong>, så du ikke betaler dobbelt.</li>
+  <li><strong>Din PIN-kode</strong> til det nye kort. Se
+  <a href="/pin-og-puk-kode/">hvor du finder PIN og PUK</a>.</li>
+  <li><strong>En reserve til MitID</strong>, hvis MitID-appen ligger på den telefon, du
+  skifter fra.</li>
+</ul>
+<p>Hele skiftet trin for trin står i <a href="/guides/skift-mobilselskab/">guiden til at
+skifte mobilselskab</a>.</p>
+
+{kilder(["digst_portering", "nummervejledning", "teleindu_portering", "cbb_vilkaar",
+         "teleankenaevnet"],
+        ["Antal abonnementer uden binding og selskaber med eSIM hentet fra selskabernes "
+         "datafeeds to gange i døgnet."])}
+</section>"""
+
+    faq = [
+        {"sp": "Hvor lang tid tager en nummerflytning?",
+         "sv": "Nummeret skal kunne flyttes på én arbejdsdag, regnet fra det gamle selskab "
+               "modtager anmodningen. Oftest aftaler du en bestemt dato med det nye selskab."},
+        {"sp": "Skal jeg selv opsige mit gamle abonnement?",
+         "sv": "Nej. Det nye selskab opsiger det for dig, når nummeret flytter. Opsiger du selv, "
+               "risikerer du, at nummeret lukkes, før det er flyttet."},
+        {"sp": "Hvad får jeg i kompensation, hvis nummerflytningen bliver forsinket?",
+         "sv": "Du har ret til en rimelig kompensation, men beløbet fastsættes af selskabet i "
+               "dets vilkår. CBB Mobil giver fx 50 kr. plus 5 kr. pr. hverdag ved forsinkelse."},
+        {"sp": "Mister jeg forbindelsen under nummerflytningen?",
+         "sv": "På flyttedagen holder det gamle simkort op med at virke, og det nye overtager. "
+               "Er telefonien afbrudt i mere end et døgn, giver flere selskaber ekstra "
+               "kompensation."},
+        {"sp": "Kan jeg flytte nummeret, selvom jeg har binding?",
+         "sv": "Ja, men bindingen hos det gamle selskab gælder stadig, så du kommer til at "
+               "betale for begge abonnementer, indtil bindingen udløber."},
+    ]
+    byg_guide(
+        sti, "Nummerflytning", "Hvor lang tid tager nummerflytning, og hvad hvis det går galt?",
+        "Hvor lang tid tager nummerflytning? Fejl og kompensation",
+        "Nummerflytning skal ske på én arbejdsdag. Se tidslinjen, de typiske fejl og hvilken "
+        "kompensation du har ret til, hvis flytningen bliver forsinket.",
+        brod, faq,
+        [("/mobilabonnement-uden-binding/", "Mobilabonnement uden binding"),
+         ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
+         ("/guides/esim/", "eSIM forklaret"),
+         ("/guides/opsig-mobilabonnement/", "Sådan opsiger du dit mobilabonnement")],
+        billede="nummerflytning",
+        altbillede="Mand på café kigger undrende på sin mobil, mens han venter på, at "
+                   "nummeret bliver flyttet")
+
+
+# ---------------------------------------------- 3) BETALER DU FOR MEGET?
+
+REF_PRIS = 199  # Et typisk beløb for et ældre abonnement med fri tale og data.
+
+
+def tabel_for_meget():
+    raekker = ""
+    for navn, lav, hoej, sti_g in DATAGRUPPER:
+        a = _billigst_i(lav, hoej, mdr=12, kun_fri_tale=True)
+        if not a:
+            continue
+        s = _snit(a)
+        spar_aar = max(0, (REF_PRIS - s) * 12)
+        spar_5 = max(0, REF_PRIS * 60 - _samlet(a, 60))
+        raekker += f"""<tr>
+  <td><a href="{sti_g}"><strong>{e(navn)}</strong></a></td>
+  <td>{_hvem(a)}</td>
+  <td class="tal">{kr(s)} kr.</td>
+  <td class="tal">{kr(spar_aar) + " kr." if spar_aar else "—"}</td>
+  <td class="tal"><strong>{kr(spar_5) + " kr." if spar_5 else "—"}</strong></td>
+</tr>"""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Billigste abonnement med fri tale i hver størrelse i vores sammenligning, og hvad
+  du sparer, hvis du i dag betaler {REF_PRIS} kr./md. Over 5 år er intropris og oprettelse
+  regnet med én gang, resten er normalpris.</caption>
+  <thead><tr><th scope="col">Datamængde</th><th scope="col">Billigst i dag</th>
+    <th scope="col">Snit 12 mdr.</th><th scope="col">Sparet pr. år</th>
+    <th scope="col">Sparet over 5 år</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def byg_betaler_for_meget():
+    sti = "/guides/betaler-du-for-meget/"
+    a30 = _billigst_i(30, 9998, kun_fri_tale=True)
+    if a30:
+        s = _snit(a30)
+        spar5 = max(0, REF_PRIS * 60 - _samlet(a30, 60))
+        kort = (f"Betaler du {REF_PRIS} kr. om måneden for et abonnement, du har haft i flere år, "
+                f"kan du i vores sammenligning få mindst 30 GB med fri tale for {kr(s)} kr./md. "
+                f"i snit over 12 måneder. Over 5 år er forskellen {kr(spar5)} kr. Intropriserne er "
+                f"til nye kunder, og dit gamle abonnement bliver ikke automatisk billigere.")
+    else:
+        kort = ("Har du haft samme abonnement i flere år, betaler du ofte mere end nye kunder "
+                "for det samme. Se regnestykket herunder.")
+
+    brod = f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> {kort}</p></div>
+
+<p>Den hurtigste måde at tjekke det på er at finde din pris på fakturaen og sammenligne
+den med <a href="/billigste-mobilabonnement/">de billigste mobilabonnementer lige nu</a>,
+regnet over et helt år. Herunder kan du se, hvad det betyder i kroner.</p>
+
+<h2>Regnestykket: {REF_PRIS} kr. om måneden mod markedet i dag</h2>
+{tabel_for_meget()}
+<p>Betaler du mere eller mindre end {REF_PRIS} kr., så træk din egen pris fra snitprisen og
+gang med 12. Det er din besparelse om året.</p>
+
+<h2>Hvorfor gamle abonnementer bliver dyre</h2>
+<ul class="pilliste">
+  <li><strong>Konkurrencen handler om nye kunder.</strong> Intropriser og kampagner er for
+  dem, der skifter. Har du siddet stille, får du dem ikke.</li>
+  <li><strong>Datamængderne vokser, prisen følger ikke med ned.</strong> Nye abonnementer
+  giver ofte mere data for pengene end dem, der blev solgt for nogle år siden. Dit gamle
+  abonnement opgraderes sjældent af sig selv.</li>
+  <li><strong>Prisstigninger på eksisterende kunder.</strong> Selskaberne må hæve prisen,
+  men de skal varsle mindst en måned før, og du har ret til at opsige uden omkostninger.
+  Se <a href="/guides/prisstigning-mobilabonnement/">hvad du kan gøre ved en
+  prisstigning</a>.</li>
+  <li><strong>Introprisen er udløbet.</strong> Mange tegnede abonnementet til en lav pris
+  de første måneder og har siden betalt normalprisen uden at tænke over det. Derfor regner
+  vi altid med <a href="/12-maaneders-prisen/">prisen over 12 måneder</a>.</li>
+</ul>
+
+<h2>Sådan tjekker du dit abonnement på fem minutter</h2>
+<ol class="nummerliste">
+  <li><strong>Find fakturaen.</strong> Notér månedsprisen, datamængden og om der er fri
+  tale.</li>
+  <li><strong>Find dit forbrug.</strong> Telefonens indstillinger viser dataforbruget. Ligger
+  du langt under din datamængde, kan du gå ned i størrelse.</li>
+  <li><strong>Tjek binding.</strong> Står der en slutdato i aftalen, så skift efter den.
+  {len([x for x in _betalte() if not x["binding"]])} af {len(_betalte())} abonnementer i vores
+  sammenligning er uden binding.</li>
+  <li><strong>Sammenlign med 12-månedersprisen.</strong> Ikke med introprisen alene.</li>
+  <li><strong>Spørg dit eget selskab.</strong> Nogle gange kan du skifte til et nyere
+  abonnement hos samme selskab. Kan de ikke matche prisen, så tag nummeret med et andet sted
+  hen. Det tager én arbejdsdag, se <a href="/guides/nummerflytning/">guiden til
+  nummerflytning</a>.</li>
+</ol>
+
+<h2>Hvem betaler typisk for meget?</h2>
+<ul class="pilliste">
+  <li><strong>Dem med abonnementet i en pakke</strong> med tv eller bredbånd, hvor prisen
+  for mobilen er svær at se.</li>
+  <li><strong>Dem, der fik telefonen med i købet.</strong> Når telefonen er betalt af,
+  fortsætter abonnementsprisen ofte uændret. Se <a href="/mobilabonnement-med-telefon/">hvordan
+  telefonpakker er skruet sammen</a>.</li>
+  <li><strong>Forældre og bedsteforældre</strong>, der har haft samme abonnement i mange år.
+  Se <a href="/mobilabonnement-til-aeldre/">abonnementer til ældre</a>.</li>
+</ul>
+
+{kilder(["slutbrugerbek", "teleankenaevnet"],
+        [f"Priser hentet fra selskabernes datafeeds to gange i døgnet. Referenceprisen på "
+         f"{REF_PRIS} kr. er et regneeksempel, ikke et gennemsnit af markedet."])}
+</section>"""
+
+    faq = [
+        {"sp": "Hvordan ved jeg, om jeg betaler for meget for mit mobilabonnement?",
+         "sv": "Find månedsprisen og datamængden på din faktura, og sammenlign med prisen over "
+               "12 måneder for et abonnement med samme data og fri tale. Er forskellen mere "
+               "end et par kroner, betaler du for meget."},
+        {"sp": "Må mit teleselskab hæve prisen på mit abonnement?",
+         "sv": "Ja, men de skal varsle ændringen mindst en måned før, og du har ret til at "
+               "opsige aftalen uden omkostninger (slutbrugerbekendtgørelsens § 6)."},
+        {"sp": "Mister jeg mit nummer, hvis jeg skifter?",
+         "sv": "Nej. Du tager nummeret med, og det nye selskab opsiger det gamle abonnement "
+               "for dig. Flytningen skal kunne ske på én arbejdsdag."},
+        {"sp": "Kan jeg få en bedre pris hos mit nuværende selskab?",
+         "sv": "Ofte ja. Spørg om du kan skifte til et af selskabets nuværende abonnementer. "
+               "Kan de ikke matche markedet, kan du skifte uden at miste nummeret."},
+    ]
+    byg_guide(
+        sti, "Betaler du for meget?", "Betaler du for meget? Så meget koster et gammelt abonnement",
+        "Betaler du for meget for dit mobilabonnement? Tjek det her",
+        "Har du haft samme mobilabonnement i årevis? Se hvad det koster over 5 år i forhold "
+        "til markedet i dag, og tjek dit abonnement på fem minutter.",
+        brod, faq,
+        [("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
+         ("/guides/prisstigning-mobilabonnement/", "Prisstigning på mobilabonnement"),
+         ("/12-maaneders-prisen/", "Sådan regner vi 12-månedersprisen"),
+         ("/guides/nummerflytning/", "Nummerflytning trin for trin")],
+        billede="betaler-du-for-meget",
+        altbillede="Mand ved køkkenbordet gennemgår sin mobilregning med en kop kaffe")
+
+
+# ---------------------------------------------- 4) HVAD KOSTER DET AT RINGE?
+
+GREENTEL_MINUT = 0.48  # kr./min. efter inkluderet taletid, greentel.dk/priser 1. nov. 2026
+
+
+def tabel_fri_tale_merpris():
+    raekker = ""
+    for navn, lav, hoej, sti_g in DATAGRUPPER:
+        k = [a for a in _betalte() if lav <= a["data_gb"] <= hoej]
+        med = [a for a in k if a["tale"] == "fri"]
+        uden = [a for a in k if a["tale"] != "fri"]
+        if not med or not uden:
+            continue
+        m, u = min(med, key=_snit), min(uden, key=_snit)
+        forskel = _snit(m) - _snit(u)
+        raekker += f"""<tr>
+  <td><a href="{sti_g}"><strong>{e(navn)}</strong></a></td>
+  <td>{_hvem(u)}<br><span class="tabel-under">{kr(_snit(u))} kr./md.</span></td>
+  <td>{_hvem(m)}<br><span class="tabel-under">{kr(_snit(m))} kr./md.</span></td>
+  <td class="tal"><strong>{(kr(forskel) + " kr.") if forskel > 0 else "Ingen merpris"}</strong></td>
+</tr>"""
+    if not raekker:
+        return ""
+    return f"""<div class="tabelramme">
+<table class="datatabel">
+  <caption>Billigste abonnement med og uden fri tale i hver størrelse i vores sammenligning,
+  i snit over 12 måneder.</caption>
+  <thead><tr><th scope="col">Datamængde</th><th scope="col">Uden fri tale</th>
+    <th scope="col">Med fri tale</th><th scope="col">Merpris for fri tale</th></tr></thead>
+  <tbody>{raekker}</tbody>
+</table>
+</div>"""
+
+
+def byg_hvad_koster_det_at_ringe():
+    sti = "/guides/hvad-koster-det-at-ringe/"
+    b = _betalte()
+    begr = sorted([a for a in b if a["tale"] != "fri"], key=_snit)
+    andel_fri = len([a for a in b if a["tale"] == "fri"])
+    ex_min = 120
+    ex_kr = f"{ex_min * GREENTEL_MINUT:.2f}".replace(".", ",")
+
+    kol = [
+        ("Abonnement", _hvem, False),
+        ("Taletid", lambda a: e(_tale_tekst(a)), False),
+        ("Data", lambda a: e(gb_tekst(a["data_gb"])), False),
+        ("Snit 12 mdr.", lambda a: f"<strong>{kr(_snit(a))} kr.</strong>", True),
+    ]
+    tabel_begr = _tabel_rk(begr[:10], kol, "Abonnementer med begrænset taletid i vores "
+                           "sammenligning, sorteret efter snitpris over 12 måneder.") if begr else ""
+
+    brod = f"""<section class="sektion baand-smal artikel">
+<div class="udtag"><p><strong>Kort svar:</strong> {andel_fri} af {len(b)} abonnementer i
+vores sammenligning har fri tale. Har dit abonnement et loft, typisk 1, 5 eller 15 timer,
+betaler du for hvert minut over loftet. Hos Greentel koster det 48 øre i minuttet, så to
+timers ekstra snak koster {ex_kr} kr. Opkald til betalingsnumre og til udlandet er ikke med
+i fri tale.</p></div>
+
+<p>Taler du mere end et par timer om måneden, er fri tale som regel billigst i længden. Se
+de aktuelle priser på <a href="/mobilabonnement-med-fri-tale/">mobilabonnementer med fri
+tale</a>, eller læs videre for at se, hvad du betaler uden.</p>
+
+<h2>Hvad fri tale koster ekstra</h2>
+{tabel_fri_tale_merpris() or "<p>Lige nu er der ikke abonnementer både med og uden fri tale i samme størrelse i vores sammenligning.</p>"}
+<p>Merprisen er forskellen mellem det billigste abonnement med og uden fri tale i samme
+datastørrelse. Er den lav, er der næsten ingen grund til at tage et abonnement med loft.</p>
+
+<h2>Abonnementer med begrænset taletid</h2>
+{tabel_begr or "<p>Alle abonnementer i vores sammenligning har fri tale lige nu.</p>"}
+
+<h2>Når timerne er brugt: minutpris og eksempler</h2>
+<p>Ringer du ud over den inkluderede taletid, betaler du en minutpris. Greentel tager
+48 øre i minuttet i Danmark og EU efter den inkluderede tale, ifølge selskabets egen
+prisliste. Andre selskaber har andre takster, så tjek prislisten hos dit eget.</p>
+<ul class="pilliste">
+  <li><strong>5 timer</strong> er 300 minutter, eller cirka 10 minutter om dagen.</li>
+  <li><strong>En time ekstra</strong> til 48 øre koster {f"{60 * GREENTEL_MINUT:.2f}".replace(".", ",")} kr.</li>
+  <li><strong>To timer ekstra</strong> koster {ex_kr} kr. — ofte mere end prisforskellen
+  til et abonnement med fri tale.</li>
+</ul>
+<p>Nogle abonnementer har også en opkaldsafgift pr. samtale. Den betyder mest, hvis du
+ringer mange korte opkald.</p>
+
+<h2>Det er ikke med i fri tale</h2>
+<ul class="pilliste">
+  <li><strong>Betalingsnumre</strong> som 90-numre og takserede servicenumre.</li>
+  <li><strong>Opkald fra Danmark til udlandet.</strong> Fri tale dækker som regel kun
+  opkald til danske numre. Se <a href="/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/">hvad det koster
+  at ringe til udlandet</a>.</li>
+  <li><strong>Opkald uden for EU</strong>, når du selv er på rejse.</li>
+  <li><strong>Overtakserede sms'er</strong>, fx afstemninger og donationer.</li>
+</ul>
+
+<h2>Hvem kan nøjes uden fri tale?</h2>
+<ul class="pilliste">
+  <li><strong>Dem, der mest skriver og bruger apps.</strong> Opkald over Messenger,
+  WhatsApp og FaceTime bruger data, ikke taletid.</li>
+  <li><strong>Børn og unge</strong>, der ringer lidt. Se
+  <a href="/mobilabonnement-til-boern/">abonnementer til børn</a>.</li>
+  <li><strong>Dem, der bruger telefonen sjældent.</strong> Her kan et
+  <a href="/taletidskort/">taletidskort</a> være billigere end et abonnement.</li>
+</ul>
+<p>Find dit faktiske forbrug i dit selskabs app eller på fakturaen, før du vælger loft.</p>
+
+{kilder(["greentel_priser"],
+        ["Taletid, datamængde og priser hentet fra selskabernes datafeeds to gange i døgnet.",
+         "Greentels minutpris kontrolleret på selskabets prisside 1. november 2026."])}
+</section>"""
+
+    faq = [
+        {"sp": "Hvad koster det at ringe uden fri tale?",
+         "sv": "Du betaler en minutpris for hvert minut over den inkluderede taletid. Hos "
+               "Greentel er det 48 øre i minuttet i Danmark og EU. Andre selskaber har andre "
+               "takster."},
+        {"sp": "Hvor mange abonnementer har fri tale?",
+         "sv": f"{andel_fri} af {len(b)} abonnementer i vores sammenligning har fri tale. "
+               "Tallet opdateres to gange i døgnet."},
+        {"sp": "Er opkald til udlandet med i fri tale?",
+         "sv": "Nej. Fri tale dækker opkald til danske numre. Opkald fra Danmark til "
+               "udenlandske numre er som regel ikke med og koster ekstra."},
+        {"sp": "Bruger opkald på WhatsApp og Messenger taletid?",
+         "sv": "Nej, de bruger data. En times taleopkald over app bruger typisk under 100 MB."},
+    ]
+    byg_guide(
+        sti, "Ringe uden fri tale", "Hvad koster det at ringe uden fri tale?",
+        "Hvad koster det at ringe uden fri tale? Minutpriser 2026",
+        "Hvad koster det at ringe, når den inkluderede taletid er brugt? Se minutpriser, "
+        "merprisen for fri tale og hvad fri tale ikke dækker.",
+        brod, faq,
+        [("/mobilabonnement-med-fri-tale/", "Mobilabonnement med fri tale"),
+         ("/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/", "Ring til udlandet"),
+         ("/taletidskort/", "Taletidskort"),
+         ("/mobilabonnement-uden-data/", "Mobilabonnement uden data")],
+        billede="ringe-uden-fri-tale",
+        altbillede="Kvinde ved et busstoppested taler i mobil med en avis i hånden")
+
+
+
 # ------------------------------------------------------------ STUDIERABAT
 
 def tabel_studie_uddannelse():
@@ -13162,6 +13878,10 @@ def byg_q4():
     byg_black_friday()
     byg_mistet_telefon()
     byg_studierabat()
+    byg_fri_data_eller_100()
+    byg_nummerflytning()
+    byg_betaler_for_meget()
+    byg_hvad_koster_det_at_ringe()
     byg_barnets_foerste_mobil()
 
 
@@ -13626,7 +14346,8 @@ og graferne på selskabernes sider. Datasættet kan hentes frit under
   udbetaling og oprettelse.</li>
   <li><strong>Prisudvikling</strong> måles på normalprisen. En intropris siger noget om en
   kampagne, ikke om prisniveauet.</li>
-  <li><strong>Telemobil-scoren</strong> samler pris, data og vilkår i ét tal. Vægtene står på
+  <li><strong>Telemobil-scoren</strong> samler pris, data og vilkår i ét tal:
+  {", ".join(f"{n.lower()} {v} %" for n, v, *_ in SCORE_VÆGTE)}. Hele formlen står på
   <a href="/telemobil-score/">siden om scoren</a>.</li>
 </ul>
 
