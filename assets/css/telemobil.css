@@ -2677,3 +2677,24 @@ body{font-variant-numeric:tabular-nums}
 .adr-soeg li.ok i::after{content:"";position:absolute;left:5px;top:2px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
 @keyframes adr-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.adr-soeg li.aktiv i{animation:none}.adr-soeg-bar span{transition:none}}
+
+/* Internet priser: nøgletal, beregnere og graf */
+.ip-fliser{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin:1.4rem 0}
+.ip-flise{background:#fff;border:1px solid #E3E7F2;border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:.25rem}
+.ip-flise b{font-size:1.45rem;line-height:1.1;color:#141A33}
+.ip-flise span{font-size:.85rem;color:#5B6178}
+.ip-beregnere{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin:1.2rem 0}
+.ip-beregner{background:#fff;border:1px solid #E3E7F2;border-radius:14px;padding:1.2rem;display:grid;gap:.7rem}
+.ip-beregner h3{margin:0;font-size:1.05rem}
+.ip-beregner label{display:grid;gap:.3rem;font-size:.92rem;color:#3B4157}
+.ip-beregner input[type=number],.ip-beregner select{font:inherit;padding:.6rem .7rem;border:1px solid #CBD1E1;border-radius:10px;background:#fff;min-height:44px}
+.ip-beregner .ip-tjek{display:flex;align-items:center;gap:.5rem}
+.ip-beregner .ip-tjek input{width:20px;height:20px}
+.ip-svar{margin:.2rem 0 0;padding:.8rem;background:#F1FAF5;border-radius:10px;font-size:.95rem}
+.ip-graf{margin:1.2rem 0;background:#fff;border:1px solid #E3E7F2;border-radius:14px;padding:1rem}
+.ip-graf svg{width:100%;height:auto;display:block}
+.ip-linje{fill:none;stroke:#0A7A4B;stroke-width:2.5}
+.ip-akse{stroke:#CBD1E1}
+.ip-tekst{font-size:12px;fill:#5B6178}
+.ip-graf figcaption{font-size:.85rem;color:#5B6178;margin-top:.5rem}
+.datatabel tr.sum td{font-weight:700;background:#F6F8FC}
