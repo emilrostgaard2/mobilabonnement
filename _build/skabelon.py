@@ -89,6 +89,7 @@ MENU = [
 
 # Bredbåndssektionen har sine egne undersider. Sættes af build.py.
 BREDBAAND_MENU = [
+    ("/internet-priser/", "Internet priser"),
     ("/bredbaand/", "Bredbånd sammenlignet"),
     ("/bredbaand/fibernet/", "Fibernet"),
     ("/bredbaand/5g/", "5G internet"),
@@ -614,7 +615,7 @@ def forfatterboks(gennemgået=None):
 </aside>"""
 
 
-def gennemgangslinje(opdateret, fakta="Alle priser kontrolleret mod udbydernes egne sider"):
+def gennemgangslinje(opdateret, fakta="Priser fra udbydernes egne datafeeds, opdateret to gange i døgnet"):
     """Forfatternavnet linker til profilsiden. Et navn uden link kan ikke
     efterprøves — og så er det ikke et tillidssignal, bare en påstand."""
     return f"""<div class="gennemgang">
