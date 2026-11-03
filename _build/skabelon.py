@@ -91,10 +91,11 @@ MENU = [
 BREDBAAND_MENU = [
     ("/internet-priser/", "Internet priser"),
     ("/bredbaand/", "Bredbånd sammenlignet"),
+    ("/bredbaand/udbydere/", "Internetudbydere"),
     ("/bredbaand/fibernet/", "Fibernet"),
     ("/bredbaand/5g/", "5G internet"),
     ("/bredbaand/kabel-internet/", "Kabel-internet"),
-    ("/guides/mobilt-bredbaand/", "Guide: mobilt bredbånd"),
+    ("/bredbaand/adressetjek/", "Tjek din adresse"),
 ]
 
 # Sættes af build.py til scoremaerkat(). Uden den vises intet — skabelonen

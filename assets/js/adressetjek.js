@@ -162,7 +162,38 @@
     k.sort(function (a, b) { return a.a - b.a; });
     return k[0];
   }
+  /* Trin-for-trin søgning: viser hvad der faktisk sker, før resultatet vises.
+     Alle trin er sande — vi påstår ikke at hente noget, vi ikke henter. */
+  var soegId = 0;
   function resultat(f) {
+    var id = ++soegId;
+    var trin = ["Finder adressen i adresseregistret",
+      "Tjekker dækning på adressen (Digitaliseringsstyrelsen)",
+      "Finder de tilbud, der kan leveres på adressen",
+      "Sorterer efter pris det første år"];
+    var hurtig = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var pause = hurtig ? 120 : 480;
+    res.innerHTML = '<div class="adr-soeg" role="status" aria-live="polite"><div class="adr-soeg-top">' +
+      "<b>Tjekker " + esc(felt.value) + '</b><span class="adr-soeg-pct">0%</span></div>' +
+      '<div class="adr-soeg-bar"><span></span></div><ol>' +
+      trin.map(function (t) { return '<li><i aria-hidden="true"></i>' + esc(t) + "</li>"; }).join("") + "</ol></div>";
+    res.hidden = false;
+    if (std) std.hidden = true;
+    try { res.scrollIntoView({ behavior: hurtig ? "auto" : "smooth", block: "nearest" }); } catch (e) {}
+    var li = res.querySelectorAll(".adr-soeg li"), bar = res.querySelector(".adr-soeg-bar span"),
+      pct = res.querySelector(".adr-soeg-pct");
+    function trinN(i) {
+      if (id !== soegId) return;
+      if (i > 0) li[i - 1].className = "ok";
+      if (i < li.length) li[i].className = "aktiv";
+      var v = Math.round(i / li.length * 100);
+      bar.style.width = v + "%"; pct.textContent = v + "%";
+      if (i < li.length) return setTimeout(function () { trinN(i + 1); }, pause + (i === 1 ? 200 : 0));
+      setTimeout(function () { if (id === soegId) visResultat(f); }, hurtig ? 0 : 250);
+    }
+    trinN(0);
+  }
+  function visResultat(f) {
     var fdl = f[0], ful = f[1], kdl = f[2], kul = f[3], xdl = f[4], mdl = f[5], mul = f[6], tdl = f[7];
     var rk = [
       ["Fiber", fdl, ful], ["Kabel-tv (coax)", kdl, kul], ["5G / mobilt bredbånd", mdl, mul],

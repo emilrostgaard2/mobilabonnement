@@ -175,12 +175,19 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
         # sig netop nu, så ret datoen med det samme i stedet for ved næste kørsel.
         # Mange guides skriver selv deres gennemgangslinje med dagens dato.
         # Her sættes den rigtige ændringsdato ind ét sted for dem alle.
-        dato = sidedato(sti, html)
+        gd = guide_datoer(sti)
+        dato = (gd[1] or gd[0]) if gd else sidedato(sti, html)
         try:
             dansk = dansk_dato(date.fromisoformat(dato))
         except ValueError:
             dansk = None
-        if dansk:
+        if gd:
+            udg = dansk_dato(date.fromisoformat(gd[0]))
+            linje = (f'Udgivet <b>{udg}</b></span><span>Opdateret <b>{dansk}</b>' if gd[1]
+                     else f'Udgivet <b>{udg}</b>')
+            html = re.sub(r'(<div class="gennemgang[^"]*">.*?)Opdateret <b>[^<]*</b>',
+                          lambda m: m.group(1) + linje, html, count=1, flags=re.S)
+        elif dansk:
             html = re.sub(r'(<div class="gennemgang[^"]*">.*?Opdateret <b>)[^<]*(</b>)',
                           lambda m: m.group(1) + dansk + m.group(2), html, count=1, flags=re.S)
             html = re.sub(r'(<meta property="article:modified_time" content=")[^"]*(")',
@@ -240,6 +247,10 @@ def sidst_aendret(sti):
     der ikke er rørt i en måned. Det er hverken sandt over for læseren eller
     troværdigt over for Google. Fingeraftrykkene ligger allerede i
     sidehistorik.json, som sitemappet også bruger."""
+    gd = guide_datoer(sti) if "UDGIVET" in globals() else None
+    if gd:
+        raa = gd[1] or gd[0]
+        return raa, dansk_dato(date.fromisoformat(raa))
     post = SIDEHISTORIK.get(sti)
     raa = (post or {}).get("dato") or ISO
     try:
@@ -654,6 +665,33 @@ def faqld(sp):
 
 
 UDGIVET = {
+    # Hvornår hver guide blev udgivet. Udledt af hvornår guidens billede blev lagt
+    # på sitet, da guiden og billedet blev lavet samtidig.
+    "/guides/hvor-meget-data/": "2026-08-20",
+    "/guides/skift-mobilselskab/": "2026-08-20",
+    "/guides/daekning-og-netvaerk/": "2026-08-20",
+    "/guides/esim/": "2026-08-20",
+    "/guides/mobilabonnement-i-udlandet/": "2026-08-20",
+    "/guides/prisstigning-mobilabonnement/": "2026-08-20",
+    "/guides/mobilabonnement-eller-bredbaand/": "2026-08-20",
+    "/guides/mobilabonnement-trods-rki/": "2026-08-20",
+    "/guides/opsig-mobilabonnement/": "2026-08-20",
+    "/hvad-koster-et-mobilabonnement/": "2026-08-20",
+    "/guides/mobilabonnement-uden-kreditvurdering/": "2026-08-20",
+    "/mobilabonnement-til-familie/": "2026-08-20",
+    "/mobilabonnement-til-erhverv/": "2026-08-20",
+    "/guides/simkort/": "2026-08-20",
+    "/guides/mobil-virker-ikke/": "2026-08-20",
+    "/guides/undgaa-hoej-regning/": "2026-08-20",
+    "/guides/koeb-mobiltelefon/": "2026-08-20",
+    "/guides/hvor-meget-data/apps/": "2026-08-28",
+    "/guides/mobilt-bredbaand/": "2026-08-28",
+    "/guides/mobilabonnement-i-udlandet/ringe-til-udlandet/": "2026-08-28",
+    "/guides/er-5g-pengene-vaerd/": "2026-08-28",
+    "/guides/langsomt-internet/": "2026-09-05",
+    "/guides/to-numre-en-telefon/": "2026-09-05",
+    "/guides/flyt-internettet/": "2026-09-05",
+    "/guides/ping-og-svartid/": "2026-09-05",
     "/guides/mistet-telefon/": "2026-09-27",
     "/guides/studierabat-mobilabonnement/": "2026-09-27",
     "/guides/barnets-foerste-mobil/": "2026-09-27",
@@ -671,6 +709,26 @@ UDGIVET = {
     "/guides/internet-uden-binding/": "2026-11-03",
     "/guides/del-internet-fra-mobil/": "2026-11-03",
 }
+
+# Hvornår en guide sidst fik en reel indholdsmæssig opdatering. Skrives i hånden,
+# når teksten ændres — aldrig automatisk. Delte tabeller, priser og design tæller
+# ikke som en opdatering af selve guiden.
+OPDATERET_GUIDE = {
+    "/guides/mobilt-bredbaand/": "2026-11-03",
+    "/guides/ping-og-svartid/": "2026-11-03",
+    "/guides/langsomt-internet/": "2026-11-03",
+    "/guides/flyt-internettet/": "2026-11-03",
+}
+
+
+def guide_datoer(sti):
+    """(udgivet, opdateret eller None) for artikler med kendt dato, ellers None."""
+    u = UDGIVET.get(sti)
+    if not u:
+        return None
+    o = OPDATERET_GUIDE.get(sti)
+    return u, (o if o and o > u else None)
+
 
 
 def artikelld(sti, titel, beskrivelse, ordtal=None, emne="Mobilabonnement", billede=None):
@@ -6192,8 +6250,8 @@ til <a href="/guides/hvor-meget-data/">hvor meget data du har brug for</a>.</p>
     # ------------------------------------------------ mobilt bredbånd
     byg_guide(
         "/guides/mobilt-bredbaand/", "Mobilt bredbånd",
-        "Mobilt bredbånd: router, dataloft og pris",
-        "Mobilt bredbånd: 4G- og 5G-router, dataloft og pris",
+        "Mobilt internet og mobilt bredbånd",
+        "Mobilt internet: priser, router og data (mobilt bredbånd)",
         "Hvad mobilt bredbånd er, hvad det koster, hvad du skal vide om router og "
         "dataloft — og hvornår det bliver en dyr fejl.",
         f"""<section class="sektion baand-smal artikel">
@@ -7514,7 +7572,7 @@ def _bb_logo(a, h=22):
     if os.path.exists(fil):
         return (f'<img src="/assets/img/logoer/{a["udbyder"]}.webp" alt="{e(a["udbyder_navn"])}" '
                 f'loading="lazy" decoding="async" height="{h}" width="{_logo_w(a["udbyder"], h)}" '
-                f'class="bb-logo">')
+                f'class="bb-logo"><span class="sr-only">{e(a["udbyder_navn"])}</span>')
     return f'<strong>{e(a["udbyder_navn"])}</strong>'
 
 
@@ -7648,7 +7706,7 @@ er stærkest på din adresse.</caption>
 
 BB_EKSTRA = {
     "fiber": """
-<h2>Billigste fibernet på 1000 Mbit/s</h2>
+<h2>1000 Mbit internet (1000/1000): billigste pris</h2>
 <p>På fiber er 1000/1000 Mbit/s standard hos de fleste selskaber, og kampagnerne ligger
 ofte netop på det højeste trin. Derfor kan 1000 Mbit/s være billigere end 100 Mbit/s det
 første halve år. Se hastighedstabellen ovenfor, og sæt en påmindelse til den måned,
@@ -7660,7 +7718,7 @@ opsigelse. Er fiberen allerede ført ind i huset, skal der som regel ikke en tek
 du sætter routeren i fiberboksen. Er der ikke fiber i huset endnu, er det netejeren, der
 graver og installerer, og det kan tage flere uger.</p>
 
-<h2>Hvem ejer fibernettet på din adresse?</h2>
+<h2>Fiber internet udbydere: hvem leverer på dit net?</h2>
 <p>Fiberkablet ejes af et netselskab, mens du køber selve internetforbindelsen hos et
 internetselskab. De største netselskaber er
 <a href="https://via.ritzau.dk/pressemeddelelse/14473053/danmarks-storste-fibernet-skifter-navn-til-sinal?lang=da" rel="nofollow noopener" target="_blank">Sinal</a>
@@ -7692,17 +7750,17 @@ stærkest hos dig, og vælg derefter det billigste selskab på det net.</p>
 og alle master i Mastedatabasen, som myndighederne driver.</p>
 [[NETMAALING]]
 
-<h2>Router til 5G: lån frem for køb</h2>
+<h2>5G router til internet: lån frem for køb</h2>
 <p>Næsten alle selskaber låner dig en 5G-router, så længe du er kunde. En tilsvarende
 router koster typisk 1.500–2.000 kr. at købe. Routeren skal returneres ved opsigelse —
 ellers bliver den opkrævet. Placer den i et vindue mod masten, ikke i et skab.</p>
 
-<h2>Fri data eller dataloft?</h2>
+<h2>Ubegrænset 5G internet: fri data eller dataloft?</h2>
 <p>Skal 5G erstatte fast internet, bør abonnementet være uden dataloft. En husstand, der
 streamer om aftenen, bruger let 150–300 GB om måneden. Tjek vilkårene hos selskabet,
 før du bestiller.</p>""",
     "coax": """
-<h2>Kabel-internet, coax og antennestik er det samme</h2>
+<h2>Internet via kabel-tv og antennestik</h2>
 <p>Kabel-internet, coax, kabel-tv-internet og internet via antennestikket er fire navne
 for samme teknologi: internet gennem det runde tv-stik i væggen. Kræver et aktivt
 kabel-tv-stik og et kabelmodem (DOCSIS 3.0 eller 3.1), som næsten altid følger med
@@ -7720,9 +7778,10 @@ tidligere Stofa-net). Derudover ejer mange antenneforeninger deres eget net og v
 hvilke selskaber der må levere i det. Norlys erstatter gradvist sit eget coax med fiber
 inden for sit område.</p>
 
-<h2>DOCSIS 3.1 giver 1000 Mbit/s i kablet</h2>
+<h2>DOCSIS 3.1 giver gigabit-hastighed i kablet</h2>
 <p>Hastigheden i et kabelnet afhænger af den standard, nettet kører med. Med DOCSIS 3.1 kan
-coax levere op til 1000 Mbit/s download. TDC var i 2016 blandt de første i Europa til at tage
+coax levere gigabit-hastigheder, og TDC NET sælger gigabit i sit coaxnet. Hvad
+coax er, og hvordan det virker, står i <a href="/guides/coax-internet/">hvad er coax internet</a>. TDC var i 2016 blandt de første i Europa til at tage
 standarden i brug i sit kabelnet, og Stofa valgte udstyr til DOCSIS 3.1 i 2017. Står der
 1000 Mbit/s i tabellen, kører din adresse på et opgraderet net.</p>
 
@@ -7737,7 +7796,7 @@ BB_SEO = {
               "titel": "Fiber internet {m} {a}: billigste fibernet fra {p} kr.",
               "besk": "Billigste fibernet i {m} {a}: {n} tilbud fra {s} selskaber sorteret efter "
                       "reel pris det første år. Startpris fra {p} kr./md. Se pris pr. hastighed."},
-    "5g": {"kw": "5G internet", "h1": "5G internet: billigste 5G-bredbånd",
+    "5g": {"kw": "5G internet", "h1": "5G internet til hjemmet: billigste 5G-bredbånd",
            "titel": "5G internet {m} {a}: billigste 5G-bredbånd fra {p} kr.",
            "besk": "Billigste 5G internet i {m} {a}: {n} tilbud fra {s} selskaber med net, "
                    "hastighed og reel årspris. Startpris fra {p} kr./md. Ingen gravearbejde."},
@@ -7857,7 +7916,7 @@ def ip_tabel_selskaber():
         fart = sorted(a["ned"] for a in k)
         spaend = f"{kr(norm[0])}–{kr(norm[-1])} kr." if norm[0] != norm[-1] else f"{kr(norm[0])} kr."
         fspaend = f"{fart[0]}–{fart[-1]}" if fart[0] != fart[-1] else f"{fart[0]}"
-        rk += f"""<tr><td>{_bb_logo(k[0])}<br><span class="tabel-under">{e(tek)}</span></td>
+        rk += f"""<tr><td><a href="/bredbaand/udbydere/{slug}/">{_bb_logo(k[0])}</a><br><span class="tabel-under">{e(tek)}</span></td>
 <td class="tal">{len(k)}</td><td class="tal">{fspaend} Mbit/s</td>
 <td class="tal">{spaend}</td>
 <td class="tal"><strong>{kr(min(_ip_aar(a) for a in k))} kr.</strong></td></tr>"""
@@ -8079,7 +8138,7 @@ afgør valget, og så betaler fiber sig. Se også <a href="/guides/dataforbrug-h
 
 {intro_sek}
 
-<h2 id="selskaber">Internetpriser hos de enkelte selskaber</h2>
+<h2 id="selskaber">Sammenlign internetpriser hos alle udbydere</h2>
 <p>{selskaber} selskaber er med i vores sammenligning. Spændet i normalpris viser, hvor
 forskelligt de prissætter samme type forbindelse.</p>
 {ip_tabel_selskaber()}
@@ -8118,6 +8177,18 @@ altid hos selskabet, før du bestiller.</p>
 
 {ip_prisudvikling()}
 
+<h2 id="prisstigning">Må dit internetselskab sætte prisen op?</h2>
+<p>Ja, men selskabet skal varsle en prisstigning mindst en måned før, og du har ret til at opsige
+uden omkostninger indtil en måned efter varslet. Det står i slutbrugerbekendtgørelsens § 6. Får du
+et varsel, er det det rigtige tidspunkt at sammenligne. Se også
+<a href="/guides/opsig-internet/">sådan opsiger du internet</a>.</p>
+
+<h2 id="fordeling">Hvor mange har fiber, coax og DSL?</h2>
+<p>Af alle faste bredbåndsabonnementer i Danmark kørte 53,9 % på fiber, 29,3 % på kabel-tv og
+8,2 % på kobber (xDSL) i andet halvår 2024. Kobbernettet er ved at blive lukket — TDC NET lukker de
+sidste forbindelser efter planen i 2029 — så har du DSL i dag, betaler det sig at se på fiber, coax
+eller 5G.</p>
+
 <h2 id="laveste-pris">Sådan får du den laveste internetpris</h2>
 <ol class="nummerliste">
   <li><strong>Tjek adressen.</strong> Sammenlign kun det, du kan få leveret. Adressetjekket
@@ -8139,6 +8210,7 @@ Medianen er den midterste pris, når alle tilbud stilles op i rækkefølge, og b
 skævt af enkelte meget dyre abonnementer. Vi viser kun selskaber, vi har datafeed fra, så tallene
 dækker ikke hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
 
+{kilder(["telestat_2h24", "slutbrugerbek", "slutbruger_binding", "tdcnet_kobber", "bbk"])}
 {forfatterboks()}
 </section>"""
 
@@ -8195,6 +8267,321 @@ dækker ikke hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p
                                "Hvad internet koster i Danmark: median, spænd, pris pr. hastighed "
                                "og teknologi, beregnet på alle tilbud i Telemobils sammenligning."))],
     ), prioritet="0.9", hyppighed="daily")
+
+
+
+# ============================================================ INTERNETUDBYDERE
+# En side pr. selskab i bredbåndsfeedet ("Norlys internet priser") og en samleside
+# ("internetudbydere"). Alt beregnes fra feedet. Siderne har ingen opsigelses- eller
+# driftsafsnit — de intentioner har deres egne sider, som der linkes til.
+
+BB_UDB_STI = "/bredbaand/udbydere/"
+BB_OPSIG_ANKER = {"norlys": "norlys", "yousee": "yousee", "telenor": "telenor"}
+
+
+def _bb_udbydere():
+    g = {}
+    for a in BB:
+        g.setdefault(a["udbyder"], []).append(a)
+    return dict(sorted(g.items(), key=lambda x: x[1][0]["udbyder_navn"].lower()))
+
+
+def _bb_udb_link(slug, navn):
+    return f'<a href="{BB_UDB_STI}{slug}/">{e(navn)} internet</a>'
+
+
+def bb_tabel_udbyder_produkter(k):
+    rk = ""
+    for a in sorted(k, key=bb_aarspris):
+        rk += f"""<tr><td><strong>{e(a['navn'])}</strong><br><span class="tabel-under">{e(TEK_NAVN.get(a['teknologi'], a['teknologi']))}{(' · ' + e(a['net'])) if a.get('net') else ''}</span></td>
+<td class="tal">{kr(a['ned'])}/{kr(a['op'])} Mbit/s</td>
+<td class="tal">{kr(bb_start(a))} kr.{('<br><span class="tabel-under">i ' + str(a['intro_mdr']) + ' mdr.</span>') if a.get('intro_pris') else ''}</td>
+<td class="tal">{kr(a['pris'])} kr.</td>
+<td class="tal">{kr(a.get('oprettelse', 0))} kr.</td>
+<td class="tal">{('Ingen' if not a.get('binding') else str(a['binding']) + ' mdr.')}</td>
+<td class="tal"><strong>{kr(_ip_aar(a))} kr.</strong></td></tr>"""
+    return f"""<div class="tabelramme"><table class="datatabel">
+<caption>Alle abonnementer fra selskabet i vores sammenligning, billigst først målt på snitprisen
+det første år.</caption>
+<thead><tr><th scope="col">Abonnement</th><th scope="col">Ned/op</th><th scope="col">Startpris</th>
+<th scope="col">Normalpris</th><th scope="col">Oprettelse</th><th scope="col">Binding</th>
+<th scope="col">Snit år 1</th></tr></thead><tbody>{rk}</tbody></table></div>"""
+
+
+def _gen(navn):
+    return navn + ("'" if navn[-1:].lower() in "sxz" else "s")
+
+
+def _og(liste):
+    liste = list(liste)
+    return liste[0] if len(liste) == 1 else ", ".join(liste[:-1]) + " og " + liste[-1]
+
+
+def _alle(n, i_alt, navn=""):
+    fra = f" fra {navn}" if navn else ""
+    if n == i_alt:
+        subj = ("Abonnementet" if i_alt == 1 else "Begge abonnementer" if i_alt == 2
+                else f"Alle {i_alt} abonnementer")
+        return f"{subj}{fra} i vores sammenligning er uden binding."
+    if n == 0:
+        return f"{'Abonnementet' if i_alt == 1 else 'Ingen af abonnementerne'}{fra} i vores sammenligning er uden binding." if i_alt > 1 else f"Abonnementet{fra} i vores sammenligning har binding."
+    return f"{n} af {i_alt} abonnementer{fra} i vores sammenligning er uden binding."
+
+
+def byg_bb_udbyder(slug, k, alle_udb):
+    navn = k[0]["udbyder_navn"]
+    sti = f"{BB_UDB_STI}{slug}/"
+    maaned, aar = vis_maaned()
+    b = min(k, key=bb_aarspris)
+    tek = sorted({TEK_NAVN.get(a["teknologi"], a["teknologi"]) for a in k})
+    fart = sorted(a["ned"] for a in k)
+    norm = sorted(a["pris"] for a in k)
+    marked = _ip_med([_ip_aar(a) for a in BB])
+    egen = _ip_med([_ip_aar(a) for a in k])
+    net = sorted({a["net"] for a in k if a.get("net")})
+    uden = len([a for a in k if not a.get("binding")])
+    ift = ("under" if egen < marked else "over" if egen > marked else "på")
+    spaend = f"{kr(norm[0])}–{kr(norm[-1])} kr." if norm[0] != norm[-1] else f"{kr(norm[0])} kr."
+    fspaend = f"{fart[0]}–{fart[-1]} Mbit/s" if fart[0] != fart[-1] else f"{fart[0]} Mbit/s"
+
+    # Sammenligning med markedet pr. teknologi
+    rk = ""
+    for t in sorted({a["teknologi"] for a in k}):
+        egne = [a for a in k if a["teknologi"] == t]
+        alle = [a for a in BB if a["teknologi"] == t]
+        rk += (f'<tr><td><strong>{e(TEK_NAVN.get(t, t))}</strong></td>'
+               f'<td class="tal">{kr(min(_ip_aar(a) for a in egne))} kr.</td>'
+               f'<td class="tal">{kr(min(_ip_aar(a) for a in alle))} kr.</td>'
+               f'<td class="tal">{kr(_ip_med([_ip_aar(a) for a in alle]))} kr.</td></tr>')
+    marked_tabel = f"""<div class="tabelramme"><table class="datatabel">
+<caption>{e(_gen(navn))} billigste pr. teknologi mod det billigste og medianen i hele vores
+sammenligning, snit det første år.</caption>
+<thead><tr><th scope="col">Teknologi</th><th scope="col">{e(navn)}</th><th scope="col">Billigst i markedet</th>
+<th scope="col">Median i markedet</th></tr></thead><tbody>{rk}</tbody></table></div>"""
+
+    andre = [x for x in alle_udb if x[0] != slug][:6]
+    andre_tekst = ", ".join(_bb_udb_link(s_, kk[0]["udbyder_navn"]) for s_, kk in andre)
+    links = []
+    if os.path.exists(os.path.join(ROD, "udbydere", slug, "index.html")) or any(u["slug"] == slug for u in UDBYDERE):
+        links.append(f'{e(_gen(navn))} mobilabonnementer står på <a href="/udbydere/{slug}/">{e(navn)} mobilabonnement</a>.')
+    if slug in BB_OPSIG_ANKER:
+        links.append(f'Skal du opsige, så se <a href="/guides/opsig-internet/#{BB_OPSIG_ANKER[slug]}">opsigelse af '
+                     f'{e(navn)} internet</a>.')
+    if any(u["slug"] == slug for u in UDBYDERE) and os.path.exists(os.path.join(ROD, "driftsstatus")):
+        links.append(f'Driftsstatus for {e(_gen(navn))} mobilnet står på <a href="/driftsstatus/{slug}/">{e(navn)} driftsstatus</a>.')
+
+    krop = bb_liste(k, titel=f"{navn} internet: alle {len(k)} abonnementer",
+                    undertitel=f"{_antal_ab(len(k))} fra {navn} på {_og(tek).lower()}, sorteret efter "
+                               f"hvad de koster det første år.") + f"""
+<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"{len(k)} {navn}-priser hentet fra selskabets datafeed")}
+<div class="udtag"><p><strong>Kort svar:</strong> {e(navn)} har {_antal_ab(len(k))} til internet i
+vores sammenligning på {e(_og(tek).lower())} med {fspaend} download. Normalprisen ligger på
+{spaend} om måneden, og det billigste er {e(b['navn'])} til {kr(_ip_aar(b))} kr. om måneden i snit
+det første år. Det er {ift} medianen for hele markedet på {kr(marked)} kr.</p></div>
+
+<h2 id="priser">{e(navn)} internet priser</h2>
+{bb_tabel_udbyder_produkter(k)}
+<p>Startprisen gælder i kampagneperioden. Normalprisen er det, du betaler bagefter. Vi sammenligner
+på snitprisen over det første år, fordi den tager både kampagne, normalpris og oprettelse med.</p>
+
+<h2 id="marked">Er {e(navn)} billig? Sammenlignet med markedet</h2>
+{marked_tabel}
+<p>Se prisniveauet for alle selskaber på <a href="/internet-priser/">internet priser</a>.</p>
+
+<h2 id="hastighed">Hvilke hastigheder har {e(navn)}?</h2>
+<p>{e(navn)} sælger internet fra {fart[0]} til {fart[-1]} Mbit/s i vores sammenligning. Hvilken
+hastighed, der passer til jer, står i <a href="/guides/god-internethastighed/">hvad er en god
+internethastighed</a>.</p>
+
+<h2 id="net">Hvilket net bruger {e(navn)}?</h2>
+<p>{(e(navn) + (" leverer på sit eget net. " if net == [navn] else " leverer på " + e(_og(net)) + ". ")) if net else ""}Det net, der ligger på din
+adresse, afgør, om {e(navn)} kan levere. Skriv din adresse øverst på siden, og bekræft hos
+{e(navn)}, før du bestiller.</p>
+
+<h2 id="binding">Binding og opsigelse</h2>
+<p>{_alle(uden, len(k), e(navn))} {" ".join(links)}</p>
+
+<h2 id="alternativer">Alternativer til {e(navn)}</h2>
+<p>Sammenlign med {andre_tekst}, eller se alle selskaber på
+<a href="{BB_UDB_STI}">internetudbydere</a>.</p>
+
+<h2>Sådan har vi gjort</h2>
+<p>Priserne hentes automatisk fra {e(_gen(navn))} eget datafeed to gange i døgnet. Vi får provision,
+hvis du bestiller via et link, men det ændrer ikke rækkefølgen. Læs mere om
+<a href="/metode/">vores metode</a>.</p>
+{forfatterboks()}
+</section>"""
+    faq = [
+        {"sp": f"Hvad koster {navn} internet?",
+         "sv": f"{navn} internet koster fra {kr(min(bb_start(a) for a in k))} kr. om måneden i startpris "
+               f"og {spaend} i normalpris. Det billigste koster {kr(_ip_aar(b))} kr. om måneden i snit "
+               f"det første år."},
+        {"sp": f"Hvilke hastigheder har {navn} internet?",
+         "sv": f"{fspaend} download i vores sammenligning, på {_og(tek).lower()}."},
+        {"sp": f"Har {navn} internet binding?",
+         "sv": f"{_alle(uden, len(k))} For private må binding højst være seks måneder."},
+        {"sp": f"Er {navn} internet billigt?",
+         "sv": f"{_gen(navn)} billigste koster {kr(_ip_aar(b))} kr. om måneden i snit det første år, mod en "
+               f"median på {kr(marked)} kr. for hele markedet i vores sammenligning."},
+    ]
+    _kort = MAANED_AAR.split()[0][:3] + ". " + MAANED_AAR.split()[-1]
+    titel = f"{navn} internet priser {_kort}: {_antal_ab(len(k))} fra {kr(min(bb_start(a) for a in k))} kr."
+    skriv(sti, shell(
+        sti=sti, titel=titel,
+        beskrivelse=(f"{navn} internet priser i {maaned} {aar}: {_antal_ab(len(k))} på "
+                     f"{_og(tek).lower()} med {fspaend}. Se normalpris, pris det første år og "
+                     f"hvordan {navn} ligger i forhold til markedet."),
+        hero=bb_hero(f"{navn} internet: priser og hastigheder",
+                     f"Se alle {_gen(navn)} internetabonnementer med normalpris og pris det første år — og "
+                     f"tjek, om {navn} kan levere på din adresse.", k),
+        efter_hero="", krumme=[("/", "Forside"), ("/bredbaand/", "Bredbånd"),
+                               (BB_UDB_STI, "Internetudbydere"), (None, f"{navn} internet")],
+        indhold=krop + faqblok(faq, f"Spørgsmål om {navn} internet"), toc=False,
+        jsonld=[graf(ORG, PERSON, WEBSITE,
+                     krummeld([("/", "Forside"), ("/bredbaand/", "Bredbånd"),
+                               (BB_UDB_STI, "Internetudbydere"), (sti, f"{navn} internet")]),
+                     faqld(faq), bb_listeld(k, f"{navn} internet"))],
+    ), prioritet="0.7", hyppighed="daily")
+
+
+def byg_bb_udbydere():
+    if not BB:
+        return
+    alle = list(_bb_udbydere().items())
+    for slug, k in alle:
+        byg_bb_udbyder(slug, k, alle)
+    maaned, aar = vis_maaned()
+    rk = ""
+    for slug, k in sorted(alle, key=lambda x: min(_ip_aar(a) for a in x[1])):
+        tek = ", ".join(sorted({TEK_NAVN.get(a["teknologi"], a["teknologi"]) for a in k}))
+        fart = sorted(a["ned"] for a in k)
+        norm = sorted(a["pris"] for a in k)
+        rk += f"""<tr><td><a href="{BB_UDB_STI}{slug}/"><strong>{e(k[0]['udbyder_navn'])} internet</strong></a><br><span class="tabel-under">{e(tek)}</span></td>
+<td class="tal">{len(k)}</td><td class="tal">{fart[0]}–{fart[-1]} Mbit/s</td>
+<td class="tal">{kr(norm[0])}–{kr(norm[-1])} kr.</td>
+<td class="tal"><strong>{kr(min(_ip_aar(a) for a in k))} kr.</strong></td></tr>"""
+    billigst = min(BB, key=bb_aarspris)
+    krop = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"{len(alle)} internetudbydere med datafeed")}
+<div class="udtag"><p><strong>Kort svar:</strong> Vi sammenligner {len(alle)} internetudbydere med
+{len(BB)} abonnementer på fiber, kabel og 5G. Billigst målt på hele det første år er lige nu
+{e(billigst['udbyder_navn'])} til {kr(_ip_aar(billigst))} kr. om måneden i snit. Hvilken udbyder der er
+bedst for dig, afhænger mest af, hvad der er gravet ned på din adresse.</p></div>
+
+<h2 id="alle">Alle internetudbydere sammenlignet</h2>
+<div class="tabelramme"><table class="datatabel">
+<caption>Internetudbyderne i vores sammenligning, billigst først. Klik på et selskab for at se alle
+dets abonnementer.</caption>
+<thead><tr><th scope="col">Udbyder</th><th scope="col">Tilbud</th><th scope="col">Hastigheder</th>
+<th scope="col">Normalpris</th><th scope="col">Billigst, snit år 1</th></tr></thead>
+<tbody>{rk}</tbody></table></div>
+
+<h2 id="bedste">Hvad er den bedste internetudbyder?</h2>
+<p>Der er ikke én bedste udbyder. Til en familie med hjemmearbejde er det den, der kan levere fiber
+på adressen til den laveste pris. Til en eller to personer kan det være 5G. Sammenlign på prisen
+over hele året, og se hastighed og upload, før du vælger. Prisniveauet for alle typer står på
+<a href="/internet-priser/">internet priser</a>.</p>
+
+<h2 id="net-og-udbyder">Udbyder og netejer er ikke det samme</h2>
+<p>Det selskab, du betaler, ejer sjældent selv kablet. Flere udbydere sælger internet på samme net,
+og netejeren afgør, hvilke udbydere du kan vælge imellem på din adresse. Skriv din adresse på
+<a href="/bredbaand/adressetjek/">hvilket internet kan jeg få</a>.</p>
+
+<h2 id="hvem-er-min">Hvem er min internetudbyder?</h2>
+<p>Det står på din faktura og i din bankapp under betalinger. Du kan også se det på routeren, som
+ofte har udbyderens logo, eller i velkomstmailen, da du bestilte.</p>
+
+<h2>Udbydere, vi ikke viser</h2>
+<p>Vi viser kun udbydere, vi har et datafeed med priser fra. Der findes flere selskaber, blandt
+andre lokale fiberselskaber, som ikke er med. Læs om <a href="/metode/">vores metode</a> og
+<a href="/saadan-tjener-vi-penge/">hvordan vi tjener penge</a>.</p>
+{forfatterboks()}
+</section>"""
+    faq = [
+        {"sp": "Hvilke internetudbydere er der i Danmark?",
+         "sv": f"I vores sammenligning: {', '.join(k[0]['udbyder_navn'] for _, k in alle)}. Der findes "
+               f"flere, blandt andre lokale fiberselskaber."},
+        {"sp": "Hvem er den billigste internetudbyder?",
+         "sv": f"Lige nu {billigst['udbyder_navn']} til {kr(_ip_aar(billigst))} kr. om måneden i snit det "
+               f"første år."},
+        {"sp": "Hvordan finder jeg ud af, hvilken internetudbyder jeg har?",
+         "sv": "Se på din faktura, i din bankapp, på routeren eller i velkomstmailen."},
+    ]
+    _kort = MAANED_AAR.split()[0][:3] + ". " + MAANED_AAR.split()[-1]
+    skriv(BB_UDB_STI, shell(
+        sti=BB_UDB_STI, titel=f"Internetudbydere {_kort}: {len(alle)} selskaber sammenlignet",
+        beskrivelse=(f"Internetudbydere i Danmark sammenlignet: {len(alle)} selskaber med {len(BB)} tilbud "
+                     f"på fiber, kabel og 5G. Se normalpris, hastigheder og den billigste udbyder i "
+                     f"{maaned} {aar}."),
+        hero=hero_side("Internetudbydere", "Internetudbydere i Danmark",
+                       "Alle selskaberne i vores sammenligning med priser, hastigheder og teknologi."),
+        efter_hero="", krumme=[("/", "Forside"), ("/bredbaand/", "Bredbånd"), (None, "Internetudbydere")],
+        indhold=krop + faqblok(faq), toc=False,
+        jsonld=[graf(ORG, PERSON, WEBSITE,
+                     krummeld([("/", "Forside"), ("/bredbaand/", "Bredbånd"), (BB_UDB_STI, "Internetudbydere")]),
+                     faqld(faq))],
+    ), prioritet="0.8", hyppighed="daily")
+
+
+# ============================================================ ADRESSETJEK
+def byg_bb_adressetjek():
+    if not BB:
+        return
+    sti = "/bredbaand/adressetjek/"
+    b = BBK
+    krop = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"Adressedata fra {b['kilde']}")}
+<div class="udtag"><p><strong>Kort svar:</strong> Skriv din adresse i feltet øverst. Så viser vi,
+hvilke hastigheder der udbydes på fiber, kabel-tv, 5G og kobber på adressen ifølge
+Digitaliseringsstyrelsens Bredbåndskortlægning {b['aar']}, og de billigste tilbud, der kan
+leveres. {_pct(b['fiber'])} af boliger og virksomheder i Danmark kan få fiber, og {_pct(b['1000'])}
+kan få mindst 1 Gbit/s.</p></div>
+
+<h2 id="hvad-viser">Hvad viser adressetjekket?</h2>
+<p>Den højeste hastighed, der udbydes på adressen for hver teknologi, og de billigste
+abonnementer i vores sammenligning, der passer til den hastighed. Kortlægningen viser ikke, hvilke
+selskaber der leverer på netop din adresse, så bekræft altid hos selskabet, før du bestiller.</p>
+
+<h2 id="hvor-hurtigt">Hvor hurtigt internet kan jeg få?</h2>
+<p>Det afhænger af, hvad der er gravet ned. Fiber giver op til 1000 Mbit/s eller mere begge veje,
+kabel-tv giver høj download men lavere upload, og 5G afhænger af afstanden til masten. Forskellene
+står i <a href="/guides/5g-internet-eller-fiber/">5G internet eller fiber</a> og
+<a href="/guides/coax-internet/">hvad er coax internet</a>.</p>
+
+<h2 id="billigste">Billigste internet på din adresse</h2>
+<p>Når du har skrevet adressen, filtrerer vi listen, så du kun ser tilbud, der kan leveres med den
+hastighed, der udbydes hos dig. Se prisniveauet på <a href="/internet-priser/">internet priser</a>
+og alle tilbud på <a href="/bredbaand/">bredbånd sammenlignet</a>.</p>
+
+{bb_officielle_tal()}
+{forfatterboks()}
+</section>"""
+    faq = [
+        {"sp": "Hvilket internet kan jeg få på min adresse?",
+         "sv": "Skriv adressen i adressetjekket. Det viser de hastigheder, der udbydes på fiber, kabel-tv, "
+               "5G og kobber ifølge Digitaliseringsstyrelsens Bredbåndskortlægning."},
+        {"sp": "Hvor hurtigt internet kan jeg få?",
+         "sv": f"{_pct(b['1000'])} af boliger og virksomheder i Danmark kan få mindst 1 Gbit/s. Din egen "
+               "adresse kan du tjekke i adressetjekket."},
+        {"sp": "Viser adressetjekket, hvilke selskaber der leverer?",
+         "sv": "Nej, kortlægningen viser hastigheder pr. teknologi. Bekræft altid hos selskabet, før du bestiller."},
+    ]
+    skriv(sti, shell(
+        sti=sti, titel="Hvilket internet kan jeg få? Tjek din adresse",
+        beskrivelse=("Hvilket internet kan jeg få på min adresse? Skriv adressen og se fiber, kabel og 5G "
+                     "hos dig ifølge Digitaliseringsstyrelsen — og det billigste internet, der kan leveres."),
+        hero=bb_hero("Hvilket internet kan jeg få på min adresse?",
+                     "Skriv din adresse og se, om du kan få fiber, kabel eller 5G, hvor hurtigt det er, "
+                     "og hvad det billigste koster.", BB),
+        efter_hero="", krumme=[("/", "Forside"), ("/bredbaand/", "Bredbånd"), (None, "Adressetjek")],
+        indhold=bb_liste(BB, titel="Internet der kan leveres på adressen",
+                         undertitel="Skriv din adresse øverst for at filtrere listen.") + krop + faqblok(faq),
+        toc=False,
+        jsonld=[graf(ORG, PERSON, WEBSITE,
+                     krummeld([("/", "Forside"), ("/bredbaand/", "Bredbånd"), (sti, "Adressetjek")]),
+                     faqld(faq))],
+    ), prioritet="0.8", hyppighed="weekly")
 
 
 def byg_bredbaand():
@@ -8255,7 +8642,7 @@ langsommere forbindelser.</p>
     f'({len(pr_tek[n])} tilbud)</li>'
     for n, navn, sti, besk in TEK_SIDER if pr_tek.get(n))}</ul>
 
-<h2 id="24-maaneder">Hvad koster bredbånd over 6, 12 og 24 måneder?</h2>
+<h2 id="24-maaneder">Reel pris over 6, 12 og 24 måneder</h2>
 <p>En kampagne på 99 kr. er billig i et halvt år. Over to år er det normalprisen, der
 betyder noget. Tabellen viser de otte billigste abonnementer over 24 måneder.</p>
 {bb_tabel_horisont(BB)}
@@ -8403,7 +8790,7 @@ ikke har adgang til priser for. Læs mere om
         beskrivelse=(f"Billigste bredbånd i {vis_maaned()[0]} {vis_maaned()[1]}: {len(BB)} tilbud "
                      f"på fiber, 5G og coax fra {selskaber} selskaber, sorteret efter reel pris "
                      f"det første år. Fra {kr(min(bb_start(a) for a in BB))} kr./md."),
-        hero=bb_hero("Billigste internet og bredbånd",
+        hero=bb_hero("Billigste internet til hjemmet: sammenlign bredbånd",
                      "Skriv din adresse, og se om du kan få fiber, kabel eller 5G — og hvad det "
                      "billigste koster regnet på hele året.", BB),
         efter_hero="", krumme=[("/", "Forside"), (None, "Bredbånd")],
@@ -8424,6 +8811,8 @@ ikke har adgang til priser for. Læs mere om
             continue
         byg_bredbaand_type(noegle, navn, sti, besk, udvalg)
     byg_internet_priser()
+    byg_bb_udbydere()
+    byg_bb_adressetjek()
 
 
 
@@ -8457,14 +8846,14 @@ samtidige enheder, ikke ved almindelig streaming.</p>
 <p>Til gengæld koster forskellen ofte under 50 kr. om måneden, og fiberabonnementer
 i den lave ende har tit dårligere upload. Det er dét, du skal kigge på.</p>""",
         "5g": """
-<h2>5G-bredbånd er den eneste forbindelse, du kan have i morgen</h2>
+<h2>Hvad er 5G internet? Trådløst internet uden kabler</h2>
 <p>Der er ingen gravearbejde, ingen tekniker og ingen ventetid. Routeren kommer
 med posten, du sætter den i stikkontakten, og så virker den. Det er den
 afgørende forskel fra fiber og coax.</p>
 <p>Det gør 5G til det oplagte valg i tre situationer: lejebolig med kort horisont,
 sommerhus, og som overgangsløsning mens du venter på fiber.</p>
 
-<h2>Hastigheden svinger — det gør fiber ikke</h2>
+<h2>5G internet hastighed: hvad kan du forvente?</h2>
 <p>5G deler kapacitet med alle andre på masten. Om aftenen, når hele kvarteret
 streamer, falder hastigheden. Det mærkes sjældent ved video, men det mærkes ved
 videomøder og online spil.</p>
@@ -8554,8 +8943,9 @@ meget.</p>
 {bb_maalgrupper(udvalg, BB_HVAD.get(noegle, "bredbånd"), noegle)}
 
 <h2>Tjek adressen først</h2>
-<p>{navn} er kun en mulighed, hvis det findes på din adresse. Alle selskaber har et
-adressetjek på deres egen side — brug det, før du regner på prisen.</p>
+<p>{navn} er kun en mulighed, hvis det findes på din adresse. Skriv din adresse i feltet
+øverst på siden, og bekræft altid hos selskabet, før du bestiller. Se også
+<a href="/bredbaand/adressetjek/">hvilket internet du kan få på din adresse</a>.</p>
 <p>Til 5G kan du starte med vores <a href="/daekningskort/">dækningstjek</a>.</p>
 
 <h2>Se de øvrige typer</h2>
@@ -8563,8 +8953,7 @@ adressetjek på deres egen side — brug det, før du regner på prisen.</p>
     f'<li><a href="/bredbaand/{s}/">{e(n)}</a> — {e(b)}</li>'
     for k, n, s, b in TEK_SIDER if k != noegle)}
   <li><a href="/bredbaand/">Alle bredbåndsabonnementer samlet</a></li>
-  <li><a href="/guides/mobilt-bredbaand/">Guide: hvornår kan mobilt bredbånd
-    erstatte fiber?</a></li>
+  <li><a href="/guides/5g-internet-eller-fiber/">Guide: 5G internet eller fiber?</a></li>
 </ul>
 
 {bb_guides()}
@@ -8599,7 +8988,20 @@ hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
                 if noegle == "coax"
                 else "5G afhænger af dækningen på adressen. Start med vores "
                      "dækningstjek og bekræft hos selskabet.")},
-    ]
+    ] + {
+        "5g": [{"sp": "Hvad er 5G internet?",
+                "sv": "5G internet er trådløst internet til hjemmet via mobilnettet. Du får en router, "
+                      "der sættes i stikkontakten, og der skal ikke graves eller komme en tekniker."},
+               {"sp": "Hvad koster 5G internet om måneden?",
+                "sv": f"5G internet koster i median {kr(round(_median([bb_aarspris(a) / 12 for a in udvalg])))} "
+                      f"kr. om måneden i snit det første år i vores sammenligning."}],
+        "fiber": [{"sp": "Hvad er fiber internet?",
+                   "sv": "Fiber internet er bredbånd gennem glasfiber helt ind i boligen. Det giver ofte "
+                         "samme hastighed op og ned og lav svartid."}],
+        "coax": [{"sp": "Hvad er coax internet?",
+                  "sv": "Coax internet, også kaldet kabel-internet, kører gennem kabel-tv-nettet og "
+                        "tilsluttes antennestikket i væggen."}],
+    }.get(noegle, [])
 
     skriv(f"/bredbaand/{sti}/", shell(
         sti=f"/bredbaand/{sti}/",
@@ -9394,13 +9796,13 @@ tyndere end i byerne. Tjek to ting, før du beslutter noget:</p>
     byg_guide(
         "/guides/ping-og-svartid/", "Internet til gaming",
         "Internet til gaming: ping, svartid og det rigtige abonnement",
-        "Internet til gaming: ping, svartid og hastighed",
+        "Bedste internet til gaming: ping, svartid og hastighed",
         "Hvilket internet er bedst til gaming? Se hvorfor ping og svartid slår hastighed, hvad "
         "der er en god ping, og hvilket abonnement en gamer skal vælge.",
         f"""<section class="sektion baand-smal artikel">
 <div class="udtag"><p><strong>Kort svar:</strong> Online spil kræver omkring 3
 Mbit/s — næsten ingenting. Det bedste internet til gaming er fiber, fordi det, der afgør oplevelsen, er svartiden. Under 20 millisekunder
-er godt, over 50 er mærkbart. Fiber ligger på 2-10, 5G på 20-40.</p></div>
+er godt, over 40 begynder at kunne mærkes i skydespil. Fiber ligger på 2-10, 5G på 20-40.</p></div>
 
 <p>Det er den mest udbredte misforståelse om internet og gaming: at man skal have
 hurtigt internet. Et onlinespil sender meget små datapakker meget ofte — omkring 3
@@ -9443,7 +9845,7 @@ sammenlignet</a>.</p>
   4K-stream i samme husstand fylder køen op. Mange routere har en indstilling for
   prioritering, hvor spil kan sættes forrest.</li>
   <li><strong>Serverens placering.</strong> Spiller du på en amerikansk server, er
-  200 ms fysik, ikke en fejl. Vælg europæiske servere, hvor det er muligt.</li>
+  over 100 ms fysik, ikke en fejl. Vælg europæiske servere, hvor det er muligt.</li>
   <li><strong>Baggrundsopdateringer.</strong> Spilklienter og styresystemer
   opdaterer, når det passer dem. Sæt dem til kun at gøre det om natten.</li>
   <li><strong>VPN.</strong> Al trafik gennem en ekstra server koster
@@ -9507,11 +9909,21 @@ har netværksstik — brug det, hvis det overhovedet kan lade sig gøre.</p>
 GB i baggrunden ødelægger din ping, mens den kører. Sæt automatiske
 opdateringer til natten.</p>
 
+<h2>Hvor hurtigt internet til PS5, Xbox og pc?</h2>
+<p>Selve spillet bruger meget lidt. Det er streaming af spil og downloads, der kræver hastighed:</p>
+<ul class="pilliste">
+  <li><strong>PlayStation Remote Play:</strong> mindst 5 Mbit/s op og ned, 15 Mbit/s for bedste
+  ydelse, ifølge PlayStation.</li>
+  <li><strong>Xbox Cloud Gaming:</strong> mindst 20 Mbit/s, helst med kabel, ifølge Xbox.</li>
+  <li><strong>Download af et spil på {SPIL_GB} GB</strong> som Forza Horizon 5: {spil_tid(100)} på
+  100 Mbit/s og {spil_tid(1000)} på 1000 Mbit/s.</li>
+</ul>
+
 <h2>Hvad kan du ikke løse med et bedre abonnement?</h2>
 <p>Det er værd at vide, hvad der ikke er din forbindelses skyld:</p>
 <ul class="pilliste">
   <li><strong>Serverens placering.</strong> Spiller du på en server i Californien,
-  er 160 ms fysik. Lyset kan ikke gå hurtigere.</li>
+  er over 100 ms fysik. Lyset kan ikke gå hurtigere.</li>
   <li><strong>Spillets egne servere.</strong> Er alle spillere i lobbyen forsinket
   samtidig, er det spillet, ikke dig.</li>
   <li><strong>Modstanderens forbindelse.</strong> Har han 200 ms, opleves det ofte
@@ -9542,14 +9954,18 @@ markant bedre svartid end 4G, og forskellen er mærkbar i realtidsspil.</p>
 <p>Er mobilspil vigtigt for dig, er det en af de få situationer, hvor 5G i
 mobilabonnementet reelt gør en forskel. Vi har regnet på, hvad det koster ekstra,
 i guiden <a href="/guides/er-5g-pengene-vaerd/">er 5G pengene værd?</a></p>
+{kilder(["ps_remote", "xbox_cloud", "steam_forza", "cw_5g_test"],
+        ["Svartider pr. teknologi er typiske intervaller på det danske marked og varierer med adresse, "
+         "udstyr og server."])}
 </section>""",
         [{"sp": "Hvad er en god ping til gaming?",
           "sv": "Under 20 millisekunder er fremragende, 20-40 er godt. Over 70 bliver "
                 "det generende i skydespil, og over 120 er konkurrencespil reelt ikke "
                 "muligt."},
          {"sp": "Hvor hurtigt internet skal man have til gaming?",
-          "sv": "Omkring 3 Mbit/s. Selv den langsomste forbindelse i Danmark klarer "
-                "det. Det er svartiden, ikke hastigheden, der afgør oplevelsen."},
+          "sv": "Selve spillet kræver kun få Mbit/s, men downloads af spil og opdateringer kræver "
+                "langt mere. 100-300 Mbit/s på fiber er et godt udgangspunkt — det er svartiden, "
+                "ikke hastigheden, der afgør oplevelsen i spillet."},
          {"sp": "Er fiber bedre end 5G til gaming?",
           "sv": "Ja, markant. Fiber ligger på 2-10 millisekunder mod 5G's 20-40, og "
                 "fiber har langt mindre udsving i svartiden."},
@@ -14028,6 +14444,38 @@ KILDER.update({
 TJEKKET = "3. november 2026"
 
 KILDER.update({
+    "taenk_hastighed": ("Forbrugerrådet Tænk — så meget internethastighed har du brug for",
+                        "https://taenk.dk/forbrugerliv/elektronik-og-digitale-tjenester/internet-hastighed-saa-meget-har-du-brug",
+                        "Hvad du gør, når du ikke får den lovede hastighed"),
+    "cw_5g_test": ("Computerworld — test af 5G-bredbånd i Danmark (21.11.2025)",
+                   "https://www.computerworld.dk/art/293689/vi-tester-5g-i-danmark-her-er-dommen-over-de-fire-store-udbydere-af-mobilt-bredbaand-og-deres-5g-loesninger",
+                   "Målt download og ping hos fire 5G-udbydere"),
+    "tdcnet_kobber": ("TDC NET — udfasning af kobbernettet", "https://tdcnet.com/infrastructure/copper-phase-out/",
+                      "Kobbernettet lukkes, de sidste forbindelser i 2029"),
+    "bolius_sommerhus": ("Bolius — billig wifi til fjernstyring i sommerhuset",
+                         "https://www.bolius.dk/saadan-faar-du-billig-wi-fi-til-fjernstyring-af-maskiner-i-sommerhuset-98798",
+                         "Datadelingskort, M2M-SIM og genstart efter strømsvigt"),
+    "apple_instant": ("Apple — Instant Hotspot på Mac", "https://support.apple.com/guide/mac-help/mchl7403f0ee/mac",
+                      "Del iPhonens mobildata til en Mac"),
+    "ms_metered": ("Microsoft — forbrugsbegrænset forbindelse i Windows", "https://support.microsoft.com/help/4028458",
+                   "Begræns opdateringer, når du bruger hotspot"),
+    "hiper_vilkaar": ("Hiper — aftalevilkår for privatkunder", "https://hiper.dk/api/aftalevilkaar/privat.pdf",
+                      "30 dages opsigelse og returnering af udstyr"),
+    "ewii_vilkaar": ("EWII — abonnementsvilkår for internet via kabel-tv (12.03.2024)",
+                     "https://ewii.dk/globalassets/mediebibliotek/1.-privat/02.-internet/filer/ewii-bredband-abonnementsvilkar-for-internet-via-kabel-tv-privatkunder-12032024.pdf",
+                     "1 måneds opsigelse og pris for bortkommen router"),
+    "teleanke_router": ("Teleankenævnet — kompensation for uberettiget opkrævning af router (06-07-2026)",
+                        "https://www.lovguiden.dk/dokument/teleankenaevnet/06-07-2026-teleankenaevnet-kompensation-paa-200-kr-for-uberettiget-opkraevning-efter-rettidig-returnering-af-router",
+                        "200 kr. i kompensation efter rettidig returnering"),
+    "taenk_mesh_test": ("Forbrugerrådet Tænk — test af mesh-netværk", "https://taenk.dk/test/mesh-netvaerk/mesh-netvaerk-bedst-test",
+                        "37 mesh-systemer testet, prisspænd 700–12.000 kr."),
+    "ps_remote": ("PlayStation — Remote Play", "https://www.playstation.com/en-us/support/games/playstation-remote-play-on-pc-and-mac/",
+                  "Mindst 5 Mbit/s, 15 Mbit/s for bedst ydelse"),
+    "xbox_cloud": ("Xbox — Cloud Gaming", "https://news.xbox.com/en-us/2025/12/19/getting-started-with-xbox-cloud-gaming/",
+                   "Mindst 20 Mbit/s"),
+})
+
+KILDER.update({
     "yousee_mesh": ("YouSee — internet", "https://yousee.dk/shop/internet", "Mesh-node 19 kr./md."),
     "norlys_fakta": ("Norlys — bredbåndsfakta", "https://norlys.dk/internet/bredbaandsfakta/", "WifiGaranti og hastigheder"),
     "hiper_mesh": ("Hiper — wifi mesh", "https://www.hiper.dk/bredbaand/wifi-mesh", "Mesh fra 19 kr./md. pr. enhed"),
@@ -14048,12 +14496,18 @@ def byg_opsig_internet():
         ("Telenor", "Kundeservice 72 100 100, hverdage kl. 8–20",
          "Mindst 30 dage", "Senest 28 dage efter ophør, gratis i butik. Erstatning op til 3.000 kr., hvis udstyret ikke kommer retur",
          "Kan opsige den gamle aftale for dig via fuldmagt"),
+        ("Hiper", "Kontakt Hiper (vilkårene angiver ikke kanalen)",
+         "30 dage, tidligst til bindingens udløb", "Retur på egen regning til den adresse, Hiper oplyser. Dokumentér forsendelsen",
+         "Skift til andet selskab tæller som opsigelse"),
+        ("EWII (kabel-tv)", "Telefon 70 55 55 55 anbefales",
+         "1 måned, tidligst efter binding", "Udstyret tilhører EWII. Bortkommen router koster 699 kr.",
+         "—"),
     ]
     raekker = "".join(f"<tr><td><strong>{e(a)}</strong></td><td>{e(b)}</td><td>{e(c)}</td><td>{e(d)}</td><td>{e(f)}</td></tr>"
                       for a, b, c, d, f in rk)
     tabel = f"""<div class="tabelramme"><table class="datatabel">
-<caption>Sådan opsiger du internet hos Norlys, YouSee og Telenor. Kontrolleret i selskabernes
-vilkår og hjælpesider {TJEKKET}.</caption>
+<caption>Sådan opsiger du internet hos Norlys, YouSee, Telenor, Hiper og EWII. Kontrolleret i
+selskabernes vilkår og hjælpesider {TJEKKET}.</caption>
 <thead><tr><th scope="col">Selskab</th><th scope="col">Sådan opsiger du</th><th scope="col">Opsigelsesvarsel</th>
 <th scope="col">Routeren retur</th><th scope="col">Når du skifter til dem</th></tr></thead>
 <tbody>{raekker}</tbody></table></div>"""
@@ -14072,22 +14526,43 @@ sammenlignet</a>{f", hvor det billigste lige nu koster {kr(_ip_aar(b))} kr. om m
 <h2 id="selskaber">Opsig internet hos Norlys, YouSee og Telenor</h2>
 {tabel}
 
-<h3 id="norlys">Opsig Norlys internet</h3>
+<h3 id="norlys">Opsigelse af Norlys internet</h3>
 <p>Ring til Norlys kundeservice, skriv til dem, eller opsig på norlys.dk. Varslet er 1 måned.
 Har du binding, kan du opsige til udgangen af bindingsperioden, eller komme ud med det samme ved
 at betale abonnementet for resten af perioden. Routeren tilhører Norlys og skal returneres senest
 5 arbejdsdage efter, at aftalen er ophørt. Fiberboksen på væggen bliver siddende.</p>
 
-<h3 id="yousee">Opsig YouSee internet</h3>
+<h3 id="yousee">Opsigelse af YouSee internet</h3>
 <p>Ring til YouSee på 70 70 36 90, eller brug kontaktformularen på yousee.dk. Varslet er mindst
 1 måned for privatkunder, og binding er højst 6 måneder. Dit eget varsel og din binding står på
 ordrebekræftelsen. Udstyret sendes retur med en returlabel, du får på mail.</p>
 
-<h3 id="telenor">Opsig Telenor internet</h3>
+<h3 id="telenor">Opsigelse af Telenor internet</h3>
 <p>Kontakt Telenors kundeservice. Varslet er mindst 30 dage, og har du binding, skal du opsige
 mindst en måned før den udløber. At sende routeren retur er ikke det samme som at opsige. Udstyret
 skal tilbage senest 28 dage efter ophør, og kommer det ikke, kan Telenor kræve erstatning på op
 til 3.000 kr. Gem kvitteringen med track-and-trace.</p>
+
+<h3 id="hiper">Opsigelse af Hiper internet</h3>
+<p>Hos Hiper er varslet 30 dage, og har du binding, kan du tidligst opsige til bindingens udløb.
+Udstyret sender du selv retur på egen regning til den adresse, Hiper oplyser ved opsigelsen — gem
+kvitteringen. Skifter du til et andet selskab, tæller det som en opsigelse, så binding og varsel
+gælder stadig.</p>
+
+<h3 id="ewii">Opsigelse af EWII internet</h3>
+<p>EWII's vilkår for internet via kabel-tv giver 1 måneds varsel, tidligst efter en eventuel binding,
+og EWII anbefaler at opsige på telefon 70 55 55 55. Routeren tilhører EWII, og en bortkommen router
+koster 699 kr.</p>
+
+<h2 id="prisstigning">Kan du opsige, hvis prisen stiger?</h2>
+<p>Ja. Et selskab skal varsle en prisstigning mindst en måned før, og du kan opsige uden omkostninger
+indtil en måned efter varslet — også selvom du har binding. Hos Hiper står det også direkte i
+vilkårene.</p>
+
+<h2 id="router-opkraevet">Er du blevet opkrævet for en router, du har sendt retur?</h2>
+<p>Gem altid kvitteringen og track-and-trace. Kan du dokumentere, at routeren er sendt retur til
+tiden, skal du ikke betale for den. Teleankenævnet gav i juli 2026 en kunde 200 kr. i kompensation,
+fordi et selskab havde opkrævet en router, som var returneret rettidigt.</p>
 
 <h2 id="skift">Skifter du udbyder? Lad det nye selskab opsige</h2>
 <p>Modsat nummerflytning på mobilen er der ingen lovregel om, at det nye internetselskab opsiger
@@ -14127,7 +14602,8 @@ internettet med, når du flytter</a>.</p>
 Teleankenævnet.</p>
 
 {kilder(["norlys_vilkaar", "norlys_skift", "yousee_opsig", "yousee_retur", "telenor_vilkaar",
-         "telenor_skift", "sbbu_teleanke", "slutbruger_binding", "teleankenaevnet"],
+         "telenor_skift", "hiper_vilkaar", "ewii_vilkaar", "sbbu_teleanke", "teleanke_router",
+         "slutbrugerbek", "slutbruger_binding", "teleankenaevnet"],
         [f"Opsigelsesregler kontrolleret i selskabernes vilkår og hjælpesider {TJEKKET}. Vilkår kan "
          "ændre sig — dit eget varsel står på din ordrebekræftelse."])}
 </section>"""
@@ -14144,11 +14620,16 @@ Teleankenævnet.</p>
         {"sp": "Opsiger det nye selskab mit gamle internet?",
          "sv": "Ikke automatisk som ved nummerflytning, men flere selskaber, blandt andre Norlys og "
                "Telenor, kan opsige det for dig via fuldmagt, når du skifter fast internet på samme adresse."},
+        {"sp": "Kan jeg opsige internet ved at stoppe betalingen?",
+         "sv": "Nej. At stoppe betalingen er ikke en opsigelse — du skal opsige til selskabet, ellers "
+               "løber abonnementet videre, og du kan få rykkergebyrer."},
+        {"sp": "Hvordan opsiger jeg Hiper internet?",
+         "sv": "Kontakt Hiper. Varslet er 30 dage, og udstyret skal sendes retur på egen regning."},
         {"sp": "Hvad sker der, hvis jeg ikke sender routeren retur?",
          "sv": "Så kan selskabet opkræve den. Hos Telenor kan erstatningen være op til 3.000 kr."},
     ]
-    byg_guide(sti, "Opsig internet", "Sådan opsiger du internet hos Norlys, YouSee og Telenor",
-              "Opsig internet: Norlys, YouSee og Telenor trin for trin",
+    byg_guide(sti, "Opsig internet", "Sådan opsiger du internet hos Norlys, YouSee, Telenor og flere",
+              "Opsig internet: Norlys, YouSee, Telenor, Hiper og EWII",
               "Sådan opsiger du internet hos Norlys, YouSee og Telenor: telefonnumre, opsigelsesvarsel, "
               "binding og returnering af router — og hvordan det nye selskab kan opsige for dig.",
               brod, faq,
@@ -14156,7 +14637,7 @@ Teleankenævnet.</p>
                ("/guides/internet-uden-binding/", "Internet uden binding"),
                ("/guides/flyt-internettet/", "Flyt internettet"),
                ("/internet-priser/", "Internet priser")],
-              billede="opsig-internet", altbillede="Person pakker en router ned til returnering")
+              billede="opsig-internet", altbillede="Mand ved et bord overvejer at opsige sit internet")
 
 
 # ---------------------------------------------- INTERNET I SOMMERHUS
@@ -14178,7 +14659,7 @@ def byg_internet_i_sommerhus():
 <caption>Kan du tage internettet med i sommerhuset, og kan det sættes på pause? Kontrolleret på
 selskabernes egne sider {TJEKKET}.</caption>
 <thead><tr><th scope="col">Selskab</th><th scope="col">Produkt</th><th scope="col">Må bruges i sommerhuset</th>
-<th scope="col">Pause</th></tr></thead><tbody>{raekker}</tbody></table></div>"""
+<th scope="col">Pause nævnt på deres side</th></tr></thead><tbody>{raekker}</tbody></table></div>"""
     pris_tabel = ""
     if g5 or fri:
         rk2 = ""
@@ -14220,12 +14701,31 @@ tablet. Det er den billigste løsning, men telefonen skal ligge i huset, og batt
 hele året, også når huset står tomt, og nogle steder er der oprettelse.</p>
 {pris_tabel}
 
+<h2 id="datadeling">Datadelingskort: billigt internet med dit eget mobilabonnement</h2>
+<p>Mange mobilabonnementer kan få et ekstra datakort, der deler data med dit abonnement. Sæt det i en
+router i sommerhuset, så bruger den af dine egne data. Bolius regner med omkring 30 kr. om måneden
+for et ekstra datakort mod omkring 200 kr. for et separat internetabonnement. Spørg dit
+mobilselskab, om de tilbyder det, og hvor meget data du har til rådighed.</p>
+
+<h2 id="vinter">Internet om vinteren: varmepumpe, alarm og kamera</h2>
+<p>Skal du kun styre varmepumpen eller se et kamera, når huset står tomt, behøver du næsten ingen
+data. Bolius peger på et M2M-SIM-kort til omkring 30 kr. om måneden, hvor få hundrede MB rækker. Husk,
+at routeren skal kunne starte igen af sig selv efter et strømsvigt, ellers mister du forbindelsen,
+til du kommer derop.</p>
+
 <h2 id="tag-med">Kan du tage din 5G-router med i sommerhuset?</h2>
 <p>Hos de selskaber, vi har tjekket, ja — inden for Danmark. Af dem nævner kun YouSee, at
 abonnementet kan sættes på pause, når huset står tomt.</p>
 {tabel}
 <p>Det er dit eget ansvar, at der er dækning, der hvor du bruger routeren. Har du kun én router,
 har du ikke internet derhjemme, mens den står i sommerhuset.</p>
+
+<h2 id="satellit">Satellitinternet, når intet andet virker</h2>
+<p>Ligger sommerhuset et sted uden brugbar mobildækning og uden fiber, er satellitinternet den sidste
+mulighed. Ældre satellitforbindelser via geostationære satellitter har så høj svartid, at
+videomøder og spil er svære. Nyere lavbane-satellitter, fx Starlink, har langt lavere svartid,
+men kræver en parabol med frit udsyn til himlen og udstyr, du selv køber. Det er dyrere end 5G og
+først relevant, når 5G ikke virker.</p>
 
 <h2 id="campingvogn">Internet i campingvogn og autocamper</h2>
 <p>Her er en 5G-router eller hotspot fra mobilen de eneste realistiske løsninger.
@@ -14247,7 +14747,7 @@ hvis I streamer.</p>
   <li>Prøv routeren af i weekenden, før gæsterne kommer.</li>
 </ol>
 
-{kilder(["yousee_sommerhus", "norlys_5g", "telenor_5g", "hiper_sommerhus", "tre_mobilt", "bbk"],
+{kilder(["yousee_sommerhus", "norlys_5g", "telenor_5g", "hiper_sommerhus", "tre_mobilt", "bolius_sommerhus", "bbk"],
         [f"Muligheder for brug i sommerhus og pause kontrolleret på selskabernes sider {TJEKKET}.",
          "Priser hentet fra selskabernes datafeeds to gange i døgnet."])}
 </section>"""
@@ -14261,6 +14761,9 @@ hvis I streamer.</p>
         {"sp": "Må jeg tage min 5G-router med i sommerhuset?",
          "sv": "Hos Norlys, Telenor, Hiper og YouSee, ja, inden for Danmark. Hastigheden afhænger af "
                "dækningen i sommerhuset."},
+        {"sp": "Hvad koster et datadelingskort?",
+         "sv": "Bolius regner med omkring 30 kr. om måneden. Prisen afhænger af dit mobilselskab, og "
+               "kortet deler data med dit eget abonnement."},
         {"sp": "Hvad er det billigste internet til campingvogn?",
          "sv": "Et mobilabonnement med fri data og hotspot, hvis du allerede har et. Ellers et "
                "abonnement til en mobil router uden binding, så du kan opsige efter sæsonen."},
@@ -14275,7 +14778,7 @@ hvis I streamer.</p>
                ("/guides/del-internet-fra-mobil/", "Del internet fra mobilen"),
                ("/guides/5g-internet-eller-fiber/", "5G internet eller fiber")],
               billede="internet-i-sommerhus",
-              altbillede="Sommerhus i klitterne med en 5G-router i vinduet")
+              altbillede="Par i et sommerhus med router på bordet og campingvogn uden for vinduet")
 
 
 # ---------------------------------------------- DATAFORBRUG I HUSSTANDEN
@@ -14346,14 +14849,19 @@ viser det på Mit-siden.</p>
 dækker over store forskelle, og husstande med 4K-streaming på flere skærme hver aften kan ligge
 over. Vælger du 5G som eneste internet, så vælg uden loft, hvis I er flere, der streamer.</p>
 
+<h2 id="fri-data">Hvad betyder fri data og fair use?</h2>
+<p>Ved 5G og mobilt bredbånd betyder "fri data" ofte, at der er en grænse for rimeligt forbrug i
+vilkårene. Tjek, hvad der sker, når grænsen nås — typisk sættes hastigheden ned. I andet halvår 2024
+havde 331.805 danske 4G/5G-dataabonnementer et loft på mindst 1 TB, en stigning på 29,6 % på et år.</p>
+
 <h2 id="fast-eller-5g">Fast internet eller 5G?</h2>
-<p>Fiber, kabel og DSL har intet dataloft. Ved 5G og mobilt internet er det datamængden, der afgør
+<p>Fiber, kabel og DSL har normalt intet dataloft. Ved 5G og mobilt internet er det datamængden, der afgør
 prisen. Se forskellene i <a href="/guides/5g-internet-eller-fiber/">5G internet eller fiber</a>,
 og prisniveauet på <a href="/internet-priser/">internet priser</a>. Skal du kun bruge data på
 mobilen, er det en anden regning — se <a href="/guides/hvor-meget-data/">hvor meget mobildata
 du har brug for</a>.</p>
 
-{kilder(["telestat_2h24", "netflix_hastighed", "teams_netvaerk"],
+{kilder(["telestat_2h24", "netflix_hastighed", "teams_netvaerk", "steam_forza"],
         ["Data pr. time er beregnet som hastighed gange tid. Husstandsoverslagene er vores egne."])}
 </section>"""
     faq = [
@@ -14366,6 +14874,9 @@ du har brug for</a>.</p>
         {"sp": "Hvor meget data bruger Netflix i timen?",
          "sv": f"Omkring {_gb_time(5)} GB i Full HD og {_gb_time(15)} GB i 4K, regnet ud fra Netflix' "
                "anbefalede hastigheder."},
+        {"sp": "Hvor meget data bruger et spil?",
+         "sv": "Store spil kan fylde over 100 GB. Forza Horizon 5 kræver fx 110 GB på Steam, så en enkelt "
+               "download kan bruge en femtedel af et loft på 500 GB."},
         {"sp": "Har fiber dataloft?",
          "sv": "Nej. Fiber, kabel og DSL har intet loft. Det er kun ved 5G og mobilt internet, at "
                "datamængden kan være begrænset."},
@@ -14380,7 +14891,7 @@ du har brug for</a>.</p>
                ("/internet-priser/", "Internet priser"),
                ("/guides/hvor-meget-data/", "Hvor meget mobildata har jeg brug for?")],
               billede="dataforbrug-husstand",
-              altbillede="Familie ser film på tv og tablet i sofaen")
+              altbillede="Kvinde streamer på bærbar computer i sofaen med routeren i vindueskarmen")
 
 
 # ------------------------------------------------------------ INTERNET-GUIDES (NOV. 2026)
@@ -14484,14 +14995,36 @@ betyder noget i hverdagen:</p>
 <ul class="pilliste">
   <li><strong>Stabilitet.</strong> Fiber deles på langt færre hænder og er i praksis stabil om
   aftenen. 5G deler kapaciteten på masten, så hastigheden falder, når mange bruger nettet samtidig.</li>
-  <li><strong>Svartid.</strong> Fiber svarer på få millisekunder. 5G er typisk langsommere til at
-  svare, hvilket mærkes ved online spil og videomøder, ikke ved streaming. Se
+  <li><strong>Svartid.</strong> Fiber svarer stabilt på få millisekunder. 5G kan også have lav
+  svartid, men den svinger mere med signalet og belastningen på masten, og det mærkes ved online
+  spil og videomøder, ikke ved streaming. Se
   <a href="/guides/ping-og-svartid/">hvad svartid betyder for gaming</a>.</li>
   <li><strong>Upload.</strong> Fiber giver ofte samme hastighed begge veje. Med 5G er uploaden
   lavere, og det er den, der afgør, om andre kan se dig skarpt på et videomøde.</li>
 </ul>
 <p>For en eller to personer, der streamer og surfer, er forskellen ofte ikke til at mærke.
 For en familie med hjemmearbejde og flere skærme er den det.</p>
+
+<h2 id="test">Hvad viser test af 5G internet i Danmark?</h2>
+<p>Computerworld testede i november 2025 5G-bredbånd fra fire udbydere i et hus i det nordlige
+København, målt med kabel til routeren:</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Computerworlds test af 5G-bredbånd, 21. november 2025. Ét hus, én adresse.</caption>
+<thead><tr><th scope="col">Udbyder</th><th scope="col">Download</th><th scope="col">Ping</th></tr></thead>
+<tbody>
+<tr><td><strong>Telenor</strong></td><td class="tal">951 Mbit/s</td><td class="tal">11–15 ms</td></tr>
+<tr><td><strong>Telmore</strong></td><td class="tal">764 Mbit/s</td><td class="tal">8–10 ms</td></tr>
+<tr><td><strong>Norlys</strong></td><td class="tal">699 Mbit/s</td><td class="tal">20–27 ms</td></tr>
+<tr><td><strong>3</strong></td><td class="tal">241 Mbit/s</td><td class="tal">Ikke oplyst</td></tr>
+</tbody></table></div>
+<p>Med godt signal kan 5G altså komme tæt på fiber. Testens egen konklusion er, at resultatet
+afhænger meget af signalet på adressen — derfor skal du tjekke dækningen, før du vælger.</p>
+
+<h2 id="kobber">Kobbernettet lukker: fiber eller 5G som afløser?</h2>
+<p>TDC NET lukker kobbernettet, og de sidste forbindelser lukkes efter planen i 2029. Har du DSL i
+dag, er fiber det oplagte valg, hvis det ligger på adressen. Ellers er 5G den hurtigste vej til en
+ny forbindelse, og <a href="/guides/coax-internet/">coax</a> gennem antennestikket er et tredje
+alternativ.</p>
 
 <h2 id="vaelg-5g">Vælg 5G internet, når</h2>
 <ul class="pilliste">
@@ -14532,7 +15065,7 @@ normalprisen, der tæller:</p>
 <p>Prisniveauet for alle typer internet kan du se på <a href="/internet-priser/">internet
 priser</a>.</p>
 
-{_bb_kilder(["bbk"])}
+{_bb_kilder(["bbk", "cw_5g_test", "tdcnet_kobber"])}
 </section>"""
 
     faq = [
@@ -14561,7 +15094,7 @@ priser</a>.</p>
                ("/internet-priser/", "Internet priser"),
                ("/guides/god-internethastighed/", "Hvad er en god internethastighed?")],
               billede="5g-internet-eller-fiber",
-              altbillede="5G-router og fiberboks side om side i en dansk stue")
+              altbillede="Par i en stue med fiberboks på væggen og 5G-router på sofabordet")
 
 
 # ---------------------------------------------- COAX INTERNET
@@ -14587,7 +15120,8 @@ def byg_coax_internet():
 kabel, som leverer kabel-tv, og du tilslutter det i antennestikket i væggen. Det kaldes også
 kabel-internet. Download kan være på højde med fiber, men upload er typisk lavere: i vores
 sammenligning er uploaden på coax {kr(cop)} Mbit/s i median{f", mod {kr(fop)} Mbit/s på fiber" if fop else ""}.
-{_pct(BBK['kabel'])} af boliger og virksomheder i Danmark kan få bredbånd via kabel-tv-nettet.</p></div>
+{_pct(BBK['kabel'])} af boliger og virksomheder i Danmark kan få bredbånd via kabel-tv-nettet, og
+29,3 % af alle faste bredbåndsabonnementer kørte via kabel-tv i 2024.</p></div>
 
 <p>Har du et antennestik med et udtag til data, kan du sandsynligvis få coax uden
 gravearbejde. Se priserne på <a href="/bredbaand/kabel-internet/">kabel-internet
@@ -14606,8 +15140,8 @@ og at hastigheden kan falde lidt om aftenen, når mange er på samtidig.</p>
 
 <h2 id="hastighed">Hvor hurtigt er coax internet?</h2>
 <p>Det hurtigste coax-abonnement i vores sammenligning giver {kr(cmax['ned'])}/{kr(cmax['op'])}
-Mbit/s. TDC NET oplyser, at deres coaxnet når over 1 million husstande med op til 2000 Mbit/s, og
-hos Norlys kræver de hurtigste coax-hastigheder et modem til DOCSIS 3.1. Downloadhastigheden er rigelig til streaming i 4K på flere skærme. Uploaden er den, du
+Mbit/s. TDC NET oplyser, at deres coaxnet når over 1 million husstande med gigabit-hastigheder,
+og hos Norlys kræver de hurtigste coax-hastigheder et modem til DOCSIS 3.1. Downloadhastigheden er rigelig til streaming i 4K på flere skærme. Uploaden er den, du
 skal kigge på, hvis du:</p>
 <ul class="pilliste">
   <li>arbejder hjemmefra med videomøder hver dag</li>
@@ -14616,6 +15150,19 @@ skal kigge på, hvis du:</p>
 </ul>
 <p>Er det ikke dig, mærker du sjældent forskellen på coax og fiber.</p>
 {tabel}
+
+<h2 id="selskaber">Hvilke selskaber kan levere coax internet?</h2>
+<p>TDC NET ejer det største coaxnet, men sælger ikke selv internet. På TDC NETs kabelnet kan du
+blandt andre vælge Bolignet, DanskNet, EWII, Fastspeed, Hiper, ipnordic, Netnoerden, Norlys,
+Telenor, Waoo og YouSee. Andre kabelnet ejes af Norlys eller af lokale antenneforeninger, og så er
+udvalget af selskaber et andet. Se priserne hos dem, vi sammenligner, på
+<a href="/bredbaand/udbydere/">internetudbydere</a>.</p>
+
+<h2 id="coax-eller-dsl">Coax eller DSL? Kobbernettet lukker</h2>
+<p>Har du i dag internet gennem telefonstikket (DSL), er det tid til at se på alternativerne. TDC NET
+er i gang med at lukke kobbernettet, og de sidste forbindelser lukkes efter planen i 2029. Coax
+gennem antennestikket, fiber og 5G er de oplagte afløsere — og coax er ofte det hurtigste at skifte
+til, fordi stikket allerede sidder i væggen.</p>
 
 <h2 id="coax-eller-fiber">Coax eller fiber?</h2>
 <p>Kan du få begge, er fiber den bedste forbindelse: samme hastighed op og ned, lavere svartid
@@ -14638,7 +15185,7 @@ som du betaler efter en eventuel kampagne, er i median {kr(_ip_med([a["pris"] fo
 Coax er ofte et godt køb, hvis du mest streamer og ikke har brug for høj upload. Se hvordan det
 står i forhold til fiber og 5G på <a href="/internet-priser/">internet priser</a>.</p>
 
-{_bb_kilder(["bbk", "tdcnet_coax", "norlys_kabel"])}
+{_bb_kilder(["bbk", "tdcnet_coax", "norlys_kabel", "tdcnet_kobber", "telestat_2h24"])}
 </section>"""
     faq = [
         {"sp": "Hvad er coax internet?",
@@ -14650,6 +15197,9 @@ står i forhold til fiber og 5G på <a href="/internet-priser/">internet priser<
         {"sp": "Hvor mange kan få coax internet?",
          "sv": f"{_pct(BBK['kabel'])} af boliger og virksomheder i Danmark kan få bredbånd via "
                f"kabel-tv-nettet ifølge Digitaliseringsstyrelsens Bredbåndskortlægning {BBK['aar']}."},
+        {"sp": "Bliver coax lukket ligesom kobbernettet?",
+         "sv": "Det er kobbernettet (DSL), TDC NET lukker frem mod 2029. Coax er ikke omfattet af den plan, "
+               "men enkelte coaxnet er gennem årene skiftet ud med fiber lokalt."},
         {"sp": "Hvad koster coax internet?",
          "sv": f"Det billigste coax-abonnement i vores sammenligning koster {kr(_ip_aar(cb))} kr. om "
                f"måneden i snit det første år."},
@@ -14663,7 +15213,7 @@ står i forhold til fiber og 5G på <a href="/internet-priser/">internet priser<
                ("/bredbaand/fibernet/", "Fibernet sammenlignet"),
                ("/guides/5g-internet-eller-fiber/", "5G internet eller fiber"),
                ("/internet-priser/", "Internet priser")],
-              billede="coax-internet", altbillede="Antennestik i væggen med kabelmodem tilsluttet")
+              billede="coax-internet", altbillede="Kvinde arbejder ved spisebordet med kabel fra et kabelmodem i antennestikket")
 
 
 # ---------------------------------------------- INTERNET UDEN BINDING
@@ -14742,12 +15292,21 @@ er simpelt: sammenlign hvad begge koster i de måneder, du regner med at beholde
   <li>vil kunne skifte, så snart et bedre tilbud dukker op</li>
 </ul>
 
-<h2 id="5g-uden-binding">5G internet uden binding</h2>
+<h2 id="5g-uden-binding">Binding på 5G og mobilt bredbånd</h2>
 <p>5G er den nemmeste forbindelse at have uden binding, fordi der ingen installation er. Routeren
 sendes med posten og returneres, når du opsiger. Se <a href="/bredbaand/5g/">5G internet
 sammenlignet</a>, og tjek om abonnementet har dataloft. Har du allerede et mobilabonnement med
 fri data, kan du i en periode klare dig med at <a href="/guides/del-internet-fra-mobil/">dele
 internet fra mobilen</a>.</p>
+
+<h2 id="egen-router">5G uden binding med egen router og mobilabonnement</h2>
+{(lambda fri_, g5_: f"""<p>Et alternativ er at købe en 5G-router selv og sætte et SIM-kort fra et mobilabonnement med fri data
+i. Det billigste mobilabonnement med fri data i vores sammenligning koster {kr(round(gns12(fri_)))} kr. om
+måneden i snit ({_hvem(fri_).split('<br>')[0]}), mod {kr(_ip_aar(g5_))} kr. for det billigste 5G internet med
+router. Læg prisen på routeren oveni, og husk, at fri data på et mobilabonnement kan have andre vilkår
+for brug i en router end et rigtigt 5G-bredbåndsabonnement.</p>""" if fri_ and g5_ else "")(
+    min([a for a in _betalte() if a["data_gb"] >= 9999], key=lambda a: gns12(a) or 9999, default=None),
+    min(_bb_tek("5g"), key=bb_aarspris, default=None))}
 
 <h2 id="skift">Når du vil skifte</h2>
 <p>Bestil det nye, før du opsiger det gamle, så du ikke står uden internet. Se hvordan du opsiger
@@ -14777,7 +15336,7 @@ hos de største selskaber i <a href="/guides/opsig-internet/">sådan opsiger du 
                ("/internet-priser/", "Internet priser"),
                ("/guides/opsig-internet/", "Sådan opsiger du internet"),
                ("/bredbaand/5g/", "5G internet sammenlignet")],
-              billede="internet-uden-binding", altbillede="Person pakker en router ned i en flyttekasse")
+              billede="internet-uden-binding", altbillede="Par ved køkkenbordet sammenligner internet uden binding på computer og mobil")
 
 
 # ---------------------------------------------- DEL INTERNET FRA MOBIL
@@ -14814,7 +15373,7 @@ Netværk og internet. Det bruger data fra dit mobilabonnement, så tjek din data
 Som fast forbindelse bliver det hurtigt for lidt — se forskellen i
 <a href="/guides/mobilabonnement-eller-bredbaand/">mobilabonnement eller bredbånd</a>.</p>
 
-<h2 id="iphone">Sådan deler du internet fra iPhone</h2>
+<h2 id="iphone">Internetdeling på iPhone</h2>
 <ol class="nummerliste">
   <li>Åbn <strong>Indstillinger</strong> og tryk på <strong>Personligt hotspot</strong>.</li>
   <li>Slå <strong>Tillad andre at deltage</strong> til.</li>
@@ -14824,7 +15383,7 @@ Som fast forbindelse bliver det hurtigt for lidt — se forskellen i
 <p>Står Personligt hotspot ikke i menuen, så kig under Mobilnetværk. Nogle abonnementer skal
 have funktionen slået til hos selskabet.</p>
 
-<h2 id="android">Sådan deler du internet fra Android</h2>
+<h2 id="android">Internetdeling på Android og Samsung</h2>
 <p>Den hurtigste vej er at stryge ned fra toppen af skærmen og trykke på <strong>Hotspot</strong>.
 Hold fingeren på knappen for at se indstillingerne. Ellers:</p>
 <ol class="nummerliste">
@@ -14843,6 +15402,27 @@ indstillingerne, hvis du ikke kan finde det.</p>
   <li><strong>Bluetooth</strong> bruger mindst strøm, men er langsom. Fint til mail, ikke til
   video.</li>
 </ul>
+
+<h2 id="mac">Fra iPhone til Mac: Instant Hotspot</h2>
+<p>Har du både iPhone og Mac, kan Macen forbinde til telefonens hotspot direkte fra wifi-menuen uden
+adgangskode. Det kræver, at wifi og Bluetooth er slået til på begge, at enhederne er tæt på hinanden,
+og helst at de bruger samme Apple-konto. Instant Hotspot deler telefonens mobildata — ikke et
+wifi-netværk, telefonen selv er forbundet til.</p>
+
+<h2 id="virker-ikke">Hotspot virker ikke? Sådan løser du det</h2>
+<ul class="pilliste">
+  <li><strong>Netværket kan ikke ses:</strong> hold hotspot-skærmen åben på telefonen, og prøv igen.</li>
+  <li><strong>Forbundet, men intet internet:</strong> tjek at mobildata er slået til, og at du har
+  data tilbage.</li>
+  <li><strong>Forbindelsen falder ud:</strong> slå strømbesparelse fra, og sæt telefonen til opladning.</li>
+  <li><strong>Hotspot mangler i menuen:</strong> nogle abonnementer skal have funktionen slået til hos
+  selskabet.</li>
+</ul>
+
+<h2 id="spar-data">Spar data: slå forbrugsbegrænset forbindelse til</h2>
+<p>I Windows 11 kan du markere hotspot-netværket som forbrugsbegrænset under Indstillinger, Netværk
+og internet, Wi-Fi og det aktuelle netværk. Så henter Windows Update kun de vigtigste opdateringer,
+mens du er på mobilens data.</p>
 
 <h2 id="data">Hvor meget data bruger det?</h2>
 <p>En computer bruger mere data end en telefon, fordi den henter opdateringer og viser video i
@@ -14864,7 +15444,7 @@ mobilselskabet kan begrænse deling eller tage betaling for den.</p>
   <li>Er forbindelsen langsom, så tjek dækningen i <a href="/daekningskort/">dækningstjekket</a>.</li>
 </ol>
 
-{kilder(["apple_hotspot", "google_hotspot"], ["Priser hentet fra selskabernes datafeeds to gange i døgnet."])}
+{kilder(["apple_hotspot", "apple_instant", "google_hotspot", "ms_metered"], ["Priser hentet fra selskabernes datafeeds to gange i døgnet."])}
 </section>"""
     faq = [
         {"sp": "Hvordan deler man internet fra mobil til computer?",
@@ -14887,7 +15467,7 @@ mobilselskabet kan begrænse deling eller tage betaling for den.</p>
                ("/bredbaand/5g/", "5G internet sammenlignet"),
                ("/guides/hvor-meget-data/apps/", "Dataforbrug pr. app")],
               billede="del-internet-fra-mobil",
-              altbillede="Bærbar computer forbundet til en mobiltelefon med hotspot slået til")
+              altbillede="Kvinde på café med bærbar computer forbundet til mobilen med kabel")
 
 
 def tabel_gaming(antal=5):
@@ -14978,6 +15558,27 @@ dårligt hvis stikkontakterne ligger på forskellige faser i elinstallationen. K
 netværkskabel til det fjerne rum, er et accesspoint i enden af kablet den hurtigste og mest
 stabile løsning.</p>
 
+<h2 id="pris">Hvad koster en wifi-forstærker og et mesh-system?</h2>
+<p>En simpel extender koster få hundrede kroner. Mesh-systemer er dyrere: Forbrugerrådet Tænk har
+testet 37 mesh-systemer til mellem 700 og 12.000 kr., og det dyreste vandt ikke. Køb efter husets
+størrelse og antal etager, ikke efter prisen.</p>
+
+<h2 id="vaelg">Sådan vælger du den rigtige forstærker</h2>
+<ul class="pilliste">
+  <li><strong>Wifi-standard:</strong> vælg mindst wifi 6, gerne samme standard som routeren.</li>
+  <li><strong>Samme system som routeren:</strong> understøtter routeren EasyMesh eller producentens eget
+  mesh, kan en enhed fra samme familie indgå i samme netværk.</li>
+  <li><strong>Netværksstik:</strong> en LAN-port på forstærkeren gør det muligt at forbinde tv eller
+  computer med kabel — og at forbinde enhederne med kabel imellem.</li>
+  <li><strong>Antal bånd:</strong> tre bånd giver mesh-enhederne en kanal til at tale sammen, så
+  hastigheden ikke halveres.</li>
+</ul>
+
+<h2 id="kanal">Skift wifi-kanal, før du køber</h2>
+<p>I lejligheder med mange naboer forstyrrer netværkene hinanden. Log ind på routeren, og vælg en
+anden kanal, eller lad routeren vælge automatisk. Det koster ingenting og hjælper ofte mere end
+en forstærker.</p>
+
 <h2 id="mesh-selskaber">Mesh fra dit internetselskab</h2>
 <p>Før du køber selv, så tjek hvad dit selskab tilbyder. Kontrolleret {TJEKKET}:</p>
 <ul class="pilliste">
@@ -15008,18 +15609,26 @@ se, om du betaler for en gammel, langsom forbindelse. Se hvad internet koster i 
 <a href="/internet-priser/">internet priser</a>, og hvilken hastighed jeres husstand har brug for
 i <a href="/guides/god-internethastighed/">hvad er en god internethastighed</a>.</p>
 
-{kilder(["taenk_mesh", "hiper_wifi", "yousee_mesh", "norlys_fakta", "hiper_mesh"], ["Rådene er ikke en test af bestemte produkter."])}
+{kilder(["taenk_mesh", "taenk_mesh_test", "hiper_wifi", "yousee_mesh", "norlys_fakta", "hiper_mesh"], ["Rådene er ikke en test af bestemte produkter."])}
 </section>"""
     faq = [
         {"sp": "Virker en internetforstærker?",
          "sv": "Ja, hvis problemet er wifi-dækningen langt fra routeren. Er internettet langsomt "
                "lige ved routeren, hjælper en forstærker ikke."},
+        {"sp": "Hvad er forskellen på en extender og en repeater?",
+         "sv": "Det er det samme. Begge modtager wifi-signalet og sender det videre."},
         {"sp": "Hvad er bedst, extender eller mesh?",
          "sv": "En extender er nok til ét rum med dårligt signal. Til et stort hus eller flere "
                "etager er mesh bedre, fordi det laver ét netværk i hele huset."},
         {"sp": "Hvor skal en wifi-forstærker placeres?",
          "sv": "Cirka midt mellem routeren og det rum, der mangler signal, et sted hvor signalet fra "
                "routeren stadig er godt."},
+        {"sp": "Hvad er en internet booster?",
+         "sv": "Det samme som en wifi-extender eller repeater: en boks, der modtager wifi-signalet og "
+               "sender det videre til de rum, routeren ikke når."},
+        {"sp": "Hvordan forstærker jeg internetsignalet?",
+         "sv": "Flyt routeren først, centralt og højt. Hjælper det ikke, så vælg en extender til ét "
+               "rum, mesh til hele huset eller et accesspoint med kabel."},
         {"sp": "Gør en forstærker internettet hurtigere?",
          "sv": "Den kan ikke gøre forbindelsen hurtigere end det, du betaler for. Den sørger for, at "
                "mere af hastigheden når frem til de rum, der ligger langt fra routeren."},
@@ -15034,7 +15643,7 @@ i <a href="/guides/god-internethastighed/">hvad er en god internethastighed</a>.
                ("/internet-priser/", "Internet priser"),
                ("/speedtest/", "Test din hastighed")],
               billede="internetforstaerker",
-              altbillede="Mesh-enhed på en reol i en dansk stue")
+              altbillede="Kvinde i lænestol sætter en mesh-enhed op med mobilen")
 
 
 # ---------------------------------------------- GOD INTERNETHASTIGHED
@@ -15128,9 +15737,15 @@ i vores sammenligning.</p>
 Det er det sikre valg for de fleste familier.</p>
 <h3>1000 Mbit/s: når tiden betyder noget</h3>
 <p>For gamere, der henter store spil, for dem der arbejder med store filer, og for husstande med
-mange enheder. {f"Det billigste på 1000 Mbit/s koster {kr(min(_ip_aar(a) for a in t1000))} kr. om måneden i snit." if t1000 else ""}
+mange enheder. {(lambda b_: f"Det billigste på 1000 Mbit/s er {(lambda n: n if n[:1].isdigit() else n.lower())(TEK_NAVN.get(b_['teknologi'], b_['teknologi']))} til {kr(_ip_aar(b_))} kr. om måneden i snit." )(min(t1000, key=bb_aarspris)) if t1000 else ""}
 {_pct(BBK['1000'])} af boliger og virksomheder i Danmark kan få mindst 1 Gbit/s ifølge
 Digitaliseringsstyrelsens Bredbåndskortlægning {BBK['aar']}.</p>
+
+<h2 id="hurtigste">Hvad er det hurtigste internet i Danmark?</h2>
+<p>Fiber er den hurtigste forbindelse. Det hurtigste abonnement i vores sammenligning giver
+{kr(max(a["ned"] for a in BB))} Mbit/s, og enkelte selskaber sælger i dag op til 2500 Mbit/s på
+udvalgte fiberadresser. Til almindelig brug mærker du sjældent forskel over 1000 Mbit/s — wifi og
+din egen computer bliver flaskehalsen før forbindelsen.</p>
 
 <h2 id="pris">Hvad koster mere hastighed?</h2>
 {tabel_hastighed_merpris()}
@@ -15145,12 +15760,26 @@ hastighed begge veje, mens coax og 5G har lavere upload. Se forskellen i
 <a href="/guides/5g-internet-eller-fiber/">5G internet eller fiber</a> og
 <a href="/guides/coax-internet/">hvad er coax internet</a>.</p>
 
-<h2 id="maal">Hvor hurtigt er mit internet?</h2>
+<h2 id="andre">Hvilken hastighed har andre danskere?</h2>
+<p>I andet halvår 2024 havde 36,4 % af de faste bredbåndsabonnementer i Danmark mindst 1 Gbit/s, og
+88,3 % havde mindst 100 Mbit/s, ifølge Digitaliseringsstyrelsens telestatistik. Gigabit er altså
+blevet almindeligt, men langt fra nødvendigt for alle.</p>
+
+<h2 id="faar-ikke">Får du ikke den hastighed, du betaler for?</h2>
+<ol class="nummerliste">
+  <li><strong>Mål med kabel</strong> direkte i routeren, flere gange og på forskellige tidspunkter.</li>
+  <li><strong>Gem målingerne</strong> med dato og klokkeslæt.</li>
+  <li><strong>Klag skriftligt til selskabet</strong> og bed om en løsning eller et prisnedslag.</li>
+  <li><strong>Klag til Teleankenævnet,</strong> hvis selskabet ikke løser det. Forbrugerrådet Tænk
+  beskriver, at du kan gå videre dertil, når selskabet ikke har svaret inden for tre måneder.</li>
+</ol>
+
+<h2 id="maal">Mål din egen hastighed</h2>
 <p>Kør en <a href="/speedtest/">hastighedstest</a> med en computer, der er forbundet med kabel
 til routeren. Så måler du forbindelsen og ikke wifi. Måler du via wifi, er et resultat på
 halvdelen af det, du betaler for, ikke usædvanligt.</p>
 
-{kilder(["bbk", "netflix_hastighed"])}
+{kilder(["bbk", "netflix_hastighed", "teams_netvaerk", "telestat_2h24", "taenk_hastighed"])}
 </section>"""
     faq = [
         {"sp": "Hvad er en god internethastighed?",
@@ -15159,6 +15788,15 @@ halvdelen af det, du betaler for, ikke usædvanligt.</p>
         {"sp": "Er 100 Mbit nok?",
          "sv": f"Til de fleste små husstande, ja. 4K-streaming kræver {NETFLIX_4K} Mbit/s pr. skærm, "
                "så 100 Mbit/s rækker til flere samtidige streams."},
+        {"sp": "Er 300 Mbit nok?",
+         "sv": "Ja, til de fleste familier med streaming, hjemmearbejde og spil. Det er kun store "
+               "downloads og mange samtidige brugere, der kræver mere."},
+        {"sp": "Er 500 Mbit nok?",
+         "sv": "Ja, til langt de fleste familier. 500 Mbit/s giver plads til flere 4K-streams, "
+               "videomøder og downloads på samme tid."},
+        {"sp": "Er 10 Mbit nok?",
+         "sv": "Til én person, der surfer og ser video i HD, ja. Til en husstand med flere skærme "
+               "eller 4K er det for lidt."},
         {"sp": "Er 1000 Mbit/s nødvendigt?",
          "sv": "Sjældent til streaming. Det mærkes ved store downloads, upload af filer og mange "
                "enheder på én gang."},
@@ -15176,7 +15814,7 @@ halvdelen af det, du betaler for, ikke usædvanligt.</p>
                ("/guides/internetforstaerker/", "Internetforstærker"),
                ("/speedtest/", "Test din hastighed")],
               billede="god-internethastighed",
-              altbillede="Familie streamer på flere skærme i en dansk stue")
+              altbillede="Familie i stuen bruger tv, tablets og computer på samme internet")
 
 
 def spil_tid(mbit):
