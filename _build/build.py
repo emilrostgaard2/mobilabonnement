@@ -8554,16 +8554,16 @@ dækker ikke hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p
                "internet være billigst, fordi der ingen gravearbejde er."},
     ]
 
-    _kort = MAANED_AAR.split()[0][:3] + ". " + MAANED_AAR.split()[-1]
-    titel = f"Internet priser {_kort}: hvad koster internet om måneden?"
+    _fra = kr(min(bb_start(a) for a in BB))
+    titel = f"Internet priser {maaned} {aar}: {len(BB)} tilbud fra {_fra} kr./md."
     if len(titel) > 60:
-        titel = f"Internet priser {_kort}: hvad koster internet pr. md.?"
+        titel = f"Internet priser {MAANED_AAR.split()[0][:3]}. {aar}: {len(BB)} tilbud fra {_fra} kr./md."
     skriv(sti, shell(
         sti=sti, titel=titel,
         beskrivelse=(f"Internet koster typisk {kr(med_aar)} kr./md. (median, {OPDATERET}). Se "
                      f"internetpriser for {len(BB)} fiber-, 5G- og kabeltilbud: pris pr. hastighed, "
                      f"normalpris og prisen det første år. Tjek din adresse."),
-        hero=bb_hero("Internet priser: hvad koster internet om måneden?",
+        hero=bb_hero("Internet priser",
                      "Skriv din adresse og se, hvad internet koster hos dig — med pris pr. "
                      "hastighed, normalpris og hvad det koster det første år.", BB),
         efter_hero="", krumme=[("/", "Forside"), ("/bredbaand/", "Bredbånd"), (None, "Internet priser")],
