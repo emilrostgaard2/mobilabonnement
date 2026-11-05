@@ -9113,12 +9113,13 @@ ikke har adgang til priser for. Læs mere om
 
     skriv("/bredbaand/", shell(
         sti="/bredbaand/",
-        titel=(f"Billigste internet {vis_maaned()[0]} {vis_maaned()[1]}: bredbånd fra "
-               f"{kr(min(bb_start(a) for a in BB))} kr."),
+        titel=(lambda t: t if len(t) <= 60 else t.replace(vis_maaned()[0], vis_maaned()[0][:3] + "."))(
+            f"Billigste bredbånd {vis_maaned()[0]} {vis_maaned()[1]}: {len(BB)} tilbud fra "
+            f"{kr(min(bb_start(a) for a in BB))} kr./md."),
         beskrivelse=(f"Billigste bredbånd i {vis_maaned()[0]} {vis_maaned()[1]}: {len(BB)} tilbud "
                      f"på fiber, 5G og coax fra {selskaber} selskaber, sorteret efter reel pris "
                      f"det første år. Fra {kr(min(bb_start(a) for a in BB))} kr./md."),
-        hero=bb_hero("Billigste internet til hjemmet: sammenlign bredbånd",
+        hero=bb_hero("Billigste bredbånd",
                      "Skriv din adresse, og se om du kan få fiber, kabel eller 5G — og hvad det "
                      "billigste koster regnet på hele året.", BB),
         efter_hero="", krumme=[("/", "Forside"), (None, "Bredbånd")],
