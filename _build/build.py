@@ -7979,12 +7979,12 @@ Streamer du mest, mærker du ikke forskellen.</p>""",
 }
 
 BB_SEO = {
-    "fiber": {"kw": "fibernet", "h1": "Billigste fibernet og fiber internet",
-              "titel": "Fiber internet {m} {a}: billigste fibernet fra {p} kr.",
+    "fiber": {"kw": "fibernet", "h1": "Billigste fibernet",
+              "titel": "Billigste fibernet {m} {a}: fra {p} kr./md. – {n} tilbud",
               "besk": "Billigste fibernet i {m} {a}: {n} tilbud fra {s} selskaber sorteret efter "
                       "reel pris det første år. Startpris fra {p} kr./md. Se pris pr. hastighed."},
-    "5g": {"kw": "5G internet", "h1": "5G internet til hjemmet: billigste 5G-bredbånd",
-           "titel": "5G internet {m} {a}: billigste 5G-bredbånd fra {p} kr.",
+    "5g": {"kw": "5G internet", "h1": "Billigste 5G internet",
+           "titel": "Billigste 5G internet {m} {a}: fra {p} kr./md. – {n} tilbud",
            "besk": "Billigste 5G internet i {m} {a}: {n} tilbud fra {s} selskaber med net, "
                    "hastighed og reel årspris. Startpris fra {p} kr./md. Ingen gravearbejde."},
     "coax": {"kw": "kabel-internet", "h1": "Billigste kabel-internet (coax internet)",
