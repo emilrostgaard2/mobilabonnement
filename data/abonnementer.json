@@ -1,9 +1,9 @@
 {
  "_kilde": "Adtraction data feed",
- "_hentet": "2026-11-07",
+ "_hentet": "2026-11-08",
  "_advarsel": "Genereret automatisk af _build/adtraction.py ved hvert build. Redigér ikke i hånden, og overskriv ikke filen med en ældre version — så mister du de nyeste priser.",
  "kilde": "adtraction",
- "opdateret": "2026-11-07",
+ "opdateret": "2026-11-08",
  "abonnementer": [
   {
    "id": "lebara-1",
@@ -367,26 +367,6 @@
   },
   {
    "id": "duka-563782",
-   "udbyder": "duka",
-   "navn": "Duka 50 GB",
-   "data_gb": 50,
-   "pris": 99,
-   "intro_pris": null,
-   "intro_mdr": 0,
-   "tale": "fri",
-   "sms": "fri",
-   "binding": 0,
-   "oprettelse": 0,
-   "eu_gb": 20,
-   "femg": true,
-   "esim": true,
-   "streaming": [],
-   "forbrugsafregnet": false,
-   "badge": null,
-   "link": "https://ion.dukatale.dk/t/t?a=1666106721&as=2102885611&t=2&tk=1&url=https://www.dukatale.dk/mobilabonnementer"
-  },
-  {
-   "id": "duka-56377082",
    "udbyder": "duka",
    "navn": "Duka 50 GB",
    "data_gb": 50,
@@ -824,26 +804,6 @@
    "forbrugsafregnet": false,
    "badge": null,
    "link": "https://on.eesy.dk/t/t?a=1700040947&as=2102885611&t=2&tk=1&url=https://eesy.dk/"
-  },
-  {
-   "id": "duka-98765",
-   "udbyder": "duka",
-   "navn": "Duka 75 GB",
-   "data_gb": 75,
-   "pris": 149,
-   "intro_pris": null,
-   "intro_mdr": 0,
-   "tale": "fri",
-   "sms": "fri",
-   "binding": 0,
-   "oprettelse": 0,
-   "eu_gb": 22,
-   "femg": true,
-   "esim": true,
-   "streaming": [],
-   "forbrugsafregnet": false,
-   "badge": null,
-   "link": "https://ion.dukatale.dk/t/t?a=1666106721&as=2102885611&t=2&tk=1&url=https://www.dukatale.dk/mobilabonnementer"
   },
   {
    "id": "telmore-173889",
