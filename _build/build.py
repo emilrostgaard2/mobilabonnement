@@ -72,17 +72,51 @@ def _logo_w(slug_, hoejde):
     return round(w * hoejde / h)
 
 
+_SH_RE = re.compile(
+    r'<div class="sektion-hoved afslør">\s*<div class="sh-tekst">\s*<span class="etiket">[^<]*</span>\s*'
+    r'(<h2[^>]*>.*?</h2>)\s*<p class="led">(.*?)</p>\s*</div>\s*<p class="opdateret-stribe">(.*?)</p>\s*</div>',
+    re.S)
+
+
+def _svar_under_h2(html, c):
+    """Det korte svar står direkte under tabellens overskrift (i stedet for en
+    boks øverst og en opdateringsboks ved siden af overskriften)."""
+    i = html.find('id="sammenlign"')
+    if i < 0:
+        return None
+    m = _SH_RE.search(html, i, i + 3000)
+    if not m:
+        return None
+    svar = re.sub(r"^\s*<p[^>]*>|</p>\s*$", "", c.strip()) if c else m.group(2).strip()
+    live = re.sub(r"<(?!/?a\b)[^>]+>", "", m.group(3))
+    live = re.sub(r"\s+", " ", live).strip().replace("Opdateret ", "Priser hentet ", 1)
+    blok = (f'<div class="sektion-hoved sh-svar-hoved">{m.group(1)}'
+            f'<p class="sh-svar">{svar}</p>'
+            f'<p class="sh-live"><i class="op-prik" aria-hidden="true"></i><span>{live}</span></p></div>')
+    return html[:m.start()] + blok + html[m.end():]
+
+
 def _indsaet_citat(sti, html):
+    html = _indsaet_citat_ind(sti, html)
+    if 'class="sektion-hoved sh-svar-hoved' not in html:
+        html = _svar_under_h2(html, None) or html
+    return html
+
+
+def _indsaet_citat_ind(sti, html):
     """Sider med abonnementskort får den citérbare sætning øverst i indholdet,
     beregnet ud fra præcis de abonnementer, siden viser."""
     if 'class="citat-fakta"' in html[:html.find('<main id="indhold">') + 400]:
         return html
     if SIDE_CITAT.get(sti):
+        ny = _svar_under_h2(html, SIDE_CITAT[sti])
+        if ny:
+            return ny
         return html.replace('<main id="indhold">',
                             f'<main id="indhold">\n<div class="baand">{SIDE_CITAT[sti]}</div>', 1)
     if sti == "/" or sti.startswith(("/sammenlign/", "/kampagner", "/guides/", "/mobilabonnementer-black-friday")):
         # Forsiden får ingen: sætningen ville være identisk med billigste-sidens
-        return html
+        return _svar_under_h2(html, None) or html
     set_, k = set(), []
     for a in skabelon.UDVALG_SIDE:
         if a["id"] not in set_:
@@ -107,6 +141,9 @@ def _indsaet_citat(sti, html):
         c = citat_for_side(sti, k)
     if not c:
         return html
+    ny = _svar_under_h2(html, c)
+    if ny:
+        return ny
     return html.replace('<main id="indhold">', f'<main id="indhold">\n<div class="baand">{c}</div>', 1)
 
 

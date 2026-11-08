@@ -2781,3 +2781,11 @@ body{font-variant-numeric:tabular-nums}
   .hf-tillid{justify-content:flex-start;margin:-.4rem 0 1.1rem;font-size:.84rem}
   .hf-tek{justify-content:flex-start}
 }
+
+/* Kort svar direkte under tabellens overskrift */
+.sh-svar-hoved{display:block;margin-bottom:1.1rem}
+.sh-svar-hoved h2{margin:0 0 .55rem}
+.sh-svar{font-size:1.06rem;line-height:1.6;max-width:62rem;margin:0;color:var(--blaek)}
+.sh-live{display:flex;align-items:flex-start;gap:.55rem;margin:.6rem 0 0;font-size:.85rem;color:var(--graa);max-width:none}
+.sh-live .op-prik{flex:none;margin-top:.45em}
+.sh-live a{color:inherit}

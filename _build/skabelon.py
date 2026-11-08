@@ -874,13 +874,13 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
         prisblok = ('<div class="pk-tal"><b>0</b><span>kr.</span></div>'
                     '<div class="pk-under">+ takst pr. minut og sms</div>')
     elif intro:
-        prisblok = (f'<div class="pk-tal"><b>{kr(a["intro_pris"])}</b><span>kr./md.</span></div>'
-                    f'<div class="pk-under">Herefter {kr(a["pris"])} kr./md.'
-                    f'{f" · snit {kr(g)} kr./md. første år" if g is not None else ""}</div>')
+        prisblok = (f'<div class="pk-tal"><b>{kr(a["intro_pris"])}</b><span>kr.</span></div>'
+                    f'<div class="pk-under">Herefter {kr(a["pris"])} kr./md.</div>')
     else:
-        prisblok = (f'<div class="pk-tal"><b>{kr(a["pris"])}</b><span>kr./md.</span></div>'
-                    f'<div class="pk-under">Fast pris'
-                    f'{f" · snit {kr(g)} kr./md. første år" if g is not None else ""}</div>')
+        prisblok = (f'<div class="pk-tal"><b>{kr(a["pris"])}</b><span>kr.</span></div>'
+                    f'<div class="pk-under">Fast pris</div>')
+    if not forbrug and aar:
+        prisblok += f'<div class="pk-under">{kr(aar)} kr. det første år</div>'
 
     spar = ""
     if gnsnit_aar and not forbrug and aar and aar < gnsnit_aar:
@@ -930,8 +930,6 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
       {spar}
       <button type="button" class="pk-detaljer" aria-expanded="false"
         aria-controls="{panel_id}">Se detaljer</button>
-      <label class="pk-sml"><input type="checkbox" class="sml-boks" value="{e(a['id'])}"> Sammenlign</label>
-      <small class="pk-kilde">Pris fra {e(u['navn'])}s datafeed, hentet {e(OPDATERET_GLOBAL)}</small>
       <a class="knap knap-primaer pk-cta" href="{a['link']}" rel="sponsored nofollow noopener"
         target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}"
         aria-label="Gå til {e(u['navn'])} og se {e(a['navn'])}">Gå til {e(u['navn'])}</a>
@@ -942,6 +940,8 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
     <dl class="pk-fakta">{faktahtml}</dl>
     {advarhtml}
     <div class="pk-panelfod">
+      <label class="pk-sml"><input type="checkbox" class="sml-boks" value="{e(a['id'])}"> Sammenlign</label>
+      <small class="pk-kilde">Pris fra {e(u['navn'])}s datafeed, hentet {e(OPDATERET_GLOBAL)}</small>
       <span class="pk-formel" title="Sådan er gennemsnittet beregnet">{formel}</span>
       <a href="/udbydere/{u['slug']}/">Læs vores gennemgang af {e(u['navn'])}</a>
     </div>
@@ -1059,7 +1059,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     kort = ""
     for i, a in enumerate(abonnementer):
         u = udbydere_map[a["udbyder"]]
-        r = prisrække(a, u, billigst_pr_gb=(a["id"] == billigst_id),
+        r = prisrække(a, u, billigst_pr_gb=(i == 0 if sorter == "aar" else a["id"] == billigst_id),
                       gnsnit_aar=gnsnit_aar, dyn=dyn,
                       score=SCOREMAERKAT(a) if SCOREMAERKAT else "")
         r = r.replace('<article class="plan', f'<article data-i="{i}" class="plan', 1)
