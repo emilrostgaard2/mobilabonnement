@@ -16,6 +16,31 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Prishistorikken er den eneste fil, der ikke kan genskabes. Er den
+      # forsvundet (fx efter en upload, der erstattede alt), hentes den seneste
+      # udgave fra git-historikken, før robotten tilføjer dagens måling.
+      - name: Genskab prishistorik, hvis den mangler
+        run: |
+          if [ ! -s data/prishistorik.json ]; then
+            SHA=$(git log --all --format=%H -- data/prishistorik.json | head -n 1)
+            if [ -n "$SHA" ]; then
+              git show "$SHA^:data/prishistorik.json" > data/prishistorik.json 2>/dev/null \
+                || git show "$SHA:data/prishistorik.json" > data/prishistorik.json
+              echo "Prishistorik genskabt fra $SHA"
+            fi
+          fi
+          python3 - <<'PY'
+          import json, sys
+          try:
+              n = len(json.load(open("data/prishistorik.json")).get("maalinger", []))
+          except Exception:
+              n = 0
+          print(f"Prishistorik: {n} målinger")
+          PY
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -56,14 +81,21 @@ jobs:
             set xfer:clobber true;
             open -u '$BRUGER','$KODE' '$SERVER';
             mirror --reverse --only-newer --verbose=1 \
-              --exclude-glob .git/ \
-              --exclude-glob .github/ \
-              --exclude-glob _build/ \
-              --exclude-glob data/ \
-              --exclude-glob .gitignore \
+              --exclude '^[.]git/' \
+              --exclude '^[.]github/' \
+              --exclude '^_build/' \
+              --exclude '^data/' \
+              --exclude '^[.]gitignore' \
               --exclude-glob '*.md' \
+              --exclude '^assets/adr/' \
               ./ public_html/;
+            mirror --reverse --ignore-time --verbose=1 \
+              assets/adr/ public_html/assets/adr/;
           "
+
+      - name: Giv søgemaskiner besked via IndexNow
+        continue-on-error: true
+        run: python3 _build/indexnow.py
 
       # Kun prisdata gemmes i repoet. De byggede HTML-sider hoerer ikke hjemme
       # i git — de genskabes ved hver koersel. Da robotten committede dem med
@@ -74,31 +106,50 @@ jobs:
           git config user.name "telemobil-bot"
           git config user.email "bot@telemobil.dk"
 
-          # Kun de filer robotten faktisk producerer data i
-          git add -- data/abonnementer.json
-          if [ -f data/prishistorik.json ]; then
-            git add -- data/prishistorik.json
-          fi
-          # Fingeraftryk pr. side. Uden den her nulstilles sitemappets lastmod
-          # ved hver koersel, og alle sider ser ud til at aendre sig dagligt.
-          if [ -f data/sidehistorik.json ]; then
-            git add -- data/sidehistorik.json
-          fi
-          if [ -f data/bredbaand.json ]; then
-            git add -- data/bredbaand.json
-          fi
-
-          if git diff --staged --quiet; then
-            echo "Ingen prisaendringer — intet at gemme."
-            exit 0
-          fi
-
-          git commit -m "Priser opdateret $(date -u +%Y-%m-%d\ %H:%M)"
-
-          # Hent hvad der maatte vaere kommet til imens, og laeg vores commit
-          # ovenpaa. Uden det fejler push, hvis to koersler overlapper.
+          # Gem robottens nye filer, hent den nyeste main og læg dem ovenpå.
+          # Tidligere gav "git pull --rebase" merge-konflikter, når der blev
+          # uploadet kode, mens robotten kørte. Nu kan det ikke ske:
+          #  - abonnementer, bredbånd og sidehistorik: robottens nye version vinder
+          #  - prishistorik: målingerne fra begge sider flettes efter dato, så
+          #    ingen målinger går tabt
+          mkdir -p /tmp/robot
+          for f in abonnementer prishistorik bb_prishistorik sidehistorik bredbaand; do
+            [ -f data/$f.json ] && cp data/$f.json /tmp/robot/$f.json
+          done
           for forsoeg in 1 2 3; do
-            if git pull --rebase --autostash origin main && git push; then
+            git fetch origin main
+            git reset --hard origin/main
+            for f in abonnementer sidehistorik bredbaand; do
+              [ -f /tmp/robot/$f.json ] && cp /tmp/robot/$f.json data/$f.json
+            done
+            python3 - <<'PY'
+          import json, os
+          def laes(p):
+              try:
+                  return json.load(open(p, encoding="utf-8"))
+              except Exception:
+                  return {"maalinger": []}
+          for navn in ("prishistorik", "bb_prishistorik"):
+              if not os.path.exists(f"/tmp/robot/{navn}.json"):
+                  continue
+              vores = laes(f"/tmp/robot/{navn}.json")
+              deres = laes(f"data/{navn}.json") if os.path.exists(f"data/{navn}.json") else {"maalinger": []}
+              pr_dato = {m["dato"]: m for m in deres.get("maalinger", [])}
+              pr_dato.update({m["dato"]: m for m in vores.get("maalinger", [])})
+              ud = dict(vores)
+              ud["maalinger"] = [pr_dato[d] for d in sorted(pr_dato)]
+              json.dump(ud, open(f"data/{navn}.json", "w", encoding="utf-8"), ensure_ascii=False)
+              print(f"{navn} flettet: {len(ud['maalinger'])} målinger")
+          PY
+            for f in abonnementer prishistorik bb_prishistorik sidehistorik bredbaand; do
+              [ -f data/$f.json ] && git add -- data/$f.json
+            done
+            if git diff --staged --quiet; then
+              echo "Ingen ændringer efter fletning — intet at gemme."
+              exit 0
+            fi
+            git commit -m "Priser opdateret $(date -u +%Y-%m-%d\ %H:%M)"
+            if git push origin HEAD:main; then
               exit 0
             fi
             echo "Forsoeg $forsoeg mislykkedes — proever igen om 5 sekunder"
