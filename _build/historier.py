@@ -19,7 +19,8 @@ Sådan retter du til:
 """
 
 # Sæt til True, når teksterne er gennemskrevet og passer til virkeligheden.
-GODKENDT = True
+GODKENDT = False  # Slået fra 8. nov. 2026: teksterne er AI-udkast, ikke Emils egne oplevelser.
+                  # Sæt kun til True for historier, der er gennemskrevet og sande.
 
 
 HISTORIER = {

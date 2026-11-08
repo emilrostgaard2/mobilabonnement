@@ -2,6 +2,51 @@
  "_om": "Offentlig rettelseslog. Skriv kun faktiske rettelser — dato, side og hvad der var forkert.",
  "rettelser": [
   {
+   "dato": "2026-11-08",
+   "side": "/metode/",
+   "tekst": "Flere sider skrev, at sammenligningen dækker \"hele markedet\" eller \"alle danske udbydere\". Priserne kommer kun fra selskaber med en aftale via Adtraction. Formuleringerne er rettet til \"i vores sammenligning\", og /metode/ har fået et afsnit om, hvad hver tabel sorteres efter."
+  },
+  {
+   "dato": "2026-11-08",
+   "side": "/billigste-mobilabonnement/",
+   "tekst": "Datakategorierne overlappede (fx kom 30 og 50 GB med to steder), og nogle tabeller var ikke sorteret som angivet. Kategorierne er nu 1–10, 11–30, 31–49, 50–99 og 100+ GB overalt, og alle prislister sorteres efter snitprisen det første år."
+  },
+  {
+   "dato": "2026-11-08",
+   "side": "/billigste-mobilabonnement/",
+   "tekst": "Tabellen \"Billigste abonnement i hver datakategori\" blandede månedspris og årspris i samme kolonner. Kolonnerne er nu navngivet og regnet på samme grundlag."
+  },
+  {
+   "dato": "2026-11-08",
+   "side": "/",
+   "tekst": "Tekstblokke med personlige eksempler var formuleringsudkast og ikke egne oplevelser. De er fjernet."
+  },
+  {
+   "dato": "2026-11-08",
+   "side": "/guides/opsig-internet/",
+   "tekst": "Guiden skrev, at der ikke findes regler for, at det nye internetselskab opsiger det gamle. Skift sker efter branchens aftale om skift af bredbåndsudbyder (SBBU). Teksten er rettet, og Teleankenævnets afgørelse fra juni 2026 om opsigelsesdato er tilføjet."
+  },
+  {
+   "dato": "2026-11-08",
+   "side": "/internet-priser/",
+   "tekst": "Afsnittet om prisstigninger manglede undtagelsen i slutbrugerbekendtgørelsens § 6: ændringer, der kun er til din fordel, giver ikke ret til at opsige."
+  },
+  {
+   "dato": "2026-11-08",
+   "side": "/bredbaand/",
+   "tekst": "Sider om bredbånd brugte forskellige tal for svartid og upload på 5G og for husstandens dataforbrug. Tallene kommer nu ét sted fra: feedet og Digitaliseringsstyrelsens telestatistik."
+  },
+  {
+   "dato": "2026-11-08",
+   "side": "/guides/flyt-internettet/",
+   "tekst": "Tidsplanen sagde \"opsig 3 uger før\", selvom opsigelsesvarslet typisk er en måned. Rettet til at opsige senest varslet plus en uge før flytningen."
+  },
+  {
+   "dato": "2026-11-08",
+   "side": "/speedtest/",
+   "tekst": "Hastighedstesten hentede én fil på 0,9 MB og kunne ikke måle hurtige forbindelser korrekt. Den måler nu download, upload og svartid med fire parallelle forbindelser."
+  },
+  {
    "dato": "2026-10-08",
    "side": "/netvaerk/",
    "tekst": "Teknologisk Instituts netværksmåling er opdateret fra 2025 til 2026-rapporten (TDC NET 96 %, Norlys 94 %, Telenor 93 %, 3 91 %). Vi skriver nu også, at testen blev skærpet i 2026, så tallene ikke kan sammenlignes direkte med 2025."

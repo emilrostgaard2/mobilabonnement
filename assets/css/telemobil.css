@@ -424,6 +424,8 @@ table.pris tbody tr:last-child td{border-bottom:none}
 .fod li{margin-bottom:.55rem}
 .fod a{color:#A8B2DC;text-decoration:none}
 .fod a:hover{color:#fff;text-decoration:underline}
+.fod-knap{background:none;border:0;padding:0;font:inherit;color:#A8B2DC;cursor:pointer}
+.fod-knap:hover,.fod-knap:focus-visible{color:#fff;text-decoration:underline}
 .fod .logo{color:#fff;margin-bottom:.9rem}
 .fod .logo:hover{color:#fff}
 .fod-bund{border-top:1px solid rgba(255,255,255,.1);padding-top:1.4rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.84rem;color:#7E88B4}
@@ -1024,6 +1026,11 @@ table.pris tbody tr[hidden]{display:none}
 /* Hastighedstest */
 .speedtest{display:flex;flex-direction:column;align-items:center;gap:1.2rem;padding:1.5rem 0}
 .st-resultat{text-align:center}
+.st-tre{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.2rem;align-items:end}
+.st-tre .st-tal b{font-size:2.6rem}
+.st-tre .st-tal span{display:block;margin:.3rem 0 0}
+.st-status{margin:.8rem 0 0;color:var(--graa);font-size:.88rem;min-height:1.2em}
+@media (max-width:520px){.st-tre .st-tal b{font-size:1.9rem}.st-tre{gap:.6rem}}
 .st-tal b{font-family:var(--font-tal);font-size:3.4rem;font-weight:600;line-height:1;
   background:var(--grad-signal);-webkit-background-clip:text;background-clip:text;color:transparent}
 .st-tal span{font-family:var(--font-tal);font-size:.9rem;color:var(--graa);margin-left:.4rem}

@@ -41,7 +41,7 @@ du betaler for — og hvilket du har brug for.</p>
 mobilforbindelsen. Et abonnement til {kr(d['min_pris_data'])} kr. og et til 300 kr. kan køre på
 nøjagtig det samme netværk, med den samme dækning, de samme master og den samme hastighed.
 Det, du betaler ekstra for i toppen, er tillægsydelser, kundeservice og i visse tilfælde
-adgang til det mest udbyggede net — ikke bedre mobilnet i sig selv.</p>
+adgang til TDC NET — ikke bedre mobilnet i sig selv.</p>
 
 <h2>Sådan finder du det billigste mobilabonnement, der passer til dig</h2>
 
@@ -84,7 +84,7 @@ aftale lukkes automatisk.</li>
 <p>Slå datastop til i din udbyders app, så snart abonnementet er oprettet. Uden datastop
 kan overforbrug koste flere hundrede kroner på en enkelt regning, særligt hvis telefonen
 bruges som hotspot. Med datastop kan regningen ganske enkelt ikke løbe løbsk. Det tager
-under et minut at aktivere og er den mest oversete indstilling på hele markedet.</p>
+under et minut at aktivere, og mange glemmer den.</p>
 </div>
 
 <h2>De tre netværk — og hvorfor de afgør, hvad du bør betale</h2>
@@ -97,8 +97,8 @@ udbyderen lejer sig ind på, og på hvilke vilkår.</p>
 <table>
 <thead><tr><th>Netværk</th><th>Styrke</th><th>Svaghed</th><th>Kendte brands på nettet</th></tr></thead>
 <tbody>
-<tr><td><strong>TDC NET</strong></td><td>Landets mest udbyggede net. Bedst i landdistrikter, sommerhusområder, tog og indendørs.</td><td>Brands på nettet ligger typisk højere i pris.</td><td>YouSee, Telmore</td></tr>
-<tr><td><strong>Telenor</strong></td><td>Bred dækning og stærk balance mellem pris og kvalitet.</td><td>Enkelte huller i tyndt befolkede områder.</td><td>CBB Mobil</td></tr>
+<tr><td><strong>TDC NET</strong></td><td>Bedst i Teknologisk Instituts målinger (bestilt af TDC NET). Typisk stærkest i landdistrikter, sommerhusområder, tog og indendørs.</td><td>Brands på nettet ligger typisk højere i pris.</td><td>YouSee, Telmore</td></tr>
+<tr><td><strong>TN-Network (Telenor/Norlys)</strong></td><td>Bred dækning og stærk balance mellem pris og kvalitet.</td><td>Enkelte huller i tyndt befolkede områder.</td><td>CBB Mobil</td></tr>
 <tr><td><strong>3</strong></td><td>Høje hastigheder og stor kapacitet i byerne. Tidligt ude med 5G.</td><td>Mere varierende i landdistrikter og langs kysten.</td><td>Oister</td></tr>
 </tbody>
 </table>
@@ -520,7 +520,7 @@ billede. Tag det højeste af de tre og læg 20 procent til.</p>
 <tr><td>Under 4 GB</td><td>5–10 GB</td><td>Marginalprisen for at gå op er så lav, at bufferen er gratis tryghed</td></tr>
 <tr><td>4–12 GB</td><td>15–20 GB</td><td>Plads til en travl måned uden at skulle tænke over det</td></tr>
 <tr><td>12–25 GB</td><td>30–50 GB</td><td>Prisspringet er lille, og du undgår overforbrug helt</td></tr>
-<tr><td>25 GB–[[FRI_BEV]] GB</td><td>100 GB eller mere med loft</td><td>Her er pris pr. GB typisk lavest på hele markedet</td></tr>
+<tr><td>25 GB–[[FRI_BEV]] GB</td><td>100 GB eller mere med loft</td><td>Her er pris pr. GB typisk lavest i vores sammenligning</td></tr>
 <tr><td>Over [[FRI_BEV]] GB</td><td>Fri data</td><td>Over den grænse er fri data billigere end et abonnement med loft (beregnet på dagens priser)</td></tr>
 </tbody>
 </table>
@@ -632,25 +632,32 @@ TJENER_PENGE = """
 
 <div class="udtag">
 <p><strong>Kort fortalt:</strong> Telemobil er gratis for dig at bruge. Vi tjener penge på
-provision fra udvalgte udbydere, når du klikker videre og bestiller. Det koster dig ikke
-mere, og det påvirker ikke, hvordan vi sorterer eller vurderer abonnementer.</p>
+provision, når du bestiller et abonnement via et af vores links. Det koster dig ikke mere.
+Provisionen afgør, hvilke selskaber der har priser i tabellerne, men ikke rækkefølgen eller
+hvad vi skriver om dem.</p>
 </div>
 
 <h2>Hvordan provisionen fungerer</h2>
 
 <p>Når du klikker på et link til en udbyder på Telemobil, registreres det, at du kom fra
-os. Bestiller du et abonnement, modtager vi et beløb fra udbyderen. Beløbet betales af
+os. Bestiller du derefter et abonnement, modtager vi et beløb fra udbyderen. Klik alene
+udløser ingen provision. Beløbet betales af
 udbyderen som en del af deres markedsføringsbudget — det lægges ikke oven i din pris, og
 du betaler nøjagtig det samme, som hvis du var gået direkte til deres hjemmeside.</p>
+
+<h2>Hvad provisionen påvirker</h2>
+
+<p><strong>Hvem der er med.</strong> Priserne kommer automatisk fra selskaber, vi har en
+aftale med gennem affiliatenetværket Adtraction. Derfor er ikke alle danske selskaber med,
+og sammenligningen dækker ikke hele markedet.</p>
+<p>Lige nu har vi en provisionsaftale med disse selskaber: [[PROVISION_SELSKABER]].</p>
 
 <h2>Hvad provisionen ikke påvirker</h2>
 
 <ul>
-<li><strong>Rækkefølgen i tabellerne.</strong> Alle sammenligningstabeller sorteres efter
-laveste pris. Sorteringen beregnes ud fra data, ikke ud fra hvad vi tjener.</li>
-<li><strong>Hvem der er med.</strong> Priserne kommer automatisk fra selskaber, vi har en
-aftale med gennem Adtraction. Derfor er ikke alle danske selskaber med. Det skriver vi
-åbent, så du ved, at vores sammenligning ikke dækker hele markedet.</li>
+<li><strong>Rækkefølgen i tabellerne.</strong> Tabellerne sorteres efter den metode, der
+står over hver tabel — som regel snitprisen det første år. Provision indgår aldrig. Se
+<a href="/metode/#rangering">sådan rangerer vi</a>.</li>
 <li><strong>Hvad vi skriver.</strong> Ulemper står i vores omtaler, uanset om vi tjener på
 udbyderen. En udbyder kan ikke få en kritisk formulering fjernet.</li>
 </ul>
@@ -659,15 +666,15 @@ udbyderen. En udbyder kan ikke få en kritisk formulering fjernet.</li>
 
 <p>Efter markedsføringsloven skal kommerciel påvirkning fremgå klart. Vi mener desuden, at
 det er en forudsætning for, at du kan bruge siden fornuftigt: du skal vide, hvad vores
-interesse er, så du selv kan vurdere vores anbefalinger. Derfor står afsløringen både
-øverst på sammenligningssiderne, ved hver tabel og i bunden af alle sider — ikke gemt på
-en underside, ingen finder.</p>
+interesse er, så du selv kan vurdere vores anbefalinger. Derfor står afsløringen ved hver
+prisliste, før du ser priserne, og i bunden af alle sider — ikke gemt på en underside,
+ingen finder.</p>
 
 <h2>Vores interessekonflikt, sagt ligeud</h2>
 
 <p>Der findes én reel interessekonflikt, og vi vil hellere skrive den frem end lade som om,
 den ikke findes: vi tjener typisk mere på dyre abonnementer end på billige. Vores svar på
-det er metoden — sortering efter pris, faste kriterier og en redaktionel linje, hvor vi
+det er metoden — sortering efter snitpris, faste kriterier og en redaktionel linje, hvor vi
 konsekvent skriver, at de fleste danskere ikke har brug for fri data. Du er velkommen til
 at holde os op på det.</p>
 

@@ -211,7 +211,7 @@ almindeligt husholdningsbudget — og den tager under en time at gennemføre.</p
     <li>Bemandet telefonisk kundeservice hele døgnet</li>
     <li>Fysiske butikker at gå ind i</li>
     <li>Streamingtjenester i abonnementet</li>
-    <li>Adgang til det mest udbyggede net i alle tilfælde</li>
+    <li>Adgang til TDC NET i alle tilfælde</li>
     <li>Store datamængder i EU — loftet er ofte lavere</li>
   </ul></div>
 </div>

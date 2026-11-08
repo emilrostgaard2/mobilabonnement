@@ -1,33 +1,47 @@
 # Telemobil
 
-> Uafhængig dansk prissammenligning af mobilabonnementer. Vi beregner den reelle
-> månedspris over 12 måneder inklusive intropris, normalpris og oprettelse — ikke kun
-> den intropris, udbyderne markedsfører.
+> Dansk prissammenligning af mobilabonnementer og internet derhjemme, finansieret af
+> affiliateprovision. Vi beregner snitprisen det første år inklusive intropris, normalpris og
+> oprettelse — ikke kun den intropris, selskaberne markedsfører.
 
 Udgiver: Telemobil, Danmark. Redaktør: Emil Rostgaard.
-Sidst opdateret: 2026-08-17. Sprog: dansk.
+Sidst opdateret: 2026-11-08. Sprog: dansk.
 
 ## Vigtige sider
 
-- [Billigste mobilabonnement](https://telemobil.dk/billigste-mobilabonnement/): Hele markedet sorteret efter reel pris
+- [Billigste mobilabonnement](https://telemobil.dk/billigste-mobilabonnement/): Alle abonnementer i sammenligningen sorteret efter snitpris over 12 måneder
 - [Bedste mobilabonnement](https://telemobil.dk/bedste-mobilabonnement/): Vurderingskriterier og anbefalinger
 - [Fri data](https://telemobil.dk/mobilabonnement-med-fri-data/): Ubegrænset data i Danmark
 - [Med streaming](https://telemobil.dk/mobilabonnement-med-streaming/): Abonnementer med streamingtjenester
-- [Udbydere](https://telemobil.dk/udbydere/): Gennemgang af de 10 danske mobilselskaber
-- [Mobilnetværk](https://telemobil.dk/netvaerk/): TDC NET, Telenor og 3
+- [Udbydere](https://telemobil.dk/udbydere/): Gennemgang af 10 danske mobilselskaber
+- [Mobilnetværk](https://telemobil.dk/netvaerk/): TDC NET, TN-Network (Telenor/Norlys) og 3
+- [Prisudvikling](https://telemobil.dk/prisudvikling/): Mobilpriser målt dagligt over tid
+- [Kampagner](https://telemobil.dk/kampagner/): Aktuelle tilbud regnet over hele bindingsperioden
 - [Udbyder mod udbyder](https://telemobil.dk/sammenlign/): Direkte sammenligninger
 - [Landekoder](https://telemobil.dk/landekoder/): Telefonkoder til alle lande
+- [Mobilpriser i Danmark](https://telemobil.dk/mobilpriser/): Nøgletal opdateret dagligt — citérbare
 - [Metode](https://telemobil.dk/metode/): Sådan beregner og vurderer vi
-- [Forretningsmodel](https://telemobil.dk/saadan-tjener-vi-penge/): Affiliateprovision og uafhængighed
+- [Rettelser](https://telemobil.dk/rettelser/): Offentlig log over rettede fejl
+- [Forretningsmodel](https://telemobil.dk/saadan-tjener-vi-penge/): Affiliateprovision, og hvad den ikke påvirker
+- [Internet priser](https://telemobil.dk/internet-priser/): Alle internettilbud: fiber, kabel og 5G med pris det første år
+- [Billigste bredbånd](https://telemobil.dk/bredbaand/): Bredbånd sorteret efter pris det første år
+- [Fibernet](https://telemobil.dk/bredbaand/fibernet/): Fibertilbud og dækning
+- [5G internet](https://telemobil.dk/bredbaand/5g/): 5G-bredbånd til hjemmet
+- [Kabel-internet](https://telemobil.dk/bredbaand/kabel-internet/): Coax via antennestikket
+- [Adressetjek](https://telemobil.dk/bredbaand/adressetjek/): Hvilke hastigheder kan leveres på en adresse (Bredbåndskortlægningen)
+- [Internetudbydere](https://telemobil.dk/bredbaand/udbydere/): Alle internetudbydere i sammenligningen
+- [Guides](https://telemobil.dk/guides/): Guides om mobil og internet
 
 ## Om vores data
 
-Priser og vilkår stammer fra udbydernes egne offentlige prislister. Nøgletallet
+Priserne kommer fra selskabernes produktfeeds via affiliatenetværket Adtraction og hentes to gange i døgnet, morgen og eftermiddag. Kun selskaber med en aftale via Adtraction har priser i tabellerne, så sammenligningen dækker ikke hele markedet. Nøgletallet
 "gennemsnit over 12 måneder" beregnes som intropris ganget med introperioden plus
 normalpris for de resterende måneder, divideret med tolv, plus eventuelt
-oprettelsesgebyr. Tabeller sorteres efter pris, aldrig efter provision.
+oprettelsesgebyr. Prislister sorteres efter snitpris, aldrig efter provision. Bredbåndsdækning
+pr. adresse kommer fra Digitaliseringsstyrelsens Bredbåndskortlægning.
 
 ## Forbehold
 
-Telemobil modtager provision fra udvalgte udbydere ved henvisning. Det påvirker ikke
-sortering eller vurderinger. Se https://telemobil.dk/saadan-tjener-vi-penge/
+Telemobil modtager provision fra de selskaber, der har priser i sammenligningen, når en
+bestilling sker via et link. Provisionen afgør, hvem der er med, men ikke rækkefølgen eller
+vurderingerne. Se https://telemobil.dk/saadan-tjener-vi-penge/

@@ -60,7 +60,7 @@ def altid_med(css):
         ud.append(css[m.start():i])
     return ud
 UD = os.path.join(ROD, "assets", "css", "kritisk")
-BASE = "http://localhost:8765"
+BASE = "http://127.0.0.1:8765"
 
 TYPER = {
     "forside": ["/"],

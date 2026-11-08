@@ -131,10 +131,10 @@ def aeldre(D, t):
 
 <div class="udtag">
 <p><strong>Kort svar:</strong> Til en ældre bruger betyder to ting mere end prisen:
-telefonisk kundeservice og en regning uden overraskelser. Priserne starter ved
-{kr(D['pris_aeldre'])} kr. om måneden, men vi anbefaler sjældent det allerbilligste
-abonnement her — de billigste udbydere har kun digital support, og det er præcis dét, der
-skaber problemer, når noget driller.</p>
+telefonisk kundeservice og en regning uden overraskelser. Derfor viser vi kun selskaber,
+man kan ringe til, og her starter priserne ved {kr(D['pris_aeldre'])} kr. om måneden. Nogle af
+de billigste selskaber har kun chat og mail — det er præcis dét, der skaber problemer, når
+noget driller.</p>
 </div>
 
 <h2>Derfor er billigst ikke bedst her</h2>

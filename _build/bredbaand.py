@@ -168,6 +168,18 @@ def main():
 
     ud.sort(key=lambda a: (a["intro_pris"] or a["pris"]))
     sti = os.path.join(ROD, "data", "bredbaand.json")
+    # Et tomt eller halveret feed er næsten altid en fejl hos feedet, ikke et
+    # marked der forsvandt. Så beholder vi gårsdagens data, i stedet for at
+    # bygge et site uden bredbåndssider og med døde links.
+    try:
+        with open(sti, encoding="utf-8") as f:
+            gammel = len(json.load(f).get("abonnementer", []))
+    except (FileNotFoundError, ValueError):
+        gammel = 0
+    if not ud or (gammel >= 10 and len(ud) < gammel * 0.3):
+        print(f"ADVARSEL: bredbåndsfeedet gav {len(ud)} produkter (før {gammel}). "
+              "Beholder de tidligere data.")
+        return
     with open(sti, "w", encoding="utf-8") as f:
         json.dump({"hentet": date.today().isoformat(), "abonnementer": ud},
                   f, ensure_ascii=False, indent=1)

@@ -21,7 +21,12 @@
 
   function hent(url) {
     if (!cache[url]) {
-      cache[url] = fetch(url).then(function (r) { if (!r.ok) throw 0; return r.json(); });
+      // 404 betyder "ingen veje med det begyndelsesbogstav" — ikke en fejl
+      cache[url] = fetch(url).then(function (r) {
+        if (r.status === 404) return [];
+        if (!r.ok) { delete cache[url]; throw 0; }
+        return r.json();
+      });
     }
     return cache[url];
   }
@@ -55,6 +60,7 @@
   if (eks.length) setTimeout(function () { skriv(0, 0, false); }, 500);
   felt.addEventListener("focus", function () { stop = true; felt.setAttribute("placeholder", "Fx Vestergade 5, 5000 Odense"); });
 
+  var forslagId = 0;
   function vis(items) {
     forslag = items; aktiv = -1;
     if (!items.length) { liste.hidden = true; felt.setAttribute("aria-expanded", "false"); return; }
@@ -66,14 +72,17 @@
   function markér(i) {
     aktiv = i;
     liste.querySelectorAll("li").forEach(function (li, j) { li.classList.toggle("on", j === i); });
-    felt.setAttribute("aria-activedescendant", i >= 0 ? "adr-o" + i : "");
+    if (i >= 0) felt.setAttribute("aria-activedescendant", "adr-o" + i);
+    else felt.removeAttribute("aria-activedescendant");
   }
 
   function vejForslag(tekst) {
     var del = tekst.replace(/\s+\d.*$/, "").trim();
     if (del.length < 2) return vis([]);
     var pnr = (tekst.match(/\b(\d{4})\b/) || [])[1];
+    var mit = ++forslagId;
     hent("/assets/adr/v/" + noegle(del) + ".json").then(function (veje) {
+      if (mit !== forslagId) return; // et nyere opslag er på vej
       var l = del.toLowerCase(), ud = [];
       veje.forEach(function (v) {
         if (v[0].toLowerCase().indexOf(l) !== 0) return;
@@ -84,6 +93,14 @@
         });
       });
       ud.sort(function (a, b) { return a.vej.length - b.vej.length || naturlig(a.vej, b.vej); });
+      if (!ud.length) {
+        vis([]);
+        res.innerHTML = '<div class="adr-kort" data-adr-tom><p>Vi fandt ingen vej, der starter med »' + esc(del) +
+          '«. Tjek stavningen, eller skriv vejnavnet uden husnummer.</p></div>';
+        res.hidden = false;
+        return;
+      }
+      if (res.querySelector("[data-adr-tom]")) res.hidden = true;
       vis(ud.slice(0, 8));
     }).catch(fejl);
   }
@@ -167,13 +184,13 @@
   var soegId = 0;
   function resultat(f) {
     var id = ++soegId;
-    var trin = ["Finder adressen i adresseregistret",
+    var trin = ["Slår adressen op",
       "Tjekker dækning på adressen (Digitaliseringsstyrelsen)",
       "Finder de tilbud, der kan leveres på adressen",
       "Sorterer efter pris det første år"];
     var hurtig = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var pause = hurtig ? 120 : 480;
-    res.innerHTML = '<div class="adr-soeg" role="status" aria-live="polite"><div class="adr-soeg-top">' +
+    var pause = hurtig ? 80 : 300;
+    res.innerHTML = '<div class="adr-soeg"><div class="adr-soeg-top">' +
       "<b>Tjekker " + esc(felt.value) + '</b><span class="adr-soeg-pct">0%</span></div>' +
       '<div class="adr-soeg-bar"><span></span></div><ol>' +
       trin.map(function (t) { return '<li><i aria-hidden="true"></i>' + esc(t) + "</li>"; }).join("") + "</ol></div>";
@@ -213,7 +230,8 @@
       .filter(Boolean).slice(0, 3).join("");
     res.innerHTML = '<div class="adr-kort"><h2>Det kan du få på ' + esc(felt.value) + "</h2><ul>" + liste + "</ul>" +
       '<p class="adr-note">Kilde: Digitaliseringsstyrelsens Bredbåndskortlægning 2026 — hastigheder udbudt til private. ' +
-      "Kortlægningen viser ikke, hvilke selskaber der leverer på adressen, så bekræft altid hos selskabet.</p>" +
+      "Kortlægningen viser ikke, hvilke selskaber der leverer på adressen, så bekræft altid hos selskabet." +
+      (mdl ? " 5G-hastigheden svinger med dækningen indendørs og belastningen på masten." : "") + "</p>" +
       (liste2 ? '<a class="adr-hop" href="#sammenlign">Se alle tilbud på adressen</a>' : "") + "</div>" +
       (kort ? '<div class="seg-res on">' + kort + "</div>" : "");
     res.hidden = false;

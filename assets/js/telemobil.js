@@ -629,51 +629,158 @@
   felt.addEventListener("keydown", function (e) { if (e.key === "Enter") slaaOp(); });
 })();
 
-/* ---- Hastighedstest ---- */
+/* ---- Hastighedstest ----
+   Måler download med fire parallelle strømme i op til 8 sekunder (eller 200 MB),
+   upload med fire strømme via upload-fremskridt, og svartid som medianen af ti
+   små forespørgsler. Opvarmningen (første sekund) tæller ikke med, så TCP-
+   opstarten ikke trækker gigabit-forbindelser ned. */
 (function () {
   "use strict";
   var knap = document.querySelector("[data-speedtest]");
   if (!knap) return;
   var boks = document.querySelector("[data-st-resultat]");
-  var tal = document.querySelector("[data-st-mbit]");
+  var fNed = document.querySelector("[data-st-ned]");
+  var fOp = document.querySelector("[data-st-op]");
+  var fPing = document.querySelector("[data-st-ping]");
+  var status = document.querySelector("[data-st-status]");
   var vurdering = document.querySelector("[data-st-vurdering]");
+  var FIL = "/assets/hastighedstest-8m.bin";
+  var STROEMME = 4, MAKS_SEK = 8, MAKS_BYTES = 120e6, MAKS_OP = 50e6, OPVARM = 1000;
+  var let_ = document.querySelector("[data-st-let]");
 
-  function beskriv(mbit) {
-    if (mbit < 1) return "Meget lav. Er din datamængde brugt op? Mange udbydere sætter " +
-      "hastigheden ned frem for at stoppe forbindelsen.";
-    if (mbit < 3) return "Nok til beskeder, sociale medier og musik, men video vil " +
-      "sandsynligvis buffe.";
-    if (mbit < 10) return "Fint til video i standardkvalitet og videomøder. Dækker de " +
-      "flestes hverdagsbrug.";
-    if (mbit < 30) return "God forbindelse. Rækker til HD-video og hotspot til en laptop.";
-    return "Meget god forbindelse. Du mærker ikke begrænsninger i almindelig brug.";
+  function fmt(mbit) {
+    if (mbit == null || !isFinite(mbit)) return "—";
+    return mbit < 10 ? mbit.toFixed(1).replace(".", ",") : String(Math.round(mbit)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+  function median(v) { v = v.slice().sort(function (a, b) { return a - b; }); return v[Math.floor(v.length / 2)]; }
+
+  function maalPing() {
+    var tider = [], i = 0;
+    return new Promise(function (ok) {
+      function en() {
+        if (i++ >= 10) return ok(tider.length ? median(tider) : null);
+        var t0 = performance.now();
+        fetch("/favicon.svg?p=" + Math.random(), { cache: "no-store" })
+          .then(function (r) { return r.text(); })
+          .then(function () { tider.push(performance.now() - t0); en(); })
+          .catch(function () { en(); });
+      }
+      en();
+    });
+  }
+
+  function maalNed(vis) {
+    return new Promise(function (ok) {
+      var start = performance.now(), bytes = 0, maaltBytes = 0, maaltStart = null, aktive = 0, stop = false;
+      function faerdig() {
+        if (stop) return; stop = true;
+        var sek = (performance.now() - (maaltStart || start)) / 1000;
+        ok(sek > 0 ? (maaltStart ? maaltBytes : bytes) * 8 / sek / 1e6 : null);
+      }
+      function stroem() {
+        if (stop) return;
+        aktive++;
+        fetch(FIL + "?n=" + Math.random(), { cache: "no-store" }).then(function (r) {
+          var laeser = r.body && r.body.getReader ? r.body.getReader() : null;
+          if (!laeser) return r.arrayBuffer().then(function (b) { tael(b.byteLength); });
+          function laes() {
+            return laeser.read().then(function (x) {
+              if (x.done || stop) { if (stop) try { laeser.cancel(); } catch (e) {} return; }
+              tael(x.value.byteLength); return laes();
+            });
+          }
+          return laes();
+        }).catch(function () {}).then(function () {
+          aktive--;
+          if (!stop && performance.now() - start < MAKS_SEK * 1000 && bytes < MAKS_BYTES) stroem();
+          else if (aktive === 0) faerdig();
+        });
+      }
+      function tael(n) {
+        bytes += n;
+        var t = performance.now() - start;
+        if (t > OPVARM) { if (maaltStart === null) maaltStart = performance.now(); else maaltBytes += n; }
+        if (maaltStart && vis) vis(maaltBytes * 8 / ((performance.now() - maaltStart) / 1000 || 1) / 1e6);
+        if (t > MAKS_SEK * 1000 || bytes > MAKS_BYTES) faerdig();
+      }
+      for (var i = 0; i < STROEMME; i++) stroem();
+      setTimeout(faerdig, (MAKS_SEK + 2) * 1000);
+    });
+  }
+
+  function maalOp(vis) {
+    // Upload måles på hvor mange bytes browseren har sendt (upload-fremskridt),
+    // ikke på svaret, så det virker, selvom serveren afviser selve forespørgslen.
+    return new Promise(function (ok) {
+      var data = new Uint8Array(2e6);
+      for (var i = 0; i < data.length; i += 4096) data[i] = (Math.random() * 255) | 0;
+      var blob = new Blob([data]);
+      var start = performance.now(), sendt = {}, stop = false, aktive = 0;
+      function sum() { var s = 0; for (var k in sendt) s += sendt[k]; return s; }
+      function faerdig() {
+        if (stop) return; stop = true;
+        var sek = (performance.now() - start) / 1000, b = sum();
+        ok(sek > 0.5 && b > 0 ? b * 8 / sek / 1e6 : null);
+      }
+      var nr = 0;
+      function stroem() {
+        if (stop) return;
+        var id = nr++, x = new XMLHttpRequest(), basis = sum();
+        aktive++;
+        x.open("POST", FIL + "?op=" + Math.random(), true);
+        x.upload.onprogress = function (e) {
+          sendt[id] = e.loaded;
+          if (vis) vis(sum() * 8 / ((performance.now() - start) / 1000 || 1) / 1e6);
+          if (performance.now() - start > 6000) { try { x.abort(); } catch (er) {} }
+        };
+        x.onloadend = function () {
+          aktive--;
+          if (!stop && performance.now() - start < 6000 && sum() < MAKS_OP) stroem();
+          else if (aktive === 0) faerdig();
+        };
+        try { x.send(blob); } catch (e) { aktive--; }
+      }
+      for (var j = 0; j < STROEMME; j++) stroem();
+      setTimeout(faerdig, 8000);
+    });
+  }
+
+  function beskriv(ned, op, ping) {
+    var t = [];
+    if (ned == null) return "Testen kunne ikke gennemføres. Tjek din forbindelse og prøv igen.";
+    if (ned < 10) t.push("Lav hastighed: nok til beskeder og musik, men video kan hakke.");
+    else if (ned < 50) t.push("Nok til HD-video og videomøder for en eller to personer.");
+    else if (ned < 300) t.push("God hastighed til en familie med flere samtidige skærme.");
+    else t.push("Meget hurtig forbindelse — over det, de fleste husstande har brug for.");
+    if (op != null && op < 5) t.push("Uploaden er lav, og det kan mærkes ved videomøder og backup.");
+    if (ping != null && ping > 60) t.push("Svartiden er høj, hvilket mærkes i online spil.");
+    t.push("Mål gerne igen med kabel direkte i routeren — wifi er ofte flaskehalsen.");
+    return t.join(" ");
   }
 
   knap.addEventListener("click", function () {
-    knap.disabled = true;
-    knap.textContent = "Måler …";
-    boks.hidden = false;
-    tal.textContent = "—";
-    vurdering.textContent = "";
-
-    var url = "/assets/hastighedstest.bin?n=" + Date.now();
-    var start = performance.now();
-
-    fetch(url, { cache: "no-store" })
-      .then(function (r) { return r.arrayBuffer(); })
-      .then(function (buf) {
-        var sek = (performance.now() - start) / 1000;
-        var mbit = (buf.byteLength * 8) / sek / 1000000;
-        tal.textContent = mbit < 10 ? mbit.toFixed(1).replace(".", ",") : Math.round(mbit);
-        vurdering.textContent = beskriv(mbit);
-        knap.disabled = false;
-        knap.textContent = "Test igen";
-      })
-      .catch(function () {
-        vurdering.textContent = "Testen kunne ikke gennemføres. Tjek din forbindelse og prøv igen.";
-        knap.disabled = false;
-        knap.textContent = "Prøv igen";
-      });
+    if (let_ && let_.checked) { MAKS_BYTES = 15e6; MAKS_OP = 5e6; } else { MAKS_BYTES = 120e6; MAKS_OP = 50e6; }
+    knap.disabled = true; knap.textContent = "Måler …";
+    boks.hidden = false; vurdering.textContent = "";
+    fNed.textContent = fOp.textContent = fPing.textContent = "—";
+    var res = {};
+    status.textContent = "Måler svartid …";
+    maalPing().then(function (p) {
+      res.ping = p; fPing.textContent = p == null ? "—" : Math.round(p);
+      status.textContent = "Måler download …";
+      return maalNed(function (v) { fNed.textContent = fmt(v); });
+    }).then(function (d) {
+      res.ned = d; fNed.textContent = fmt(d);
+      status.textContent = "Måler upload …";
+      return maalOp(function (v) { fOp.textContent = fmt(v); });
+    }).then(function (u) {
+      res.op = u; fOp.textContent = fmt(u);
+      status.textContent = "Færdig.";
+      vurdering.textContent = beskriv(res.ned, res.op, res.ping);
+      knap.disabled = false; knap.textContent = "Test igen";
+      document.dispatchEvent(new CustomEvent("tm-speedtest", { detail: res }));
+      if (typeof window.gtag === "function") window.gtag("event", "speedtest", { ned: Math.round(res.ned || 0) });
+    });
   });
 })();
 

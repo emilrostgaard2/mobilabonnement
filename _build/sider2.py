@@ -333,7 +333,7 @@ def esim(D, t):
 <div class="udtag">
 <p><strong>Kort svar:</strong> Et eSIM er et digitalt simkort, der er indbygget i
 telefonen og aktiveres med en QR-kode i stedet for et fysisk kort. Du kan være i gang få
-minutter efter bestilling i stedet for at vente på posten. Stort set alle danske udbydere
+minutter efter bestilling i stedet for at vente på posten. De fleste selskaber
 tilbyder eSIM, som regel uden ekstra betaling, og priserne er de samme som med fysisk
 simkort — abonnementer med eSIM starter fra {kr(D['pris_esim'])} kr. om måneden.</p>
 </div>

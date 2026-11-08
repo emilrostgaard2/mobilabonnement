@@ -196,6 +196,46 @@ def main():
         if ord_ < 350 and url not in ("/404.html", "/kontakt/"):
             advarsler.append(f"{url}: kun {ord_} ord")
 
+        # Præcis én H1
+        if len(re.findall(r"<h1[\s>]", html)) > 1:
+            fejl.append(f"{url}: mere end én H1")
+
+        # Canonical skal pege på siden selv (ellers ignorerer Google den)
+        noindex = 'content="noindex' in html
+        if p.kanonisk and not noindex and not url.endswith("404.html"):
+            if p.kanonisk != "https://telemobil.dk" + url:
+                fejl.append(f"{url}: canonical peger på {p.kanonisk}")
+
+        # Tom ændringsdato
+        if '<meta property="article:modified_time" content="">' in html:
+            fejl.append(f"{url}: tom article:modified_time")
+
+        # Skabelonrester og tal, der ikke giver mening
+        synlig = re.sub(r"<script.*?</script>|<style.*?</style>", " ", html, flags=re.S)
+        synlig = re.sub(r"<[^>]+>", " ", synlig)
+        synlig = re.sub(r"\s+", " ", synlig)
+        for moenster, hvad in (
+                (r"\[\[", "uerstattet pladsholder [["),
+                (r"\bNone\b", "None i teksten"),
+                (r"\b9999 GB\b", "9999 GB i stedet for fri data"),
+                (r"\bfra 0 til 0\b", "'fra 0 til 0'"),
+                (r"(?<![\d.,])1 (selskaber|abonnementer|prisændringer|målinger|produkter|tilbud fra 1)\b", "forkert flertal efter 1"),
+                (r"(?<![\d.,])(\d[\d.]*)–\1(?![\d.,])", "interval med samme tal i begge ender"),
+                (r"\b5g (internet|bredbånd)\b", "'5g' med lille g"),
+                (r"\bTDC NETs\b|\bTN-Networks\b", "forkert genitiv af netnavn"),
+                (r"\bkr\.\.", "dobbelt punktum efter kr."),
+        ):
+            m_ = re.search(moenster, synlig)
+            if m_:
+                fejl.append(f"{url}: {hvad} — »{synlig[max(0, m_.start() - 40):m_.end() + 30].strip()}«")
+
+        # Påstande vi ikke kan dokumentere (markedsføringsloven § 5)
+        for moenster in (r"(?<!ikke )(?<!dækker )(?<!&quot;)hele markedet(?! i vores)", r"(?<!&quot;)alle danske (udbydere|mobilselskaber)",
+                         r"\buafhængig(e)? (sammenligning|prissammenligning|side)", r"\btestvinder", r"\bbedst i test"):
+            m_ = re.search(moenster, synlig, re.I)
+            if m_:
+                advarsler.append(f"{url}: udokumenteret påstand — »{synlig[max(0, m_.start() - 50):m_.end() + 20].strip()}«")
+
     # Nødvendige filer
     for f in ("sitemap.xml", "robots.txt", "favicon.svg", ".htaccess", "404.html"):
         if not os.path.exists(os.path.join(ROD, f)):
@@ -206,11 +246,19 @@ def main():
     if os.path.exists(smsti):
         with open(smsti, encoding="utf-8") as f:
             sm = f.read()
+        noindex_sider = set()
+        for s in sider:
+            with open(s, encoding="utf-8") as f:
+                if 'content="noindex' in f.read(4000):
+                    noindex_sider.add(url_af(s))
         for u in kendte:
-            if u == "/404.html":
+            if u == "/404.html" or u in noindex_sider:
                 continue
             if f"<loc>https://telemobil.dk{u}</loc>" not in sm:
                 advarsler.append(f"{u}: ikke med i sitemap.xml")
+        for u in noindex_sider:
+            if f"<loc>https://telemobil.dk{u}</loc>" in sm:
+                fejl.append(f"{u}: noindex-side står i sitemap.xml")
 
     # Prisløfter i titel og beskrivelse skal kunne findes i prisdata.
     # "fra 0 kr./md." opstår, når en kategori ikke har nogen abonnementer —
@@ -227,8 +275,8 @@ def main():
         _d = re.search(r'name="description" content="(.*?)"', _h, re.S)
         for _felt, _tekst in (("titel", _t.group(1) if _t else ""),
                               ("beskrivelse", _d.group(1) if _d else "")):
-            for _tal in re.findall(r"\b(\d{1,4}) kr", _tekst):
-                _n = int(_tal)
+            for _tal in re.findall(r"(?<![\d.])(\d{1,3}(?:\.\d{3})+|\d{1,5}) kr", _tekst):
+                _n = int(_tal.replace(".", ""))
                 if _n == 0:
                     fejl.append(f"{_url}: {_felt} lover 0 kr. — kategorien har "
                                 f"ingen abonnementer")

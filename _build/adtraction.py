@@ -375,6 +375,14 @@ def main():
         sys.exit("Ingen abonnementer kunne oversættes. Kør med --inspect og ret "
                  "feltnavnene i oversaet().")
 
+    # Feedet kan have samme abonnement to gange — fjern ens dubletter
+    set_, unik = set(), []
+    for a in abonnementer:
+        n = (a["udbyder"], a["navn"], a["data_gb"], a["pris"], a["intro_pris"], a["intro_mdr"], a["tale"])
+        if n not in set_:
+            set_.add(n)
+            unik.append(a)
+    abonnementer[:] = unik
     abonnementer.sort(key=lambda a: a["pris"])
     ud = {
         "_kilde": "Adtraction data feed",

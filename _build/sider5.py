@@ -42,7 +42,7 @@ tjekke, om du får noget for pengene, du reelt bruger.
 <a href="/billigste-mobilabonnement/">Se hele sammenligningen</a>.</p>
 </div>
 
-<h2>Det tal, der overrasker: 69 % sælges på intropris</h2>
+<h2>Det tal, der overrasker: {S['andel_intro']} % sælges på intropris</h2>
 
 <p>Af de {S['antal']} abonnementer, vi følger, er <strong>{S['antal_intro']}</strong> solgt
 med en kampagnepris — altså {S['andel_intro']} %. Kun {S['antal_fast']} har fast pris fra

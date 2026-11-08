@@ -44,6 +44,14 @@ SIDER = []  # (sti, prioritet, hyppighed)
 def _antal_ab(n):
     return f"{n} abonnement" if n == 1 else f"{n} abonnementer"
 
+def _dd(iso):
+    """ISO-dato til dansk tekst: '2026-11-06' -> '6. november 2026'."""
+    try:
+        return dansk_dato(date.fromisoformat(str(iso)[:10]))
+    except ValueError:
+        return str(iso)
+
+
 def dansk_dato(d):
     return f"{d.day}. {MAANEDER[d.month - 1]} {d.year}"
 
@@ -162,6 +170,7 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     html = _ret_ampersand(html)
     html = _fjern_dobbelt_maerke(html).replace("[[FRI_BEV]]", str(D["fri_bev"]))
     html = _indsaet_krydslinks(sti, html)
+    html = _indsaet_kontekstlink(sti, html)
     if _tynd_side(sti):
         # Search Console (okt. 2026): Google crawlede ikke disse sider. De er
         # næsten ens skabeloner (driftsstatus) eller sideinddeling (guides/side-2).
@@ -187,13 +196,21 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
                      else f'Udgivet <b>{udg}</b>')
             html = re.sub(r'(<div class="gennemgang[^"]*">.*?)Opdateret <b>[^<]*</b>',
                           lambda m: m.group(1) + linje, html, count=1, flags=re.S)
-        elif dansk:
+        if gd and "planliste" not in html and "kr./md" not in html and " kr." not in _artikeltekst(html):
+            html = re.sub(r'<span>Priser fra selskabernes produktfeeds via Adtraction, hentet to gange i døgnet</span>\n?',
+                          '', html, count=1)
+        elif dansk and not gd:
             html = re.sub(r'(<div class="gennemgang[^"]*">.*?Opdateret <b>)[^<]*(</b>)',
                           lambda m: m.group(1) + dansk + m.group(2), html, count=1, flags=re.S)
             html = re.sub(r'(<meta property="article:modified_time" content=")[^"]*(")',
                           lambda m: m.group(1) + dato + m.group(2), html, count=1)
             html = re.sub(r'("dateModified":\s*")[^"]*(")',
                           lambda m: m.group(1) + dato + m.group(2), html)
+    elif '<div class="gennemgang' in html and ("planliste" in html or "kr./md" in html):
+        # Pengesider bygges med dagens priser. "Opdateret i dag" ville antyde, at
+        # teksten er gennemgået i dag — det sande er, at priserne er hentet i dag.
+        html = re.sub(r'(<div class="gennemgang[^"]*">.*?)<span>Opdateret <b>',
+                      lambda m: m.group(1) + '<span>Priser opdateret <b>', html, count=1, flags=re.S)
     mappe = os.path.join(ROD, sti.strip("/"))
     if sti == "/":
         filsti = os.path.join(ROD, "index.html")
@@ -346,7 +363,41 @@ for _a in ab_data["abonnementer"]:
     if "fri data" in (_a.get("navn") or "").lower() and 0 < _a.get("data_gb", 0) < 9999:
         _a["data_gb"] = 9999
 
+# Feedet kan indeholde samme abonnement to gange (fx Duka 75 GB) og to
+# forskellige abonnementer med samme id. Ens dubletter fjernes; forskellige
+# abonnementer med samme id får et unikt id, så tal og tabeller stemmer.
+_set, _unik = {}, []
+for _a in ab_data["abonnementer"]:
+    _noegle = (_a["udbyder"], _a.get("navn"), _a["data_gb"], _a["pris"], _a.get("intro_pris"),
+               _a.get("intro_mdr"), _a.get("tale"), _a.get("oprettelse"))
+    if _noegle in _set:
+        continue
+    _set[_noegle] = True
+    _n, _id = 2, _a["id"]
+    while any(x["id"] == _a["id"] for x in _unik):
+        _a["id"] = f"{_id}-{_n}"
+        _n += 1
+    _unik.append(_a)
+ab_data["abonnementer"] = _unik
 ABON = sorted(ab_data["abonnementer"], key=visningspris)
+
+
+def i_baand(gb, lav, hoej):
+    """Ét sted, der afgør om en datamængde ligger i et interval. Decimaler
+    (fx 10,5 GB) rundes op, så de altid lander i præcis ét interval."""
+    import math
+    g = math.ceil(gb) if 0 < gb < 9999 else gb
+    return lav <= g <= hoej
+
+
+# De fem dataintervaller. Samme grænser overalt: sider, tal, citater og menuer.
+GB_BAAND = {
+    "1-10-gb": ("1–10 GB", 1, 10),
+    "10-30-gb": ("11–30 GB", 11, 30),
+    "30-50-gb": ("31–49 GB", 31, 49),
+    "50-gb": ("50–99 GB", 50, 99),
+    "100-gb": ("100 GB og op", 100, 9998),
+}
 for a in ABON:
     if a["udbyder"] not in UMAP:
         raise SystemExit(f"Ukendt udbyder i abonnementer.json: {a['udbyder']}")
@@ -393,13 +444,18 @@ IDAG = date.today()
 MAANED_AAR = f"{MAANEDER[IDAG.month - 1]} {IDAG.year}"
 
 
+def kort_maaned(navn):
+    """'november' -> 'nov.', men 'maj' forbliver 'maj' og 'juni' -> 'jun.'."""
+    return navn if len(navn) <= 4 and navn == "maj" else navn[:3] + "."
+
+
 def med_maaned(titel, maks=58):
     """Sætter måned og år på en titel, hvis der er plads.
 
     Titler over 65 tegn bliver afkortet i søgeresultatet, og så er tilføjelsen
     værre end ingenting. Vi prøver den lange form først, så den korte."""
     # 58 tegn ≈ Googles grænse på ca. 560 pixel (Screaming Frog, okt. 2026)
-    kort = MAANED_AAR.split()[0][:3] + ". " + MAANED_AAR.split()[-1] if " " in MAANED_AAR else MAANED_AAR
+    kort = kort_maaned(MAANED_AAR.split()[0]) + " " + MAANED_AAR.split()[-1] if " " in MAANED_AAR else MAANED_AAR
     for suffiks in (f" ({MAANED_AAR})", f" ({kort})", f" {IDAG.year}"):
         if len(titel) + len(suffiks) <= maks:
             return titel + suffiks
@@ -409,6 +465,7 @@ def med_maaned(titel, maks=58):
 OPDATERET = dansk_dato(IDAG)
 skabelon.OPDATERET_GLOBAL = OPDATERET
 ISO = IDAG.isoformat()
+skabelon.OPDATERET_ISO_GLOBAL = ISO
 
 # Afledte nøgletal — bruges i tekst, så tal og tabeller aldrig kan komme i utakt
 med_gb = [a for a in ABON if 0 < a["data_gb"] < 9999]
@@ -434,8 +491,12 @@ D = {
     # Normalpris, ikke tilbudspris: et tilbud på 6 kr. i to måneder hører
     # ikke hjemme i en sidetitel i Google.
     "pris_fri": min(a["pris"] for a in fri) if fri else 0,
-    "antal": len(ABON),
-    "antal_udbydere": len(UDBYDERE),
+    # Alle tal i tekst tæller det samme: betalte abonnementer med pris, og
+    # selskaber der har priser i sammenligningen. Gennemgåede selskaber uden
+    # prisdata tælles for sig.
+    "antal": len([a for a in ABON if a["pris"] > 0 and not a.get("forbrugsafregnet")]),
+    "antal_udbydere": len({a["udbyder"] for a in ABON if a["pris"] > 0}),
+    "antal_gennemgaaet": len(UDBYDERE),
     "maks_besparelse": max(a["pris"] for a in ABON) - visningspris(billigst),
 }
 
@@ -468,7 +529,8 @@ D["pris_bedste"] = D["pris_mellem"]
 MUSIKTJENESTER = {"Deezer", "Telmore Musik", "YouSee Musik", "Mofibo", "Podimo",
                   "Musik", "Lydbøger"}
 D["pris_musik"] = _min(lambda a: MUSIKTJENESTER & set(a.get("streaming", [])))
-D["pris_aeldre"] = _min(lambda a: a["data_gb"] <= 10)
+D["pris_aeldre"] = _min(lambda a: a["data_gb"] <= 15 and bool(
+    (UMAP[a["udbyder"]].get("kundeservice") or {}).get("tlf")))
 
 
 def _beregn_fri_bev():
@@ -561,7 +623,7 @@ PERSON = {
     "description": FORFATTER["bio"],
     "knowsAbout": ["Mobilabonnementer", "Telemarkedet i Danmark", "Forbrugerøkonomi",
                    "Prissammenligning", "Mobilnetværk", "eSIM", "Nummerportering",
-                   "Søgemaskineoptimering", "Affiliate-markedsføring"],
+                   "Bredbånd", "Fibernet", "5G-internet"],
     "knowsLanguage": ["da-DK", "en"],
     "nationality": {"@type": "Country", "name": "Danmark"},
     "hasOccupation": {
@@ -580,7 +642,7 @@ WEBSITE = {
     "url": DOMAENE + "/",
     "name": SITENAVN,
     "inLanguage": "da-DK",
-    "description": ("Sammenlign mobilabonnementer fra alle danske udbydere på pris, data, "
+    "description": ("Sammenlign mobilabonnementer fra de danske selskaber, vi har prisdata fra, på pris, data, "
                     "netværk og reelle omkostninger over 12 måneder."),
     "copyrightHolder": {"@id": DOMAENE + "/#organisation"},
     "publisher": {"@id": DOMAENE + "/#organisation"},
@@ -714,8 +776,13 @@ UDGIVET = {
 # når teksten ændres — aldrig automatisk. Delte tabeller, priser og design tæller
 # ikke som en opdatering af selve guiden.
 OPDATERET_GUIDE = {
-    "/guides/mobilt-bredbaand/": "2026-11-03",
-    "/guides/ping-og-svartid/": "2026-11-03",
+    # Kun reelle indholdsændringer. Rettelser fra 8. nov. 2026 står i /rettelser/.
+    "/guides/mobilt-bredbaand/": "2026-11-08",      # live-priser i stedet for faste tal
+    "/guides/ping-og-svartid/": "2026-11-08",       # 5G-svartid rettet til 10-40 ms
+    "/guides/opsig-internet/": "2026-11-08",        # SBBU, § 6-undtagelse, Teleankenævnet
+    "/guides/flyt-internettet/": "2026-11-08",      # tidsplan for opsigelse rettet
+    "/guides/daekning-og-netvaerk/": "2026-11-08",  # TN-Network og målingens bestiller
+    "/mobilabonnement-til-familie/": "2026-11-08",  # regnestykke med navngivne abonnementer
 }
 
 
@@ -729,7 +796,23 @@ def guide_datoer(sti):
 
 
 
-def artikelld(sti, titel, beskrivelse, ordtal=None, emne="Mobilabonnement", billede=None):
+def artikelld(sti, titel, beskrivelse, ordtal=None, emne=None, billede=None):
+    g = next((x for x in globals().get("GUIDER", []) if x[0] == sti), None)
+    if emne is None:
+        internet = (sti.startswith(("/bredbaand", "/internet-priser"))
+                    or (g is not None and g[5] in {"Bredbånd", "Internet", "Wifi", "Hotspot",
+                                                   "Gaming", "Flytning"}))
+        emne = "Internet" if internet else "Mobilabonnement"
+    if not billede and g is not None:
+        # Guides uden eget OG-billede bruger deres artikelbillede i stedet for logoet
+        _f = os.path.join(ROD, "assets", "img", "guides", f"{g[3]}-1280.webp")
+        if os.path.exists(_f):
+            try:
+                from PIL import Image as _I
+                with _I.open(_f) as _im:
+                    billede = (f"/assets/img/guides/{g[3]}-1280.webp", _im.size[0], _im.size[1])
+            except Exception:
+                billede = (f"/assets/img/guides/{g[3]}-1280.webp", 1280, 720)
     node = {
         "@type": "Article",
         "@id": DOMAENE + sti + "#artikel",
@@ -747,8 +830,7 @@ def artikelld(sti, titel, beskrivelse, ordtal=None, emne="Mobilabonnement", bill
                   "width": billede[1] if billede else 1200,
                   "height": billede[2] if billede else 630},
         "isAccessibleForFree": True,
-        "articleSection": "Mobilabonnement",
-        "inLanguage": "da-DK",
+        "articleSection": emne,
         "about": {"@type": "Thing", "name": emne},
         "creativeWorkStatus": "Published",
     }
@@ -788,7 +870,7 @@ def listeld(abonnementer, navn):
                      else ("Fri data i Danmark" if a["data_gb"] >= 9999
                            else f"{a['data_gb']} GB data i Danmark"))
                     + ", " + ("fri tale" if a["tale"] == "fri" else f"{a['tale']} taletid")
-                    + (f", {a['eu_gb']} GB EU-data" if a.get("eu_gb") else "")
+                    + ((", fri EU-data" if a["eu_gb"] >= 9999 else f", {a['eu_gb']} GB EU-data") if a.get("eu_gb") else "")
                     + ". " + ("Ingen binding." if a["binding"] == 0
                               else f"{a['binding']} mdr. binding.")),
                 "sku": a["id"],
@@ -989,9 +1071,9 @@ def regningstjek():
 def datavaelger():
     """Det spørgsmål, folk faktisk har: hvor meget data bruger jeg? Fire store
     knapper med prisen fra i hver — virker uden indtastning for alle aldre."""
-    trin = [("Under 10 GB", 1, 10, "/mobilabonnement-1-10-gb/"),
-            ("10–30 GB", 11, 30, "/mobilabonnement-10-30-gb/"),
-            ("30–100 GB", 31, 9998, "/mobilabonnement-50-gb/"),
+    trin = [("1–10 GB", 1, 10, "/mobilabonnement-1-10-gb/"),
+            ("11–30 GB", 11, 30, "/mobilabonnement-10-30-gb/"),
+            ("31–49 GB", 31, 49, "/mobilabonnement-30-50-gb/"),
             ("Fri data", 9999, 10 ** 9, "/mobilabonnement-med-fri-data/")]
     knapper = ""
     for navn, lo, hi, sti in trin:
@@ -1051,9 +1133,9 @@ def hero_forside():
 </section>"""
 
 
-VAELGER_TRIN = [("u10", "Under 10 GB", 1, 10, "/mobilabonnement-1-10-gb/"),
-                ("u30", "10–30 GB", 11, 30, "/mobilabonnement-10-30-gb/"),
-                ("u100", "30–100 GB", 31, 9998, "/mobilabonnement-50-gb/"),
+VAELGER_TRIN = [("u10", "1–10 GB", 1, 10, "/mobilabonnement-1-10-gb/"),
+                ("u30", "11–30 GB", 11, 30, "/mobilabonnement-10-30-gb/"),
+                ("u100", "31–49 GB", 31, 49, "/mobilabonnement-30-50-gb/"),
                 ("fri", "Fri data", 9999, 10 ** 9, "/mobilabonnement-med-fri-data/")]
 
 
@@ -1096,7 +1178,7 @@ def vaelger():
         valgte, kort = set(), []
         for lab, a in [("Billigst over 12 måneder", billigst),
                        ("Laveste startpris", start),
-                       ("Bedst dækning", daek)]:
+                       ("Billigst på TDC NET", daek)]:
             if a and a["id"] not in valgte:
                 valgte.add(a["id"])
                 kort.append(_vaelger_kort(lab, a))
@@ -1198,7 +1280,7 @@ SIDEBILLEDER = {
         "tekst": [
             "De to ting forveksles konstant. Ingen binding betyder, at du ikke har "
             "forpligtet dig til at blive et bestemt antal måneder. Opsigelsesvarslet er "
-            "noget andet: næsten alle danske udbydere har et varsel på løbende måned "
+            "noget andet: de fleste selskaber har et varsel på løbende måned "
             "plus en måned, også når der ikke er binding.",
             "I praksis betyder det, at du kan skifte når som helst, men at der går op "
             "til to måneder, før det gamle abonnement stopper. Din nye udbyder klarer "
@@ -1413,8 +1495,8 @@ def hurtigvalg():
         ("Mest data pr. krone", sorted([a for a in med_data if a["data_gb"] < 9999],
                                        key=lambda a: a["pris"] / a["data_gb"]),
          "Laveste pris pr. gigabyte"),
-        ("Bedst dækning", sorted(tdc, key=lambda a: a["pris"]),
-         "TDC NET — landets mest udbyggede"),
+        ("Billigst på TDC NET", sorted(tdc, key=lambda a: a["pris"]),
+         "Laveste månedspris på TDC NET"),
         ("Billigste fri data", sorted(frie, key=lambda a: a["pris"]),
          "Ubegrænset data i Danmark"),
     ]
@@ -1586,7 +1668,7 @@ def prisaendringer(maks=8):
 
     tabel = f"""<div class="tabelramme">
 <table class="datatabel">
-  <caption>Prisændringer fra {e(foer['dato'])} til {e(nu['dato'])}.
+  <caption>Prisændringer fra {e(_dd(foer['dato']))} til {e(_dd(nu['dato']))}.
   {"Viser de " + str(maks) + " største ændringer." if len(aendret) > maks else ""}</caption>
   <thead><tr><th scope="col">Abonnement</th><th scope="col">Før</th>
     <th scope="col">Nu</th><th scope="col">Ændring</th></tr></thead>
@@ -1596,10 +1678,10 @@ def prisaendringer(maks=8):
 
     return f"""
   <h2 id="aendringer">Ændringer siden sidste måling</h2>
-  <p>Siden {e(foer['dato'])} er {opsummering}. Vi henter priserne to gange i døgnet
+  <p>Siden {e(_dd(foer['dato']))} er {opsummering}. Vi henter priserne to gange i døgnet
   og gemmer hver måling, så det her er målt — ikke husket.</p>
   {tabel}
-  <p>Se hvordan hele markedet har flyttet sig over tid på
+  <p>Se hvordan priserne i vores sammenligning har flyttet sig over tid på
   <a href="/prisudvikling/">prisudvikling på mobilabonnementer</a>.</p>"""
 
 
@@ -1780,14 +1862,14 @@ def gruppe_prisudvikling(noegle, navn):
     return f"""
   <h2>Sådan har priserne på {e(navn)} flyttet sig</h2>
   <p>{saetning} Vi gemmer priserne to gange i døgnet og regner altid på
-  normalprisen. Se hele markedets udvikling på
+  normalprisen. Se udviklingen for alle abonnementer i vores sammenligning på
   <a href="/prisudvikling/">prisudvikling på mobilabonnementer</a>.</p>
   <div class="tabelramme">
   <table class="datatabel">
-    <caption>{e(navn.capitalize())} fra {e(med[0]['dato'])} til {e(med[-1]['dato'])},
+    <caption>{e(navn.capitalize())} fra {e(_dd(med[0]['dato']))} til {e(_dd(med[-1]['dato']))},
     målt over {len(med)} målinger.</caption>
-    <thead><tr><th scope="col">Tal</th><th scope="col">{e(med[0]['dato'])}</th>
-      <th scope="col">{e(med[-1]['dato'])}</th><th scope="col">Ændring</th></tr></thead>
+    <thead><tr><th scope="col">Tal</th><th scope="col">{e(_dd(med[0]['dato']))}</th>
+      <th scope="col">{e(_dd(med[-1]['dato']))}</th><th scope="col">Ændring</th></tr></thead>
     <tbody>
       <tr><td><strong>Laveste</strong></td><td class="tal">{kr(round(a['min']))} kr.</td>
         <td class="tal">{kr(round(b['min']))} kr.</td>
@@ -2136,11 +2218,10 @@ def tabel_appforbrug():
 def tabel_5g_prisforskel():
     """Hvad 5G reelt koster ekstra, målt på vores eget datasæt."""
     import statistics as st
-    grupper = [("1-10 GB", 1, 10), ("10-30 GB", 10, 30), ("30-50 GB", 30, 50),
-               ("50 GB og op", 50, 9998), ("Fri data", 9999, 99999)]
+    grupper = [v for v in GB_BAAND.values()] + [("Fri data", 9999, 99999)]
     krop = ""
     for navn, lav, hoej in grupper:
-        i_gruppe = [a for a in ABON if lav <= a["data_gb"] <= hoej and a["pris"] > 0]
+        i_gruppe = [a for a in ABON if i_baand(a["data_gb"], lav, hoej) and a["pris"] > 0]
         med = [a["pris"] for a in i_gruppe if a.get("femg")]
         uden = [a["pris"] for a in i_gruppe if not a.get("femg")]
         if not med or not uden:
@@ -2251,7 +2332,7 @@ def tabel_bredbaand_sammenlign():
     raekker = [
         ("Hastighed ned", "50-300 Mbit/s", "300-1000 Mbit/s", "Fiber vinder klart"),
         ("Hastighed op", "10-50 Mbit/s", "300-1000 Mbit/s", "Afgørende ved videomøder og upload"),
-        ("Svartid", "20-40 ms", "2-10 ms", "Mærkes ved online spil, ikke ved streaming"),
+        ("Svartid", "10-40 ms", "2-10 ms", "Mærkes ved online spil, ikke ved streaming"),
         ("Stabilitet i myldretid", "Svinger med masten", "Konstant", "Mobilt deler kapacitet med naboerne"),
         ("Installation", "Sæt stikket i", "Gravearbejde eller tekniker", "Mobilt er klar samme dag"),
         ("Binding", "Ofte ingen", "Højst 6 måneder", "Mobilt er lettere at fortryde"),
@@ -2415,11 +2496,11 @@ def tabel_bredbaand_husstand():
 
 
 def tabel_pr_datamaengde():
-    grupper = [("Op til 10 GB", 1, 10), ("11-20 GB", 11, 20), ("21-40 GB", 21, 40),
-               ("41-80 GB", 41, 80), ("Over 80 GB", 81, 9998), ("Fri data", 9999, 9999)]
+    grupper = [(n, lo, hi, f"/mobilabonnement-{s}/") for s, (n, lo, hi) in GB_BAAND.items()]
+    grupper.append(("Fri data", 9999, 9999, "/mobilabonnement-med-fri-data/"))
     raekker = ""
-    for navn, lav, hoej in grupper:
-        kandidater = [a for a in ABON if lav <= a["data_gb"] <= hoej and a["pris"] > 0]
+    for navn, lav, hoej, sti_ in grupper:
+        kandidater = [a for a in ABON if i_baand(a["data_gb"], lav, hoej) and a["pris"] > 0]
         if not kandidater:
             continue
         kandidater = [a for a in kandidater if gns12(a) is not None] or kandidater
@@ -2427,16 +2508,20 @@ def tabel_pr_datamaengde():
         u = UMAP[bedst["udbyder"]]
         prgb = f'{bedst["pris"] / bedst["data_gb"]:.2f}'.replace(".", ",") + " kr." if 0 < bedst["data_gb"] < 9999 else "—"
         _aar12 = round(gns12(bedst) * 12) if gns12(bedst) is not None else bedst["pris"] * 12
-        raekker += (f'<tr><td><strong>{e(navn)}</strong></td>'
-                    f'<td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> {e(bedst["navn"])}</td>'
-                    f'<td>{prgb}</td><td>{kr(_aar12)} kr.</td>'
-                    f'<td><strong>{kr(bedst["pris"])} kr.</strong></td></tr>')
+        raekker += (f'<tr><td><strong><a href="{sti_}">{e(navn)}</a></strong></td>'
+                    f'<td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> {e(_abonavn(bedst))}</td>'
+                    f'<td class="tal"><strong>{kr(round(gns12(bedst)))} kr.</strong></td>'
+                    f'<td class="tal">{kr(_aar12)} kr.</td>'
+                    f'<td class="tal">{kr(bedst["pris"])} kr.</td><td class="tal">{prgb}</td></tr>')
     return f"""<h3>Billigste abonnement i hver datakategori</h3>
-<p>De fleste sammenligningssider viser kun den absolut laveste pris. Den er sjældent
-relevant, hvis du bruger mere end 5 GB. Her er den billigste i hver kategori, med
-årsomkostningen regnet med.</p>
-<table><thead><tr><th>Datamængde</th><th>Billigste valg</th><th>Pris pr. GB</th>
-<th>Pris pr. år</th><th>Pris/md.</th></tr></thead><tbody>{raekker}</tbody></table>"""
+<p>Den absolut laveste pris er sjældent relevant, hvis du bruger mere end 5 GB. Her er det
+billigste abonnement i hver kategori målt på snitprisen det første år.</p>
+<table><caption>Billigst i hver datakategori. Snit/md. og første år i alt regner intropris,
+normalpris og oprettelse med. Normalpris pr. GB er normalprisen delt med datamængden.</caption>
+<thead><tr><th scope="col">Datamængde</th><th scope="col">Billigste valg</th>
+<th scope="col">Snit/md. år 1</th><th scope="col">Første år i alt</th>
+<th scope="col">Normalpris/md.</th><th scope="col">Normalpris pr. GB</th></tr></thead>
+<tbody>{raekker}</tbody></table>"""
 
 
 def tabel_prgb_rangliste(antal=12):
@@ -2673,7 +2758,7 @@ def prisfordeling():
         raekker += f"""<div class="fordel-raekke">
   <div class="fordel-navn">{e(navn)}</div>
   <div class="fordel-bar"><span style="width:{bredde}%"></span></div>
-  <div class="fordel-pris">{kr(priser[0])}–{kr(priser[-1])} kr.</div>
+  <div class="fordel-pris">{_spaend(priser, " kr.")}</div>
   <div class="fordel-antal">{_antal_ab(len(planer))}</div>
 </div>"""
         billigst_seg = min(planer, key=lambda a: gns12(a) or 9e9)
@@ -2774,6 +2859,8 @@ def vejviser(aktuel=""):
          f"{_antal_ab(len([a for a in ABON if 'Netflix' in a.get('streaming', [])]))}")
         if "Netflix" in TJENESTER_I_DATA else None,
         ("/mobilabonnement-med-esim/", "Med eSIM", "klar samme dag"),
+        ("/mobilabonnement-med-5g/", "Med 5G",
+         f"{_antal_ab(len([a for a in ABON if a.get('femg') and a['pris'] > 0]))}"),
         ("/mobilabonnement-til-boern/", "Til børn", "tryghed og lav pris"),
         ("/mobilabonnement-til-unge/", "Til unge", "meget data"),
         ("/mobilabonnement-til-aeldre/", "Til ældre", "telefonisk kundeservice"),
@@ -2784,20 +2871,14 @@ def vejviser(aktuel=""):
         ("/netvaerk/", "Mobilnetværk", "de tre danske net"),
         ("/mobilabonnementer-black-friday/", f"Black Friday {IDAG.year}", "tilbud regnet efter"),
         # Datastørrelserne hører med her — ellers får de kun links fra footeren
-        ("/mobilabonnement-1-10-gb/", "1–10 GB",
-         f"{_antal_ab(len([a for a in ABON if 1 <= a['data_gb'] <= 10]))}"),
-        ("/mobilabonnement-10-30-gb/", "10–30 GB",
-         f"{_antal_ab(len([a for a in ABON if 11 <= a['data_gb'] <= 30]))}"),
-        ("/mobilabonnement-30-50-gb/", "30–50 GB",
-         f"{_antal_ab(len([a for a in ABON if 31 <= a['data_gb'] <= 49]))}"),
-        ("/mobilabonnement-50-gb/", "50 GB og op",
-         f"{_antal_ab(len([a for a in ABON if 50 <= a['data_gb'] <= 99]))}"),
-        ("/mobilabonnement-100-gb/", "100 GB og op",
-         f"{_antal_ab(len([a for a in ABON if 100 <= a['data_gb'] < 9999]))}"),
+    ] + [(f"/mobilabonnement-{s}/", n,
+          f"{_antal_ab(len([a for a in ABON if a['pris'] > 0 and i_baand(a['data_gb'], lo, hi)]))}")
+         for s, (n, lo, hi) in GB_BAAND.items()] + [
         ("/prisudvikling/", "Prisudvikling", "stiger priserne?"),
         ("/mobilabonnement-med-lydbog/", "Med lydbog", "podcast og lydbøger"),
         ("/mobilabonnement-med-musik/", "Med musik", "Spotify og musiktjenester"),
         ("/danskernes-forbrug/", "Markedet i tal", "priser og forbrug"),
+        ("/mobilpriser/", "Mobilpriser lige nu", "nøgletal til at citere"),
         ("/prisarkiv/", "Prisarkiv", "hver målt prisændring"),
         ("/guides/", "Alle guides", f"{len(GUIDER)} gennemgange"),
         ("/anmeldelser/", "Anmeldelser",
@@ -2813,7 +2894,8 @@ def vejviser(aktuel=""):
         fiber = [a for a in BB if a["teknologi"] == "fiber"]
         coax = [a for a in BB if a["teknologi"] == "coax"]
         femg = [a for a in BB if a["teknologi"] == "5g"]
-        veje += [("/bredbaand/", "Billigste bredbånd", f"{_antal_ab(len(BB))}")]
+        veje += [("/internet-priser/", "Internet priser", f"{len(BB)} tilbud sammenlignet"),
+                 ("/bredbaand/", "Billigste bredbånd", f"{_antal_ab(len(BB))}")]
         if fiber:
             veje.append(
                 ("/bredbaand/fibernet/", "Fibernet",
@@ -2824,18 +2906,65 @@ def vejviser(aktuel=""):
             veje.append(
                 ("/bredbaand/kabel-internet/", "Kabel-internet (coax)",
                  f"{_antal_ab(len(coax))}"))
-    punkter = "".join(
-        f'<a href="{h}"><b>{e(t)}</b><span>{e(u)}</span></a>'
-        for h, t, u in [v for v in veje if v]
-        if h != aktuel and _MULIGE.get(h, True))
+    # Højst ti links, valgt efter emne. 38 ens links på hver side oven i footeren
+    # fortynder linkværdien og hjælper ikke læseren videre.
+    def gruppe(h):
+        if h.startswith(("/bredbaand", "/internet-priser")):
+            return "bb"
+        if "-gb/" in h or h in ("/mobilabonnement-med-fri-data/", "/mobilabonnement-uden-data/"):
+            return "data"
+        if "-til-" in h:
+            return "maal"
+        if "-med-" in h:
+            return "tillaeg"
+        if h in ("/billigste-mobilabonnement/", "/bedste-mobilabonnement/", "/mobilabonnement-uden-binding/",
+                 "/kampagner/", "/mobilabonnementer-black-friday/", "/mobilabonnement-under-100-kr/"):
+            return "pris"
+        return "marked"
+    alle = [v for v in veje if v and v[0] != aktuel and _MULIGE.get(v[0], True)]
+    min_gruppe = gruppe(aktuel) if aktuel else "pris"
+    valgt = [v for v in alle if v[0] in ("/billigste-mobilabonnement/", "/bedste-mobilabonnement/")]
+    valgt += [v for v in alle if gruppe(v[0]) == min_gruppe and v not in valgt][:5]
+    valgt += [v for v in alle if v[0] in ("/internet-priser/", "/mobilabonnement-med-fri-data/",
+                                         "/mobilabonnement-uden-binding/") and v not in valgt]
+    valgt += [v for v in alle if v not in valgt][:max(0, 10 - len(valgt))]
+    valgt = valgt[:10]
+    punkter = "".join(f'<a href="{h}"><b>{e(t)}</b><span>{e(u)}</span></a>' for h, t, u in valgt)
     return f"""<h2>Vælg din vej videre</h2>
-<p>Vi har en dedikeret oversigt til hvert af de mest almindelige behov — med antal
-abonnementer eller laveste pris i kategorien, hvor det giver mening.</p>
+<p>Relaterede oversigter med antal abonnementer eller laveste pris, hvor det giver mening.</p>
 <div class="vejviser">{punkter}</div>"""
 
 
+def score_pr_kategori():
+    """Højeste Telemobil-score i hver datakategori — bedste-sidens eget svar."""
+    rk = ""
+    for s, (navn, lo, hi) in list(GB_BAAND.items()) + [("fri", ("Fri data", 9999, 9999))]:
+        k = [a for a in ABON if a["pris"] > 0 and telemobil_score(a) is not None
+             and i_baand(a["data_gb"], lo, hi)]
+        if not k:
+            continue
+        a = max(k, key=lambda x: (telemobil_score(x), -(gns12(x) or 9e9)))
+        u = UMAP[a["udbyder"]]
+        sti_ = "/mobilabonnement-med-fri-data/" if s == "fri" else f"/mobilabonnement-{s}/"
+        rk += (f'<tr><td><strong><a href="{sti_}">{e(navn)}</a></strong></td>'
+               f'<td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> {e(_abonavn(a))}</td>'
+               f'<td class="tal"><strong>{telemobil_score(a)}</strong></td>'
+               f'<td class="tal">{kr(round(gns12(a)))} kr.</td></tr>')
+    if not rk:
+        return ""
+    return f"""<h2 id="bedst-pr-kategori">Højeste score i hver datakategori</h2>
+<p>Det bedste abonnement afhænger af, hvor meget data du bruger. Her er abonnementet med den
+højeste Telemobil-score i hver kategori. Scoren regnes maskinelt, og provision indgår ikke.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Højeste Telemobil-score (0–100) pr. datakategori og snitprisen det første år.</caption>
+<thead><tr><th scope="col">Datamængde</th><th scope="col">Abonnement</th>
+<th scope="col">Score</th><th scope="col">Snit/md. år 1</th></tr></thead>
+<tbody>{rk}</tbody></table></div>"""
+
+
 def redaktionens_valg():
-    """Fire redaktionelle picks med begrundelse — ikke bare beregnede tal."""
+    """Fire beregnede valg med forklaring. Valgene er regnet ud af data ved hvert
+    build og må derfor ikke kaldes redaktionelle."""
     med_data = [a for a in ABON if a["data_gb"] > 0 and a["pris"] > 0]
     tdc = [a for a in med_data if UMAP[a["udbyder"]]["netvaerk"] == "TDC NET"]
     frie = [a for a in ABON if a["data_gb"] >= 9999 and a["pris"] > 0]
@@ -2844,28 +2973,28 @@ def redaktionens_valg():
     valg = []
     if fast:
         v = min(fast, key=lambda a: a["pris"])
-        valg.append((v, "Billigst uden intro-fælde",
-            f"Fast pris fra dag ét. Ingen kampagneperiode der udløber, ingen påmindelse du "
-            f"skal huske at sætte. Prisen du ser, er prisen om tolv måneder — og det er "
-            f"mere værd end de tyve kroner, du kan spare på et introtilbud, du glemmer at "
-            f"genforhandle."))
+        valg.append((v, "Billigst uden intropris",
+            f"Laveste faste pris blandt abonnementer med data. Ingen kampagneperiode der "
+            f"udløber, så prisen du ser, er også prisen om tolv måneder."))
     endelig = [a for a in med_data if a["data_gb"] < 9999]
     if endelig:
-        v = min(endelig, key=lambda a: a["pris"] / a["data_gb"])
-        valg.append((v, "Mest for pengene",
-            f"Laveste pris pr. gigabyte i hele sammenligningen. Det er det tal, der gør "
-            f"abonnementer af forskellig størrelse sammenlignelige, og her er der ikke "
-            f"nogen tæt på. Har du et forbrug i den størrelse, er det svært at argumentere "
-            f"for noget andet."))
+        _prgb = sorted(endelig, key=lambda a: a["pris"] / a["data_gb"])
+        v = _prgb[0]
+        _naest = (f" Nummer to koster {kr(round(_prgb[1]['pris'] / _prgb[1]['data_gb'], 2))} kr. pr. GB."
+                  if len(_prgb) > 1 else "")
+        valg.append((v, "Lavest pris pr. GB",
+            f"Laveste normalpris pr. gigabyte i sammenligningen: "
+            f"{kr(round(v['pris'] / v['data_gb'], 2))} kr. pr. GB.{_naest} Det tal gør "
+            f"abonnementer af forskellig størrelse sammenlignelige."))
     if tdc:
         v = min(tdc, key=lambda a: gns12(a) or 9e9)
-        valg.append((v, "Bedst hvis dækning betyder noget",
-            f"Billigste vej ind på TDC NET, som er det mest udbyggede net i Danmark. Bor du "
-            f"på landet, i et sommerhusområde eller pendler du langt, er det her, du skal "
-            f"kigge — også selvom der findes billigere abonnementer på de andre net."))
+        valg.append((v, "Billigst på TDC NET",
+            f"Laveste snitpris det første år på TDC NET. Vælg den, hvis TDC NET dækker "
+            f"bedst der, hvor du bor eller pendler — tjek netejernes egne dækningskort, "
+            f"før du skifter."))
     if frie:
         v = min(frie, key=lambda a: gns12(a) or 9e9)
-        valg.append((v, "Til dig uden fastnet",
+        valg.append((v, "Billigste fri data",
             f"Billigste fri data regnet over tolv måneder. Bruger du mobilen som husstandens "
             f"internet via hotspot, er det her, regnestykket vender — op til {D['fri_bev']} GB om "
             f"måneden findes der i dag et abonnement med fast datamængde, der er billigere."))
@@ -2889,13 +3018,12 @@ def redaktionens_valg():
   </div>
 </div>"""
 
-    return f"""<h2>De fire abonnementer vi selv ville pege på</h2>
-<p>Vi gennemgår markedet ved hver opdatering og udpeger ét abonnement i hver hovedkategori.
-Udvælgelsen er ikke rangeret efter, hvad vi tjener på — det er, hvad vi ville sige til en
-ven, der spurgte, hvad de skulle skifte til.</p>
+    return f"""<h2>Fire beregnede valg</h2>
+<p>Ved hver opdatering regner vi ét abonnement ud i fire kategorier ud fra priserne i vores
+sammenligning. Valgene er beregnet, ikke håndplukket, og provision indgår ikke.</p>
 <div class="rvkort-gitter">{kort}</div>
-<p class="rv-note">Verificeret {OPDATERET} mod priserne i vores sammenligning, som hentes
-automatisk fra selskabernes datafeeds.</p>"""
+<p class="rv-note">Beregnet {OPDATERET} ud fra priserne i vores sammenligning, som hentes
+automatisk fra selskabernes produktfeeds via Adtraction.</p>"""
 
 
 def overforbrug():
@@ -3059,11 +3187,15 @@ def byg_forside():
     sti = "/"
     titel = med_maaned(f"Sammenlign mobilabonnementer — fra {D['min_normalpris']} kr./md.")
     besk = (f"Sammenlign {D['antal']} mobilabonnementer fra {D['antal_udbydere']} udbydere. "
-            f"Normalpris fra {D['min_normalpris']} kr./md. – vi viser altid prisen efter introtilbuddet. Opdateret {OPDATERET}.")
+            f"Normalpris fra {D['min_normalpris']} kr./md. Vi viser intropris, normalpris og snitpris over 12 mdr. Opdateret {OPDATERET}.")
 
     faq = [
-        {"sp": "Hvad er det billigste mobilabonnement i Danmark?",
-         "sv": _kort_svar_billigste() + " Priserne ændrer sig løbende, så tjek listen for de aktuelle tal."},
+        {"sp": "Hvordan sammenligner jeg mobilabonnementer bedst?",
+         "sv": "Sammenlign på snitprisen det første år frem for den pris, der står størst. En lav "
+               "intropris stiger typisk efter 1-6 måneder, og snitprisen regner intropris, normalpris "
+               "og oprettelse sammen. Vælg derefter datamængde efter dit faktiske forbrug og tjek, "
+               "hvilket net selskabet bruger. Den fulde prisliste står på siden om billigste "
+               "mobilabonnement."},
         {"sp": "Hvor meget data har jeg brug for?",
          "sv": "Et dansk mobilabonnement brugte i gennemsnit 26,9 GB om måneden i andet halvår 2024 ifølge "
                "Digitaliseringsstyrelsens telestatistik, og forbruget stiger med omkring 20 % om året. Bruger du primært wi-fi hjemme og på "
@@ -3085,7 +3217,7 @@ def byg_forside():
         {"sp": "Hvad er forskellen på de danske mobilnet?",
          "sv": "Der er tre fysiske mobilnet: TDC NET, TN-Network (som Telenor og Norlys ejer sammen) og 3. "
                "Alle mobilselskaber kører på ét af dem. I Teknologisk Instituts måling fra foråret "
-               f"{NET_MAALING['aar']} havde alle fire målte net adgang til 5G på over 99 % af målestederne, "
+               f"{NET_MAALING['aar']} (bestilt af TDC NET), hvor Telenor og Norlys blev målt hver for sig, havde alle fire målte net adgang til 5G på over 99 % af målestederne, "
                "og TDC NET havde den højeste andel fejlfri oplevelse. Dækningen på din egen adresse betyder "
                "mere end landsgennemsnittet."},
         {"sp": "Hvad betyder fri data — er det ubegrænset?",
@@ -3185,7 +3317,7 @@ def udbyderkort(u):
 def byg_billigste():
     sti = "/billigste-mobilabonnement/"
     titel = med_maaned(f"Billigste mobilabonnement — fra {D['min_normalpris']} kr./md.")
-    besk = (f"Se det billigste mobilabonnement i Danmark lige nu. {D['antal']} abonnementer "
+    besk = (f"Se det billigste mobilabonnement i vores sammenligning lige nu. {D['antal']} abonnementer "
             f"sammenlignet på pris, data og pris pr. GB. Opdateret {OPDATERET}.")
     krumme = [("/", "Forside"), (None, "Billigste mobilabonnement")]
 
@@ -3258,7 +3390,7 @@ def byg_billigste():
   {laesvidere([
       ("/mobilabonnement-med-fri-data/", "Mobilabonnement med fri data — er det pengene værd?"),
       ("/guides/hvor-meget-data/", "Hvor meget data har jeg brug for?"),
-      ("/guides/daekning-og-netvaerk/", "Dækning og netværk: TDC NET, Telenor og 3"),
+      ("/guides/daekning-og-netvaerk/", "Dækning og netværk: TDC NET, Telenor/Norlys og 3"),
       ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
       ("/mobilabonnement-uden-binding/", "Mobilabonnement uden binding"),
       ("/udbydere/", "Alle udbydere gennemgået"),
@@ -3335,7 +3467,7 @@ def byg_fridata():
 
 <section class="sektion baand-smal">
   {laesvidere([
-      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — alle abonnementer i sammenligningen"),
       ("/guides/hvor-meget-data/", "Hvor meget data har jeg brug for?"),
       ("/guides/daekning-og-netvaerk/", "Dækning og netværk i Danmark"),
       ("/udbydere/oister/", "Oister — mest data for pengene"),
@@ -3363,7 +3495,7 @@ def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links
               billede=None, spejlvend=False, forvalg=None):
     krumme = [("/", "Forside"), (None, etiket)]
     krop = f"""
-{pristabel(udvalg, UMAP, titel=f"Bedste valg — {etiket.lower()}", undertitel=intro,
+{pristabel(udvalg, UMAP, titel=f"Billigste — {etiket.lower()}", undertitel=intro,
            billigst_id=udvalg[0]['id'] if udvalg else None, forvalg=forvalg)}
 {sidebillede(billede, spejlvend=spejlvend) if billede else ""}
 <section class="sektion baand-smal artikel">{gennemgangslinje(OPDATERET)}{brodtekst}
@@ -3386,9 +3518,16 @@ def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links
 
 def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
                  faq, links, chips=None, ekstra_tabeller=None, tabeltitel=None,
-                 billede=None, spejlvend=False, forvalg=None):
-    """Kategoriside: hero med radar, tabel, langt indhold og ekstra datatabeller."""
+                 billede=None, spejlvend=False, forvalg=None, tom=None, sorter="aar"):
+    """Kategoriside: hero med radar, tabel, langt indhold og ekstra datatabeller.
+
+    tom = (alternativ_udvalg, tabeltitel, forklaring): bruges, når kategorien er
+    tom i feedet. Siden bliver stående og viser det nærmeste reelle alternativ i
+    stedet for en tom tabel."""
     krumme = [("/", "Forside"), (None, etiket)]
+    if not udvalg and tom:
+        udvalg, tabeltitel, intro = tom[0], tom[1], tom[2]
+        chips = [c for c in (chips or []) if not str(c[1]).startswith("0 kr")]
     t = {"gennemgang": gennemgangslinje(OPDATERET)}
     brod = tekstfunktion(D, t)
 
@@ -3398,7 +3537,7 @@ def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
     krop = f"""
 {pristabel(udvalg, UMAP, titel=tabeltitel or f"{etiket} — sammenlignet på pris",
            undertitel=intro, billigst_id=udvalg[0]['id'] if udvalg else None,
-           forvalg=forvalg)}
+           forvalg=forvalg, sorter=sorter)}
 {sidebillede(billede, spejlvend=spejlvend) if billede else ""}
 {brod}
 <section class="sektion baand-smal">
@@ -3573,7 +3712,7 @@ TJENESTE_UDBYDERE = {
 
 NETVAERK = [
     {
-        "slug": "tdc-net", "navn": "TDC NET", "kort": "Danmarks mest udbyggede mobilnet",
+        "slug": "tdc-net", "navn": "TDC NET", "kort": "Bedst i Teknologisk Instituts målinger",
         "styrke": ("TDC NET er det mest finmaskede mobilnet i Danmark og har gennem en "
                    "årrække klaret sig bedst i målinger af netkvalitet. Nettet "
                    "står særligt stærkt i landdistrikter, sommerhusområder, langs jernbanen "
@@ -3989,8 +4128,9 @@ def byg_netvaerksoversigt():
          "sv": "Tre: TDC NET, TN-Network (Telenor og Norlys) og 3. Alle andre mobilselskaber lejer sig ind på et af dem. "
                "Det betyder, at antallet af selskaber er langt større end antallet af net."},
         {"sp": "Hvilket mobilnet er bedst i Danmark?",
-         "sv": "TDC NET er det mest udbyggede og står typisk stærkest i landdistrikter, "
-               "sommerhusområder og indendørs. I byerne er forskellen mellem de tre lille i praksis."},
+         "sv": "TDC NET har klaret sig bedst i Teknologisk Instituts målinger (bestilt af TDC NET) og står typisk stærkest i landdistrikter, "
+               "sommerhusområder og indendørs. I byerne er forskellen mellem de tre lille i praksis. "
+               "Tjek altid dækningen på din egen adresse."},
         {"sp": "Kan jeg vælge netværk frit?",
          "sv": "Indirekte. Du vælger et selskab, og selskabet bestemmer nettet. Vil du på et bestemt "
                "net, skal du vælge blandt de selskaber, der kører på det."},
@@ -4102,16 +4242,16 @@ def byg_netvaerksoversigt():
   {laesvidere([
       ("/daekningskort/", "Tjek dækningen på din adresse"),
       ("/udbydere/", "Se hvilket net hver udbyder kører på"),
-      ("/speedtest/", "Test din mobilhastighed"),
+      ("/speedtest/", "Test din internethastighed"),
       ("/guides/daekning-og-netvaerk/", "Guide til dækning og netværk"),
   ])}
   {forfatterboks()}{afsloering()}
 </section>
 """
     return skriv(sti, shell(
-        sti=sti, titel="Mobilnetværk i Danmark: TDC NET, Telenor og 3",
+        sti=sti, titel="Mobilnetværk i Danmark: TDC NET, Telenor/Norlys og 3",
         beskrivelse=("Der findes kun tre mobilnet i Danmark. Se forskellen på TDC NET, "
-                     "Telenor og 3 — og hvornår netværket betyder mere end prisen."),
+                     "TN-Network (Telenor/Norlys) og 3 — og hvornår netværket betyder mere end prisen."),
         opdateret=OPDATERET,
         hero=hero_side("Mobilnetværk", "De tre danske mobilnet",
                        "Dit valg af udbyder er i virkeligheden et valg af net. Her er "
@@ -4197,7 +4337,7 @@ def byg_netvaerksside(n):
   </ol>
 
   <p>Se alle net i vores <a href="/netvaerk/">oversigt over mobilnetværk</a>, eller
-  sammenlign hele markedet på <a href="/billigste-mobilabonnement/">billigste
+  sammenlign alle abonnementer på <a href="/billigste-mobilabonnement/">billigste
   mobilabonnement</a>.</p>
 </section>
 
@@ -4307,8 +4447,8 @@ henter store filer over hotspot. Det står i abonnementsvilkårene.</p>""",
         "brød": """<p>Over 100 GB er du i praksis ved at bruge mobilen i stedet for bredbånd.
 Det kan fungere godt — men det er en anden beslutning end at vælge et
 mobilabonnement, og den bør træffes med åbne øjne.</p>
-<p>En husstand, der streamer video om aftenen, bruger typisk 150-300 GB om
-måneden. Det kan et stort mobilabonnement dække, men hastigheden svinger med
+<p>Et gennemsnitligt fast bredbånd brugte 525 GB om måneden i andet halvår 2024
+(Digitaliseringsstyrelsens telestatistik). Det kan et stort mobilabonnement dække, men hastigheden svinger med
 belastningen på masten, og du deler kapacitet med alle andre i området på det
 tidspunkt, hvor alle ser tv.</p>
 <h3>Sammenlign med bredbånd, før du vælger</h3>
@@ -4325,17 +4465,25 @@ planlægger at erstatte bredbånd helt.</p>""",
     },
 }
 
+PROFIL_TIL = {
+    "Let bruger": "dig, der mest er på wi-fi",
+    "Almindelig bruger": "dig, der bruger sociale medier og musik på farten",
+    "Aktiv bruger": "dig, der streamer video uden for wi-fi flere gange om ugen",
+    "Storforbruger": "dig, der streamer hver dag eller bruger hotspot",
+    "Meget stort forbrug": "dig, der bruger mobilen som internet derhjemme",
+}
+
 GB_INTERVALLER = [
     ("1-10-gb", "1–10 GB", 1, 10, "Let bruger",
      "Til dig der er på wi-fi det meste af dagen og bruger mobilen til beskeder, "
      "musik og lidt navigation."),
-    ("10-30-gb", "10–30 GB", 11, 30, "Almindelig bruger",
+    ("10-30-gb", "11–30 GB", 11, 30, "Almindelig bruger",
      "Danmarks mest almindelige forbrug. Rækker til sociale medier, podcasts, "
      "kort og lidt video på farten."),
-    ("30-50-gb", "30–50 GB", 31, 49, "Aktiv bruger",
+    ("30-50-gb", "31–49 GB", 31, 49, "Aktiv bruger",
      "Til dig der pendler dagligt og streamer video uden for wi-fi flere gange "
      "om ugen."),
-    ("50-gb", "50 GB og op", 50, 99, "Storforbruger",
+    ("50-gb", "50–99 GB", 50, 99, "Storforbruger",
      "Til dig der streamer dagligt på farten eller bruger telefonen som hotspot "
      "til en laptop."),
     ("100-gb", "100 GB og op", 100, 9998, "Meget stort forbrug",
@@ -4346,13 +4494,16 @@ GB_INTERVALLER = [
 
 def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
     sti = f"/mobilabonnement-{slug}/"
-    udvalg = sorted([a for a in ABON if lav <= a["data_gb"] <= hoej and a["pris"] > 0],
-                    key=visningspris)
+    udvalg = sorted([a for a in ABON if i_baand(a["data_gb"], lav, hoej) and a["pris"] > 0],
+                    key=lambda a: gns12(a) or 9e9)
     if not udvalg:
         return
-    billigst_g = min(udvalg, key=lambda a: a["pris"])
-    # Titlen lover normalprisen — tilbudsprisen står i tabellen
-    fra = billigst_g["pris"]
+    # Prisreglen er den samme på hele sitet:
+    #  - "fra X kr." i titel, meta og hero = laveste normalpris i udvalget
+    #  - "billigst" i tekst og tabel = laveste snitpris det første år (gns12)
+    billigst_g = udvalg[0]
+    fra = min(a["pris"] for a in udvalg)
+    lav_n = min(udvalg, key=lambda a: (a["pris"], gns12(a) or 9e9))
     u = UMAP[billigst_g["udbyder"]]
     krumme = [("/", "Forside"), (None, f"Mobilabonnement {navn}")]
 
@@ -4363,9 +4514,9 @@ def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
 
     faq = [
         {"sp": f"Hvad koster et mobilabonnement med {navn}?",
-         "sv": f"Det billigste med {navn} starter ved {kr(fra)} kr. om måneden. Regnet som "
-               f"gennemsnit over 12 måneder er det {kr(gns12(billigst_g))} kr. "
-               f"Det er {u['navn']} {_abonavn(billigst_g)}."},
+         "sv": f"Billigst over det første år er {u['navn']} {_abonavn(billigst_g)} med "
+               f"{kr(round(gns12(billigst_g)))} kr. om måneden i snit. Den laveste normalpris "
+               f"er {kr(fra)} kr. om måneden hos {UMAP[lav_n['udbyder']]['navn']} {_abonavn(lav_n)}."},
         {"sp": f"Er {navn} nok til mig?",
          "sv": beskrivelse + " Tjek dit faktiske forbrug i telefonens indstillinger — de fleste "
                "danskere bruger mindre, end de tror."},
@@ -4397,9 +4548,8 @@ def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
 
   <div class="udtag">
   <p><strong>Kort svar:</strong> Der er {_antal_ab(len(udvalg))} med {navn} i vores
-  sammenligning. Det billigste er {e(u['navn'])} {e(billigst_g['navn'])} til
-  {kr(fra)} kr. om måneden — {kr(gns12(billigst_g))} kr. i gennemsnit over 12 måneder.
-  {e(navn)} passer til: {e(profil.lower())}.</p>
+  sammenligning. Billigst over det første år er {e(u['navn'])} {e(billigst_g['navn'])}:
+  {e(_prisled_aar(billigst_g))}. {e(navn)} passer typisk til {e(PROFIL_TIL.get(profil, "de fleste"))}.</p>
   </div>
 
   <h2>{e(GB_TEKST[slug]["h2"])}</h2>
@@ -4417,7 +4567,7 @@ def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
 
 <section class="sektion baand-smal">
   {laesvidere([
-      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — alle abonnementer i sammenligningen"),
       ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?"),
       ("/12-maaneders-prisen/", "Sådan beregner vi 12-måneders-prisen"),
       ("/bedste-mobilabonnement/", "Bedste mobilabonnement"),
@@ -4463,6 +4613,35 @@ VS_PAR = [
 VS_PAR_AKTIVE = []
 
 
+def _netnavn(u):
+    n = u.get("netvaerk", "")
+    return {"TDC NET": "TDC NET", "TN-Network": "TN-Network (Telenor/Norlys)",
+            "3": "3's net"}.get(n, "et lejet net")
+
+
+def _vs_dom(ua, ub, pa, pb):
+    """Kort, unik konklusion for et par — regnet ud af data, ikke en skabelonfrase."""
+    fa, fb = pa[0], pb[0]
+    ga_, gb2 = gns12(fa) or 9e9, gns12(fb) or 9e9
+    bil, dyr = (ua, ub) if ga_ <= gb2 else (ub, ua)
+    bf, df = (fa, fb) if ga_ <= gb2 else (fb, fa)
+    t = (f"{bil['navn']} har det billigste abonnement af de to: {_abonavn(bf)} til "
+         f"{kr(round(gns12(bf)))} kr. om måneden i snit det første år mod "
+         f"{kr(round(gns12(df)))} kr. hos {dyr['navn']}.")
+    maks_a = max(a["data_gb"] for a in pa)
+    maks_b = max(a["data_gb"] for a in pb)
+    if maks_a != maks_b:
+        st, mx = (ua, maks_a) if maks_a > maks_b else (ub, maks_b)
+        t += (f" Kun {st['navn']} har fri data." if mx >= 9999
+              else f" {st['navn']} går højest op i data med {gb_tekst(mx)}.")
+    if ua["netvaerk"] == ub["netvaerk"] and ua["netvaerk"] not in ("", "MVNO", "Se udbyder"):
+        t += f" Begge kører på {_netnavn(ua)}, så dækningen er den samme."
+    elif ua["netvaerk"] != ub["netvaerk"]:
+        t += (f" {ua['navn']} kører på {_netnavn(ua)} og {ub['navn']} på {_netnavn(ub)} — "
+              "den forskel betyder mest, hvis du bor uden for en større by.")
+    return t
+
+
 def byg_vs(slug_a, slug_b):
     ua, ub = UMAP[slug_a], UMAP[slug_b]
     sti = f"/sammenlign/{slug_a}-vs-{slug_b}/"
@@ -4493,7 +4672,7 @@ def byg_vs(slug_a, slug_b):
         rk("Største datamængde",
            gb_tekst(max(a["data_gb"] for a in pa)), gb_tekst(max(a["data_gb"] for a in pb))),
         rk("Mest EU-data",
-           f"{max(a.get('eu_gb', 0) for a in pa)} GB", f"{max(a.get('eu_gb', 0) for a in pb)} GB"),
+           gb_tekst(max(a.get('eu_gb', 0) for a in pa)), gb_tekst(max(a.get('eu_gb', 0) for a in pb))),
         rk("Streaming inkluderet",
            "Ja" if any(a.get("streaming") for a in pa) else "Nej",
            "Ja" if any(a.get("streaming") for a in pb) else "Nej"),
@@ -4512,20 +4691,22 @@ def byg_vs(slug_a, slug_b):
                f"{kr(gns12(fb))} kr./md. Hvilket der er billigst for dig afhænger af, hvor meget "
                "data du skal bruge."},
         {"sp": f"Kører {ua['navn']} og {ub['navn']} på samme net?",
-         "sv": (f"Nej. {ua['navn']} kører på {netlabel(ua).replace('s net', '')} og {ub['navn']} på "
-                f"{netlabel(ub).replace('s net', '')}. Det er den vigtigste forskel, hvis du bor uden "
+         "sv": (f"Nej. {ua['navn']} kører på {_netnavn(ua)} og {ub['navn']} på "
+                f"{_netnavn(ub)}. Det er den vigtigste forskel, hvis du bor uden "
                 "for de større byer."
                 if ua["netvaerk"] != ub["netvaerk"] else
-                f"Ja, begge kører på {netlabel(ua).replace('s net', '')}. Dækningen er dermed den "
+                f"Ja, begge kører på {_netnavn(ua)}. Dækningen er dermed den "
                 "samme, og valget står på pris, vilkår og kundeservice.")},
         {"sp": f"Kan jeg skifte fra {ua['navn']} til {ub['navn']} og beholde mit nummer?",
          "sv": f"Ja. Du bestiller hos {ub['navn']} og oplyser dit nummer — de opsiger selv "
                f"{ua['navn']} og flytter nummeret. Det er gratis og tager typisk få dage."},
         {"sp": f"Har {ua['navn']} eller {ub['navn']} flest abonnementer?",
-         "sv": f"{ua['navn'] if len(pa) >= len(pb) else ub['navn']} har flest med "
-               f"{max(len(pa), len(pb))} abonnementer mod {min(len(pa), len(pb))}. "
-               f"Et større udvalg er ikke i sig selv en fordel — det afgørende er, om der "
-               f"findes et abonnement i netop din datastørrelse."},
+         "sv": ((f"De har lige mange: {_antal_ab(len(pa))} hver i vores sammenligning. "
+                 if len(pa) == len(pb) else
+                 f"{ua['navn'] if len(pa) > len(pb) else ub['navn']} har flest med "
+                 f"{max(len(pa), len(pb))} abonnementer mod {min(len(pa), len(pb))}. ")
+               + "Et større udvalg er ikke i sig selv en fordel — det afgørende er, om der "
+                 "findes et abonnement i netop din datastørrelse.")},
     ]
 
     krop = f"""
@@ -4534,13 +4715,10 @@ def byg_vs(slug_a, slug_b):
            billigst_id=alle[0]["id"], vis=12)}
 
 <section class="sektion baand-smal artikel">
-  {gennemgangslinje(OPDATERET, "Begge udbyderes vilkår gennemgået")}
+  {gennemgangslinje(OPDATERET, "Vilkår fra begge selskabers egne sider")}
 
   <div class="udtag">
-  <p><strong>Kort svar:</strong> {e(billigst_u['navn'])} har det billigste abonnement af de to
-  målt på gennemsnitspris over 12 måneder. Men {e(ua['navn'])} kører på
-  {netlabel(ua)} og {e(ub['navn'])} på {netlabel(ub)}
-  {"— samme net, så dækningen er identisk" if ua["netvaerk"] == ub["netvaerk"] else "— to forskellige net, og det er den forskel, der betyder mest, hvis du bor uden for en større by"}.</p>
+  <p><strong>Kort svar:</strong> {e(_vs_dom(ua, ub, pa, pb))}</p>
   </div>
 
   <h2>{e(ua['navn'])} mod {e(ub['navn'])} på tal</h2>
@@ -4571,7 +4749,7 @@ def byg_vs(slug_a, slug_b):
     Det er der, de to ofte adskiller sig mest.</li>
   </ol>
 
-  <p>Se hele markedet på <a href="/billigste-mobilabonnement/">billigste mobilabonnement</a>,
+  <p>Se alle abonnementer på <a href="/billigste-mobilabonnement/">billigste mobilabonnement</a>,
   eller <a href="/sammenlign/">sammenlign to andre udbydere</a>.</p>
 </section>
 
@@ -4579,8 +4757,8 @@ def byg_vs(slug_a, slug_b):
 """
     return skriv(sti, shell(
         sti=sti, titel=f"{ua['navn']} vs {ub['navn']} — hvem er billigst?",
-        beskrivelse=(f"{ua['navn']} eller {ub['navn']}? Se priser, netværk, EU-data og "
-                     "vilkår side om side, og find ud af hvem der passer til dit forbrug."),
+        beskrivelse=(f"{ua['navn']} eller {ub['navn']}? {billigst_u['navn']} er billigst over det første år "
+                     f"fra {kr(round(min(gns12(fa), gns12(fb))))} kr./md. Se priser, netværk, EU-data og vilkår side om side."),
         opdateret=OPDATERET,
         hero=hero_side("Sammenligning", f"{e(ua['navn'])} vs {e(ub['navn'])}",
                        f"To udbydere sammenlignet på pris, netværk og vilkår. "
@@ -4590,7 +4768,8 @@ def byg_vs(slug_a, slug_b):
                         ("Planer", str(len(pa) + len(pb)))]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
-                     artikelld(sti, f"{ua['navn']} vs {ub['navn']}", ""))],
+                     artikelld(sti, f"{ua['navn']} vs {ub['navn']}",
+                               f"{ua['navn']} og {ub['navn']} sammenlignet på pris, netværk og vilkår."))],
     ), prioritet="0.75")
 
 
@@ -4627,7 +4806,7 @@ def byg_vs_oversigt():
                    f'<td>{netlabel(u)}</td>'
                    f'<td>{kr(gns12(bu))} kr.</td>'
                    f'<td>{gb_tekst(max(a["data_gb"] for a in planer))}</td>'
-                   f'<td>{maks_eu} GB</td>'
+                   f'<td>{"Fri" if maks_eu >= 9999 else (str(maks_eu) + " GB" if maks_eu else "Ingen")}</td>'
                    f'<td class="{"ja" if har_fri else "nej"}">{"Ja" if har_fri else "Nej"}</td>'
                    f'<td class="{"ja" if har_stream else "nej"}">{"Ja" if har_stream else "Nej"}</td></tr>')
 
@@ -4714,7 +4893,7 @@ def byg_vs_oversigt():
   {laesvidere([
       ("/udbydere/", "Alle udbydere gennemgået enkeltvis"),
       ("/netvaerk/", "De tre danske mobilnet"),
-      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — alle abonnementer i sammenligningen"),
       ("/12-maaneders-prisen/", "Sådan beregner vi den reelle pris"),
   ])}
   {forfatterboks()}{afsloering()}
@@ -4747,7 +4926,7 @@ def landetabel():
         raekker += (f'<tr data-land="{e(l["navn"].lower())}" data-kode="{l["kode"]}"'
                     f' data-region="{e(l["region"])}"{risiko}>'
                     f'<td><span class="flag">{l["flag"]}</span> {e(l["navn"])}</td>'
-                    f'<td class="kode">+{l["kode"]}</td>'
+                    f'<td class="kode">+{(l["kode"][0] + " " + l["kode"][1:]) if len(l["kode"]) == 4 and l["kode"].startswith("1") else l["kode"]}</td>'
                     f'<td class="kode">{e(l["iso"])}</td>'
                     f'<td>{e(l["region"])}</td><td>{merkat}</td></tr>')
     return raekker
@@ -5071,7 +5250,7 @@ def byg_daekningstjek():
                "dem. Et discountselskab på TDC NET har præcis samme dækning som et premiumselskab på "
                "samme net."},
         {"sp": "Hvilket net har bedst dækning i Danmark?",
-         "sv": "TDC NET er det mest udbyggede og står typisk stærkest i landdistrikter, "
+         "sv": "TDC NET har klaret sig bedst i Teknologisk Instituts målinger (bestilt af TDC NET) og står typisk stærkest i landdistrikter, "
                "sommerhusområder og indendørs. I byerne er forskellen mellem de tre lille."},
         {"sp": "Hvad gør jeg, hvis dækningen er dårlig indendørs?",
          "sv": "Slå wi-fi-opkald til i telefonens indstillinger. Så føres opkald over dit hjemmenet i "
@@ -5150,7 +5329,7 @@ def byg_daekningstjek():
   {laesvidere([
       ("/netvaerk/", "De tre danske mobilnet sammenlignet"),
       ("/guides/daekning-og-netvaerk/", "Guide til dækning og netværk"),
-      ("/speedtest/", "Test din mobilhastighed"),
+      ("/speedtest/", "Test din internethastighed"),
       ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
   ])}
   {forfatterboks()}{afsloering()}
@@ -5166,9 +5345,7 @@ def byg_daekningstjek():
                        "rigtige dækningskort — og hvad du skal kigge efter.",
                        "", [("Net i Danmark", "3"), ("Tjek", "3 steder"), ("Wi-fi-opkald", "gratis")]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
-        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
-                     howtold(sti, "Tjek mobildækningen på din adresse",
-                             "Sådan tjekker du dækningen rigtigt", krop))],
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
     ), prioritet="0.7")
 
 
@@ -5176,44 +5353,74 @@ def byg_speedtest():
     sti = "/speedtest/"
     krumme = [("/", "Forside"), (None, "Hastighedstest")]
     faq = [
-        {"sp": "Hvor hurtig bør min mobilforbindelse være?",
-         "sv": "Til streaming i HD rækker 5-10 Mbit. Til videomøder 3-5 Mbit. Til almindelig browsing "
-               "og sociale medier er 2 Mbit nok. Over 50 Mbit mærker de fleste ikke forskel i "
-               "hverdagsbrug."},
-        {"sp": "Hvorfor er min hastighed lavere end lovet?",
-         "sv": "Udbydernes hastigheder er teoretiske maksimum. Den reelle hastighed afhænger af "
-               "afstand til masten, hvor mange der er på nettet samtidig, bygningens mure og din "
-               "telefons modem."},
-        {"sp": "Måler denne test min faktiske forbindelse?",
-         "sv": "Den måler hastigheden mellem din enhed og vores server. Det giver et brugbart "
-               "fingerpeg, men er ikke en laboratoriemåling. Kør den flere gange og på forskellige "
-               "tidspunkter for et retvisende billede."},
+        {"sp": "Hvor præcis er testen?",
+         "sv": "Den måler med fire parallelle forbindelser mellem din enhed og vores server og ser "
+               "bort fra det første sekund, så en hurtig fiberforbindelse ikke bliver målt for lavt. "
+               "Det er et godt fingerpeg, men ikke en certificeret måling. Mål med kabel direkte i "
+               "routeren og flere gange på forskellige tidspunkter for et retvisende billede."},
+        {"sp": "Hvorfor er min hastighed lavere end den, jeg betaler for?",
+         "sv": "Den hyppigste grund er wifi: test med kabel i routeren først. Derudover deles coax "
+               "og 5G med naboerne, så hastigheden kan falde om aftenen. Får du gentagne gange under "
+               "det lovede med kabel, så klag skriftligt til selskabet."},
+        {"sp": "Hvad er en god svartid (ping)?",
+         "sv": "Under 20 millisekunder er meget godt, 20-40 er godt. Fiber ligger typisk på 2-10 ms, "
+               "coax på 10-20 og 5G på 10-40. Svartiden betyder mest for online spil og videomøder."},
         {"sp": "Bruger testen af min datamængde?",
-         "sv": "Ja, hver test henter cirka 0,9 MB. Kører du ti tests, bruger du under 10 MB. Det er "
-               "forsvindende lidt, men værd at vide på et lille abonnement."},
-        {"sp": "Hvad gør jeg, hvis hastigheden er for lav?",
-         "sv": "Tjek om du har brugt din datamængde op — mange udbydere sætter hastigheden ned frem "
-               "for at stoppe forbindelsen. Genstart telefonen, og test igen et andet sted for at "
-               "udelukke, at det er dækningen netop der."},
+         "sv": "Ja. En fuld test henter op til 120 MB og sender op til 50 MB. Tester du på mobilen, så "
+               "sæt flueben i Spar data — så bruger testen højst cirka 20 MB."},
+        {"sp": "Hvilken hastighed har jeg brug for?",
+         "sv": "100 Mbit/s til en eller to personer, 300–500 Mbit/s til en familie med flere skærme. "
+               "Netflix anbefaler 15 Mbit/s til 4K. Se hele regnestykket i guiden om god internethastighed."},
     ]
+
+    sammenlign = ""
+    if BB:
+        trin = []
+        for navn, lo, hi in HASTIGHEDSTRIN:
+            k = [a for a in BB if lo <= a["ned"] <= hi]
+            if k:
+                b_ = min(k, key=bb_aarspris)
+                trin.append((navn, len(k), b_))
+        if trin:
+            rk = "".join(
+                f'<tr><td><strong>{e(n)}</strong></td><td class="tal">{antal}</td>'
+                f'<td>{e(b_["udbyder_navn"])} {e(TEK_NAVN.get(b_["teknologi"], b_["teknologi"]))}</td>'
+                f'<td class="tal"><strong>{kr(_ip_aar(b_))} kr.</strong></td></tr>'
+                for n, antal, b_ in trin)
+            sammenlign = f"""<h2 id="pris-pr-hastighed">Hvad koster hastigheden?</h2>
+  <p>Måler du langt under det, du betaler for — eller betaler du for mere, end du bruger? Her er
+  det billigste internet på hvert hastighedstrin i vores sammenligning, målt på snitprisen det
+  første år. Se alle tilbud på <a href="/internet-priser/">internet priser</a>, eller tjek hvad
+  der kan leveres på <a href="/bredbaand/adressetjek/">din adresse</a>.</p>
+  <div class="tabelramme"><table class="datatabel">
+  <caption>Billigste internet pr. hastighedstrin, snit pr. måned det første år inkl. oprettelse.</caption>
+  <thead><tr><th scope="col">Hastighed</th><th scope="col">Tilbud</th><th scope="col">Billigste</th>
+  <th scope="col">Fra</th></tr></thead><tbody>{{rk}}</tbody></table></div>""".replace("{rk}", rk)
 
     krop = f"""
 <section class="sektion baand">
   <div class="vaerktoej">
     <div class="vt-hoved">
-      <h2>Test din hastighed</h2>
-      <p class="led">Måler downloadhastigheden mellem din enhed og vores server. Testen
-      henter cirka 0,9 MB.</p>
+      <h2>Mål din internethastighed</h2>
+      <p class="led">Måler download, upload og svartid mellem din enhed og vores server med
+      fire parallelle forbindelser. Virker på fiber, kabel, 5G og mobilen.</p>
     </div>
     <div class="speedtest">
+      <label class="ip-tjek"><input type="checkbox" data-st-let> Spar data (mobil): højst ca. 20 MB</label>
       <button type="button" class="knap knap-primaer" data-speedtest>Start test</button>
-      <div class="st-resultat" data-st-resultat hidden>
-        <div class="st-tal"><b data-st-mbit>—</b><span>Mbit/s</span></div>
+      <div class="st-resultat" data-st-resultat hidden aria-live="polite">
+        <div class="st-tre">
+          <div class="st-tal"><b data-st-ned>—</b><span>Mbit/s ned</span></div>
+          <div class="st-tal"><b data-st-op>—</b><span>Mbit/s op</span></div>
+          <div class="st-tal"><b data-st-ping>—</b><span>ms svartid</span></div>
+        </div>
+        <p class="st-status" data-st-status></p>
         <div class="st-vurdering" data-st-vurdering></div>
       </div>
     </div>
-    <p class="vt-note">Resultatet er et fingerpeg, ikke en laboratoriemåling. Din reelle
-    hastighed afhænger af afstand til masten, belastning på nettet og din telefon.</p>
+    <p class="vt-note">Mål med kabel direkte i routeren for at teste selve forbindelsen. Over wifi
+    måler du også wifi'en, som ofte er flaskehalsen. Resultatet er et fingerpeg, ikke en
+    certificeret måling.</p>
   </div>
 </section>
 
@@ -5221,87 +5428,78 @@ def byg_speedtest():
   {gennemgangslinje(OPDATERET, "Testen kører i din egen browser")}
 
   <div class="udtag">
-  <p><strong>Kort svar:</strong> De fleste har brug for langt mindre hastighed, end de tror.
-  5-10 Mbit rækker til video i HD, og 2 Mbit til almindelig browsing. Er din måling under
-  1 Mbit, er du sandsynligvis løbet tør for data — mange udbydere sætter hastigheden ned i
-  stedet for at stoppe forbindelsen helt.</p>
+  <p><strong>Kort svar:</strong> Testen viser din download, upload og svartid på cirka 15
+  sekunder. 100 Mbit/s rækker til en eller to personer, 300–500 Mbit/s til en familie. Ligger du
+  markant under det, du betaler for, så test igen med kabel i routeren, før du klager eller
+  skifter.</p>
   </div>
 
-  <h2>Hvad skal du bruge hastigheden til?</h2>
+  <h2>Sådan læser du resultatet</h2>
   <table>
-  <thead><tr><th>Aktivitet</th><th>Nødvendig hastighed</th><th>Bemærkning</th></tr></thead>
+  <thead><tr><th>Måling</th><th>Godt</th><th>Det betyder</th></tr></thead>
   <tbody>
-  <tr><td>Beskeder og sociale medier</td><td>1–2 Mbit</td><td>Næsten altid nok</td></tr>
-  <tr><td>Musikstreaming</td><td>1–2 Mbit</td><td>Selv i høj kvalitet</td></tr>
-  <tr><td>Video i standardkvalitet</td><td>3–5 Mbit</td><td>Dækker de fleste</td></tr>
-  <tr><td>Video i HD</td><td>5–10 Mbit</td><td>Her stopper behovet for de fleste</td></tr>
-  <tr><td>Videomøder</td><td>3–5 Mbit begge veje</td><td>Upload betyder lige så meget</td></tr>
-  <tr><td>Hotspot til laptop</td><td>10–25 Mbit</td><td>Afhænger af hvad laptoppen laver</td></tr>
+  <tr><td>Download</td><td>100+ Mbit/s</td><td>Streaming, downloads og websider</td></tr>
+  <tr><td>Upload</td><td>20+ Mbit/s</td><td>Videomøder, backup og at sende store filer</td></tr>
+  <tr><td>Svartid (ping)</td><td>Under 20 ms</td><td>Online spil og videomøder uden forsinkelse</td></tr>
   </tbody>
   </table>
-  <p>Læg mærke til, hvor lavt tallene ligger. Et abonnement, der reklamerer med flere
-  hundrede megabit, giver dig ikke en bedre oplevelse end et på 25 Mbit, hvis du bruger
-  telefonen som de fleste. Hastighed er sjældent det, du skal betale ekstra for —
-  <a href="/daekningskort/">dækning er</a>.</p>
+  <p>Fiber giver typisk samme hastighed begge veje og den laveste svartid. Kabel-internet (coax)
+  har høj download men lavere upload. 5G svinger med dækningen og belastningen på masten. Se
+  forskellen i <a href="/guides/5g-internet-eller-fiber/">5G internet eller fiber</a>.</p>
 
-  <h2>Hvorfor svinger hastigheden?</h2>
-  <ul>
-    <li><strong>Afstand til masten.</strong> Den enkeltfaktor der betyder mest.</li>
-    <li><strong>Belastning.</strong> Myldretid, koncerter og stationer deler kapaciteten
-    mellem mange brugere samtidig.</li>
-    <li><strong>Bygningen.</strong> Tykke mure, kældre og elevatorer dæmper signalet
-    kraftigt.</li>
-    <li><strong>Opbrugt data.</strong> Flere udbydere skruer ned frem for at stoppe. Er du
-    pludselig meget langsom sidst på måneden, er det typisk forklaringen.</li>
-    <li><strong>MVNO-vilkår.</strong> Nogle aftaler indeholder hastighedsloft eller lavere
-    prioritet i myldretiden. Det står i abonnementsvilkårene.</li>
-  </ul>
+  {sammenlign}
 
   <h2>Sådan tester du rigtigt</h2>
   <ol class="trin">
-    <li><strong>Slå wi-fi fra</strong>
-    Ellers måler du dit hjemmenet i stedet for mobilforbindelsen.</li>
+    <li><strong>Brug kabel, hvis du kan</strong>
+    Sæt computeren direkte i routeren. Så måler du forbindelsen og ikke wifi'en.</li>
+    <li><strong>Luk andre ting ned</strong>
+    Streaming og opdateringer på andre enheder trækker fra resultatet.</li>
     <li><strong>Test flere gange</strong>
-    En enkelt måling siger ikke meget. Tag gennemsnittet af tre.</li>
-    <li><strong>Test på forskellige tidspunkter</strong>
-    Klokken 8 og klokken 20 kan give vidt forskellige resultater på samme sted.</li>
-    <li><strong>Test hvor du faktisk er</strong>
-    Hjemme, på arbejdet og på pendlerruten — ikke kun ét sted.</li>
+    Klokken 8 og klokken 20 kan give vidt forskellige resultater, især på coax og 5G.</li>
+    <li><strong>Test mobilen uden wifi</strong>
+    Vil du måle mobilforbindelsen, så slå wifi fra og sæt flueben i Spar data.</li>
   </ol>
+
+  <h2>Er det wifi eller forbindelsen?</h2>
+  <p>Er hastigheden god ved routeren men dårlig i andre rum, er det wifi og ikke abonnementet.
+  Så hjælper en ny router eller mesh mere end et dyrere abonnement — se
+  <a href="/guides/internetforstaerker/">internetforstærker, mesh eller ny router</a>. Er den
+  dårlig overalt, så se <a href="/guides/langsomt-internet/">derfor er dit internet langsomt</a>.</p>
 </section>
 
 <section class="sektion baand-smal">
   {laesvidere([
-      ("/daekningskort/", "Tjek dækningen på din adresse"),
-      ("/netvaerk/", "De tre danske mobilnet"),
-      ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?"),
-      ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
+      ("/guides/god-internethastighed/", "Hvad er en god internethastighed?"),
+      ("/internet-priser/", "Internet priser — alle tilbud"),
+      ("/bredbaand/adressetjek/", "Tjek hvad der kan leveres på din adresse"),
+      ("/daekningskort/", "Mobildækning på din adresse"),
   ])}
   {forfatterboks()}{afsloering()}
 </section>
 """
     return skriv(sti, shell(
-        sti=sti, titel="Hastighedstest — mål din mobilforbindelse",
-        beskrivelse=("Test hvor hurtig din mobilforbindelse er, og se hvad du reelt har brug "
-                     "for. De fleste har brug for langt mindre hastighed, end de tror."),
+        sti=sti, titel="Hastighedstest — test din internethastighed (download, upload, ping)",
+        beskrivelse=("Gratis internet speedtest: mål download, upload og ping på fiber, kabel, 5G og "
+                     "mobil på 15 sekunder, og se hvad hastigheden koster."),
         opdateret=OPDATERET,
-        hero=hero_side("Værktøj", "Test din mobilhastighed",
-                       "Mål downloadhastigheden på få sekunder, og se hvad tallet betyder "
-                       "for det, du faktisk bruger telefonen til.",
-                       "", [("Test", "0,9 MB"), ("HD-video", "5–10 Mbit"), ("Browsing", "2 Mbit")]),
-        efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
+        hero=hero_side("Værktøj", "Hastighedstest",
+                       "Test din internethastighed — download, upload og svartid — og se, om du "
+                       "får det, du betaler for.",
+                       "", [("Måler", "ned, op, ping"), ("Tid", "ca. 15 sek."), ("Pris", "gratis")]),
+        efter_hero="", krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      vaerktoejld(sti, "Hastighedstest",
-                                 "Mål downloadhastigheden på din mobilforbindelse."))],
-    ), prioritet="0.7")
+                                 "Mål download, upload og svartid på din internetforbindelse."))],
+    ), prioritet="0.8")
 
 
 # --------------------------------------------------------------- UDBYDERE
 
 def byg_udbyderoversigt():
     sti = "/udbydere/"
-    titel = med_maaned(f"Mobilselskaber i Danmark — {D['antal_udbydere']} udbydere sammenlignet")
-    besk = ("Gennemgang af alle danske mobilselskaber. Se netværk, priser, "
+    titel = med_maaned(f"Mobilselskaber i Danmark — {D['antal_gennemgaaet']} udbydere gennemgået")
+    besk = (f"Gennemgang af {D['antal_gennemgaaet']} danske mobilselskaber. Se netværk, priser, "
             "ejerforhold og hvem der passer til hvad — med fordele og ulemper.")
     krumme = [("/", "Forside"), (None, "Udbydere")]
 
@@ -5311,8 +5509,9 @@ def byg_udbyderoversigt():
 
     faq = [
         {"sp": "Hvor mange mobilselskaber er der i Danmark?",
-         "sv": f"Vi følger {D['antal_udbydere']} selskaber med i alt {D['antal']} abonnementer. "
-               "Der findes flere på markedet, men de fleste er små eller retter sig mod erhverv."},
+         "sv": f"Vi har gennemgået {D['antal_gennemgaaet']} selskaber, og {D['antal_udbydere']} af dem har "
+               f"i alt {D['antal']} abonnementer med pris i vores sammenligning. Der findes flere på markedet, "
+               "blandt andre 3, Telenor og Norlys, som vi ikke har mobilpriser fra."},
         {"sp": "Hvilket mobilselskab er billigst?",
          "sv": f"{UMAP[billigste_u['udbyder']]['navn']} har det billigste abonnement i vores "
                f"sammenligning til {kr(gns12(billigste_u))} kr. om måneden regnet over 12 måneder. "
@@ -5332,15 +5531,16 @@ def byg_udbyderoversigt():
          "sv": f"Blandt dem vi følger, har flere selskaber 5-7 abonnementer. Et stort udvalg er "
                "ikke i sig selv en fordel — en kort prisliste gør ofte beslutningen nemmere."},
         {"sp": "Anbefaler I selskaber, I tjener penge på?",
-         "sv": "Vi medtager også udbydere, vi ikke har en provisionsaftale med, og alle tabeller "
-               "sorteres efter pris. Udbydere kan ikke købe sig til en placering eller en bedre omtale."},
+         "sv": "Vi gennemgår også selskaber, vi ikke har en provisionsaftale med, men priserne i "
+               "tabellerne kommer kun fra selskaber med en aftale via Adtraction. Rækkefølgen i "
+               "tabellerne afgøres af metoden over hver tabel og aldrig af provision."},
     ]
 
     krop = f"""
 <section class="sektion baand">
   <div class="sektion-hoved afslør">
     <span class="etiket">Oversigt</span>
-    <h2>Alle {D['antal_udbydere']} udbydere i vores sammenligning</h2>
+    <h2>{D['antal_gennemgaaet']} udbydere gennemgået</h2>
     <p class="led">Klik videre for priser, netværk, fordele og de ulemper, selskaberne selv
     undlader at nævne.</p>
   </div>
@@ -5351,9 +5551,10 @@ def byg_udbyderoversigt():
   {gennemgangslinje(OPDATERET)}
 
   <div class="udtag">
-  <p><strong>Kort svar:</strong> Vi følger {D['antal_udbydere']} danske mobilselskaber med
-  {D['antal']} abonnementer mellem {kr(gns12(billigste_u))} og {kr(gns12(dyreste_u))} kr. om
-  måneden. Alle lejer sig ind på et af landets tre mobilnet — TDC NET, Telenor eller 3 — så
+  <p><strong>Kort svar:</strong> Vi har gennemgået {D['antal_gennemgaaet']} danske mobilselskaber.
+  {("Alle " + str(D['antal_udbydere'])) if D['antal_udbydere'] == D['antal_gennemgaaet'] else (str(D['antal_udbydere']) + " af dem")} har tilsammen {D['antal']} abonnementer med pris i vores sammenligning, mellem
+  {kr(gns12(billigste_u))} og {kr(gns12(dyreste_u))} kr. om måneden i snit det første år. Alle
+  kører på et af landets tre mobilnet — TDC NET, TN-Network (Telenor/Norlys) eller 3 — så
   valget af selskab er reelt to beslutninger: hvilket net du vil køre på, og hvem du vil
   være kunde hos.</p>
   </div>
@@ -5364,8 +5565,8 @@ def byg_udbyderoversigt():
   <p>Det er den vigtigste indsigt om det danske marked, og den er værd at gentage: et
   abonnement til {kr(gns12(billigste_u))} kr. og et til {kr(gns12(dyreste_u))} kr. kan køre
   på præcis de samme master med præcis den samme hastighed. Din telefon kan ikke se forskel.</p>
-  <p>Det, du betaler ekstra for i den dyre ende, er fire ting: adgang til det mest udbyggede
-  net, bemandet kundeservice og butikker, tillægsydelser som streaming eller forsikring, og
+  <p>Det, du betaler ekstra for i den dyre ende, er fire ting: adgang til TDC NET, som har klaret
+  sig bedst i målingerne, bemandet kundeservice og butikker, tillægsydelser som streaming eller forsikring, og
   i nogle tilfælde en højere prioritering af din trafik, når nettet er belastet.</p>
   <p>Spørgsmålet er derfor aldrig, om et billigt selskab er "dårligt". Det er, om du får
   glæde af det, du betaler ekstra for.</p>
@@ -5409,7 +5610,7 @@ def byg_udbyderoversigt():
   {vejviser("/udbydere/")}
 
   {kilder(["teleindustrien", "digst_klage", "teleankenaevnet"],
-          ["Priser og vilkår: udbydernes egne offentlige prislister, kontrolleret manuelt.",
+          ["Priser: selskabernes produktfeeds via Adtraction, hentet to gange i døgnet. Vilkår: selskabernes egne sider.",
            "Ejerforhold: selskabernes egne oplysninger.",
            "Netværksangivelser: udbydernes egne oplysninger. Hvor de ikke kan verificeres, "
            "angiver vi MVNO frem for at gætte."])}
@@ -5419,7 +5620,7 @@ def byg_udbyderoversigt():
   {laesvidere([
       ("/netvaerk/", "De tre danske mobilnet sammenlignet"),
       ("/sammenlign/", "Stil to udbydere direkte op mod hinanden"),
-      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — alle abonnementer i sammenligningen"),
       ("/bedste-mobilabonnement/", "Bedste mobilabonnement — vores kriterier"),
   ])}
   {forfatterboks()}{afsloering()}
@@ -5427,11 +5628,12 @@ def byg_udbyderoversigt():
 """
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk,
-        hero=hero_side("Udbydere", f"Alle {D['antal_udbydere']} danske mobilselskaber",
+        hero=hero_side("Udbydere", f"{D['antal_gennemgaaet']} danske mobilselskaber gennemgået",
                        "Vi gennemgår hvert selskab for sig — netværk, priser, ejerforhold og "
                        "de ulemper, de selv undlader at nævne.",
                        '<a href="#indhold" class="knap knap-primaer">Se oversigten</a>',
-                       [("Selskaber", str(D['antal_udbydere'])), ("Abonnementer", str(D['antal'])),
+                       [("Gennemgået", str(D['antal_gennemgaaet'])), ("Med priser", str(D['antal_udbydere'])),
+                        ("Abonnementer", str(D['antal'])),
                         ("Net i DK", "3")]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
@@ -5486,11 +5688,12 @@ def byg_udbyder(u):
     sti = f"/udbydere/{u['slug']}/"
     egne = [a for a in ABON if a["udbyder"] == u["slug"]]
     fra = min(a["pris"] for a in egne) if egne else None
-    titel = (f"{u['navn']} mobilabonnement — priser fra {fra} kr./md. {IDAG.year}" if fra
+    titel = (med_maaned(f"{u['navn']} mobilabonnement — fra {fra} kr./md.") if fra
              else f"{u['navn']} mobilabonnement — priser, netværk og anmeldelse")
+    _net = {"TDC NET": "TDC NET", "TN-Network": "TN-Network (Telenor/Norlys)", "3": "3's net"}
     netbesk = (f"{u['navn']} lejer sig ind på et af de danske netværk. "
-               if u["netvaerk"] == "MVNO"
-               else f"{u['navn']} kører på {u['netvaerk']}s netværk. ")
+               if u["netvaerk"] in ("MVNO", "", "Se udbyder")
+               else f"{u['navn']} kører på {_net.get(u['netvaerk'], u['netvaerk'])}. ")
     besk = (netbesk
             + (f"Abonnementer fra {fra} kr./md. " if fra else "")
             + f"Se priser, fordele, ulemper og hvem {u['navn']} passer til.")
@@ -5529,9 +5732,9 @@ def byg_udbyder(u):
 
     tabel = ""
     if egne:
-        tabel = pristabel(sorted(egne, key=lambda a: a["pris"]), UMAP,
-                          titel=f"{u['navn']}s abonnementer og priser",
-                          undertitel=f"Alle {u['navn']}-abonnementer vi følger, sorteret efter pris.",
+        tabel = pristabel(egne, UMAP,
+                          titel=f"{_gen(u['navn'])} abonnementer og priser",
+                          undertitel=f"Alle {u['navn']}-abonnementer i vores sammenligning, sorteret efter snitpris det første år.",
                           filtre=False, billigst_id=min(egne, key=lambda a: a['pris'])['id'])
 
     uq = UNIK.get(u["slug"], {})
@@ -5543,7 +5746,7 @@ def byg_udbyder(u):
 {tabel}
 
 <section class="sektion baand-smal artikel">
-  {gennemgangslinje(OPDATERET, f"Vilkår gennemgået på {u['navn']}s egen hjemmeside")}
+  {gennemgangslinje(OPDATERET, f"Vilkår fra {_gen(u['navn'])} egen hjemmeside")}
 
   {udbyder_faktaboks(u, egne)}
 
@@ -5587,7 +5790,7 @@ def byg_udbyder(u):
     <thead><tr><th>Abonnement</th><th>Data</th><th>Netværk</th><th>Pris/md.</th></tr></thead>
     <tbody>{sammenlign}</tbody>
   </table>
-  <p>Se hele markedet i vores <a href="/billigste-mobilabonnement/">sammenligning af
+  <p>Se alle abonnementer i vores <a href="/billigste-mobilabonnement/">sammenligning af
   billigste mobilabonnement</a>.</p>
   {vs_links(u)}
   {f'<p>Se også <a href="/kampagner/{u["slug"]}/">{e(u["navn"])}s aktuelle kampagner</a> regnet om til pris over 12 måneder.</p>' if u["slug"] in KAMPAGNE_UDBYDERE else ""}
@@ -5628,7 +5831,7 @@ def byg_udbyder(u):
 
 <section class="sektion baand-smal">
   {laesvidere([
-      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+      ("/billigste-mobilabonnement/", "Billigste mobilabonnement — alle abonnementer i sammenligningen"),
       ("/bedste-mobilabonnement/", "Bedste mobilabonnement — vores kriterier"),
       ("/udbydere/", f"Sammenlign {u['navn']} med de andre udbydere"),
       ("/guides/daekning-og-netvaerk/", "Hvilket netværk skal du vælge?"),
@@ -5763,39 +5966,38 @@ def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
                        billede=guidebillede(billede, altbillede or h1, prioritet=True) if billede else None),
         efter_hero="", krumme=krumme, indhold=krop + faqblok(faq), og_billede=og,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
-                     artikelld(sti, titel, besk, billede=og),
-                     howtold(sti, h1, besk, brodtekst))],
+                     artikelld(sti, titel, besk, billede=og))],
     ), prioritet="0.7")
 
 
 GUIDER = [
     ("/guides/god-internethastighed/", "Hvad er en god internethastighed?",
      "100, 500 eller 1000 Mbit? Se hvad jeres husstand faktisk har brug for.",
-     "god-internethastighed", "Familie streamer på flere skærme", "Internet", 6),
+     "god-internethastighed", "Familie i stuen bruger tv, tablets og computer på samme internet", "Internet", 6),
     ("/guides/5g-internet-eller-fiber/", "5G internet eller fiber?",
      "Forskellen på hastighed, stabilitet, upload og pris side om side.",
-     "5g-internet-eller-fiber", "5G-router og fiberboks", "Internet", 6),
+     "5g-internet-eller-fiber", "Par i en stue med fiberboks på væggen og 5G-router på sofabordet", "Internet", 6),
     ("/guides/internetforstaerker/", "Internetforstærker: extender, mesh eller ny router?",
      "Test først, om det er wifi eller forbindelsen. Så vælger du rigtigt.",
-     "internetforstaerker", "Mesh-enhed på en reol", "Wifi", 6),
+     "internetforstaerker", "Kvinde i lænestol sætter en mesh-enhed op med mobilen", "Wifi", 6),
     ("/guides/internet-i-sommerhus/", "Internet i sommerhus og campingvogn",
      "5G, hotspot eller fiber — og hvem der lader dig tage routeren med.",
-     "internet-i-sommerhus", "Sommerhus med 5G-router", "Internet", 6),
+     "internet-i-sommerhus", "Par i et sommerhus med router på bordet og campingvogn uden for vinduet", "Internet", 6),
     ("/guides/opsig-internet/", "Opsig internet hos Norlys, YouSee og Telenor",
      "Varsel, binding, router retur — og når det nye selskab opsiger for dig.",
-     "opsig-internet", "Router pakkes til returnering", "Rettigheder", 6),
+     "opsig-internet", "Mand ved et bord overvejer at opsige sit internet", "Rettigheder", 6),
     ("/guides/dataforbrug-husstand/", "Hvor meget data bruger en husstand?",
      "524,8 GB om måneden i gennemsnit. Er 1000 GB nok til jer?",
-     "dataforbrug-husstand", "Familie ser film i sofaen", "Data", 5),
+     "dataforbrug-husstand", "Kvinde streamer på bærbar computer i sofaen med routeren i vindueskarmen", "Data", 5),
     ("/guides/coax-internet/", "Hvad er coax internet?",
      "Kabel-internet gennem antennestikket: hastighed, upload og pris.",
-     "coax-internet", "Antennestik med kabelmodem", "Internet", 5),
+     "coax-internet", "Kvinde arbejder ved spisebordet med kabel fra et kabelmodem i antennestikket", "Internet", 5),
     ("/guides/internet-uden-binding/", "Internet uden binding",
      "Billigste tilbud uden binding, reglerne og hvornår binding betaler sig.",
-     "internet-uden-binding", "Router pakkes i flyttekasse", "Internet", 5),
+     "internet-uden-binding", "Par ved køkkenbordet sammenligner internet uden binding på computer og mobil", "Internet", 5),
     ("/guides/del-internet-fra-mobil/", "Del internet fra mobil til computer",
      "Hotspot på iPhone og Android trin for trin — og hvornår en router er bedre.",
-     "del-internet-fra-mobil", "Bærbar forbundet til mobil-hotspot", "Hotspot", 5),
+     "del-internet-fra-mobil", "Kvinde på café med bærbar computer forbundet til mobilen med kabel", "Hotspot", 5),
     ("/guides/fri-data-eller-100-gb/", "Fri data eller 100 GB?",
      "Se prisforskellen i kroner, og hvornår ubegrænset data er pengene værd.",
      "fri-data-eller-100-gb", "Kvinde på bænk ved kanalen bruger sin mobil", "Data", 6),
@@ -5815,7 +6017,7 @@ GUIDER = [
      "Trin for trin — og de fem ting der oftest går galt undervejs.",
      "skift-mobilselskab", "Kvinde skifter mobilselskab på laptop", "Guide", 5),
     ("/guides/daekning-og-netvaerk/", "Dækning og netværk i Danmark",
-     "TDC NET, Telenor og 3 — hvem er stærkest hvor, og hvornår betyder det noget.",
+     "TDC NET, TN-Network (Telenor/Norlys) og 3 — hvem er stærkest hvor, og hvornår betyder det noget.",
      "daekning-og-netvaerk", "Kvinde med 5G-dækning ved dansk kystby", "Guide", 7),
     ("/guides/esim/", "eSIM forklaret",
      "Hvad et eSIM er, hvornår det er en fordel, og hvordan du kommer i gang.",
@@ -5836,7 +6038,7 @@ GUIDER = [
      "Skifter du selskab, skal du ikke opsige selv — så mister du nummeret. Se den rigtige vej.",
      "skift-mobilselskab", "Person opsiger sit mobilabonnement", "Rettigheder", 6),
     ("/hvad-koster-et-mobilabonnement/", "Hvad koster et mobilabonnement?",
-     "Vi har regnet på alle abonnementer i markedet. Gennemsnit, median og hvad du bør betale.",
+     "Vi har regnet på alle abonnementer i vores sammenligning. Gennemsnit, median og hvad du bør betale.",
      "hvad-koster", "Kvinde regner på sin mobilregning", "Analyse", 9),
     ("/guides/mobilabonnement-uden-kreditvurdering/", "Mobilabonnement uden kreditvurdering",
      "Taletid kræver ingen kreditvurdering. Se alle veje uden om opslaget.",
@@ -6048,7 +6250,7 @@ def tabel_ping():
     rk = [
         ("Fiber", "2–10 ms", "Fremragende", "Symmetrisk og stabil"),
         ("Kabel-internet (coax)", "10–20 ms", "God", "Kan svinge om aftenen"),
-        ("5G", "20–40 ms", "Brugbar", "Svinger med masten og belastningen"),
+        ("5G", "10–40 ms", "Brugbar", "Svinger med masten og belastningen"),
         ("4G", "35–60 ms", "Mærkbar", "Til turbaserede spil, ikke skydespil"),
         ("Satellit (geostationær)", "500–700 ms", "Uegnet", "Fysisk afstand kan ikke omgås. Lavbane-satellit ligger markant lavere"),
     ]
@@ -6071,11 +6273,11 @@ def tabel_flyttetjek():
         ("6-8 uger før", "Tjek dit opsigelsesvarsel",
          "Typisk en måned. Står i dine abonnementsvilkår."),
         ("6 uger før", "Tjek hvad der kan leveres på den nye adresse",
-         "Fiber findes ikke overalt. Brug selskabets adressetjek."),
+         "Fiber findes ikke overalt. Brug adressetjekket øverst på siden, og bekræft hos selskabet."),
+        ("5-6 uger før", "Opsig den gamle forbindelse",
+         "Senest opsigelsesvarslet plus en uge før flytningen, så du ikke betaler for to."),
         ("4 uger før", "Bestil forbindelsen til den nye adresse",
-         "Kræver installation, kan der gå 2-6 uger. Bestil før du opsiger."),
-        ("3 uger før", "Opsig den gamle forbindelse",
-         "Med den rigtige slutdato, så der ikke er huller."),
+         "Kræver installation, kan der gå 2-6 uger. Vælg opstart på flyttedagen."),
         ("1 uge før", "Bestil eller planlæg teknikerbesøg",
          "Ved fiber og coax skal der ofte en tekniker forbi."),
         ("Flyttedagen", "Tag routeren med — eller lad den blive",
@@ -6290,9 +6492,9 @@ hotspot-løsningen i stedet, dækker vi den i guiden til
   end på fiber. Det mærkes.</li>
   <li><strong>Husstand med flere samtidige streams.</strong> Om aftenen deler du kapacitet
   med alle andre på masten.</li>
-  <li><strong>Højt forbrug med et dataloft.</strong> En husstand, der streamer video om
-  aftenen, bruger 150-300 GB om måneden. Rammer du loftet den 20. i måneden, er der ti
-  dage tilbage uden internet.</li>
+  <li><strong>Højt forbrug med et dataloft.</strong> Et gennemsnitligt fast bredbånd bruger
+  525 GB om måneden. Rammer du loftet før månedens udgang, sættes hastigheden typisk
+  kraftigt ned resten af måneden.</li>
 </ol>
 
 <h2>Er der data nok til jer?</h2>
@@ -6304,12 +6506,7 @@ bruger</a>.</p>
 {tabel_bredbaand_husstand()}
 
 <h2>Hvad koster mobilt bredbånd i Danmark?</h2>
-<p>Priserne ligger typisk mellem 150 og 350 kr. om måneden afhængigt af datamængde og
-hastighed. Dertil kommer routeren, som enten indgår, lejes for 25-50 kr. om måneden eller
-købes for 800-2.000 kr.</p>
-<p>Til sammenligning koster fiberbredbånd typisk 250-450 kr. om måneden. Prisforskellen er
-altså mindre, end mange tror — og den forsvinder helt, hvis du skal have et stort
-dataabonnement for at undgå loftet.</p>
+{_mbb_pris_afsnit()}
 <h3>Regn oprettelsen med</h3>
 <p>Fast bredbånd kan have oprettelse og op til seks måneders binding, som er det længste,
 private må bindes. Mobilt bredbånd har ofte ingen af delene. Bliver du kun boende et år, kan
@@ -6333,11 +6530,9 @@ udkanten af dækningen, og et hus med tykke mure eller lavt til taget kan gøre 
 mærkbar forskel.</p>
 
 <h2>Datamængden er det, der afgør det</h2>
-<p>Det er her, de fleste bliver overrasket. Et mobilt bredbåndsabonnement med 500 GB lyder
-rigeligt, indtil man regner efter: en aften med to streams i HD koster 6 GB, og en
-systemopdatering til en bærbar kan tage 5 GB alene.</p>
-<p>Skal mobilt bredbånd erstatte en fast forbindelse i en husstand, skal det være uden
-loft. Er der et loft, er det en supplerende forbindelse — ikke en erstatning.</p>
+<p>En aften med to streams i HD koster omkring 6 GB, og en systemopdatering til en bærbar kan
+tage 5 GB alene. Skal mobilt bredbånd erstatte en fast forbindelse i en husstand, skal det
+være uden loft. Er der et loft, er det en supplerende forbindelse — ikke en erstatning.</p>
 
 <h2>Tjek dækningen på adressen først</h2>
 <p>Mobilt bredbånd er lige så godt som signalet på netop din adresse. Det nytter ikke at
@@ -6357,7 +6552,7 @@ for dig.</p>
                 "med videomøder, online spil eller flere samtidige streams i myldretiden "
                 "er en fast forbindelse markant bedre."},
          {"sp": "Hvor hurtigt er mobilt bredbånd?",
-          "sv": "Typisk 50-300 Mbit/s ned og 10-50 Mbit/s op på 5G. Hastigheden svinger "
+          "sv": f"Typisk 50-300 Mbit/s ned i praksis, og 5G-tilbuddene i vores sammenligning lover {_5g_op()} op. Hastigheden svinger "
                 "med afstanden til masten og belastningen i området."},
          {"sp": "Skal mobilt bredbånd have dataloft?",
           "sv": "Skal mobilt bredbånd erstatte fast internet, bør det være uden dataloft. Et "
@@ -6643,7 +6838,7 @@ def bb_tabel(udvalg, *, titel):
         raekker += f"""<tr>
   <td class="bb-udbyder">{logohtml}<span class="tabel-under">{e(a['navn'])}</span></td>
   <td class="tal">{e(TEK_NAVN.get(a['teknologi'], a['teknologi']))}</td>
-  <td class="tal">{a['ned']}/{a['op']}<br>
+  <td class="tal">{kr(a['ned'])}/{kr(a['op'])}<br>
       <span class="tabel-under">Mbit/s</span></td>
   <td class="tal">{kr(vist)} kr.<br><span class="tabel-under">{e(under)}</span></td>
   <td class="tal">{kr(bb_mdr_pris(a))} kr.</td>
@@ -6746,7 +6941,7 @@ def bb_tabel_teknologi():
          "Fiber og coax er jævnbyrdige"),
         ("Hastighed op", "300–1000 Mbit/s", "50–100 Mbit/s", "40–200 Mbit/s",
          "Her adskiller fiber sig markant"),
-        ("Svartid", "2–10 ms", "10–20 ms", "20–40 ms",
+        ("Svartid", "2–10 ms", "10–20 ms", "10–40 ms",
          "Mærkes ved spil, ikke ved streaming"),
         ("Stabilitet i myldretid", "Konstant", "Deles i kvarteret", "Deles på masten",
          "Fiber deles på langt færre hænder og er i praksis stabil"),
@@ -6881,7 +7076,7 @@ def bb_raekke(a, *, billigst=False, gnsnit_aar=None):
     flag = f'<span class="pk-flag pk-{flagklasse}">{flagtekst}</span>' if flagtekst else ""
 
     stats = [
-        (f'{a["ned"]}', "Mbit/s ned"),
+        (f'{kr(a["ned"])}', "Mbit/s ned"),
         (f'{a["op"]}', "Mbit/s op"),
         ("Ingen" if not a["binding"] else f'{a["binding"]} mdr.', "binding"),
         (f'{kr(a.get("oprettelse", 0))} kr.', "oprettelse"),
@@ -6916,7 +7111,7 @@ def bb_raekke(a, *, billigst=False, gnsnit_aar=None):
 
     fakta = [
         ("Teknologi", TEK_NAVN.get(a["teknologi"], a["teknologi"])),
-        ("Hastighed ned", f'{a["ned"]} Mbit/s'),
+        ("Hastighed ned", f'{kr(a["ned"])} Mbit/s'),
         ("Hastighed op", f'{a["op"]} Mbit/s'),
         ("Normalpris", f'{kr(a["pris"])} kr./md.'),
         ("Oprettelse", f'{kr(a.get("oprettelse", 0))} kr.'),
@@ -7014,9 +7209,9 @@ BB_VINKEL = {
                     "alle leverer nogenlunde det samme produkt. Det gør oprettelsen og "
                     "tilbudsperiodens længde til de afgørende forskelle — ikke "
                     "hastigheden.",
-        "familie": "Fiber er den eneste teknologi, hvor kapaciteten ikke deles med "
-                   "naboerne. Streamer hele kvarteret klokken 20, mærker du det ikke. "
-                   "Det er den vigtigste grund til at vælge fiber til en familie.",
+        "familie": "Fiber deler kapaciteten med langt færre end coax og 5G, og nettet har "
+                   "typisk masser af luft. Streamer hele kvarteret klokken 20, mærker du det "
+                   "sjældent. Det er en god grund til at vælge fiber til en familie.",
         "binding": "Uden binding kan du skifte, så snart en bedre kampagne dukker op. "
                    "Har et fibertilbud binding, så regn den samlede pris for hele "
                    "bindingsperioden med, før du sammenligner.",
@@ -7033,8 +7228,8 @@ BB_VINKEL = {
         "binding": "5G uden binding er den mest fleksible løsning på markedet: ingen "
                    "installation, ingen binding, og routeren kan flyttes med. Det gør "
                    "det oplagt til lejebolig og sommerhus.",
-        "arbejde": "Uploadhastigheden på 5G er typisk 90-200 Mbit/s — rigeligt til "
-                   "videomøder. Det, du skal holde øje med, er svartiden på 20-40 "
+        "arbejde": "5G-tilbuddene i vores sammenligning lover {op5g} upload — rigeligt til "
+                   "videomøder. Det, du skal holde øje med, er svartiden på 10-40 "
                    "millisekunder og at hastigheden svinger over døgnet.",
     },
     "coax": {
@@ -7067,7 +7262,7 @@ def bb_minitabel(udvalg, *, maks=4):
   <td class="tal">{i}</td>
   <td><strong>{e(a['udbyder_navn'])}</strong><br>
       <span class="tabel-under">{e(a['navn'])}</span></td>
-  <td class="tal">{a['ned']}/{a['op']}<br><span class="tabel-under">Mbit/s</span></td>
+  <td class="tal">{kr(a['ned'])}/{kr(a['op'])}<br><span class="tabel-under">Mbit/s</span></td>
   <td class="tal">{kr(vist)} kr.</td>
   <td class="tal">{kr(round(bb_aarspris(a) / 12))} kr.</td>
   <td><a class="knap knap-primaer knap-lille" href="{a['link']}"
@@ -7103,8 +7298,7 @@ def bb_maalgrupper(udvalg, hvad="bredbånd", tek=None):
 <p>Målt på hele det første år er {e(b['udbyder_navn'])} {e(b['navn'])} billigst til
 {kr(round(bb_aarspris(b) / 12))} kr. om måneden i snit. Flere abonnementer starter
 på samme tilbudspris, men de er ikke lige billige — tilbudsperioden er forskellig, og
-oprettelsen svinger fra {kr(min(a.get("oprettelse", 0) for a in udvalg))} til
-{kr(max(a.get("oprettelse", 0) for a in udvalg))} kr.</p>
+{_opr_saetning([a.get("oprettelse", 0) for a in udvalg])}.</p>
 {bb_minitabel(billigst)}
 <p>{BB_VINKEL.get(tek, {}).get("billigst",
   "Vil du presse prisen yderligere: vælg lavere hastighed, tag et abonnement med "
@@ -7115,7 +7309,7 @@ oprettelsen svinger fra {kr(min(a.get("oprettelse", 0) for a in udvalg))} til
         f = min(familie, key=bb_aarspris)
         ud += f"""
 <h2 id="familie">{e(hvad[0].upper() + hvad[1:])} til familien</h2>
-<p>En husstand med flere skærme bør have mindst 300 Mbit/s. Fire samtidige
+<p>En familie med flere skærme bør have 300–500 Mbit/s. Fire samtidige
 4K-streams kræver omkring 60 Mbit/s, og lægger du et videomøde, en spilopdatering
 og en backup oveni, er du oppe på 200-300. {_antal_ab(len(familie))} lever op til
 det, billigst er {e(f['udbyder_navn'])} til
@@ -7162,8 +7356,8 @@ op, billigst er {e(a2['udbyder_navn'])} til
 {bb_minitabel(arbejde)}
 <p>{BB_VINKEL.get(tek, {}).get("arbejde",
   "Svartiden betyder også noget. Fiber ligger på 2-10 millisekunder, coax på 10-20 "
-  "og 5G på 20-40. Det mærkes ved videomøder som en lille forsinkelse, når to taler "
-  "i munden på hinanden.")}</p>"""
+  "og 5G på 10-40. Det mærkes ved videomøder som en lille forsinkelse, når to taler "
+  "i munden på hinanden.").replace("{op5g}", _5g_op())}</p>"""
 
     return ud
 
@@ -7210,7 +7404,7 @@ def bb_herovisual(udvalg):
     <span class="hv-tek">{e(TEK_NAVN.get(a['teknologi'], a['teknologi']))}</span></div>
   <div class="hv-navnlinje">{e(a['navn'])}</div>
   <div class="hv-bar"><span style="width:{pct}%"></span></div>
-  <div class="hv-fart">{a['ned']}<em>/{a['op']}</em> <span>Mbit/s</span></div>
+  <div class="hv-fart">{kr(a['ned'])}<em>/{kr(a['op'])}</em> <span>Mbit/s</span></div>
   <div class="hv-prisrk">
     <div class="hv-pris"><b>{kr(vist)}</b><span>kr./md.</span></div>
     {spar}
@@ -7252,7 +7446,7 @@ def bb_liste(udvalg, *, titel, undertitel, vis=12):
     </div>
     <p class="opdateret-stribe"><i class="prik op-prik"></i>
       <span><strong>Opdateret {e(bb_dato())}</strong> ·
-      {len(udvalg)} produkter hentet automatisk fra udbydernes datafeed</span></p>
+      {len(udvalg)} {"produkt" if len(udvalg) == 1 else "produkter"} hentet automatisk fra udbydernes datafeed</span></p>
   </div>
   {bb_filterbar(sorteret)}
   <p class="liste-afsloering"><strong>Reklamelinks:</strong> Vi får provision, når du bestiller via
@@ -7289,7 +7483,7 @@ def bb_liste(udvalg, *, titel, undertitel, vis=12):
     </div>
     <p class="opdateret-stribe"><i class="prik op-prik"></i>
       <span><strong>Opdateret {e(bb_dato())}</strong> ·
-      {len(udvalg)} produkter hentet automatisk fra udbydernes datafeed</span></p>
+      {len(udvalg)} {"produkt" if len(udvalg) == 1 else "produkter"} hentet automatisk fra udbydernes datafeed</span></p>
   </div>
   {bb_filterbar(sorteret)}
   <p class="liste-afsloering"><strong>Reklamelinks:</strong> Vi får provision, når du bestiller via
@@ -7309,130 +7503,6 @@ def bb_liste(udvalg, *, titel, undertitel, vis=12):
 # bredbånd", "bredbånd til familien" eller "bredbånd uden binding". Hver side
 # har sit eget udvalg, sit eget regnestykke og sin egen vinkel, så de ikke
 # konkurrerer indbyrdes.
-BB_MAALGRUPPER = [
-    {
-        "sti": "billigste",
-        "etiket": "Billigst",
-        "h1": "Billigste bredbånd",
-        "titel": "Billigste bredbånd — {n} abonnementer fra {fra} kr./md.",
-        "besk": "Se det billigste bredbånd målt på hele det første år, ikke på "
-                "tilbudsprisen. {n} abonnementer fra {s} selskaber sammenlignet.",
-        "kort": "Billigste bredbånd koster {fra} kr. om måneden det første år, når "
-                "tilbudspris, normalpris og oprettelse regnes med. Fem abonnementer "
-                "starter på 99 kr. — men de er ikke lige billige.",
-        "filter": lambda a: True,
-        "sorter": lambda a: bb_aarspris(a),
-        "tekst": """
-<h2>Derfor er det billigste tilbud sjældent det billigste abonnement</h2>
-<p>Fem af abonnementerne i vores sammenligning koster 99 kr. om måneden. De er
-ikke lige billige. Forskellen ligger tre steder, og ingen af dem står på skiltet.</p>
-<ol class="nummerliste">
-  <li><strong>Tilbudsperiodens længde.</strong> Tre, fire eller seks måneder.
-  Forskellen mellem tre og seks måneder til 200 kr. rabat er 600 kr. på et år.</li>
-  <li><strong>Normalprisen bagefter.</strong> 259 kr. og 379 kr. er begge
-  "normalpris", men de koster 1.440 kr. forskelligt over de resterende måneder.</li>
-  <li><strong>Oprettelse og fragt.</strong> Fra 0 til 299 kr., plus op til 99 kr.
-  for at få routeren sendt.</li>
-</ol>
-<p>Derfor sorterer vi efter førsteårsprisen. Det er det eneste tal, der kan
-sammenlignes på tværs — og det vender rækkefølgen om på næsten hele listen.</p>
-
-<h2>Sådan bliver billigt endnu billigere</h2>
-<ol class="nummerliste">
-  <li><strong>Vælg lavere hastighed.</strong> 100 Mbit/s rækker til de fleste. Det
-  er springet til 1000, der koster.</li>
-  <li><strong>Tag et abonnement med gratis oprettelse.</strong> Ved seks måneders
-  binding svarer 299 kr. til 50 kr. oveni om måneden.</li>
-  <li><strong>Tjek om routeren indgår.</strong> Routerleje på 25-50 kr. om måneden
-  er 600 kr. om året.</li>
-  <li><strong>Skift igen efter kampagnen.</strong> Har du ingen binding, kan du
-  gentage øvelsen. Det er dét, der holder prisen nede år efter år.</li>
-</ol>""",
-    },
-    {
-        "sti": "til-familien",
-        "etiket": "Til familien",
-        "h1": "Bredbånd til familien",
-        "titel": "Bredbånd til familien — hastighed nok til flere skærme",
-        "besk": "Hvilket bredbånd der holder til flere samtidige streams, "
-                "hjemmearbejde og gaming. {n} abonnementer med mindst 300 Mbit/s.",
-        "kort": "En familie med flere skærme bør have mindst 300 Mbit/s. "
-                "{n} abonnementer lever op til det, og det billigste koster "
-                "{fra} kr. om måneden det første år.",
-        "filter": lambda a: a["ned"] >= 300,
-        "sorter": lambda a: bb_aarspris(a),
-        "tekst": """
-<h2>Hvor meget bruger en familie egentlig?</h2>
-<p>En husstand på fire, hvor alle streamer om aftenen, bruger typisk 400-800 GB om
-måneden. Det lyder af meget, men det er ikke datamængden, der er flaskehalsen på
-en fast forbindelse — det er kapaciteten, når flere bruger den samtidig.</p>
-<p>Fire samtidige 4K-streams kræver omkring 60 Mbit/s. Lægger du en
-spilopdatering, et videomøde og en backup oveni, er du oppe på 200-300. Derfor er
-300 Mbit/s undergrænsen for en familie — ikke fordi tallet er magisk, men fordi
-det giver luft, når alle er hjemme klokken 20.</p>
-
-<h2>Det, der faktisk driller i en familie</h2>
-<ol class="nummerliste">
-  <li><strong>Wi-fi'et, ikke forbindelsen.</strong> De fleste "langsomme
-  internet"-problemer i en familie skyldes routeren eller afstanden til den. En
-  gigabitforbindelse hjælper ikke, hvis signalet ikke når op på første sal.</li>
-  <li><strong>Upload ved videomøder.</strong> Arbejder to hjemme samtidig, er det
-  upload, der afgør, om I begge kan ses og høres. Coax giver ofte kun 100 op.</li>
-  <li><strong>Svartiden ved spil.</strong> Har I en gamer i huset, betyder
-  svartiden mere end hastigheden. Fiber ligger på 2-10 ms, 5G på 20-40.</li>
-  <li><strong>Dataloft på 5G.</strong> En familie rammer et loft på 500 GB. Skal
-  5G bruges, bør det være uden loft.</li>
-</ol>
-
-<h2>Fiber er det rigtige valg til en familie</h2>
-<p>Det er den eneste teknologi med samme hastighed op og ned, konstant kapacitet
-uanset hvor mange naboer der streamer, og en svartid, der holder til spil.</p>
-<p>Findes fiber ikke på adressen, er coax næstbedst til en familie — hastigheden
-ned er den samme, og begrænsningen er upload. 5G er den svageste af de tre til
-flere personer, fordi kapaciteten deles med hele kvarteret på masten.</p>""",
-    },
-    {
-        "sti": "uden-binding",
-        "etiket": "Uden binding",
-        "h1": "Bredbånd uden binding",
-        "titel": "Bredbånd uden binding — {n} abonnementer uden bindingsperiode",
-        "besk": "Bredbånd uden bindingsperiode. {n} abonnementer fra {s} selskaber, "
-                "sorteret efter hvad de koster det første år.",
-        "kort": "{n} af abonnementerne er helt uden binding. Det billigste koster "
-                "{fra} kr. om måneden det første år, og du kan opsige med almindeligt "
-                "varsel når som helst.",
-        "filter": lambda a: not a["binding"],
-        "sorter": lambda a: bb_aarspris(a),
-        "tekst": """
-<h2>Hvornår er binding et problem?</h2>
-<p>Seks måneders binding er den mest almindelige på det danske marked, og for de
-fleste er den harmløs. Den bliver et problem i fire situationer.</p>
-<ol class="nummerliste">
-  <li><strong>Du skal måske flytte.</strong> Binding følger abonnementet, ikke
-  adressen. Kan udbyderen ikke levere til den nye adresse, kan du normalt komme ud
-  af aftalen — men det skal du selv kontrollere først.</li>
-  <li><strong>Du er i tvivl om hastigheden.</strong> Uden binding kan du prøve en
-  mindre pakke og skifte op, hvis den ikke rækker.</li>
-  <li><strong>Du vil skifte, når kampagnen udløber.</strong> Uden binding kan du
-  gentage kampagneøvelsen hvert halve år. Det er den billigste måde at have
-  bredbånd på.</li>
-  <li><strong>Du prøver 5G som erstatning for fiber.</strong> Virker det ikke på
-  din adresse, vil du ikke være bundet i seks måneder.</li>
-</ol>
-
-<h2>Uden binding er ikke gratis at opsige</h2>
-<p>Der er stadig et opsigelsesvarsel — typisk løbende måned plus 30 dage. Og
-routeren skal returneres. Gør du ikke det, kan den blive opkrævet — hos Telenor op til 3.000 kr.</p>
-<p>Det er også værd at bemærke, at abonnementer uden binding sjældent har de
-skarpeste kampagner. Selskaberne giver de største rabatter mod et halvt års
-tilsagn. Sammenlign derfor på førsteårsprisen, ikke på friheden alene.</p>
-
-<h2>Hvad koster friheden?</h2>
-<p>Sammenlign de billigste med og uden binding i tabellen. På det danske marked
-ligger forskellen typisk på 30-60 kr. om måneden. Skal du bo samme sted i to år,
-er binding den bedste handel. Er du usikker, er de 40 kr. en billig forsikring.</p>""",
-    },
-]
 
 
 def byg_bredbaand_maalgruppe(d):
@@ -7466,7 +7536,7 @@ def byg_bredbaand_maalgruppe(d):
   <li><strong>{n} abonnementer</strong> fra {s} selskaber matcher</li>
   <li><strong>{kr(fra)} kr./md.</strong> billigst det første år
       ({e(udvalg[0]['udbyder_navn'])} {e(udvalg[0]['navn'])})</li>
-  <li><strong>{hurtigst['ned']}/{hurtigst['op']} Mbit/s</strong> er den højeste
+  <li><strong>{kr(hurtigst['ned'])}/{kr(hurtigst['op'])} Mbit/s</strong> er den højeste
       hastighed i udvalget ({e(hurtigst['udbyder_navn'])})</li>
   <li><strong>{len([a for a in udvalg if not a['oprettelse']])} af {n}</strong>
       har gratis oprettelse</li>
@@ -7508,8 +7578,8 @@ Læs mere om <a href="/metode/">vores metode</a>.</p>
                "seks måneder. Sammenligner man kun på den, vinder det tilbud, der "
                "stiger mest bagefter."},
         {"sp": "Kan jeg få det på min adresse?",
-         "sv": "Det afhænger af, hvad der er gravet ned. Brug selskabets eget "
-               "adressetjek, før du bestiller — fiber findes ikke overalt."},
+         "sv": "Det afhænger af, hvad der er gravet ned. Slå adressen op i vores adressetjek, "
+               "og bekræft hos selskabet, før du bestiller — fiber findes ikke overalt."},
         {"sp": "Hvad sker der, når kampagnen udløber?",
          "sv": "Prisen stiger til normalprisen automatisk. Den står i tabellen under "
                "tilbudsprisen, så du kan se, hvad du kommer til at betale."},
@@ -7540,9 +7610,10 @@ _MDR_NAVN = ["januar", "februar", "marts", "april", "maj", "juni", "juli", "augu
 def vis_maaned():
     """Måneden der står i titlen. Fra den 25. skiftes til næste måned, så
     siden er aktuel, når Google opdaterer resultatet i månedsskiftet."""
+    # Tidligere skiftede vi til næste måned fra den 25. Det gav sætninger som
+    # "billigste i december" midt i november — det er ikke sandt. Nu altid
+    # indeværende måned, så titel, beskrivelse og brødtekst siger det samme.
     d = IDAG
-    if d.day >= 25:
-        d = date(d.year + (d.month == 12), d.month % 12 + 1, 1)
     return _MDR_NAVN[d.month - 1], d.year
 
 
@@ -7627,7 +7698,7 @@ def bb_tabel_pr_selskab(udvalg, hvad):
                  else f'{kr(a["pris"])} kr. fast')
         rk += f"""<tr>
   <td class="tal">{i}</td>
-  <td>{_bb_logo(a)}<br><span class="tabel-under">{e(TEKNOLOGI_KORT.get(a['teknologi'], a['teknologi']))} · {_bb_fart(a)}{f' · <a href="/udbydere/{a["udbyder"]}/">om {e(a["udbyder_navn"])}</a>' if a["udbyder"] in UMAP else ''}</span></td>
+  <td>{_bb_logo(a)}<br><span class="tabel-under">{e(TEKNOLOGI_KORT.get(a['teknologi'], a['teknologi']))} · {_bb_fart(a)}{f' · <a href="{BB_UDB_STI}{a["udbyder"]}/">om {e(a["udbyder_navn"])} internet</a>'}</span></td>
   <td class="tal">{start}</td>
   <td class="tal">{kr(a['pris'])} kr.</td>
   <td class="tal">{kr(bb_total(a, 6))} kr.</td>
@@ -7754,9 +7825,8 @@ router koster typisk 1.500–2.000 kr. at købe. Routeren skal returneres ved op
 ellers bliver den opkrævet. Placer den i et vindue mod masten, ikke i et skab.</p>
 
 <h2>Ubegrænset 5G internet: fri data eller dataloft?</h2>
-<p>Skal 5G erstatte fast internet, bør abonnementet være uden dataloft. En husstand, der
-streamer om aftenen, bruger let 150–300 GB om måneden. Tjek vilkårene hos selskabet,
-før du bestiller.</p>""",
+<p>Skal 5G erstatte fast internet, bør abonnementet være uden dataloft. Et gennemsnitligt
+fast bredbånd bruger 525 GB om måneden. Tjek vilkårene hos selskabet, før du bestiller.</p>""",
     "coax": """
 <h2>Internet via kabel-tv og antennestik</h2>
 <p>Kabel-internet, coax, kabel-tv-internet og internet via antennestikket er fire navne
@@ -7766,8 +7836,8 @@ abonnementet.</p>
 
 <h2>Du behøver ikke tv-pakke</h2>
 <p>Du kan få kabel-internet uden tv-pakke. Flere selskaber sælger internet i samme
-kabelnet, fx både YouSee og Hiper i YouSees net, så du kan vælge efter pris og ikke efter,
-hvem der ejer kablet. Mange antenneforeninger har desuden opgraderet til hybridfiber, hvor
+kabelnet, fx både YouSee og Hiper på TDC NET's coaxnet, så du kan vælge efter pris og ikke
+efter, hvem der ejer kablet. Mange antenneforeninger har desuden opgraderet til hybridfiber, hvor
 fiber føres ud i området, og coax tager det sidste stykke ind i boligen.</p>
 
 <h2>Hvem ejer kabelnettet?</h2>
@@ -7805,6 +7875,9 @@ BB_SEO = {
 }
 
 
+GUIDE_STIER_BYGGET = set()
+
+
 def bb_guides(aktuel=""):
     links = [
         ("/internet-priser/", "Internet priser: hvad koster internet om måneden?"),
@@ -7813,10 +7886,20 @@ def bb_guides(aktuel=""):
         ("/guides/ping-og-svartid/", "Internet til gaming: ping og svartid"),
         ("/guides/mobilt-bredbaand/", "Mobilt bredbånd som alternativ til fast internet"),
         ("/guides/mobilabonnement-eller-bredbaand/", "Mobilabonnement med hotspot eller bredbånd?"),
+        ("/guides/god-internethastighed/", "Hvad er en god internethastighed?"),
+        ("/guides/5g-internet-eller-fiber/", "5G internet eller fiber?"),
+        ("/guides/coax-internet/", "Coax internet: sådan virker kabel-tv-nettet"),
+        ("/guides/internet-uden-binding/", "Internet uden binding"),
+        ("/guides/opsig-internet/", "Sådan opsiger du internet"),
+        ("/guides/internetforstaerker/", "Internetforstærker: extender, mesh eller ny router?"),
+        ("/guides/internet-i-sommerhus/", "Internet i sommerhuset"),
+        ("/guides/dataforbrug-husstand/", "Hvor meget data bruger en husstand?"),
+        ("/guides/del-internet-fra-mobil/", "Del internet fra mobilen"),
         ("/speedtest/", "Test din hastighed"),
         ("/daekningskort/", "Dækningstjek for 5G og 4G"),
     ]
-    li = "".join(f'<li><a href="{s}">{e(t)}</a></li>' for s, t in links if s != aktuel)
+    li = "".join(f'<li><a href="{s}">{e(t)}</a></li>' for s, t in links
+                 if s != aktuel and (not s.startswith("/guides/") or s in GUIDE_STIER_BYGGET or not GUIDE_STIER_BYGGET))
     return f'<h2 id="guides">Guides om internet derhjemme</h2><ul class="pilliste">{li}</ul>'
 
 
@@ -7849,6 +7932,19 @@ def _ip_aar(a):
 
 def _ip_med(v):
     return round(_median(v)) if v else 0
+
+
+def _mbb_pris_afsnit():
+    """Pris på 5G-internet mod fiber — fra feedet, ikke fra hukommelsen."""
+    g5 = [_ip_aar(a) for a in (BB or []) if a["teknologi"] == "5g"]
+    fi = [_ip_aar(a) for a in (BB or []) if a["teknologi"] == "fiber"]
+    if not g5 or not fi:
+        return ("<p>Prisen afhænger af datamængde og hastighed. Se de aktuelle priser på "
+                '<a href="/internet-priser/">internet priser</a>.</p>')
+    return (f"<p>I vores sammenligning koster 5G-internet i median {kr(_ip_med(g5))} kr. om måneden i "
+            f"snit det første år, og fibernet {kr(_ip_med(fi))} kr. Routeren indgår som regel, men "
+            f"tjek om den skal returneres, når du opsiger. Se alle tilbud på "
+            f'<a href="/internet-priser/">internet priser</a>.</p>')
 
 
 def _ip_tek_grupper():
@@ -7939,7 +8035,7 @@ def ip_tabel_selskaber():
         norm = sorted(a["pris"] for a in k)
         fart = sorted(a["ned"] for a in k)
         spaend = f"{kr(norm[0])}–{kr(norm[-1])} kr." if norm[0] != norm[-1] else f"{kr(norm[0])} kr."
-        fspaend = f"{fart[0]}–{fart[-1]}" if fart[0] != fart[-1] else f"{fart[0]}"
+        fspaend = f"{kr(fart[0])}–{kr(fart[-1])}" if fart[0] != fart[-1] else f"{kr(fart[0])}"
         rk += f"""<tr><td><a href="/bredbaand/udbydere/{slug}/">{_bb_logo(k[0])}</a><br><span class="tabel-under">{e(tek)}</span></td>
 <td class="tal">{len(k)}</td><td class="tal">{fspaend} Mbit/s</td>
 <td class="tal">{spaend}</td>
@@ -8141,7 +8237,9 @@ def ip_tabel_byer():
         if not t or not t[0]:
             continue
         stil = ' class="sum"' if navn == "Hele Danmark" else ""
-        rk += (f'<tr{stil}><td><strong>{e(navn)}</strong></td><td class="tal">{kr(t[0])}</td>'
+        _bs = next((s_ for b_, s_, _, _ in BYSIDER if b_ == navn), None)
+        _nv = f'<a href="{_bs}">{e(navn)}</a>' if _bs else e(navn)
+        rk += (f'<tr{stil}><td><strong>{_nv}</strong></td><td class="tal">{kr(t[0])}</td>'
                f'<td class="tal">{pct(t[1], t[0])}</td><td class="tal">{pct(t[2], t[0])}</td>'
                f'<td class="tal">{pct(t[3], t[0])}</td><td class="tal">{pct(t[4], t[0])}</td></tr>')
     return f"""<div class="tabelramme"><table class="datatabel">
@@ -8151,6 +8249,178 @@ afgrænset efter postnumre. "Kun mobilt" er adresser uden fiber, kabel-tv, kobbe
 <thead><tr><th scope="col">By</th><th scope="col">Adresser</th><th scope="col">Fiber</th>
 <th scope="col">Kabel-tv</th><th scope="col">Mindst 1000 Mbit/s</th><th scope="col">Kun mobilt</th></tr></thead>
 <tbody>{rk}</tbody></table></div>"""
+
+
+# ============================================================ BYSIDER
+# "Internet i Aarhus": dækning pr. postnummer beregnet af os ud fra adressedata i
+# Bredbåndskortlægningen. Priserne er de landsdækkende listepriser — byen afgør
+# udvalget, ikke prisen. Hver side har sine egne tal, så de ikke er tynde kopier.
+
+def _by_slug(navn):
+    return (navn.lower().replace("æ", "ae").replace("ø", "oe").replace("å", "aa")
+            .replace(" ", "-"))
+
+
+def by_statistik_pr_postnr():
+    """{by: {postnr: [navn, adresser, fiber, kabel, 1000+, kun_mobil, mobil_100]}}"""
+    mappe = os.path.join(ROD, "assets", "adr", "p")
+    ud = {}
+    if not os.path.isdir(mappe):
+        return ud
+    for fn in sorted(os.listdir(mappe)):
+        if not fn.endswith(".json"):
+            continue
+        try:
+            d = json.load(open(os.path.join(mappe, fn), encoding="utf-8"))
+            pnr = int(d["p"])
+        except (ValueError, KeyError, OSError):
+            continue
+        by = next((navn for navn, iv in IP_BYER if any(lo <= pnr <= hi for lo, hi in iv)), None)
+        if not by:
+            continue
+        t = ud.setdefault(by, {}).setdefault(pnr, [d.get("k", ""), 0, 0, 0, 0, 0, 0])
+        for _, huse in d["v"]:
+            for h in huse.split():
+                f = d["f"][int(h.rsplit(":", 1)[1])]
+                t[1] += 1
+                t[2] += f[0] > 0
+                t[3] += f[2] > 0
+                t[4] += max(f[0], f[2], f[4], f[5], f[7]) >= 1000
+                t[5] += (not (f[0] or f[2] or f[4] or f[7])) and f[5] > 0
+                t[6] += f[5] >= 100
+    return ud
+
+
+def byg_bysider():
+    if not BB:
+        return []
+    data = by_statistik_pr_postnr()
+    bygget = []
+    def pct(a, b):
+        return (str(round(a / b * 100, 1)).replace(".", ",") + " %") if b else "–"
+    alle_byer = sorted(data, key=lambda b: -sum(v[1] for v in data[b].values()))
+    for by in alle_byer:
+        pn = data[by]
+        tot = [sum(v[i] for v in pn.values()) for i in range(1, 7)]
+        if tot[0] < 1000:
+            continue
+        slug = _by_slug(by)
+        sti = f"/internet-priser/{slug}/"
+        fiber_pct = tot[1] / tot[0] * 100
+        kabel_pct = tot[2] / tot[0] * 100
+        tek_rk = ""
+        for t, navn_t, andel in (("fiber", "Fibernet", tot[1]), ("coax", "Kabel-internet (coax)", tot[2]),
+                                 ("5g", "5G-internet (mindst 100 Mbit/s mobilt)", tot[5])):
+            k = [a for a in BB if a["teknologi"] == t]
+            if not k:
+                continue
+            b_ = min(k, key=bb_aarspris)
+            tek_rk += (f'<tr><td><strong>{e(navn_t)}</strong></td><td class="tal">{pct(andel, tot[0])}</td>'
+                       f'<td>{e(b_["udbyder_navn"])} {kr(b_["ned"])}/{kr(b_["op"])} Mbit/s</td>'
+                       f'<td class="tal"><strong>{kr(_ip_aar(b_))} kr.</strong></td>'
+                       f'<td>{_bb_cta(b_, "Se tilbud")}</td></tr>')
+        pn_rk = "".join(
+            f'<tr><td>{p_} {e(v[0])}</td><td class="tal">{kr(v[1])}</td><td class="tal">{pct(v[2], v[1])}</td>'
+            f'<td class="tal">{pct(v[3], v[1])}</td><td class="tal">{pct(v[4], v[1])}</td></tr>'
+            for p_, v in sorted(pn.items()) if v[1] >= 50)
+        andre = [b for b in alle_byer if b != by][:6]
+        andre_links = ", ".join(f'<a href="/internet-priser/{_by_slug(b)}/">internet i {e(b)}</a>' for b in andre)
+        bedst_pn = max(((p_, v) for p_, v in pn.items() if v[1] >= 200), key=lambda x: x[1][2] / x[1][1], default=None)
+        svagest_pn = min(((p_, v) for p_, v in pn.items() if v[1] >= 200), key=lambda x: x[1][2] / x[1][1], default=None)
+        variation = ""
+        if bedst_pn and svagest_pn and bedst_pn[0] != svagest_pn[0]:
+            variation = (f"<p>Dækningen svinger inden for byen: i {bedst_pn[0]} {e(bedst_pn[1][0])} kan "
+                         f"{pct(bedst_pn[1][2], bedst_pn[1][1])} af adresserne få fiber, i {svagest_pn[0]} "
+                         f"{e(svagest_pn[1][0])} {pct(svagest_pn[1][2], svagest_pn[1][1])}. Derfor er "
+                         f"adressetjekket øverst mere præcist end bytallet.</p>")
+        billigst = min(BB, key=bb_aarspris)
+        faq = [
+            {"sp": f"Hvor mange i {by} kan få fiber?",
+             "sv": f"{pct(tot[1], tot[0])} af de {kr(tot[0])} adresser i {by} kan få fiber ifølge vores beregning "
+                   f"på Bredbåndskortlægningen {BBK['aar']}. {pct(tot[2], tot[0])} kan få kabel-internet."},
+            {"sp": f"Hvad koster internet i {by}?",
+             "sv": f"Listepriserne er som regel de samme i hele landet. Det billigste i vores sammenligning er "
+                   f"{billigst['udbyder_navn']} til {kr(_ip_aar(billigst))} kr. om måneden i snit det første år, "
+                   f"men tjek din adresse, for udvalget afhænger af, hvad der er gravet ned."},
+            {"sp": f"Kan jeg få 1000 Mbit/s i {by}?",
+             "sv": f"{pct(tot[3], tot[0])} af adresserne i {by} kan få mindst 1000 Mbit/s via fiber, "
+                   f"kabel eller fast trådløst."},
+            {"sp": f"Hvad hvis jeg ikke kan få fiber i {by}?",
+             "sv": f"Så er kabel-internet eller 5G alternativerne. 5G kræver ingen installation og kan bestilles "
+                   f"samme dag. {pct(tot[4], tot[0])} af adresserne i {by} har kun mobilt bredbånd som mulighed."},
+        ]
+        krop = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET, fakta=f"Dækning beregnet ud fra Bredbåndskortlægningen {BBK['aar']}")}
+<div class="udtag"><p><strong>Kort svar:</strong> {pct(tot[1], tot[0])} af de {kr(tot[0])} adresser i {e(by)}
+kan få fiber, og {pct(tot[2], tot[0])} kan få kabel-internet. {pct(tot[3], tot[0])} kan få mindst 1000 Mbit/s.
+Det billigste internet i vores sammenligning koster {kr(_ip_aar(billigst))} kr. om måneden i snit det første år,
+men om det kan leveres, afhænger af din adresse.</p></div>
+
+<h2 id="teknologi">Fiber, kabel og 5G i {e(by)}</h2>
+<p>Andelen af adresser i {e(by)}, der kan få hver teknologi, og det billigste tilbud på hver af dem i vores
+sammenligning. {"Fiber dækker de fleste adresser i byen." if fiber_pct >= 80 else "Fiber dækker ikke hele byen, så kabel-internet og 5G er vigtige alternativer." }</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Internet i {e(by)}: dækning beregnet af Telemobil ud fra Bredbåndskortlægningen {BBK['aar']}, og billigste
+tilbud målt på snitprisen det første år inkl. oprettelse (pr. {e(OPDATERET)}).</caption>
+<thead><tr><th scope="col">Teknologi</th><th scope="col">Adresser med adgang</th><th scope="col">Billigste tilbud</th>
+<th scope="col">Snit/md.</th><th scope="col"><span class="sr-only">Bestil</span></th></tr></thead>
+<tbody>{tek_rk}</tbody></table></div>
+
+<h2 id="postnumre">Dækning pr. postnummer i {e(by)}</h2>
+{variation}
+<div class="tabelramme"><table class="datatabel">
+<caption>Andel af adresser pr. postnummer med adgang til fiber, kabel-tv og mindst 1000 Mbit/s.</caption>
+<thead><tr><th scope="col">Postnummer</th><th scope="col">Adresser</th><th scope="col">Fiber</th>
+<th scope="col">Kabel-tv</th><th scope="col">1000+ Mbit/s</th></tr></thead>
+<tbody>{pn_rk}</tbody></table></div>
+
+<h2 id="vaelg">Sådan vælger du internet i {e(by)}</h2>
+<ol class="nummerliste">
+  <li><strong>Tjek din adresse</strong> i feltet øverst. Den viser, hvilke teknologier og hastigheder
+  der er udbudt hos dig.</li>
+  <li><strong>Vælg hastighed efter behov</strong> — 100 Mbit/s til en eller to personer, 300–500 til en
+  familie. Se <a href="/guides/god-internethastighed/">hvad er en god internethastighed</a>.</li>
+  <li><strong>Sammenlign på prisen det første år</strong>, ikke på kampagneprisen. Alle tilbud står på
+  <a href="/internet-priser/">internet priser</a>.</li>
+  <li><strong>Bekræft hos selskabet</strong>, før du bestiller. Kortlægningen viser, hvad der er udbudt, ikke
+  hvilket selskab der leverer på netop din adresse.</li>
+</ol>
+
+<h2 id="andre-byer">Andre byer</h2>
+<p>Se også {andre_links} — eller hele landet på <a href="/internet-priser/">internet priser</a>.</p>
+{bb_guides()}
+</section>
+<section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>"""
+        krumme = [("/", "Forside"), ("/internet-priser/", "Internet priser"), (None, f"Internet i {by}")]
+        titel = f"Internet i {by}: fiber, kabel og 5G — dækning og priser"
+        if len(titel) > 60:
+            titel = f"Internet i {by}: dækning og priser"
+        skriv(sti, shell(
+            sti=sti, titel=titel,
+            beskrivelse=(f"{pct(tot[1], tot[0])} af adresserne i {by} kan få fiber og {pct(tot[2], tot[0])} kabel-internet. "
+                         f"Se dækning pr. postnummer og det billigste internet. Tjek din adresse."),
+            hero=bb_hero(f"Internet i {by}",
+                         f"Skriv din adresse i {by} og se, hvad du kan få — fiber, kabel eller 5G — og hvad "
+                         f"det koster det første år.", BB),
+            efter_hero="", krumme=krumme, indhold=krop + faqblok(faq), toc=False,
+            jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                         artikelld(sti, titel, f"Internetdækning og priser i {by}.", emne="Internet"))],
+        ), prioritet="0.7", hyppighed="weekly")
+        bygget.append((by, sti, tot[0], pct(tot[1], tot[0])))
+    return bygget
+
+
+BYSIDER = []
+
+
+def by_links_sektion():
+    if not BYSIDER:
+        return ""
+    li = "".join(f'<li><a href="{s}">Internet i {e(b)}</a> <span class="tabel-under">· fiber {p}</span></li>'
+                 for b, s, _, p in BYSIDER)
+    return f"""<h2 id="byer-links">Internet i din by</h2>
+<p>Dækning pr. postnummer og billigste tilbud i de største byer:</p>
+<ul class="pilliste kolonner">{li}</ul>"""
 
 
 # Gebyrer hos internetselskaberne, aflæst på selskabernes egne sider 3. november 2026.
@@ -8221,8 +8491,9 @@ def ip_tabel_top10():
 <td class="tal">{kr(bb_total(a, 24))} kr.</td>
 <td>{_bb_cta(a, "Se tilbud")}</td></tr>"""
     return f"""<div class="tabelramme"><table class="datatabel">
-<caption>Top 10 billigste internet målt på prisen det første år. Mindsteprisen er det, du som
-minimum betaler, inklusive oprettelse. 24 mdr. er den samlede pris over to år.</caption>
+<caption>Top 10 billigste internet målt på prisen det første år. Mindsteprisen er vores beregning:
+oprettelse plus bindingsperioden eller mindst én måned. Selskabets egen mindstepris kan være
+højere, hvis opsigelsesvarslet er længere. 24 mdr. er den samlede pris over to år.</caption>
 <thead><tr><th scope="col">#</th><th scope="col">Abonnement</th><th scope="col">Startpris</th>
 <th scope="col">Normalpris</th><th scope="col">Mindstepris</th><th scope="col">Snit år 1</th>
 <th scope="col">24 mdr. i alt</th><th scope="col"><span class="sr-only">Bestil</span></th></tr></thead>
@@ -8263,6 +8534,36 @@ def ip_graf_prisudvikling():
 målinger.</figcaption></figure>"""
 
 
+def _spaend(v, enhed=""):
+    """'100–1.000 Mbit/s', eller ét tal, når begge ender er ens."""
+    v = sorted(v)
+    return f"{kr(v[0])}{enhed}" if v[0] == v[-1] else f"{kr(v[0])}–{kr(v[-1])}{enhed}"
+
+
+def _tek_lille(t):
+    """Teknologinavne midt i en sætning: 'fiber og 5G internet', aldrig '5g'."""
+    return re.sub(r"\b5g\b", "5G", re.sub(r"\bdsl\b", "DSL", t.lower()))
+
+
+def _opr_saetning(v):
+    """Oprettelse som sætningsled. Undgår "fra 0 til 0 kr." og "fra 99 til 99 kr."."""
+    v = [x or 0 for x in v] or [0]
+    lo, hi = min(v), max(v)
+    if hi == 0:
+        return "oprettelsen gratis hos alle lige nu"
+    if lo == hi:
+        return f"oprettelsen {kr(hi)} kr. hos alle"
+    return f"oprettelsen svinger fra {'gratis' if lo == 0 else kr(lo) + ' kr.'} til {kr(hi)} kr"
+
+
+def _5g_op():
+    """Upload på 5G som tilbuddene i feedet lover det — ikke et tal fra hukommelsen."""
+    v = sorted(a["op"] for a in (BB or []) if a.get("teknologi") == "5g" and a.get("op"))
+    if not v:
+        return "30–100 Mbit/s"
+    return f"{kr(v[0])} Mbit/s" if v[0] == v[-1] else f"{kr(v[0])}–{kr(v[-1])} Mbit/s"
+
+
 def ip_beregnere():
     """To små værktøjer: 'Betaler du for meget?' og 'Hvor hurtigt skal det være?'."""
     trin = []
@@ -8271,7 +8572,7 @@ def ip_beregnere():
         if k:
             b = min(k, key=bb_aarspris)
             trin.append({"n": navn, "m": _ip_med([_ip_aar(a) for a in k]), "b": _ip_aar(b),
-                         "u": b["udbyder_navn"], "lo": lo, "hi": hi})
+                         "np": b["pris"], "u": b["udbyder_navn"], "lo": lo, "hi": hi})
     if not trin:
         return ""
     data = json.dumps(trin, ensure_ascii=False).replace("</", "<\\/")
@@ -8298,12 +8599,12 @@ def ip_beregnere():
   function kr(n){{return String(Math.round(n)).replace(/\\B(?=(\\d{{3}})+(?!\\d))/g,".");}}
   var din=document.getElementById("ip-din"),tr=document.getElementById("ip-trin"),s1=document.getElementById("ip-svar1");
   function pris(){{var p=+din.value,t=T[+tr.value];if(!p){{s1.textContent="Skriv din pris, så regner vi det ud.";return;}}
-    var d=p-t.b;s1.innerHTML=d>0?"Det billigste på "+t.n+" koster <b>"+kr(t.b)+" kr./md.</b> i snit det første år ("+t.u+"). Du kan spare op til <b>"+kr(d*12)+" kr. om året</b>. Medianen er "+kr(t.m)+" kr.":"Du betaler ikke mere end det billigste på "+t.n+" i vores sammenligning. Godt gået.";}}
+    var d=p-t.b,d2=p-t.np;s1.innerHTML=d>0?"Det billigste på "+t.n+" koster <b>"+kr(t.b)+" kr./md.</b> i snit det første år ("+t.u+"). Første år sparer du <b>"+kr(d*12)+" kr.</b>"+(d2>0?", og derefter "+kr(d2*12)+" kr. om året på normalprisen ("+kr(t.np)+" kr./md.).":". Efter introperioden er normalprisen "+kr(t.np)+" kr./md., altså ikke billigere end din nuværende pris.")+" Medianen er "+kr(t.m)+" kr.":"Du betaler ikke mere end det billigste på "+t.n+" i vores sammenligning.";}}
   din.addEventListener("input",pris);tr.addEventListener("change",pris);
   var ids=["ip-pers","ip-skaerm","ip-hjem","ip-spil"],s2=document.getElementById("ip-svar2");
   function fart(){{var p=+document.getElementById("ip-pers").value||1,s=+document.getElementById("ip-skaerm").value||0;
     var mb=10*p+15*s+(document.getElementById("ip-hjem").checked?20:0);
-    var anb=document.getElementById("ip-spil").checked?1000:mb<=60?100:mb<=150?300:mb<=300?500:1000;
+    var anb=mb<=60?100:mb<=150?300:mb<=300?500:1000;if(document.getElementById("ip-spil").checked&&anb<300)anb=300;
     var t=T.filter(function(x){{return anb>=x.lo&&anb<=x.hi;}})[0]||T[T.length-1];
     s2.innerHTML="I bruger omkring <b>"+mb+" Mbit/s</b> på én gang. Vi anbefaler <b>"+anb+" Mbit/s</b>, så der er luft. Det koster typisk <b>"+kr(t.m)+" kr./md.</b> det første år, og billigst "+kr(t.b)+" kr.";}}
   ids.forEach(function(i){{var el=document.getElementById(i);el.addEventListener("input",fart);el.addEventListener("change",fart);}});
@@ -8313,7 +8614,8 @@ def ip_beregnere():
 </div>
 <p class="tabel-under">Beregnerne bruger de samme priser som tabellerne på siden. Anbefalingen regner med
 cirka 10 Mbit/s pr. person, 15 Mbit/s pr. 4K-stream (Netflix' anbefaling) og 20 Mbit/s ekstra til
-videomøder, rundet op til næste hastighedstrin.</p>"""
+videomøder, rundet op til næste hastighedstrin. Spil kræver lav svartid mere end hastighed, så
+med online spil foreslår vi mindst 300 Mbit/s og helst fiber.</p>"""
 
 
 def byg_internet_priser():
@@ -8454,9 +8756,11 @@ binding</a>.</p>
 feltet øverst på siden. Adressetjekket bruger Digitaliseringsstyrelsens Bredbåndskortlægning
 og viser, om du kan få fiber, kabel eller 5G, og de billigste tilbud på hver af dem. Bekræft
 altid hos selskabet, før du bestiller.</p>
-<p>Priserne er de samme i hele landet — det er udvalget, der er forskelligt. Tabellen viser, hvor
+<p>Listepriserne er som regel de samme i hele landet, men udvalget er forskelligt, og nogle
+priser afhænger af, hvilket net du bor på. Tabellen viser, hvor
 stor en del af adresserne i de største byer der kan få hver teknologi:</p>
 {ip_tabel_byer()}
+{by_links_sektion()}
 <p>Kan du kun få mobilt internet, er <a href="/bredbaand/5g/">5G internet</a> dit bedste bud. Se
 alle muligheder på din egen adresse på <a href="/bredbaand/adressetjek/">hvilket internet kan jeg
 få</a>.</p>
@@ -8465,7 +8769,8 @@ få</a>.</p>
 
 <h2 id="prisstigning">Må dit internetselskab sætte prisen op?</h2>
 <p>Ja, men selskabet skal varsle en prisstigning mindst en måned før, og du har ret til at opsige
-uden omkostninger indtil en måned efter varslet. Det står i slutbrugerbekendtgørelsens § 6. Får du
+uden omkostninger indtil en måned efter varslet, medmindre ændringen udelukkende er til din fordel.
+Det står i slutbrugerbekendtgørelsens § 6. Får du
 et varsel, er det det rigtige tidspunkt at sammenligne. Se også
 <a href="/guides/opsig-internet/">sådan opsiger du internet</a>.</p>
 
@@ -8529,7 +8834,8 @@ dækker ikke hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p
                f"medianen {kr(med_norm)} kr. i vores sammenligning af {len(BB)} tilbud."},
         {"sp": "Hvad er mindstepris på internet?",
          "sv": "Mindsteprisen er det, du som minimum betaler i en eventuel bindingsperiode inklusive "
-               "oprettelse. Uden binding svarer den typisk til første måned plus oprettelse."},
+               "oprettelse. Uden binding består den af oprettelse plus det, du betaler i opsigelsesperioden. "
+               "Selskabet skal oplyse mindsteprisen, før du bestiller."},
         {"sp": "Er 5G internet billigere end fiber?",
          "sv": (f"I vores sammenligning koster 5G internet i median "
                 f"{kr(_ip_med([_ip_aar(a) for a in tek['5g']]))} kr. og fibernet "
@@ -8546,8 +8852,9 @@ dækker ikke hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p
          "sv": "Oftest er routeren inkluderet som lån, men den skal sendes retur, når du opsiger. Glemmer "
                "du det, kan den blive opkrævet."},
         {"sp": "Er internet dyrere på landet?",
-         "sv": "Nej, priserne er de samme i hele landet. Men udvalget er mindre: færre adresser på landet "
-               "kan få fiber og kabel-tv, så 5G kan være det eneste valg."},
+         "sv": "Listepriserne er som regel de samme, men nogle afhænger af, hvilket net du bor på. "
+               "Den store forskel er udvalget: færre adresser på landet kan få fiber og kabel-tv, så 5G "
+               "kan være det eneste valg."},
         {"sp": "Hvordan får jeg en lavere internetpris?",
          "sv": "Vælg den laveste hastighed, der dækker jeres forbrug, sammenlign på prisen over "
                "12 måneder, og skift, når kampagnen udløber. For en eller to personer kan 5G "
@@ -8557,7 +8864,7 @@ dækker ikke hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p
     _fra = kr(min(bb_start(a) for a in BB))
     titel = f"Internet priser {maaned} {aar}: {len(BB)} tilbud fra {_fra} kr./md."
     if len(titel) > 60:
-        titel = f"Internet priser {MAANED_AAR.split()[0][:3]}. {aar}: {len(BB)} tilbud fra {_fra} kr./md."
+        titel = f"Internet priser {kort_maaned(MAANED_AAR.split()[0])} {aar}: {len(BB)} tilbud fra {_fra} kr./md."
     skriv(sti, shell(
         sti=sti, titel=titel,
         beskrivelse=(f"Internet koster typisk {kr(med_aar)} kr./md. (median, {OPDATERET}). Se "
@@ -8581,9 +8888,12 @@ dækker ikke hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p
                       "description": (f"Normalpris, kampagnepris, oprettelse og snitpris det første år for "
                                       f"{len(BB)} internetabonnementer fra {selskaber} danske selskaber, "
                                       f"opdateret to gange i døgnet."),
+                      "url": DOMAENE + sti,
                       "creator": {"@id": DOMAENE + "/#organisation"},
                       "license": "https://creativecommons.org/licenses/by/4.0/",
                       "isAccessibleForFree": True, "inLanguage": "da-DK",
+                      "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv",
+                                        "contentUrl": DOMAENE + "/aabne-data/internetpriser.csv"}],
                       "spatialCoverage": "Danmark", "dateModified": ISO,
                       "variableMeasured": ["Normalpris", "Kampagnepris", "Oprettelse",
                                            "Snitpris første år", "Hastighed ned", "Hastighed op"]})],
@@ -8663,7 +8973,7 @@ def byg_bb_udbyder(slug, k, alle_udb):
     uden = len([a for a in k if not a.get("binding")])
     ift = ("under" if egen < marked else "over" if egen > marked else "på")
     spaend = f"{kr(norm[0])}–{kr(norm[-1])} kr." if norm[0] != norm[-1] else f"{kr(norm[0])} kr."
-    fspaend = f"{fart[0]}–{fart[-1]} Mbit/s" if fart[0] != fart[-1] else f"{fart[0]} Mbit/s"
+    fspaend = f"{kr(fart[0])}–{kr(fart[-1])} Mbit/s" if fart[0] != fart[-1] else f"{kr(fart[0])} Mbit/s"
 
     # Sammenligning med markedet pr. teknologi
     rk = ""
@@ -8691,15 +9001,15 @@ sammenligning, snit det første år.</caption>
     if any(u["slug"] == slug for u in UDBYDERE) and os.path.exists(os.path.join(ROD, "driftsstatus")):
         links.append(f'Driftsstatus for {e(_gen(navn))} mobilnet står på <a href="/driftsstatus/{slug}/">{e(navn)} driftsstatus</a>.')
 
-    krop = bb_liste(k, titel=f"{navn} internet: alle {len(k)} abonnementer",
-                    undertitel=f"{_antal_ab(len(k))} fra {navn} på {_og(tek).lower()}, sorteret efter "
+    krop = bb_liste(k, titel=(f"{navn} internet: alle {len(k)} abonnementer" if len(k) > 1 else f"{navn} internet: abonnementet"),
+                    undertitel=f"{_antal_ab(len(k))} fra {navn} på {_tek_lille(_og(tek))}, sorteret efter "
                                f"hvad de koster det første år.") + f"""
 <section class="sektion baand-smal artikel">
 {gennemgangslinje(OPDATERET, fakta=f"{len(k)} {navn}-priser hentet fra selskabets datafeed")}
 <div class="udtag"><p><strong>Kort svar:</strong> {e(navn)} har {_antal_ab(len(k))} til internet i
-vores sammenligning på {e(_og(tek).lower())} med {fspaend} download. Normalprisen ligger på
+vores sammenligning på {e(_tek_lille(_og(tek)))} med {fspaend} download. Normalprisen ligger på
 {spaend} om måneden, og det billigste er {e(b['navn'])} til {kr(_ip_aar(b))} kr. om måneden i snit
-det første år. Det er {ift} medianen for hele markedet på {kr(marked)} kr.</p></div>
+det første år. Det er {ift} medianen for alle tilbud i vores sammenligning på {kr(marked)} kr.</p></div>
 
 <h2 id="priser">{e(navn)} internet priser</h2>
 {bb_tabel_udbyder_produkter(k)}
@@ -8743,19 +9053,19 @@ hvis du bestiller via et link, men det ændrer ikke rækkefølgen. Læs mere om
                f"og {spaend} i normalpris. Det billigste koster {kr(_ip_aar(b))} kr. om måneden i snit "
                f"det første år."},
         {"sp": f"Hvilke hastigheder har {navn} internet?",
-         "sv": f"{fspaend} download i vores sammenligning, på {_og(tek).lower()}."},
+         "sv": f"{fspaend} download i vores sammenligning, på {_tek_lille(_og(tek))}."},
         {"sp": f"Har {navn} internet binding?",
          "sv": f"{_alle(uden, len(k))} For private må binding højst være seks måneder."},
         {"sp": f"Er {navn} internet billigt?",
          "sv": f"{_gen(navn)} billigste koster {kr(_ip_aar(b))} kr. om måneden i snit det første år, mod en "
-               f"median på {kr(marked)} kr. for hele markedet i vores sammenligning."},
+               f"median på {kr(marked)} kr. for alle tilbud i vores sammenligning."},
     ]
-    _kort = MAANED_AAR.split()[0][:3] + ". " + MAANED_AAR.split()[-1]
+    _kort = kort_maaned(MAANED_AAR.split()[0]) + " " + MAANED_AAR.split()[-1]
     titel = f"{navn} internet priser {_kort}: {_antal_ab(len(k))} fra {kr(min(bb_start(a) for a in k))} kr."
     skriv(sti, shell(
         sti=sti, titel=titel,
         beskrivelse=(f"{navn} internet priser i {maaned} {aar}: {_antal_ab(len(k))} på "
-                     f"{_og(tek).lower()} med {fspaend}. Se normalpris, pris det første år og "
+                     f"{_tek_lille(_og(tek))} med {fspaend}. Se normalpris, pris det første år og "
                      f"hvordan {navn} ligger i forhold til markedet."),
         hero=bb_hero(f"{navn} internet: priser og hastigheder",
                      f"Se alle {_gen(navn)} internetabonnementer med normalpris og pris det første år — og "
@@ -8783,8 +9093,8 @@ def byg_bb_udbydere():
         fart = sorted(a["ned"] for a in k)
         norm = sorted(a["pris"] for a in k)
         rk += f"""<tr><td><a href="{BB_UDB_STI}{slug}/"><strong>{e(k[0]['udbyder_navn'])} internet</strong></a><br><span class="tabel-under">{e(tek)}</span></td>
-<td class="tal">{len(k)}</td><td class="tal">{fart[0]}–{fart[-1]} Mbit/s</td>
-<td class="tal">{kr(norm[0])}–{kr(norm[-1])} kr.</td>
+<td class="tal">{len(k)}</td><td class="tal">{_spaend(fart, " Mbit/s")}</td>
+<td class="tal">{_spaend(norm, " kr.")}</td>
 <td class="tal"><strong>{kr(min(_ip_aar(a) for a in k))} kr.</strong></td>
 <td class="tal">{_bb_tp(slug)}</td></tr>"""
     billigst = min(BB, key=bb_aarspris)
@@ -8836,7 +9146,7 @@ andre lokale fiberselskaber, som ikke er med. Læs om <a href="/metode/">vores m
         {"sp": "Hvordan finder jeg ud af, hvilken internetudbyder jeg har?",
          "sv": "Se på din faktura, i din bankapp, på routeren eller i velkomstmailen."},
     ]
-    _kort = MAANED_AAR.split()[0][:3] + ". " + MAANED_AAR.split()[-1]
+    _kort = kort_maaned(MAANED_AAR.split()[0]) + " " + MAANED_AAR.split()[-1]
     skriv(BB_UDB_STI, shell(
         sti=BB_UDB_STI, titel=f"Internetudbydere {_kort}: {len(alle)} selskaber sammenlignet",
         beskrivelse=(f"Internetudbydere i Danmark sammenlignet: {len(alle)} selskaber med {len(BB)} tilbud "
@@ -8942,7 +9252,7 @@ def byg_bredbaand():
 <div class="udtag"><p><strong>Kort svar:</strong> Billigste bredbånd koster
 {kr(fra)} kr. om måneden i snit det første år, når tilbudspris, normalpris og oprettelse
 regnes med. Startpriserne begynder ved {kr(min(bb_start(a) for a in BB))} kr./md.
-Hurtigste er {hurtigst['ned']} Mbit/s hos {e(hurtigst['udbyder_navn'])}.
+Hurtigste er {kr(hurtigst['ned'])} Mbit/s hos {e(hurtigst['udbyder_navn'])}.
 Fiber er den bedste forbindelse, 5G den hurtigste at få installeret.</p></div>
 {bb_nu_linje(BB, "bredbånd")}
 {bb_noegletal(BB)}
@@ -8980,8 +9290,7 @@ betyder noget. Tabellen viser de otte billigste abonnementer over 24 måneder.</
 måneden. Det lyder som {len(grp)} lige gode tilbud. Regner man året igennem, spænder de fra
 {kr(round(min(bb_aarspris(a) for a in grp) / 12))} til
 {kr(round(max(bb_aarspris(a) for a in grp) / 12))} kr. om måneden — fordi
-tilbudsperioden er forskellig, og fordi oprettelsen svinger fra
-{kr(min(a.get("oprettelse", 0) for a in BB))} til {kr(max(a.get("oprettelse", 0) for a in BB))} kr.</p>"""
+tilbudsperioden er forskellig, og fordi {_opr_saetning([a.get("oprettelse", 0) for a in BB])}.</p>"""
   if len(grp) > 1 else "<p>Tilbudsprisen gælder kun de første måneder. Regner man året igennem, "
   "ser rækkefølgen helt anderledes ud end på selskabernes forsider.</p>")(
     min(bb_start(a) for a in BB), [a for a in BB if bb_start(a) == min(bb_start(x) for x in BB)])}
@@ -9016,16 +9325,16 @@ fordi forskellen betyder noget for nogle og intet for andre.</p>
 <p>Bredbånd er det eneste produkt på sitet, hvor din adresse afgør, hvad du
 overhovedet kan få. Fiber findes ikke overalt, coax kræver tv-kabel i huset, og 5G
 afhænger af, hvor masten står.</p>
-<p>Alle selskaber har et adressetjek på deres egen side. Brug det først — der er
-ingen grund til at sammenligne produkter, du ikke kan få leveret.</p>
+<p>Start med <a href="/bredbaand/adressetjek/">adressetjekket</a>, der viser hvad der kan
+leveres på din adresse ud fra Bredbåndskortlægningen, og bekræft hos selskabet, før du
+bestiller — der er ingen grund til at sammenligne produkter, du ikke kan få leveret.</p>
 <p>Til 5G kan du starte med vores <a href="/daekningskort/">dækningstjek</a> og se,
 hvilket net der dækker hos dig.</p>
 
 <h2>Fire ting der koster penge uden at stå på skiltet</h2>
 <ol class="nummerliste">
-  <li><strong>Oprettelse.</strong> Svinger i dag fra {kr(min(a.get("oprettelse", 0) for a in BB))}
-  til {kr(max(a.get("oprettelse", 0) for a in BB))} kr. Ved seks måneders binding svarer 300 kr. til
-  50 kr. oveni om måneden.</li>
+  <li><strong>Oprettelse.</strong> {_opr_saetning([a.get("oprettelse", 0) for a in BB]).capitalize()} i vores sammenligning.
+  Ved seks måneders binding svarer 300 kr. til 50 kr. oveni om måneden.</li>
   <li><strong>Fragt af router.</strong> Enkelte selskaber tager 99 kr. for at sende
   udstyret. Det står sjældent sammen med prisen.</li>
   <li><strong>Routerleje.</strong> Nogle abonnementer inkluderer routeren, andre
@@ -9035,9 +9344,10 @@ hvilket net der dækker hos dig.</p>
 </ol>
 
 <h2>Sådan skifter du internetudbyder</h2>
-<p>Modsat nummerflytning på mobilen er der ingen lovregel om, at det nye selskab
-opsiger det gamle. Flere selskaber, blandt andre Norlys og Telenor, kan dog gøre det
-for dig via en fuldmagt. Se hvordan hos de største i
+<p>Skift af fast internet foregår efter branchens fælles aftale om skift af
+bredbåndsudbyder (SBBU): det nye selskab sender en fuldmagt, og det gamle opsiger på
+den aftalte dato. Ikke alle selskaber er med, så spørg det nye selskab, om de opsiger
+for dig — blandt andre Norlys og Telenor gør. Se hvordan hos de største i
 <a href="/guides/opsig-internet/">sådan opsiger du internet</a>.</p>
 <ol class="nummerliste">
   <li>Tjek dit opsigelsesvarsel. Typisk en måned.</li>
@@ -9075,7 +9385,7 @@ ikke har adgang til priser for. Læs mere om
 </section>"""
 
     faq = [
-        {"sp": "Hvad er det billigste bredbånd i Danmark lige nu?",
+        {"sp": "Hvad er det billigste bredbånd lige nu?",
          "sv": (lambda b_: f"Billigste bredbånd er {b_['udbyder_navn']} med "
                 f"{b_['ned']}/{b_['op']} Mbit/s til {kr(round(bb_aarspris(b_) / 12))} kr. om "
                 f"måneden i snit det første år, når tilbudspris, normalpris og oprettelse "
@@ -9085,10 +9395,10 @@ ikke har adgang til priser for. Læs mere om
          "sv": "Mindsteprisen er det, du som minimum betaler i bindingsperioden inkl. "
                "oprettelse. Private kan højst bindes i seks måneder, så mindsteprisen dækker "
                "typisk seks måneder."},
-        {"sp": "Hvor hurtigt internet har jeg brug for?",
-         "sv": "100-300 Mbit/s rækker til de fleste husstande. Netflix anbefaler 15 Mbit/s "
-               "til 4K, så selv fire samtidige streams klares på 100 Mbit/s. Springet til 1000 mærkes ved "
-               "store filer og mange enheder, ikke ved almindelig streaming."},
+        {"sp": "Hvilken hastighed skal jeg vælge?",
+         "sv": "100 Mbit/s til en eller to personer og 300–500 Mbit/s til en familie. Netflix anbefaler "
+               "15 Mbit/s til 4K, så fire samtidige streams klares på 100 Mbit/s. Se hele regnestykket i "
+               "guiden om god internethastighed."},
         {"sp": "Er fiber altid bedre end coax?",
          "sv": "På uploadhastighed og stabilitet, ja. På download er forskellen ofte "
                "lille i praksis. Coax giver typisk 1000 ned men kun 100 op, hvor fiber "
@@ -9113,7 +9423,7 @@ ikke har adgang til priser for. Læs mere om
 
     skriv("/bredbaand/", shell(
         sti="/bredbaand/",
-        titel=(lambda t: t if len(t) <= 60 else t.replace(vis_maaned()[0], vis_maaned()[0][:3] + "."))(
+        titel=(lambda t: t if len(t) <= 60 else t.replace(vis_maaned()[0], kort_maaned(vis_maaned()[0])))(
             f"Billigste bredbånd {vis_maaned()[0]} {vis_maaned()[1]}: {len(BB)} tilbud fra "
             f"{kr(min(bb_start(a) for a in BB))} kr./md."),
         beskrivelse=(f"Billigste bredbånd i {vis_maaned()[0]} {vis_maaned()[1]}: {len(BB)} tilbud "
@@ -9139,6 +9449,7 @@ ikke har adgang til priser for. Læs mere om
         if not udvalg:
             continue
         byg_bredbaand_type(noegle, navn, sti, besk, udvalg)
+    BYSIDER[:] = byg_bysider()
     byg_internet_priser()
     byg_bb_udbydere()
     byg_bb_adressetjek()
@@ -9164,7 +9475,7 @@ def byg_bredbaand_type(noegle, navn, sti, besk, udvalg):
 <h2>Derfor er fiber den bedste forbindelse — når den findes</h2>
 <p>Fiber sender lys gennem glas i stedet for strøm gennem kobber. Det giver tre
 fordele, der alle er målbare: samme hastighed op og ned, en svartid på få
-millisekunder, og en forbindelse der ikke svinger med naboernes forbrug.</p>
+millisekunder, og en forbindelse der sjældent mærkes af naboernes forbrug.</p>
 <p>Ulempen er den eneste, der betyder noget: fiber skal graves ned. Er der ikke
 fiber i din vej, kan du ikke få det, uanset hvad det koster.</p>
 
@@ -9190,9 +9501,9 @@ videomøder og online spil.</p>
 hvilken router du køber. Se <a href="/daekningskort/">vores dækningstjek</a>.</p>
 
 <h2>Pas på dataloftet</h2>
-<p>Nogle 5G-abonnementer har et loft. En husstand, der streamer om aftenen, bruger
-150-300 GB om måneden, og rammer du loftet den 20., er der ti dage tilbage uden
-internet. Skal 5G erstatte fast bredbånd, bør det være uden loft.</p>""",
+<p>Nogle 5G-abonnementer har et loft. Et gennemsnitligt fast bredbånd bruger 525 GB om
+måneden, og rammer du loftet før månedens udgang, sættes hastigheden typisk kraftigt ned.
+Skal 5G erstatte fast bredbånd, bør det være uden loft.</p>""",
         "coax": """
 <h2>Coax kører gennem tv-kablet</h2>
 <p>Er der kabel-tv i huset, er der som regel også coax-bredbånd. Det gør det
@@ -9230,7 +9541,7 @@ forbindelse føles langsommere klokken 20 end klokken 10.</p>""",
 {maaned} {aar} er {e(billigst['udbyder_navn'])} til
 {kr(round(bb_aarspris(billigst) / 12))} kr. om måneden i snit det første år. Startpriserne
 begynder ved {kr(min(bb_start(a) for a in udvalg))} kr./md. Hurtigste er
-{e(hurtigst['udbyder_navn'])} med {hurtigst['ned']} Mbit/s ned. {e(besk)}</p></div>
+{e(hurtigst['udbyder_navn'])} med {kr(hurtigst['ned'])} Mbit/s ned. {e(besk)}</p></div>
 {bb_nu_linje(udvalg, seo["kw"])}
 {bb_noegletal(udvalg)}
 
@@ -9257,7 +9568,7 @@ hvem der er billigst.</p>
 {kr(bb_aarspris(dyrest) - bb_aarspris(billigst))} kr. over det første år — for en
 forbindelse, der i praksis gør det samme. Se hvordan {e(seo["kw"])} ligger i forhold til de
 andre typer på <a href="/internet-priser/">internet priser</a>. {uden_binding} af {len(udvalg)} tilbud er uden
-binding, og den højeste hastighed er {hurtigst['ned']}/{hurtigst['op']} Mbit/s.</p>
+binding, og den højeste hastighed er {kr(hurtigst['ned'])}/{kr(hurtigst['op'])} Mbit/s.</p>
 
 <h2>Sådan læser du tabellen</h2>
 <p>Prisen med stort er den, du betaler i kampagneperioden. Linjen under viser, hvad
@@ -9299,7 +9610,7 @@ hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
     faq = [
         {"sp": f"Hvad er det billigste {seo['kw']} lige nu?",
          "sv": f"Billigste {seo['kw']} i {maaned} {aar} er {billigst['udbyder_navn']} med "
-               f"{billigst['ned']}/{billigst['op']} Mbit/s til "
+               f"{kr(billigst['ned'])}/{kr(billigst['op'])} Mbit/s til "
                f"{kr(round(bb_aarspris(billigst) / 12))} kr. om måneden i snit det første år. "
                f"Startpriserne begynder ved {kr(min(bb_start(a) for a in udvalg))} kr./md."},
         {"sp": f"Hvad koster {navn_s}?",
@@ -9308,11 +9619,11 @@ hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
                f"kr./md. Regnet over det første år inkl. oprettelse starter det ved "
                f"{kr(round(bb_aarspris(billigst) / 12))} kr./md."},
         {"sp": f"Hvem har det hurtigste {navn_s}?",
-         "sv": f"{hurtigst['udbyder_navn']} med {hurtigst['ned']} Mbit/s ned og "
-               f"{hurtigst['op']} Mbit/s op."},
+         "sv": f"{hurtigst['udbyder_navn']} med {kr(hurtigst['ned'])} Mbit/s ned og "
+               f"{kr(hurtigst['op'])} Mbit/s op."},
         {"sp": f"Kan jeg få {navn_s} på min adresse?",
-         "sv": ("Fiber skal være gravet ned til adressen. Brug selskabets eget "
-                "adressetjek, før du bestiller." if noegle == "fiber"
+         "sv": ("Fiber skal være gravet ned til adressen. Slå adressen op i vores adressetjek, "
+                "og bekræft hos selskabet, før du bestiller." if noegle == "fiber"
                 else "Coax kræver tv-kabel i huset. Tjek adressen hos selskabet."
                 if noegle == "coax"
                 else "5G afhænger af dækningen på adressen. Start med vores "
@@ -9320,16 +9631,15 @@ hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
     ] + {
         "5g": [{"sp": "Hvad er 5G internet?",
                 "sv": "5G internet er trådløst internet til hjemmet via mobilnettet. Du får en router, "
-                      "der sættes i stikkontakten, og der skal ikke graves eller komme en tekniker."},
-               {"sp": "Hvad koster 5G internet om måneden?",
-                "sv": f"5G internet koster i median {kr(round(_median([bb_aarspris(a) / 12 for a in udvalg])))} "
-                      f"kr. om måneden i snit det første år i vores sammenligning."}],
+                      "der sættes i stikkontakten, og der skal ikke graves eller komme en tekniker. "
+                      "Om det kan erstatte fiber, gennemgår vi i guiden 5G internet eller fiber."},
+               ],
         "fiber": [{"sp": "Hvad er fiber internet?",
                    "sv": "Fiber internet er bredbånd gennem glasfiber helt ind i boligen. Det giver ofte "
                          "samme hastighed op og ned og lav svartid."}],
         "coax": [{"sp": "Hvad er coax internet?",
                   "sv": "Coax internet, også kaldet kabel-internet, kører gennem kabel-tv-nettet og "
-                        "tilsluttes antennestikket i væggen."}],
+                        "tilsluttes antennestikket i væggen. Hele forklaringen står i guiden om coax internet."}],
     }.get(noegle, [])
 
     skriv(f"/bredbaand/{sti}/", shell(
@@ -9681,7 +9991,7 @@ kælder. Brug <a href="/daekningskort/">dækningstjekket</a> til den del.</p>
 <p>Vi viser Trustpilot-scoren, hvor den findes, men den dækker selskabets samlede
 forretning — ikke kun mobilabonnementer. Et selskab med mange tv-kunder kan have
 lav score af grunde, der intet har med mobil at gøre.</p>
-<h3>Hele markedet</h3>
+<h3>Hvem der er med</h3>
 <p>Vi har datafeed fra en stor del af de danske selskaber, men ikke alle. Særligt
 på bredbånd findes der lokale fiberselskaber, som kun leverer i bestemte områder,
 og som vi ikke har prisdata fra. Tjek altid din adresse hos selskaberne.</p>
@@ -9956,8 +10266,8 @@ leveres til — og hvornår. Først derefter opsiger du med en slutdato, der pas
 <h2>Kan du få det samme på den nye adresse?</h2>
 <p>Ikke nødvendigvis. Bredbånd afhænger fuldstændig af, hvad der er gravet ned.
 Har du fiber i dag, kan den nye adresse have kabel-internet eller ingenting.</p>
-<p>Alle selskaber har et adressetjek på deres egen side. Brug det, før du regner på
-noget. Kan dit nuværende selskab ikke levere, kan du normalt komme ud af en
+<p>Slå den nye adresse op i <a href="/bredbaand/adressetjek/">adressetjekket</a>, og bekræft
+hos selskabet, før du regner på noget. Kan dit nuværende selskab ikke levere, kan du normalt komme ud af en
 bindingsperiode uden gebyr — men du skal selv bede om det og få det skriftligt.</p>
 <p>Er der ikke fiber på den nye adresse, er 5G det oplagte alternativ: ingen
 installation, klar samme dag, og routeren kan flyttes med igen næste gang. Se
@@ -10131,7 +10441,7 @@ tyndere end i byerne. Tjek to ting, før du beslutter noget:</p>
         f"""<section class="sektion baand-smal artikel">
 <div class="udtag"><p><strong>Kort svar:</strong> Online spil kræver omkring 3
 Mbit/s — næsten ingenting. Det bedste internet til gaming er fiber, fordi det, der afgør oplevelsen, er svartiden. Under 20 millisekunder
-er godt, over 40 begynder at kunne mærkes i skydespil. Fiber ligger på 2-10, 5G på 20-40.</p></div>
+er godt, over 40 begynder at kunne mærkes i skydespil. Fiber ligger på 2-10, 5G på 10-40.</p></div>
 
 <p>Det er den mest udbredte misforståelse om internet og gaming: at man skal have
 hurtigt internet. Et onlinespil sender meget små datapakker meget ofte — omkring 3
@@ -10296,7 +10606,7 @@ i guiden <a href="/guides/er-5g-pengene-vaerd/">er 5G pengene værd?</a></p>
                 "langt mere. 100-300 Mbit/s på fiber er et godt udgangspunkt — det er svartiden, "
                 "ikke hastigheden, der afgør oplevelsen i spillet."},
          {"sp": "Er fiber bedre end 5G til gaming?",
-          "sv": "Ja, markant. Fiber ligger på 2-10 millisekunder mod 5G's 20-40, og "
+          "sv": "Ja, markant. Fiber ligger på 2-10 millisekunder mod 5G's 10-40, og "
                 "fiber har langt mindre udsving i svartiden."},
          {"sp": "Hvad er jitter?",
           "sv": "Udsving i svartiden. En stabil ping på 40 ms er bedre end en, der "
@@ -10449,14 +10759,14 @@ SCORE_VÆGTE = [
      "Hvad du får for pengene. To abonnementer til samme pris kan give vidt "
      "forskellige datamængder."),
     ("Vilkår", 20,
-     "Binding, oprettelse og opsigelsesvarsel. Et abonnement uden binding er "
-     "mere værd end et med, alt andet lige."),
+     "Binding (7 point), oprettelse (5), eSIM (2), 5G (2) og inkluderede tjenester "
+     "(op til 4). Et abonnement uden binding er mere værd end et med, alt andet lige."),
     ("Kundetilfredshed", 10,
      "Trustpilot-score vægtet efter antal anmeldelser. Få anmeldelser gør "
      "scoren følsom over for enkeltsager."),
     ("Gennemsigtighed", 10,
-     "Om prisen er til at gennemskue: står normalprisen tydeligt, er der "
-     "skjulte gebyrer, hvor let er det at opsige."),
+     "Om prisen er til at gennemskue: point trækkes fra for korte intropriser med "
+     "stort prisspring bagefter, oprettelse over 99 kr. og binding over seks måneder."),
 ]
 
 
@@ -10480,7 +10790,7 @@ def byg_score():
     krop = f"""<section class="sektion baand-smal artikel">
 {gennemgangslinje(OPDATERET, fakta="Beregnes automatisk på alle abonnementer to gange i døgnet")}
 <div class="udtag"><p><strong>Kort fortalt:</strong> Telemobil-scoren er et tal fra
-0 til 100, der samler pris, datamængde, vilkår og kundetilfredshed i ét. Den
+0 til 100, der samler pris, pris pr. GB, vilkår, kundetilfredshed og gennemsigtighed i ét. Den
 beregnes maskinelt på alle {len([a for a in ABON if a["pris"] > 0])} abonnementer og
 kan ikke påvirkes af udbyderne.</p></div>
 
@@ -10769,7 +11079,7 @@ def byg_driftsstatus():
     antal = len([u for u in UDBYDERE if u["slug"] in DRIFT_SIDER])
 
     krop = f"""<section class="sektion baand-smal artikel">
-{gennemgangslinje(OPDATERET, fakta="Links til selskabernes officielle driftsinfo kontrolleret manuelt")}
+{gennemgangslinje(OPDATERET, fakta="Links til selskabernes officielle driftsinfo")}
 <div class="udtag"><p><strong>Virker mobilen ikke?</strong> Prøv først at slå
 flytilstand til og fra. Løser det ikke problemet, så gå ind på dit selskabs egen
 side og find Driftsinfo under Kundeservice eller Hjælp — det er den eneste kilde,
@@ -10780,9 +11090,8 @@ og du kan ikke finde ud af, om det er dig eller nettet. Den her side er lavet ti
 at besvare det andet spørgsmål på tredive sekunder.</p>
 
 <h2 id="tjek">Tjek det her først — det tager to minutter</h2>
-<p>Mellem en tredjedel og halvdelen af alle "nettet er nede"-oplevelser skyldes
-telefonen, ikke nettet. Gennemgå de her seks punkter, før du bruger tid på at
-ringe til kundeservice.</p>
+<p>Ofte er det telefonen og ikke nettet, der driller. Gennemgå de her seks punkter,
+før du bruger tid på at ringe til kundeservice.</p>
 {drift_tjekliste()}
 
 <h2>Hvad betyder symptomet?</h2>
@@ -10795,9 +11104,8 @@ alle selskaber under Kundeservice eller Hjælp.</p>
 {drifttabel()}
 
 <h2>Hvor længe varer et typisk nedbrud?</h2>
-<p>De fleste driftsforstyrrelser på danske mobilnet varer under to timer.
-Planlagt vedligeholdelse ligger som regel om natten og varsles på selskabets
-driftsside dagen før.</p>
+<p>Mange driftsforstyrrelser på mobilnettet er løst inden for få timer. Planlagt
+vedligeholdelse ligger som regel om natten og varsles på selskabets driftsside.</p>
 <p>Varer det længere end en halv dag, er det som regel et større teknisk problem
 eller et gravearbejde, der har ramt en fiberforbindelse til en mast. Så plejer
 selskabet at melde ud med en forventet løsningstid.</p>
@@ -10958,7 +11266,7 @@ def byg_driftsstatus_selskab(u):
                  f"ikke {e(navn)}, der er problemet.</p>")
 
     krop = f"""<section class="sektion baand-smal artikel">
-{gennemgangslinje(OPDATERET, fakta=f"Link til {navn}s officielle driftsinfo kontrolleret manuelt")}
+{gennemgangslinje(OPDATERET, fakta=f"Link til {_gen(navn)} officielle driftsinfo")}
 <div class="udtag"><p><strong>Virker {e(navn)} ikke?</strong> Slå flytilstand til og
 fra igen — det løser den hyppigste årsag. Hjælper det ikke, så find Driftsinfo på
 <a href="{e(url)}" rel="nofollow noopener" target="_blank">{e(navn)}s hjemmeside</a>
@@ -11038,7 +11346,7 @@ du beholder dit nummer, når du skifter.</p>
 
     skriv(sti, shell(
         sti=sti,
-        titel=f"{navn} driftsstatus — er der nedbrud lige nu?",
+        titel=f"{navn} nede? Driftsstatus, officiel driftsinfo og tjekliste",
         beskrivelse=f"Tjek om der er nedbrud hos {navn}. Direkte link til officiel "
                     f"driftsinfo, seks ting du selv kan tjekke, og hvad du har krav "
                     f"på ved længere nedbrud.",
@@ -11114,7 +11422,7 @@ def byg_anmeldelser():
         for u in med_data)
 
     krop = f"""<section class="sektion baand-smal artikel">
-{gennemgangslinje(OPDATERET, fakta=f"Vilkår for {len(med_data)} selskaber gennemgået manuelt")}
+{gennemgangslinje(OPDATERET, fakta=f"Vilkår for {len(med_data)} selskaber fra deres egne sider")}
 <div class="udtag"><p><strong>Kort fortalt:</strong> Jeg har gennemgået
 {len(med_data)} danske mobilselskaber på pris, vilkår, netværk og
 kundetilfredshed. Bedst bedømt på Trustpilot er
@@ -11301,8 +11609,18 @@ def byg_lydbog():
 </table>
 </div>"""
     else:
-        tabel = ('<p class="krydslink">Der er ingen abonnementer med lydbøger i vores '
-                 'datasæt lige nu. Tabellen udfyldes automatisk, når der kommer et.</p>')
+        # Ingen pakker med lydbog i feedet. Så viser vi det, der faktisk hjælper en,
+        # der lytter: de billigste små abonnementer, som rækker til lydbøger med god margin.
+        smaa = sorted([a for a in ABON if a["pris"] > 0 and i_baand(a["data_gb"], 1, 30)],
+                      key=lambda a: gns12(a) or 9e9)[:8]
+        tabel = ("<p>Selskaberne i vores sammenligning har ingen pakker med lydbog lige nu. "
+                 "Du har heller ikke brug for en: en lydbogstjeneste købt for sig plus et lille "
+                 "abonnement er som regel billigst, og du beholder tjenesten, når du skifter "
+                 "mobilselskab. Her er de billigste abonnementer, der rækker til lydbøger og "
+                 "podcast med god margin.</p>"
+                 + (pristabel(smaa, UMAP, titel="Billigste abonnementer til lydbøger og podcast",
+                              undertitel="Abonnementer med 1–30 GB.", filtre=False, vis=8,
+                              id_attr="lydbog-abonnementer") if smaa else ""))
 
     krop = f"""<section class="sektion baand-smal artikel">
 {gennemgangslinje(OPDATERET, fakta="Dataforbrug beregnet ud fra tjenesternes egne bitrates")}
@@ -11320,7 +11638,7 @@ er større, end de fleste regner med.</p>
 selskab uden lydbog kan sagtens køre på samme master som et med — forskellen
 ligger i pakken, ikke i dækningen.</p>
 
-<h2>Abonnementer med lydbog inkluderet</h2>
+<h2>{"Abonnementer med lydbog inkluderet" if med else "Det billigste abonnement til lydbøger"}</h2>
 {tabel}
 
 <h2>Hvor lidt fylder en lydbog?</h2>
@@ -11343,8 +11661,8 @@ om aftenen, og lyt på farten dagen efter.</p>
 <p>Regnestykket er det samme som ved streaming. Får du en tjeneste med, er det kun
 en besparelse, hvis du i forvejen betalte for den — og hvis den, du får, er den, du
 ville have valgt.</p>
-<p>Mofibo koster typisk 129-179 kr. om måneden alene, Podimo omkring 99 kr. Koster
-abonnementet med lydbog mere end det, betaler du overpris for bekvemmeligheden.</p>
+<p>Tjek, hvad tjenesten koster alene på dens egen side, og sammenlign med merprisen på
+abonnementet. Er merprisen højere, betaler du overpris for bekvemmeligheden.</p>
 <p>Og husk: tjenesten er knyttet til abonnementet. Skifter du mobilselskab, mister
 du adgangen samme dag — også halvt gennemlyttede bøger og din biblioteksliste.</p>
 
@@ -11369,7 +11687,7 @@ meget — ligger dit forbrug typisk under fem gigabyte om måneden. Så er
 <a href="/mobilabonnement-1-10-gb/">et abonnement med 1-10 GB</a> rigeligt, og du
 sparer flere hundrede kroner om året i forhold til en stor pakke.</p>
 <p>Streamer du samtidig video på farten, er billedet et andet. Se
-<a href="/mobilabonnement-10-30-gb/">10-30 GB</a>, som dækker langt de fleste.</p>
+<a href="/mobilabonnement-10-30-gb/">11–30 GB</a>, som dækker langt de fleste.</p>
 
 {forfatterboks()}
 </section>"""
@@ -11382,9 +11700,9 @@ sparer flere hundrede kroner om året i forhold til en stor pakke.</p>
          "sv": "Ja. Alle de store tjenester kan hente bøger ned over wi-fi. Gør du "
                "det, bruger du ingen mobildata overhovedet."},
         {"sp": "Er det billigst at få lydbogen med i mobilabonnementet?",
-         "sv": "Kun hvis du i forvejen betalte for tjenesten. Mofibo koster typisk "
-               "129-179 kr. alene og Podimo omkring 99 kr. Koster abonnementet mere "
-               "end det oveni, betaler du overpris."},
+         "sv": "Kun hvis du i forvejen betalte for tjenesten. Sammenlign merprisen på "
+               "abonnementet med det, tjenesten koster alene på dens egen side. Er "
+               "merprisen højere, betaler du overpris."},
         {"sp": "Hvad sker der med lydbogen, hvis jeg skifter selskab?",
          "sv": "Du mister adgangen samme dag, inklusive halvt gennemlyttede bøger og "
                "din biblioteksliste. Tjenesten er knyttet til abonnementet, ikke "
@@ -11460,8 +11778,8 @@ def _prisaendring_svar():
     start = dansk_dato(date.fromisoformat(med[0]["dato"]))
     op = len([x for x in aendr if x["til"] > x["fra"]])
     ned = len(aendr) - op
-    return (f"Siden {start} har vi registreret {len(aendr)} prisændringer på enkelte abonnementer "
-            f"({ned} fald og {op} stigninger). Vi henter priserne to gange i døgnet, og hver ændring står "
+    return (f"Siden {start} har vi registreret {len(aendr)} prisændring{'' if len(aendr) == 1 else 'er'} på enkelte abonnementer "
+            f"({ned} {'fald' if ned != 1 else 'fald'} og {op} stigning{'' if op == 1 else 'er'}). Vi henter priserne to gange i døgnet, og hver ændring står "
             "i vores offentlige prisarkiv.")
 
 def _prisarkiv_data():
@@ -11507,7 +11825,7 @@ def prisarkiv_tabel(aendringer, maks=60):
             hvem = ('<strong>Udgået abonnement</strong><br>'
                     '<span class="tabel-under">findes ikke længere i feedet</span>')
         raekker += f"""<tr>
-  <td class="tal"><time datetime="{e(x['dato'])}">{e(x['dato'])}</time></td>
+  <td class="tal"><time datetime="{e(x['dato'])}">{e(_dd(x['dato']))}</time></td>
   <td>{hvem}</td>
   <td class="tal">{kr(x['fra'])} kr.</td>
   <td class="tal">{kr(x['til'])} kr.</td>
@@ -11606,7 +11924,7 @@ under <a href="/billigste-mobilabonnement/">billigste mobilabonnement</a>.</p>
 {gennemgangslinje(OPDATERET, fakta=f"{kr(maalinger)} prismålinger gemt siden {dansk_dato(date.fromisoformat(med[0]['dato']))}")}
 <div class="udtag"><p><strong>Kort fortalt:</strong> Vi har gemt
 {kr(maalinger)} prismålinger siden {e(dansk_dato(date.fromisoformat(med[0]['dato'])))} og registreret
-{kr(len(aendringer))} prisændringer. Alle tal på denne side er målt, ikke
+{kr(len(aendringer))} prisændring{'' if len(aendringer) == 1 else 'er'}. Alle tal på denne side er målt, ikke
 anslået, og du må gerne bruge dem.</p></div>
 
 <p>Prissammenligninger viser, hvad et abonnement koster i dag. Ingen viser, hvad
@@ -11620,9 +11938,9 @@ fremhævelse af det, der passer os bedst.</p>
 <h2>Sådan ser det ud i tal</h2>
 <ul class="pilliste">
   <li><strong>{kr(maalinger)} prismålinger</strong> gemt siden
-      {e(med[0]['dato'])}</li>
+      {e(dansk_dato(date.fromisoformat(med[0]['dato'])))}</li>
   <li><strong>{len(med)} måledage</strong> over {dage} dage</li>
-  <li><strong>{kr(len(aendringer))} prisændringer</strong> registreret</li>
+  <li><strong>{kr(len(aendringer))} prisændring{'' if len(aendringer) == 1 else 'er'}</strong> registreret</li>
   <li><strong>{kr(ned)} faldt</strong> i pris, <strong>{kr(op)} steg</strong></li>
 </ul>
 <p>{stoerst_txt}</p>
@@ -11649,9 +11967,8 @@ interessant som et, der stiger i pris.</p>
 
 <h2>Hvad tallene ikke viser</h2>
 <ul class="pilliste">
-  <li><strong>Hele markedet.</strong> Vi måler de abonnementer, vi har adgang
-  til gennem udbydernes feeds. Det dækker en stor del af markedet, men ikke det
-  hele.</li>
+  <li><strong>Ikke hele markedet.</strong> Vi måler de abonnementer, vi har adgang
+  til gennem selskabernes feeds via Adtraction. Selskaber uden aftale er ikke med.</li>
   <li><strong>Kampagner.</strong> Intropriser skifter hele tiden og er ikke
   medregnet. Se dem i stedet i
   <a href="/kampagner/">oversigten over aktuelle kampagner</a>.</li>
@@ -11696,13 +12013,13 @@ hjælper gerne journalister og studerende.</p>
          "sv": "Ja. Angiv Telemobil som kilde med et link til denne side, og skriv "
                "hvornår tallene er hentet."},
         {"sp": "Dækker I hele det danske marked?",
-         "sv": "Nej. Vi måler de abonnementer, vi har adgang til gennem udbydernes "
-               "datafeeds. Det dækker en stor del af markedet, men ikke det hele."},
+         "sv": "Nej. Vi måler de abonnementer, vi har adgang til gennem selskabernes "
+               "produktfeeds via Adtraction. Selskaber uden aftale er ikke med."},
     ]
 
     skriv("/prisarkiv/", shell(
         sti="/prisarkiv/",
-        titel=med_maaned(f"Prisarkiv — {kr(len(aendringer))} målte prisændringer"),
+        titel=med_maaned(f"Prisarkiv — {kr(len(aendringer))} målte prisændring{'' if len(aendringer) == 1 else 'er'}"),
         beskrivelse=(f"Hver prisændring vi har målt på danske mobilabonnementer siden "
                      f"{dansk_dato(date.fromisoformat(med[0]['dato']))}. {kr(maalinger)} målinger, rå data, frit at "
                      f"citere med kildeangivelse."),
@@ -11742,6 +12059,23 @@ def byg_guideoversigt():
     for n in range(antal_sider):
         _byg_guideside(sorteret[n * pr_side:(n + 1) * pr_side], n + 1, antal_sider,
                        len(sorteret))
+
+
+_INTERNET_MAERKER = {"Bredbånd", "Internet", "Wifi", "Hotspot", "Gaming", "Flytning"}
+
+
+def _alle_guides_efter_emne():
+    """Alle guides på den indekserede forside, grupperet. Side 2-4 er noindex,
+    så uden den her liste ville ældre guides kun have links fra sideinddelingen."""
+    internet = [g for g in GUIDER if g[5] in _INTERNET_MAERKER]
+    mobil = [g for g in GUIDER if g[5] not in _INTERNET_MAERKER]
+    def ul(k):
+        return "".join(f'<li><a href="{g[0]}">{e(g[1])}</a></li>' for g in sorted(k, key=lambda g: g[1]))
+    return f"""<h2 id="alle">Alle guides efter emne</h2>
+  <h3>Internet derhjemme</h3>
+  <ul class="pilliste kolonner">{ul(internet)}</ul>
+  <h3>Mobilabonnement</h3>
+  <ul class="pilliste kolonner">{ul(mobil)}</ul>"""
 
 
 def _guidesti(n):
@@ -11812,8 +12146,14 @@ def _byg_guideside(udvalg, nu, i_alt, i_alt_guides):
   <tr><td>Reagere på at prisen er steget</td><td><a href="/guides/prisstigning-mobilabonnement/">Prisstigning — dine rettigheder</a></td></tr>
   <tr><td>Vide om mobilen kan erstatte bredbånd</td><td><a href="/guides/mobilabonnement-eller-bredbaand/">Mobil eller bredbånd?</a></td></tr>
   <tr><td>Have abonnement på trods af RKI</td><td><a href="/guides/mobilabonnement-trods-rki/">Mobilabonnement trods RKI</a></td></tr>
+  <tr><td>Vælge hastighed til internet derhjemme</td><td><a href="/guides/god-internethastighed/">Hvad er en god internethastighed?</a></td></tr>
+  <tr><td>Vælge mellem 5G og fiber</td><td><a href="/guides/5g-internet-eller-fiber/">5G internet eller fiber</a></td></tr>
+  <tr><td>Få bedre wifi i hele huset</td><td><a href="/guides/internetforstaerker/">Internetforstærker, mesh eller ny router</a></td></tr>
+  <tr><td>Opsige eller flytte internettet</td><td><a href="/guides/opsig-internet/">Sådan opsiger du internet</a></td></tr>
   </tbody>
   </table>
+
+  {_alle_guides_efter_emne() if nu == 1 else ""}
 
   <h2>Rækkefølgen vi anbefaler</h2>
   <p>Skal du vælge nyt mobilabonnement, er der en rækkefølge, der gør beslutningen markant
@@ -11857,21 +12197,21 @@ def _byg_guideside(udvalg, nu, i_alt, i_alt_guides):
     sidetekst = "" if nu == 1 else f" — side {nu}"
     return skriv(sti, shell(
         sti=sti,
-        titel=(f"Guides til mobilabonnement — data, dækning, eSIM og skifte" if nu == 1
-               else f"Guides til mobilabonnement — side {nu} af {i_alt}"),
-        beskrivelse=("Praktiske guides om dataforbrug, netværk, eSIM og hvordan du skifter "
-                     "mobilselskab. Skrevet i almindeligt dansk og opdateret løbende."
+        titel=(f"Guides om mobil og internet — data, dækning, priser og skifte" if nu == 1
+               else f"Guides om mobil og internet — side {nu} af {i_alt}"),
+        beskrivelse=("Praktiske guides om mobilabonnement og internet derhjemme: dataforbrug, "
+                     "netværk, hastighed, eSIM og hvordan du skifter eller opsiger."
                      if nu == 1 else
                      f"Side {nu} af vores guides om mobilabonnement, dataforbrug, "
                      f"netværk og hvordan du skifter selskab. Nyeste øverst."),
         opdateret=OPDATERET,
-        hero=hero_side("Guides", "Guides til mobilabonnement" + (f" — side {nu}" if nu > 1 else ""),
+        hero=hero_side("Guides", "Guides om mobil og internet" + (f" — side {nu}" if nu > 1 else ""),
                        "Det du skal vide, før du vælger — skrevet i almindeligt dansk.",
                        "", [("Guides", str(i_alt_guides)), ("Værktøjer", "4"),
                             ("Pris", "gratis")]),
         efter_hero="", krumme=krumme, indhold=krop,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme),
-                     {"@type": "ItemList", "name": "Guides til mobilabonnement",
+                     {"@type": "ItemList", "name": "Guides om mobil og internet",
                       "numberOfItems": len(udvalg),
                       "itemListElement": [
                           {"@type": "ListItem", "position": i + 1, "url": DOMAENE + g[0],
@@ -11960,9 +12300,9 @@ def _kurve(maalinger, noegle="median", bredde=760, hoejde=260):
   <svg viewBox="0 0 {bredde} {hoejde}" role="img" width="100%"
     aria-label="Kurve over medianprisen pr. datastørrelse fra {e(første)} til {e(sidste)}">
     {gitter}{linjer}
-    <text x="{pad_v}" y="{hoejde - 10}" font-size="10" fill="#5C6489">{e(første)}</text>
+    <text x="{pad_v}" y="{hoejde - 10}" font-size="10" fill="#5C6489">{e(_dd(første))}</text>
     <text x="{bredde - pad_h}" y="{hoejde - 10}" text-anchor="end" font-size="10"
-      fill="#5C6489">{e(sidste)}</text>
+      fill="#5C6489">{e(_dd(sidste))}</text>
   </svg>
   <figcaption class="pu-forklaring">{forklaring}</figcaption>
 </figure>"""
@@ -11992,9 +12332,51 @@ def _udviklingstabel(maalinger):
 <p>Fra {e(først["dato"])} til {e(sidst["dato"])}. Vi sammenligner medianprisen,
 fordi den ikke påvirkes af, at enkelte dyre abonnementer kommer til eller falder
 fra i mellemtiden.</p>
-<table><thead><tr><th>Datamængde</th><th>{e(først["dato"])}</th>
-<th>{e(sidst["dato"])}</th><th>Ændring</th></tr></thead>
+<table><thead><tr><th>Datamængde</th><th>{e(_dd(først["dato"]))}</th>
+<th>{e(_dd(sidst["dato"]))}</th><th>Ændring</th></tr></thead>
 <tbody>{raekker}</tbody></table>"""
+
+
+def prisindeks_tabel(maalinger):
+    """Telemobils mobilprisindeks: medianen af normalpriserne pr. måned (sidste
+    måling i måneden), med første måned = 100. Til presse og citater."""
+    pr_md = {}
+    for m in maalinger:
+        pr_md[m["dato"][:7]] = m
+    if len(pr_md) < 2:
+        return ""
+    md = sorted(pr_md)
+    def med_alle(m):
+        v = sorted(p for p in (m.get("priser") or {}).values() if p)
+        return _median(v) if v else None
+    def med_grp(m, g):
+        return ((m.get("grupper") or {}).get(g) or {}).get("median")
+    basis = med_alle(pr_md[md[0]])
+    rk = ""
+    for k in md:
+        m = pr_md[k]
+        a = med_alle(m)
+        if not a or not basis:
+            continue
+        aar, mnd = int(k[:4]), int(k[5:7])
+        g1, g2, g3 = med_grp(m, "1-10"), med_grp(m, "21-40"), med_grp(m, "fri")
+        rk += (f'<tr><td>{e(MAANEDER[mnd - 1].capitalize())} {aar}</td>'
+               f'<td class="tal"><strong>{kr(round(a))} kr.</strong></td>'
+               f'<td class="tal">{_tal_dk(round(a / basis * 100, 1))}</td>'
+               f'<td class="tal">{kr(round(g1)) + " kr." if g1 else "–"}</td>'
+               f'<td class="tal">{kr(round(g2)) + " kr." if g2 else "–"}</td>'
+               f'<td class="tal">{kr(round(g3)) + " kr." if g3 else "–"}</td>'
+               f'<td class="tal">{m.get("antal", "")}</td></tr>')
+    return f"""<h2 id="prisindeks">Telemobils mobilprisindeks</h2>
+<p>Medianen af normalpriserne på alle abonnementer i vores sammenligning, målt ved månedens sidste
+måling. Første måned er sat til 100. Tallene må citeres med kildeangivelse, og rådata ligger under
+<a href="/aabne-data/">åbne data</a>.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Mobilprisindeks pr. måned: median normalpris i alt og i tre datakategorier. Indeks
+{e(MAANEDER[int(md[0][5:7]) - 1])} {md[0][:4]} = 100.</caption>
+<thead><tr><th scope="col">Måned</th><th scope="col">Median</th><th scope="col">Indeks</th>
+<th scope="col">1–10 GB</th><th scope="col">21–40 GB</th><th scope="col">Fri data</th>
+<th scope="col">Abonnementer</th></tr></thead><tbody>{rk}</tbody></table></div>"""
 
 
 def byg_prisudvikling():
@@ -12020,7 +12402,8 @@ kurven kræver mindst to. Kom tilbage om en uge — så er der noget at se.</p>
 <p>Vi har {dage} målinger fra {e(dansk_dato(date.fromisoformat(først["dato"])))} til {e(dansk_dato(date.fromisoformat(sidst["dato"])))}. Hver
 måling dækker {sidst["antal"]} abonnementer fra {sidst["udbydere"]} udbydere.</p>
 {_kurve(maalinger)}
-{_udviklingstabel(maalinger)}"""
+{_udviklingstabel(maalinger)}
+{prisindeks_tabel(maalinger)}"""
 
     brod = f"""<section class="sektion baand-smal artikel">
 {gennemgangslinje(OPDATERET, fakta="Målingerne gemmes automatisk ved hvert build")}
@@ -12142,7 +12525,8 @@ def kampagnekort(k):
               if udb else "Produktet koster <strong>0 kr.</strong>"]
     if k.get("binding"):
         linjer.append(f'Mindstepris <strong>{kr(mp)} kr.</strong> '
-                      f'over {k["binding"]} mdr.')
+                      f'over {k["binding"]} mdr.'
+                      + (f' inkl. {kr(k["oprettelse"])} kr. i oprettelse' if k.get("oprettelse") else ""))
     if k.get("normalpris") and k.get("normalpris") != k.get("maanedspris"):
         linjer.append(f'Herefter <strong>{kr(k["normalpris"])} kr./md.</strong>')
     if k.get("udloeber"):
@@ -12248,7 +12632,7 @@ skal kigge efter, før du siger ja.</p>
 ser sådan ud.</p>
 {pristabel(intro, UMAP, titel="Alle abonnementer med intropris",
            undertitel="Sorteret efter introprisen. Klik Se detaljer for regnestykket.",
-           billigst_id=billigst["id"], id_attr="intropriser-tabel", vis=10)}"""
+           billigst_id=billigst["id"], id_attr="intropriser-tabel", vis=10, sorter=None)}"""
     else:
         introdel = """<h2 id="intropriser">Abonnementer med intropris</h2>
 <p>Der er ingen abonnementer med intropris i vores data lige nu. Det sker
@@ -12670,7 +13054,7 @@ hvorefter prisen stiger til {kr(b['pris'])} kr. Regnet over et helt år svarer
 det til {kr(g) if g is not None else "—"} kr./md.</p>
 {pristabel(intro_abo, UMAP, titel=f"{u['navn']} — abonnementer med intropris",
            undertitel="Sorteret efter introprisen.",
-           billigst_id=b["id"], id_attr=f"intro-{u['slug']}", vis=10, filtre=False)}"""
+           billigst_id=b["id"], id_attr=f"intro-{u['slug']}", vis=10, filtre=False, sorter=None)}"""
     else:
         introdel = ""
 
@@ -13008,25 +13392,37 @@ Doktrin: Priser sorteres efter pris, ikke efter provision
 
     # llms.txt: struktureret oversigt til AI-crawlere, der læser sitet
     veje = "\n".join(f"- [{t}]({DOMAENE}{h}): {u}" for h, t, u in [
-        ("/billigste-mobilabonnement/", "Billigste mobilabonnement", "Hele markedet sorteret efter reel pris"),
+        ("/billigste-mobilabonnement/", "Billigste mobilabonnement", "Alle abonnementer i sammenligningen sorteret efter snitpris over 12 måneder"),
         ("/bedste-mobilabonnement/", "Bedste mobilabonnement", "Vurderingskriterier og anbefalinger"),
         ("/mobilabonnement-med-fri-data/", "Fri data", "Ubegrænset data i Danmark"),
         ("/mobilabonnement-med-streaming/", "Med streaming", "Abonnementer med streamingtjenester"),
-        ("/udbydere/", "Udbydere", "Gennemgang af de 10 danske mobilselskaber"),
-        ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor og 3"),
+        ("/udbydere/", "Udbydere", f"Gennemgang af {D['antal_gennemgaaet']} danske mobilselskaber"),
+        ("/netvaerk/", "Mobilnetværk", "TDC NET, TN-Network (Telenor/Norlys) og 3"),
+        ("/prisudvikling/", "Prisudvikling", "Mobilpriser målt dagligt over tid"),
+        ("/kampagner/", "Kampagner", "Aktuelle tilbud regnet over hele bindingsperioden"),
         ("/sammenlign/", "Udbyder mod udbyder", "Direkte sammenligninger"),
         ("/landekoder/", "Landekoder", "Telefonkoder til alle lande"),
         ("/mobilpriser/", "Mobilpriser i Danmark", "Nøgletal opdateret dagligt — citérbare"),
         ("/metode/", "Metode", "Sådan beregner og vurderer vi"),
         ("/rettelser/", "Rettelser", "Offentlig log over rettede fejl"),
         ("/saadan-tjener-vi-penge/", "Forretningsmodel", "Affiliateprovision, og hvad den ikke påvirker"),
+    ] + ([
+        ("/internet-priser/", "Internet priser", "Alle internettilbud: fiber, kabel og 5G med pris det første år"),
+        ("/bredbaand/", "Billigste bredbånd", "Bredbånd sorteret efter pris det første år"),
+        ("/bredbaand/fibernet/", "Fibernet", "Fibertilbud og dækning"),
+        ("/bredbaand/5g/", "5G internet", "5G-bredbånd til hjemmet"),
+        ("/bredbaand/kabel-internet/", "Kabel-internet", "Coax via antennestikket"),
+        ("/bredbaand/adressetjek/", "Adressetjek", "Hvilke hastigheder kan leveres på en adresse (Bredbåndskortlægningen)"),
+        ("/bredbaand/udbydere/", "Internetudbydere", "Alle internetudbydere i sammenligningen"),
+    ] if BB else []) + [
+        ("/guides/", "Guides", "Guides om mobil og internet"),
     ])
     with open(os.path.join(ROD, "llms.txt"), "w", encoding="utf-8") as f:
         f.write(f"""# Telemobil
 
-> Dansk prissammenligning af mobilabonnementer, finansieret af affiliateprovision. Vi beregner den reelle
-> månedspris over 12 måneder inklusive intropris, normalpris og oprettelse — ikke kun
-> den intropris, udbyderne markedsfører.
+> Dansk prissammenligning af mobilabonnementer og internet derhjemme, finansieret af
+> affiliateprovision. Vi beregner snitprisen det første år inklusive intropris, normalpris og
+> oprettelse — ikke kun den intropris, selskaberne markedsfører.
 
 Udgiver: Telemobil, Danmark. Redaktør: {FORFATTER['navn']}.
 Sidst opdateret: {ISO}. Sprog: dansk.
@@ -13037,15 +13433,17 @@ Sidst opdateret: {ISO}. Sprog: dansk.
 
 ## Om vores data
 
-Priser og vilkår stammer fra udbydernes egne offentlige prislister. Nøgletallet
+Priserne kommer fra selskabernes produktfeeds via affiliatenetværket Adtraction og hentes to gange i døgnet, morgen og eftermiddag. Kun selskaber med en aftale via Adtraction har priser i tabellerne, så sammenligningen dækker ikke hele markedet. Nøgletallet
 "gennemsnit over 12 måneder" beregnes som intropris ganget med introperioden plus
 normalpris for de resterende måneder, divideret med tolv, plus eventuelt
-oprettelsesgebyr. Tabeller sorteres efter pris, aldrig efter provision.
+oprettelsesgebyr. Prislister sorteres efter snitpris, aldrig efter provision. Bredbåndsdækning
+pr. adresse kommer fra Digitaliseringsstyrelsens Bredbåndskortlægning.
 
 ## Forbehold
 
-Telemobil modtager provision fra udvalgte udbydere ved henvisning. Det påvirker ikke
-sortering eller vurderinger. Se {DOMAENE}/saadan-tjener-vi-penge/
+Telemobil modtager provision fra de selskaber, der har priser i sammenligningen, når en
+bestilling sker via et link. Provisionen afgør, hvem der er med, men ikke rækkefølgen eller
+vurderingerne. Se {DOMAENE}/saadan-tjener-vi-penge/
 """)
     llms_noegletal()
 
@@ -13058,9 +13456,9 @@ Disallow: /data/
 # Rådata til adressetjekket hentes af siden selv — ikke noget at indeksere
 Disallow: /assets/adr/
 
-# Sitet er statisk og let at crawle — ingen grund til at bremse
-User-agent: Googlebot
-Allow: /
+# Gruppen ovenfor gælder alle crawlere, også Googlebot, Bingbot og
+# AI-søgemaskinernes OAI-SearchBot, PerplexityBot og ChatGPT-User. En egen
+# Googlebot-gruppe ville ophæve Disallow-linjerne for Google.
 
 Sitemap: {DOMAENE}/sitemap.xml
 """
@@ -13281,10 +13679,10 @@ def _betalte():
 
 
 DATAGRUPPER = [
-    ("Op til 10 GB", 1, 10, "/mobilabonnement-1-10-gb/"),
-    ("10–30 GB", 11, 30, "/mobilabonnement-10-30-gb/"),
-    ("30–50 GB", 31, 50, "/mobilabonnement-30-50-gb/"),
-    ("50–99 GB", 51, 99, "/mobilabonnement-50-gb/"),
+    ("1–10 GB", 1, 10, "/mobilabonnement-1-10-gb/"),
+    ("11–30 GB", 11, 30, "/mobilabonnement-10-30-gb/"),
+    ("31–49 GB", 31, 49, "/mobilabonnement-30-50-gb/"),
+    ("50–99 GB", 50, 99, "/mobilabonnement-50-gb/"),
     ("100 GB og op", 100, 9998, "/mobilabonnement-100-gb/"),
     ("Fri data", 9999, 10 ** 9, "/mobilabonnement-med-fri-data/"),
 ]
@@ -13300,8 +13698,64 @@ def _familie_sum():
         return 0
     return round(2 * voksen[0] + 2 * barn[0])
 
+def tabel_kundeservice_tlf():
+    """Hvem man kan ringe til, hvornår — det vigtigste for en ældre bruger."""
+    rk = ""
+    for u in sorted(UDBYDERE_MED_DATA, key=lambda u: u["navn"]):
+        ks = u.get("kundeservice") or {}
+        k = [a for a in ABON if a["udbyder"] == u["slug"] and a["pris"] > 0 and a["data_gb"] <= 15]
+        billig = min(k, key=lambda a: gns12(a) or 9e9) if k else None
+        rk += (f'<tr><td><a href="/udbydere/{u["slug"]}/"><strong>{e(u["navn"])}</strong></a></td>'
+               f'<td>{e(ks["tlf"]) if ks.get("tlf") else "Ingen telefon"}</td>'
+               f'<td>{e(ks.get("tider") or "—")}</td>'
+               f'<td class="tal">{(kr(round(gns12(billig))) + " kr.") if billig else "—"}</td></tr>')
+    if not rk:
+        return ""
+    return f"""<h2 id="kundeservice">Hvem kan man ringe til?</h2>
+<p>Telefonnumre og åbningstider er hentet fra selskabernes egne sider. Selskaber uden
+telefon har kun chat eller mail.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Telefonisk kundeservice og billigste abonnement op til 15 GB (snit/md. det første år).</caption>
+<thead><tr><th scope="col">Selskab</th><th scope="col">Telefon</th><th scope="col">Åbent</th>
+<th scope="col">Fra (op til 15 GB)</th></tr></thead><tbody>{rk}</tbody></table></div>"""
+
+
+def familie_regnestykke():
+    """Familien på fire sat sammen af de billigste abonnementer, med navn og pris."""
+    b = _betalte()
+    voksen = sorted([a for a in b if a["data_gb"] >= 30], key=lambda a: gns12(a) or 9e9)
+    barn = sorted([a for a in b if 5 <= a["data_gb"] <= 10], key=lambda a: gns12(a) or 9e9)
+    if not voksen or not barn:
+        return ""
+    v, bb_ = voksen[0], barn[0]
+    rk = ""
+    for hvem, a in (("Voksen 1 (30 GB eller mere)", v), ("Voksen 2 (30 GB eller mere)", v),
+                    ("Barn 1 (5–10 GB)", bb_), ("Barn 2 (5–10 GB)", bb_)):
+        u = UMAP[a["udbyder"]]
+        rk += (f'<tr><td>{e(hvem)}</td><td><a href="/udbydere/{u["slug"]}/">{e(u["navn"])}</a> '
+               f'{e(_abonavn(a))}</td><td class="tal">{kr(round(gns12(a)))} kr.</td>'
+               f'<td>{_cta_lille(a)}</td></tr>')
+    i_alt = round(2 * gns12(v) + 2 * gns12(bb_))
+    return f"""<h2 id="regnestykke">Familien på fire: det billigste regnestykke</h2>
+<p>Sat sammen af de billigste abonnementer i vores sammenligning målt på snitprisen det
+første år. Hver person har sit eget abonnement uden binding, så I kan skifte én ad gangen.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>To voksne og to børn med hvert sit abonnement. Snitpris pr. måned det første år
+inkl. intropris og oprettelse, pr. {e(OPDATERET)}.</caption>
+<thead><tr><th scope="col">Person</th><th scope="col">Abonnement</th><th scope="col">Snit/md.</th>
+<th scope="col"><span class="sr-only">Bestil</span></th></tr></thead>
+<tbody>{rk}<tr><td colspan="2"><strong>Hele familien</strong></td>
+<td class="tal"><strong>{kr(i_alt)} kr.</strong></td><td></td></tr></tbody></table></div>"""
+
+
+def _cta_lille(a):
+    u = UMAP[a["udbyder"]]
+    return (f'<a href="{e(a["link"])}" rel="sponsored nofollow noopener" target="_blank" '
+            f'data-udgaaende="{e(u["slug"])}" data-abonnement="{e(a["id"])}">Se tilbud</a>')
+
+
 def _billigst_i(lav, hoej, mdr=12, kun_fri_tale=False):
-    k = [a for a in _betalte() if lav <= a["data_gb"] <= hoej
+    k = [a for a in _betalte() if i_baand(a["data_gb"], lav, hoej)
          and (a["tale"] == "fri" or not kun_fri_tale)]
     return min(k, key=lambda a: _samlet(a, mdr)) if k else None
 
@@ -14062,6 +14516,55 @@ NYE_GUIDE_KRYDSLINKS = {
 }
 
 
+# Naturlige links i selve teksten, lige efter det korte svar. Ét afsnit pr. side,
+# skrevet som en sætning, læseren har brug for — ikke en liste i bunden.
+KONTEKST_LINKS = {
+    "/guides/flyt-internettet/":
+        'Skal du ud af det gamle abonnement, viser <a href="/guides/opsig-internet/">guiden om at '
+        'opsige internet</a> varsel og returfrister hos de største selskaber. Vil du kunne flytte frit '
+        'næste gang, så se <a href="/guides/internet-uden-binding/">internet uden binding</a>.',
+    "/guides/ping-og-svartid/":
+        'Overvejer du 5G til spil, så læs <a href="/guides/5g-internet-eller-fiber/">5G internet eller '
+        'fiber</a> — svartiden er den største forskel. Hvor meget hastighed I har brug for ud over det, '
+        'står i <a href="/guides/god-internethastighed/">hvad er en god internethastighed</a>.',
+    "/guides/mobilt-bredbaand/":
+        'De aktuelle priser på 5G-internet til hjemmet står på <a href="/bredbaand/5g/">billigste '
+        '5G-bredbånd</a>, og sammenligningen med fast internet i <a href="/guides/5g-internet-eller-fiber/">'
+        '5G internet eller fiber</a>.',
+    "/guides/mobilabonnement-eller-bredbaand/":
+        'Skal du bare bruge mobilen som hotspot en gang imellem, viser <a href="/guides/del-internet-fra-mobil/">'
+        'del internet fra mobilen</a>, hvordan du gør, og hvad det koster i data.',
+    "/guides/er-5g-pengene-vaerd/":
+        'Handler det om internet derhjemme og ikke om telefonen, så se <a href="/guides/5g-internet-eller-fiber/">'
+        '5G internet eller fiber</a>.',
+    "/guides/langsomt-internet/":
+        'Er internettet kun langsomt langt fra routeren, er det wifi og ikke abonnementet — se '
+        '<a href="/guides/internetforstaerker/">internetforstærker, mesh eller ny router</a>. Er det '
+        'langsomt overalt, så tjek <a href="/guides/god-internethastighed/">hvilken hastighed I reelt har brug for</a>.',
+    "/guides/hvor-meget-data/":
+        'Skal du vurdere internettet derhjemme i stedet for mobilen, står husstandens tal i '
+        '<a href="/guides/dataforbrug-husstand/">hvor meget data bruger en husstand</a>.',
+    "/mobilabonnement-med-fri-data/":
+        'Skal fri data dække hele husstanden, er et <a href="/bredbaand/5g/">5G-bredbånd til hjemmet</a> '
+        'ofte billigere og mere stabilt end telefonens hotspot. Til sommerhuset, se '
+        '<a href="/guides/internet-i-sommerhus/">internet i sommerhus</a>, og til en enkelt laptop '
+        '<a href="/guides/del-internet-fra-mobil/">del internet fra mobilen</a>.',
+    "/mobilabonnement-100-gb/":
+        'Bruger du mobilen som internet derhjemme, så sammenlign også med <a href="/bredbaand/5g/">'
+        '5G-internet til hjemmet</a> og de samlede <a href="/internet-priser/">internet priser</a>.',
+}
+
+
+def _indsaet_kontekstlink(sti, html):
+    t = KONTEKST_LINKS.get(sti)
+    if not t:
+        return html
+    m = re.search(r'<div class="udtag">.*?</div>', html, re.S)
+    if not m:
+        return html
+    return html[:m.end()] + f'\n<p>{t}</p>' + html[m.end():]
+
+
 def _indsaet_krydslinks(sti, html):
     links = NYE_GUIDE_KRYDSLINKS.get(sti)
     if not links:
@@ -14135,7 +14638,7 @@ def byg_fri_data_eller_100():
     kol = [
         ("Abonnement", _hvem, False),
         ("Data i DK", lambda a: e(gb_tekst(a["data_gb"])), False),
-        ("EU-data", lambda a: f'{a.get("eu_gb") or "—"} GB' if a.get("eu_gb") else "Ikke oplyst", True),
+        ("EU-data", lambda a: ("Fri" if a["eu_gb"] >= 9999 else f'{a["eu_gb"]} GB') if a.get("eu_gb") else "Ikke oplyst", True),
         ("5G", lambda a: "Ja" if a.get("femg") else "Nej", False),
         ("Snit 12 mdr.", lambda a: f"<strong>{kr(_snit(a))} kr.</strong>", True),
     ]
@@ -14154,7 +14657,7 @@ def byg_fri_data_eller_100():
                            if mf > 0 else "")
                         + "Ligger dit forbrug omkring gennemsnittet på 26,9 GB, er der stadig god plads.</p>")
 
-    eu_fri = [a.get("eu_gb") or 0 for a in fri if a.get("eu_gb")]
+    eu_fri = [a.get("eu_gb") or 0 for a in fri if a.get("eu_gb") and a["eu_gb"] < 9999]
     eu_tekst = ""
     if eu_fri:
         eu_tekst = (f"<p>Blandt abonnementerne med fri data i vores sammenligning ligger "
@@ -14551,7 +15054,8 @@ gang med 12. Det er din besparelse om året.</p>
                "end et par kroner, betaler du for meget."},
         {"sp": "Må mit teleselskab hæve prisen på mit abonnement?",
          "sv": "Ja, men de skal varsle ændringen mindst en måned før, og du har ret til at "
-               "opsige aftalen uden omkostninger (slutbrugerbekendtgørelsens § 6)."},
+               "opsige aftalen uden omkostninger indtil en måned efter varslet "
+               "(slutbrugerbekendtgørelsens § 6). Det gælder ikke ændringer, der kun er til din fordel."},
         {"sp": "Mister jeg mit nummer, hvis jeg skifter?",
          "sv": "Nej. Du tager nummeret med, og det nye selskab opsiger det gamle abonnement "
                "for dig. Flytningen skal kunne ske på én arbejdsdag."},
@@ -14885,8 +15389,9 @@ koster 699 kr.</p>
 
 <h2 id="prisstigning">Kan du opsige, hvis prisen stiger?</h2>
 <p>Ja. Et selskab skal varsle en prisstigning mindst en måned før, og du kan opsige uden omkostninger
-indtil en måned efter varslet — også selvom du har binding. Hos Hiper står det også direkte i
-vilkårene.</p>
+indtil en måned efter varslet — også selvom du har binding (slutbrugerbekendtgørelsens § 6).
+Undtagelsen er ændringer, der udelukkende er til din fordel, fx en prisnedsættelse. Hos Hiper
+står retten også direkte i vilkårene.</p>
 
 <h2 id="router-opkraevet">Er du blevet opkrævet for en router, du har sendt retur?</h2>
 <p>Gem altid kvitteringen og track-and-trace. Kan du dokumentere, at routeren er sendt retur til
@@ -14894,10 +15399,13 @@ tiden, skal du ikke betale for den. Teleankenævnet gav i juli 2026 en kunde 200
 fordi et selskab havde opkrævet en router, som var returneret rettidigt.</p>
 
 <h2 id="skift">Skifter du udbyder? Lad det nye selskab opsige</h2>
-<p>Modsat nummerflytning på mobilen er der ingen lovregel om, at det nye internetselskab opsiger
-det gamle. Men branchen har en fælles aftale om skift af bredbåndsudbyder, og flere selskaber,
-blandt andre Norlys og Telenor, tilbyder at opsige den gamle aftale for dig via en fuldmagt. Det
-gælder typisk kun fast internet på samme adresse og i samme navn.</p>
+<p>Skift af fast internet foregår efter branchens fælles aftale om skift af bredbåndsudbyder
+(SBBU): det nye selskab sender en fuldmagt til det gamle, som opsiger på den aftalte dato. Ikke
+alle selskaber er med i aftalen, men blandt andre Norlys og Telenor opsiger den gamle aftale for
+dig. Det gælder typisk kun fast internet på samme adresse og i samme navn.</p>
+<p>Teleankenævnet afgjorde i juni 2026, at det gamle selskab må opsige på den dato, fuldmagten
+angiver, også selvom den ligger i din binding — og så kan du skulle betale resten af perioden.
+Tjek derfor datoen, før du bestiller.</p>
 <p>Opsigelsesvarsel og binding hos det gamle selskab gælder stadig. Starter det nye abonnement,
 før det gamle er udløbet, betaler du for begge i en periode. Selskaberne anbefaler selv, at du
 også sender en opsigelse på mail, så du har dokumentation.</p>
@@ -15481,7 +15989,7 @@ skal kigge på, hvis du:</p>
 {tabel}
 
 <h2 id="selskaber">Hvilke selskaber kan levere coax internet?</h2>
-<p>TDC NET ejer det største coaxnet, men sælger ikke selv internet. På TDC NETs kabelnet kan du
+<p>TDC NET ejer det største coaxnet, men sælger ikke selv internet. På TDC NET's kabelnet kan du
 blandt andre vælge Bolignet, DanskNet, EWII, Fastspeed, Hiper, ipnordic, Netnoerden, Norlys,
 Telenor, Waoo og YouSee. Andre kabelnet ejes af Norlys eller af lokale antenneforeninger, og så er
 udvalget af selskaber et andet. Se priserne hos dem, vi sammenligner, på
@@ -16099,8 +16607,8 @@ blevet almindeligt, men langt fra nødvendigt for alle.</p>
   <li><strong>Mål med kabel</strong> direkte i routeren, flere gange og på forskellige tidspunkter.</li>
   <li><strong>Gem målingerne</strong> med dato og klokkeslæt.</li>
   <li><strong>Klag skriftligt til selskabet</strong> og bed om en løsning eller et prisnedslag.</li>
-  <li><strong>Klag til Teleankenævnet,</strong> hvis selskabet ikke løser det. Forbrugerrådet Tænk
-  beskriver, at du kan gå videre dertil, når selskabet ikke har svaret inden for tre måneder.</li>
+  <li><strong>Klag til Teleankenævnet,</strong> hvis selskabet afviser din klage eller ikke løser
+  problemet. Selskabet skal oplyse dig om muligheden, når det afviser en klage.</li>
 </ol>
 
 <h2 id="maal">Mål din egen hastighed</h2>
@@ -16401,7 +16909,7 @@ def tabel_barn_pris():
     for navn, lav, hoej, sti, hvem in [
         ("Op til 10 GB", 1, 10, "/mobilabonnement-1-10-gb/",
          "Første smartphone med stramt datastop."),
-        ("10–30 GB", 11, 30, "/mobilabonnement-10-30-gb/",
+        ("11–30 GB", 11, 30, "/mobilabonnement-10-30-gb/",
          "Ældre børn med skole-apps og beskeder."),
     ]:
         a = _billigst_i(lav, hoej)
@@ -16807,7 +17315,7 @@ def udbyder_prisudvikling(u):
             sammen = (f"{kr(round(abs(forskel)))} kr. "
                       f"{'over' if forskel > 0 else 'under'} markedet")
         marked = (f'<div class="pg-kort"><b>{kr(round(mm))} kr.</b>'
-                  f'<span>Typisk pris i hele markedet — {navn} ligger {e(sammen)}</span></div>')
+                  f'<span>Typisk pris i vores sammenligning — {navn} ligger {e(sammen)}</span></div>')
 
     _, aendringer = _prisarkiv_data()
     mine = [x_ for x_ in aendringer if x_["abonnement"] and x_["abonnement"]["udbyder"] == s]
@@ -16879,7 +17387,7 @@ def udbyder_prisudvikling(u):
   </figure>
   {liste}
   <p>Hver enkelt ændring står med dato i <a href="/prisarkiv/">prisarkivet</a>, og
-  udviklingen for hele markedet kan du se under
+  udviklingen for hele sammenligningen kan du se under
   <a href="/prisudvikling/">prisudvikling på mobilabonnementer</a>.</p>"""
 
 
@@ -16896,6 +17404,7 @@ def _tests():
 
 
 TESTS = _tests()
+skabelon.HAR_TESTS = bool(TESTS)
 
 
 def _median_af(vaerdier):
@@ -17022,10 +17531,10 @@ def metode_krop():
     start = dansk_dato(date.fromisoformat(m[0]["dato"])) if m else OPDATERET
     return f"""<section class="sektion baand-smal artikel">
 <div class="udtag"><p><strong>Kort fortalt:</strong> Priserne hentes automatisk fra
-selskabernes egne produktdata to gange i døgnet. Vi regner hvert abonnement om til den
-reelle pris over 12 måneder, gemmer alle priser dag for dag og sorterer efter pris — ikke
-efter hvad vi tjener. Oplysninger, der ikke står i datafeedet, kontrollerer vi manuelt og
-daterer.</p></div>
+selskabernes produktfeeds via Adtraction to gange i døgnet. Vi regner hvert abonnement om
+til snitprisen det første år, gemmer alle priser dag for dag og sorterer efter pris — ikke
+efter hvad vi tjener. Kun selskaber med en aftale via Adtraction har priser i tabellerne.
+Oplysninger, der ikke står i feedet, finder vi på selskabernes egne sider og daterer.</p></div>
 
 <h2 id="datagrundlag">Hvor priserne kommer fra</h2>
 <p>Priser og abonnementsdata kommer fra de datafeeds, selskaberne selv leverer gennem
@@ -17068,12 +17577,28 @@ og graferne på selskabernes sider. Datasættet kan hentes frit under
   <a href="/telemobil-score/">siden om scoren</a>.</li>
 </ul>
 
-<h2 id="sortering">Sortering og udvælgelse</h2>
-<p>Sammenligningstabellerne sorteres efter pris. Provision indgår ikke i sorteringen, og et
-selskab kan ikke købe en bedre placering eller få en kritisk formulering fjernet.</p>
-<p>Vi viser i dag selskaber, vi har en aftale med gennem Adtraction, fordi det er derfra,
-de automatiske prisdata kommer. Det betyder, at ikke alle danske selskaber er med. Mangler
-et selskab, der er relevant for dig, så sammenlign også på selskabets egen side.</p>
+<h2 id="rangering">Sådan rangerer vi</h2>
+<p>Hovedparametrene for rækkefølgen er de samme på hele sitet. Hvilken af dem en tabel bruger,
+står over tabellen.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Rækkefølgen i tabellerne og hvad der afgør den. Provision indgår aldrig.</caption>
+<thead><tr><th scope="col">Hvor</th><th scope="col">Sorteret efter</th></tr></thead>
+<tbody>
+<tr><td>Prislister på mobilsiderne (forside, billigste, datamængder, målgrupper, selskaber)</td><td>Snitpris det første år: intropris, normalpris og oprettelse lagt sammen og delt med 12. Laveste først.</td></tr>
+<tr><td>Bredbånd og internet priser</td><td>Samlet pris det første år inkl. oprettelse delt med 12. Laveste først.</td></tr>
+<tr><td>Bedste mobilabonnement</td><td>Telemobil-scoren: {", ".join(f"{n.lower()} {v} %" for n, v, *_ in SCORE_VÆGTE)}.</td></tr>
+<tr><td>Anmeldelser</td><td>Selskabernes Trustpilot-score.</td></tr>
+<tr><td>Kampagner og intropriser</td><td>Introprisen eller den reelle besparelse, som det står over tabellen.</td></tr>
+</tbody></table></div>
+<p>Du kan selv sortere om i hver tabel. Provision indgår ikke i nogen sortering, og et selskab
+kan ikke købe en bedre placering eller få en kritisk formulering fjernet.</p>
+
+<h2 id="sortering">Hvem der er med</h2>
+<p>Provisionsaftaler afgør, hvilke selskaber der har priser i tabellerne. Vi viser i dag kun
+priser fra selskaber, vi har en aftale med gennem Adtraction, fordi det er derfra, de
+automatiske prisdata kommer. Det betyder, at ikke alle danske selskaber er med, og at
+sammenligningen ikke dækker hele markedet. Mangler et selskab, der er relevant for dig,
+så sammenlign også på selskabets egen side.</p>
 
 <h2 id="kriterier">Vurderingskriterier</h2>
 <div class="tabelramme"><table class="datatabel">
@@ -17153,7 +17678,21 @@ def byg_aabne_data():
                 if s in UMAP and v.get("min"):
                     w.writerow([m["dato"], UMAP[s]["navn"], v.get("antal", ""), v["min"],
                                 v.get("median", ""), v.get("maks", "")])
+    if BB:
+        with open(os.path.join(mappe, "internetpriser.csv"), "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(["dato", "selskab", "abonnement", "teknologi", "ned_mbit", "op_mbit",
+                        "normalpris_kr", "intropris_kr", "intro_maaneder", "oprettelse_kr",
+                        "binding_mdr", "snit_foerste_aar_kr"])
+            for a in sorted(BB, key=lambda a: (a["udbyder_navn"], a["pris"])):
+                w.writerow([ISO, a["udbyder_navn"], a["navn"], a["teknologi"], a["ned"], a["op"],
+                            a["pris"], a.get("intro_pris") or "", a.get("intro_mdr") or 0,
+                            a.get("oprettelse", 0), a.get("binding", 0), _ip_aar(a)])
     start = maal[0]["dato"] if maal else ISO
+    bb_raekke = (f"""<tr><td><a href="/aabne-data/internetpriser.csv" download><strong>internetpriser.csv</strong></a><br>
+<a href="/aabne-data/internetpriser-excel.csv" download>Excel-udgave</a></td>
+<td>Alle {len(BB)} internettilbud med teknologi, hastighed, normalpris, kampagnepris og snitpris det første år</td>
+<td>I dag</td></tr>""" if BB else "")
     brod = f"""<section class="sektion baand-smal artikel">
 <div class="udtag"><p><strong>Kort fortalt:</strong> Du må frit bruge vores prisdata —
 i artikler, opgaver, analyser og på egne sider — så længe du angiver Telemobil som kilde
@@ -17172,6 +17711,7 @@ med et link til telemobil.dk. Filerne opdateres to gange i døgnet.</p></div>
 <a href="/aabne-data/prisudvikling-pr-selskab-excel.csv" download>Excel-udgave</a></td>
 <td>Laveste, typiske og højeste normalpris pr. selskab, dag for dag</td>
 <td>Fra {e(dansk_dato(date.fromisoformat(start)))}</td></tr>
+{bb_raekke}
 </tbody></table></div>
 
 <h2>Licens og kildeangivelse</h2>
@@ -17208,10 +17748,12 @@ Priser kan ændre sig mellem to opdateringer, og selskabets egen side er altid g
               {"@type": "DataDownload", "encodingFormat": "text/csv",
                "contentUrl": DOMAENE + "/aabne-data/mobilabonnementer.csv"},
               {"@type": "DataDownload", "encodingFormat": "text/csv",
-               "contentUrl": DOMAENE + "/aabne-data/prisudvikling-pr-selskab.csv"}]}
+               "contentUrl": DOMAENE + "/aabne-data/prisudvikling-pr-selskab.csv"}]
+              + ([{"@type": "DataDownload", "encodingFormat": "text/csv",
+                   "contentUrl": DOMAENE + "/aabne-data/internetpriser.csv"}] if BB else [])}
     # Excel-udgaver: dansk Excel forventer semikolon og decimalkomma, og BOM
     # for at vise æøå rigtigt. Standardfilerne beholdes til maskiner og AI.
-    for navn in ("mobilabonnementer", "prisudvikling-pr-selskab"):
+    for navn in ("mobilabonnementer", "prisudvikling-pr-selskab") + (("internetpriser",) if BB else ()):
         with open(os.path.join(mappe, navn + ".csv"), encoding="utf-8", newline="") as f:
             raekker = list(csv.reader(f))
         with open(os.path.join(mappe, navn + "-excel.csv"), "w", encoding="utf-8-sig", newline="") as f:
@@ -17224,7 +17766,9 @@ Priser kan ændre sig mellem to opdateringer, og selskabets egen side er altid g
                    "antal_abonnementer": "Antal abonnementer",
                    "laveste_normalpris_kr": "Laveste normalpris (kr./md.)",
                    "median_normalpris_kr": "Typisk normalpris (kr./md.)",
-                   "hoejeste_normalpris_kr": "Højeste normalpris (kr./md.)"}
+                   "hoejeste_normalpris_kr": "Højeste normalpris (kr./md.)",
+                   "teknologi": "Teknologi", "ned_mbit": "Hastighed ned (Mbit/s)",
+                   "op_mbit": "Hastighed op (Mbit/s)", "snit_foerste_aar_kr": "Snit første år (kr./md.)"}
             if raekker:
                 raekker[0] = [ovs.get(c, c.replace("_", " ").capitalize()) for c in raekker[0]]
             for r in raekker:
@@ -17238,17 +17782,138 @@ Priser kan ændre sig mellem to opdateringer, og selskabets egen side er altid g
 
 # ------------------------------------------------------------ INTERNE LINKS
 
+def byg_alternativer(u):
+    """'Alternativer til X': billigere abonnementer med mindst samme data, og
+    det billigste på samme net. Regnet ud af data pr. abonnement — ingen fraser."""
+    andre = [a for a in _betalte() if a["udbyder"] != u["slug"]]
+    if len(andre) < 3:
+        return None
+    egne = sorted([a for a in _betalte() if a["udbyder"] == u["slug"]], key=lambda a: gns12(a) or 9e9)
+    sti = f"/udbydere/{u['slug']}/alternativer/"
+    navn = u["navn"]
+    rk = ""
+    for a in egne[:8]:
+        k = [x for x in andre if x["data_gb"] >= a["data_gb"] and (gns12(x) or 9e9) < (gns12(a) or 0)]
+        b_ = min(k, key=lambda x: gns12(x) or 9e9) if k else None
+        if b_:
+            hoejre = (f'<td><a href="/udbydere/{b_["udbyder"]}/">{e(UMAP[b_["udbyder"]]["navn"])}</a> '
+                      f'{e(_abonavn(b_))}</td><td class="tal"><strong>{kr(round(gns12(b_)))} kr.</strong></td>'
+                      f'<td class="tal">{kr(round((gns12(a) - gns12(b_)) * 12))} kr.</td>')
+        else:
+            hoejre = '<td colspan="3">Intet billigere med samme data i vores sammenligning</td>'
+        rk += (f'<tr><td>{e(_abonavn(a))}<br><span class="tabel-under">{kr(round(gns12(a)))} kr./md. i snit'
+               f'</span></td>{hoejre}</tr>')
+    net = u.get("netvaerk")
+    samme_net = ([x for x in andre if UMAP[x["udbyder"]].get("netvaerk") == net]
+                 if net not in ("", "MVNO", None, "Se udbyder") else [])
+    net_rk = ""
+    for s, (bnavn, lo, hi) in GB_BAAND.items():
+        k = [x for x in samme_net if i_baand(x["data_gb"], lo, hi)]
+        if k:
+            b_ = min(k, key=lambda x: gns12(x) or 9e9)
+            net_rk += (f'<tr><td>{e(bnavn)}</td><td><a href="/udbydere/{b_["udbyder"]}/">'
+                       f'{e(UMAP[b_["udbyder"]]["navn"])}</a> {e(_abonavn(b_))}</td>'
+                       f'<td class="tal">{kr(round(gns12(b_)))} kr.</td></tr>')
+    billigst = min([x for x in andre if x["data_gb"] > 0] or andre, key=lambda x: gns12(x) or 9e9)
+    kort = (f"Det billigste alternativ til {navn} i vores sammenligning er "
+            f"{UMAP[billigst['udbyder']]['navn']} {_abonavn(billigst)}: {_prisled_aar(billigst)}.")
+    if egne:
+        par = []
+        for a in egne:
+            k = [x for x in andre if x["data_gb"] >= a["data_gb"]]
+            if k:
+                b_ = min(k, key=lambda x: gns12(x) or 9e9)
+                if gns12(b_) < gns12(a):
+                    par.append((a, b_))
+        if par:
+            a, b_ = max(par, key=lambda p: gns12(p[0]) - gns12(p[1]))
+            kort += (f" Har du {navn} {_abonavn(a)}, kan du få mindst samme data hos "
+                     f"{UMAP[b_['udbyder']]['navn']} og spare {kr(round((gns12(a) - gns12(b_)) * 12))} kr. "
+                     f"det første år.")
+    netnavn = _netnavn(u)
+    vs = [(a, b_) for a, b_ in VS_PAR_AKTIVE if u["slug"] in (a, b_)]
+    vs_html = "".join(f'<li><a href="/sammenlign/{a}-vs-{b_}/">{e(UMAP[a]["navn"])} eller '
+                      f'{e(UMAP[b_]["navn"])}?</a></li>' for a, b_ in vs)
+    if egne:
+        blok1 = (f'<h2 id="billigere">Billigere med mindst samme data</h2>\n'
+                 f'<p>For hvert {e(navn)}-abonnement i vores sammenligning: det billigste abonnement hos et '
+                 f'andet selskab med mindst lige så meget data, målt på snitprisen det første år.</p>\n'
+                 f'<div class="tabelramme"><table class="datatabel">\n'
+                 f'<caption>Alternativer til {e(navn)}. Besparelsen er forskellen i snitpris gange tolv, '
+                 f'pr. {e(OPDATERET)}.</caption>\n'
+                 f'<thead><tr><th scope="col">{e(navn)}</th><th scope="col">Billigere alternativ</th>'
+                 f'<th scope="col">Snit/md.</th><th scope="col">Sparet år 1</th></tr></thead>'
+                 f'<tbody>{rk}</tbody></table></div>')
+    else:
+        blok1 = (f'<h2 id="billigere">Billigere alternativer</h2>\n<p>Vi har ikke prisdata fra {e(navn)}. '
+                 f'Herunder står de billigste abonnementer på samme net, så du kan sammenligne med din '
+                 f'nuværende regning.</p>')
+    blok2 = ""
+    if net_rk:
+        blok2 = (f'<h2 id="samme-net">Billigst på {e(netnavn)}</h2>\n'
+                 f'<p>Vil du beholde samme dækning som hos {e(navn)}, så vælg et selskab på samme net. Her er '
+                 f'det billigste i hver datakategori på {e(netnavn)}.</p>\n'
+                 f'<div class="tabelramme"><table class="datatabel">\n'
+                 f'<caption>Billigste abonnement på {e(netnavn)} pr. datakategori (snit/md. det første år).'
+                 f'</caption>\n<thead><tr><th scope="col">Datamængde</th><th scope="col">Abonnement</th>'
+                 f'<th scope="col">Snit/md.</th></tr></thead><tbody>{net_rk}</tbody></table></div>')
+    vs_blok = (f'<h3>Sammenlign {e(navn)} direkte</h3><ul class="pilliste">{vs_html}</ul>'
+               if vs_html else "")
+    krop = f"""<section class="sektion baand-smal artikel">
+{gennemgangslinje(OPDATERET)}
+<div class="udtag"><p><strong>Kort svar:</strong> {e(kort)}</p></div>
+
+{blok1}
+
+{blok2}
+
+<h2 id="skift">Sådan skifter du fra {e(navn)}</h2>
+<p>Bestil hos det nye selskab og oplys dit nummer. Det nye selskab flytter nummeret og opsiger
+{e(navn)} for dig, og der går typisk få dage. Har du binding eller en telefon på afbetaling hos
+{e(navn)}, løber de videre. Se <a href="/guides/skift-mobilselskab/">sådan skifter du mobilselskab</a>.</p>
+{vs_blok}
+<p>Læs hele <a href="/udbydere/{u['slug']}/">gennemgangen af {e(navn)}</a>, eller se alle priser på
+<a href="/billigste-mobilabonnement/">billigste mobilabonnement</a>.</p>
+</section>
+<section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>"""
+    samme_navne = sorted({UMAP[x['udbyder']]['navn'] for x in samme_net})
+    faq = [
+        {"sp": f"Hvad er et billigere alternativ til {navn}?", "sv": kort},
+        {"sp": f"Kan jeg beholde mit nummer, når jeg skifter fra {navn}?",
+         "sv": f"Ja. Det nye selskab flytter nummeret og opsiger {navn} for dig. Det er gratis."},
+        {"sp": f"Hvilke selskaber bruger samme net som {navn}?",
+         "sv": (f"{navn} kører på {netnavn}. I vores sammenligning gør {_og(samme_navne)} det også."
+                if samme_navne else "Se netværket for hvert selskab på siden om mobilnetværk.")},
+    ]
+    krumme = [("/", "Forside"), ("/udbydere/", "Udbydere"), (f"/udbydere/{u['slug']}/", navn),
+              (None, "Alternativer")]
+    titel = med_maaned(f"Alternativer til {navn} — billigere abonnementer")
+    skriv(sti, shell(
+        sti=sti, titel=titel,
+        beskrivelse=(f"Find et billigere alternativ til {navn} med mindst samme data — og se det "
+                     f"billigste på samme net. Regnet på snitprisen det første år."),
+        hero=hero_side("Alternativer", f"Alternativer til {e(navn)}",
+                       f"Billigere abonnementer med mindst samme data, og det billigste på {e(netnavn)}.",
+                       '<a href="#billigere" class="knap knap-primaer">Se alternativerne</a>'),
+        efter_hero="", krumme=krumme, indhold=krop + faqblok(faq), toc=False,
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq))],
+    ), prioritet="0.6")
+    return sti
+
+
 def vs_links(u):
+    alt = (f'<p>Se også <a href="/udbydere/{u["slug"]}/alternativer/">billigere alternativer til '
+           f'{e(u["navn"])}</a>.</p>')
     par = [(a, b_) for a, b_ in VS_PAR_AKTIVE if u["slug"] in (a, b_)]
     if not par:
-        return ""
+        return alt
     li = ""
     for a, b_ in par:
         anden = UMAP[b_ if a == u["slug"] else a]
         li += (f'<li><a href="/sammenlign/{a}-vs-{b_}/">{e(u["navn"])} eller '
                f'{e(anden["navn"])}?</a></li>')
     return (f'<h3>Sammenlign {e(u["navn"])} direkte</h3>'
-            f'<ul class="pilliste">{li}</ul>')
+            f'<ul class="pilliste">{li}</ul>' + alt)
 
 
 def relaterede_guides(sti):
@@ -17358,7 +18023,7 @@ def vurdering_regler(u, egne):
     uden_o = sum(1 for a in egne if not a.get("oprettelse"))
     esim = sum(1 for a in egne if a.get("esim"))
     femg = sum(1 for a in egne if a.get("femg"))
-    eu = [a.get("eu_gb") for a in egne if a.get("eu_gb")]
+    eu = [a.get("eu_gb") for a in egne if a.get("eu_gb") and a["eu_gb"] < 9999]
     n = len(egne)
 
     def andel(k):
@@ -17578,14 +18243,15 @@ CITAT_KW = {
     "/": "mobilabonnement",
     "/billigste-mobilabonnement/": "mobilabonnement",
     "/mobilabonnement-1-10-gb/": "mobilabonnement med 1–10 GB",
-    "/mobilabonnement-10-30-gb/": "mobilabonnement med 10–30 GB",
-    "/mobilabonnement-30-50-gb/": "mobilabonnement med 30–50 GB",
+    "/mobilabonnement-10-30-gb/": "mobilabonnement med 11–30 GB",
+    "/mobilabonnement-30-50-gb/": "mobilabonnement med 31–49 GB",
     "/mobilabonnement-50-gb/": "mobilabonnement med 50–99 GB",
     "/mobilabonnement-100-gb/": "mobilabonnement med 100 GB eller mere",
     "/mobilabonnement-med-fri-data/": "mobilabonnement med fri data",
     "/mobilabonnement-med-fri-tale/": "mobilabonnement med fri tale",
     "/mobilabonnement-med-esim/": "mobilabonnement med eSIM",
-    "/mobilabonnement-med-telefon/": "mobilabonnement med telefon",
+    "/mobilabonnement-med-5g/": "mobilabonnement med 5G",
+    "/mobilabonnement-med-telefon/": "abonnement uden binding til en kontantkøbt telefon",
     "/mobilabonnement-med-streaming/": "mobilabonnement med streaming",
     "/mobilabonnement-med-netflix/": "mobilabonnement med Netflix",
     "/mobilabonnement-med-hbo-max/": "mobilabonnement med HBO Max",
@@ -17594,7 +18260,7 @@ CITAT_KW = {
     "/mobilabonnement-med-tv2-play/": "mobilabonnement med TV 2 Play",
     "/mobilabonnement-med-musik/": "mobilabonnement med musik",
     "/mobilabonnement-med-lydbog/": "mobilabonnement med lydbøger",
-    "/mobilabonnement-til-aeldre/": "mobilabonnement til ældre",
+    "/mobilabonnement-til-aeldre/": "mobilabonnement til ældre med telefonisk kundeservice",
     "/mobilabonnement-til-boern/": "mobilabonnement til børn",
     "/mobilabonnement-til-erhverv/": "mobilabonnement til erhverv",
     "/mobilabonnement-til-familie/": "mobilabonnement til familien",
@@ -17610,13 +18276,14 @@ CITAT_FILTER = {
     "/mobilabonnement-med-fri-data/": lambda a: a["data_gb"] >= 9999,
     "/mobilabonnement-med-fri-tale/": lambda a: a["tale"] == "fri",
     "/mobilabonnement-uden-binding/": lambda a: not a["binding"],
+    "/mobilabonnement-med-telefon/": lambda a: not a["binding"],
+    "/mobilabonnement-til-aeldre/": lambda a: a["data_gb"] <= 15 and bool(
+        (UMAP[a["udbyder"]].get("kundeservice") or {}).get("tlf")),
     "/mobilabonnement-med-esim/": lambda a: bool(a.get("esim")),
+    "/mobilabonnement-med-5g/": lambda a: bool(a.get("femg")),
     "/mobilabonnement-uden-data/": lambda a: a["data_gb"] == 0,
-    "/mobilabonnement-1-10-gb/": lambda a: 1 <= a["data_gb"] <= 10,
-    "/mobilabonnement-10-30-gb/": lambda a: 10 <= a["data_gb"] <= 30,
-    "/mobilabonnement-30-50-gb/": lambda a: 30 <= a["data_gb"] <= 50,
-    "/mobilabonnement-50-gb/": lambda a: 50 <= a["data_gb"] <= 99,
-    "/mobilabonnement-100-gb/": lambda a: 100 <= a["data_gb"] < 9999,
+    **{f"/mobilabonnement-{s}/": (lambda lo, hi: (lambda a: i_baand(a["data_gb"], lo, hi)))(lo, hi)
+       for s, (_n, lo, hi) in GB_BAAND.items()},
     "/mobilabonnement-under-100-kr/": lambda a: a["pris"] < 100,
     "/mobilabonnement-med-streaming/": lambda a: bool(a.get("streaming")),
     "/mobilabonnement-med-musik/": lambda a: "Musik" in (a.get("streaming") or []),
@@ -17930,13 +18597,14 @@ def tabel_fri_data_betaler_sig():
     if not fri:
         return ""
     bf = min(fri, key=gns12)
-    trin = [("Under 10 GB", "Stort set kun wi-fi, beskeder og kort", 1, 10, "/mobilabonnement-1-10-gb/"),
-            ("10–30 GB", "Sociale medier og musik på farten", 11, 30, "/mobilabonnement-10-30-gb/"),
-            ("30–100 GB", "Video på farten og lidt hotspot", 31, 100, "/mobilabonnement-50-gb/"),
-            ("Over 100 GB", "Mobilen er også internet derhjemme", 101, 9998, "/mobilabonnement-100-gb/")]
+    trin = [("1–10 GB", "Stort set kun wi-fi, beskeder og kort", 1, 10, "/mobilabonnement-1-10-gb/"),
+            ("11–30 GB", "Sociale medier og musik på farten", 11, 30, "/mobilabonnement-10-30-gb/"),
+            ("31–49 GB", "Video på farten flere gange om ugen", 31, 49, "/mobilabonnement-30-50-gb/"),
+            ("50–99 GB", "Video hver dag og lidt hotspot", 50, 99, "/mobilabonnement-50-gb/"),
+            ("100 GB og op", "Mobilen er også internet derhjemme", 100, 9998, "/mobilabonnement-100-gb/")]
     rk = ""
     for navn, brug, lo, hi, sti in trin:
-        k = [a for a in alle if lo <= a["data_gb"] <= hi]
+        k = [a for a in alle if i_baand(a["data_gb"], lo, hi)]
         if not k:
             continue
         b = min(k, key=gns12)
@@ -18008,7 +18676,7 @@ def netvaerk_maaling_sektion():
                  f'<td class="tal">{_tal_dk(m["fem_g"].get(n, 0))} %</td></tr>'
                  for n, v in sorted(m["fejlfri"].items(), key=lambda x: -x[1]))
     return f"""<h2 id="maalinger">Teknologisk Instituts målinger af de danske mobilnet</h2>
-<p class="citat-fakta">Ifølge Teknologisk Instituts måling fra {e(m['periode'])} på {m['steder']}
+<p class="citat-fakta">Ifølge Teknologisk Instituts måling fra {e(m['periode'])}, bestilt af TDC NET, på {m['steder']}
 faste målesteder i hele landet havde TDC NET den bedste samlede mobilnetværksoplevelse med {m['fejlfri']['TDC NET']} %
 fejlfri oplevelse, foran Norlys med {m['fejlfri']['Norlys']} %, Telenor med
 {m['fejlfri']['Telenor']} % og 3 med {m['fejlfri']['3']} %.</p>
@@ -18290,6 +18958,14 @@ def main():
     # bredbåndsfeedet, bygges de ikke, og så skal de ud af menuen.
     if not BB:
         skabelon.BREDBAAND_MENU = []
+        # Guides, der kun bygges med bredbåndsdata, må ikke stå i oversigten eller
+        # under "Flere guides" — ellers bliver de døde links den dag feedet fejler.
+        GUIDER[:] = [g for g in GUIDER if g[0] not in {
+            "/guides/5g-internet-eller-fiber/", "/guides/coax-internet/",
+            "/guides/internet-uden-binding/", "/guides/god-internethastighed/",
+            "/guides/internet-i-sommerhus/", "/guides/dataforbrug-husstand/",
+            "/guides/opsig-internet/", "/guides/internetforstaerker/",
+            "/guides/del-internet-fra-mobil/"}]
     else:
         tek = {a["teknologi"] for a in BB}
         skabelon.BREDBAAND_MENU = [
@@ -18500,7 +19176,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
              "sv": "Næsten altid, men ikke garanteret på de allerbilligste abonnementer. Tjek at både tale og sms "
                    "er inkluderet, før du bestiller."},
         ],
-        links=[("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+        links=[("/billigste-mobilabonnement/", "Billigste mobilabonnement — alle abonnementer i sammenligningen"),
                ("/mobilabonnement-uden-data/", "Mobilabonnement uden data"),
                ("/mobilabonnement-med-fri-data/", "Mobilabonnement med fri data"),
                ("/udbydere/lebara/", "Lebara — bedst til opkald til udlandet")])
@@ -18517,12 +19193,13 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         intro=("Rangeret efter Telemobil-score: pris over 12 måneder, pris pr. GB, vilkår, "
                "kundetilfredshed og gennemsigtighed, regnet maskinelt for alle abonnementer. "
                '<a href="/telemobil-score/">Se hvordan scoren beregnes</a>.'),
-        udvalg=bedste_udvalg, tekstfunktion=sider.bedste,
+        udvalg=bedste_udvalg, tekstfunktion=sider.bedste, sorter=None,
         chips=[("Vurderet på", "5 kriterier"), ("Udbydere", str(D['antal_udbydere'])), ("Fra", f"{D['min_pris']} kr.")],
         tabeltitel="Bedste værdi for pengene lige nu",
-        ekstra_tabeller=[loyalty_tabel(), netvaerk_maaling_sektion(), redaktionens_valg(), prisfordeling(), tabel_billigst_pr_udbyder(),
-                         tabel_prgb_rangliste(), overforbrug(),
-                         udbydergitter(), fejltabel(), begrebstabel(), vejviser('/bedste-mobilabonnement/')],
+        # Kun blokke, der handler om kvalitet og score. Prisblokkene står på
+        # /billigste-mobilabonnement/, så de to sider ikke konkurrerer om de samme svar.
+        ekstra_tabeller=[score_pr_kategori(), loyalty_tabel(), netvaerk_maaling_sektion(),
+                         fejltabel(), begrebstabel(), vejviser('/bedste-mobilabonnement/')],
         faq=[
             {"sp": "Hvad er det bedste mobilabonnement i Danmark?",
              "sv": "Det afhænger af, hvor du bor og hvor meget data du bruger. Bor du i en by med almindeligt "
@@ -18530,11 +19207,12 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                    "vejer netværket tungere end prisen."},
             {"sp": "Er dyre mobilabonnementer bedre end billige?",
              "sv": "Ikke på selve forbindelsen. Der findes kun tre mobilnet i Danmark, og alle selskaber lejer sig "
-                   "ind hos en af dem. Du betaler ekstra for dækning på det mest udbyggede net, kundeservice og "
+                   "ind hos en af dem. Du betaler ekstra for adgang til TDC NET, kundeservice og "
                    "tillægsydelser — ikke for et bedre mobilnet."},
             {"sp": "Hvilket mobilnet er bedst i Danmark?",
-             "sv": "TDC NET er det mest udbyggede og har gennem en årrække klaret sig bedst i Teknologisk Instituts målinger (bestilt af TDC NET) "
-                   "af netkvalitet. I byerne er forskellen til Telenor og 3 dog lille i praksis."},
+             "sv": "TDC NET har gennem en årrække klaret sig bedst i Teknologisk Instituts målinger af netkvalitet, "
+                   "som TDC NET selv bestiller. I byerne er forskellen til TN-Network (Telenor/Norlys) og 3 dog lille i praksis. "
+                   "Dækningen på din egen adresse betyder mere end landsgennemsnittet."},
             {"sp": "Hvordan vurderer I abonnementerne?",
              "sv": "Med Telemobil-scoren fra 0 til 100: " + ", ".join(
                        f"{navn.lower()} {v} %" for navn, v, _ in SCORE_VÆGTE) +
@@ -18550,6 +19228,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/udbydere/", "Alle udbydere gennemgået")])
 
     udendata = sorted([a for a in ABON if a["data_gb"] == 0], key=lambda a: a["pris"])
+    smaa_alt = sorted([a for a in ABON if a["pris"] > 0 and i_baand(a["data_gb"], 1, 10)],
+                      key=lambda a: gns12(a) or 9e9)[:10]
     byg_kategori(
         sti="/mobilabonnement-uden-data/", etiket="Uden data",
         h1="Mobilabonnement uden data",
@@ -18559,7 +19239,10 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         intro=("Abonnementer med tale og sms, men uden mobildata. Bemærk at forbrugsafregnede "
                "abonnementer har 0 kr. i fast pris, men koster pr. minut."),
         udvalg=udendata, tekstfunktion=sider.uden_data,
-        chips=[("Fra", f"{D['pris_udendata']} kr."), ("Data", "0 GB"), ("Wi-fi", "virker stadig")],
+        chips=([("Fra", f"{D['pris_udendata']} kr.")] if udendata else []) + [("Data", "0 GB"), ("Wi-fi", "virker stadig")],
+        tom=(smaa_alt, "Billigste alternativ: små abonnementer med data",
+             "Der er ingen abonnementer helt uden data i vores sammenligning lige nu. Et lille "
+             "dataabonnement koster ofte det samme — slå bare mobildata fra i telefonen."),
         tabeltitel="Abonnementer uden mobildata",
         ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), tabel_aarsomkostning(), fejllink(), begrebslink(), vejviser()],
         faq=[
@@ -18695,6 +19378,68 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
                ("/bedste-mobilabonnement/", "Bedste mobilabonnement")])
 
+    femg_udvalg = [a for a in ABON if a.get("femg") and a["pris"] > 0]
+    if femg_udvalg:
+        def _femg_tekst(D_, t):
+            alle_b = _betalte()
+            andel = round(len(femg_udvalg) / len(alle_b) * 100) if alle_b else 0
+            uden = [a for a in alle_b if not a.get("femg")]
+            b5 = min(femg_udvalg, key=lambda a: gns12(a) or 9e9)
+            return f"""<section class="sektion baand-smal artikel">{t["gennemgang"]}
+<div class="udtag"><p><strong>Kort svar:</strong> {len(femg_udvalg)} af {len(alle_b)} abonnementer i vores
+sammenligning ({andel} %) har 5G. Det billigste er {e(UMAP[b5["udbyder"]]["navn"])} {e(_abonavn(b5))}:
+{e(_prisled_aar(b5))}. 5G koster sjældent ekstra i dag — men det giver kun noget, hvor der er god 5G-dækning.</p></div>
+
+<h2 id="koster-ekstra">Koster 5G ekstra?</h2>
+<p>Tabellen sammenligner normalprisen for abonnementer med og uden 5G i samme datakategori. En lille
+eller negativ forskel betyder, at du får 5G uden at betale for det.</p>
+{tabel_5g_prisforskel()}
+
+<h2 id="maerker-du-det">Mærker du forskellen?</h2>
+<p>På telefonen mærkes 5G mest ved store downloads og i områder med meget trafik. Til beskeder,
+musik og video i HD er 4G som regel rigeligt. 5G er mere værd, hvis du bruger telefonen som hotspot
+eller bor, hvor 4G-nettet er presset. Se hele gennemgangen i
+<a href="/guides/er-5g-pengene-vaerd/">er 5G pengene værd</a>.</p>
+<p>5G kræver også en telefon, der understøtter det, og dækning der, hvor du er. Tjek nettet på din
+adresse i <a href="/daekningskort/">dækningstjekket</a>, og se forskellen mellem de tre net på
+<a href="/netvaerk/">mobilnetværk</a>.</p>
+{"" if not uden else f'<p>{len(uden)} abonnementer i sammenligningen er stadig uden 5G. De kan være et fint valg, hvis du mest er på wi-fi.</p>'}
+
+<h2 id="internet-derhjemme">5G som internet derhjemme</h2>
+<p>Vil du bruge 5G som internet i hjemmet i stedet for på telefonen, er et 5G-bredbånd med router
+som regel billigere og mere stabilt end telefonens hotspot. Se <a href="/bredbaand/5g/">5G internet til
+hjemmet</a>.</p>
+</section>"""
+        byg_kategori(
+            sti="/mobilabonnement-med-5g/", etiket="Med 5G",
+            h1="Mobilabonnement med 5G",
+            titel=med_maaned(f"Mobilabonnement med 5G{fra(min(a['pris'] for a in femg_udvalg))}"),
+            besk=(f"Sammenlign {len(femg_udvalg)} mobilabonnementer med 5G på pris og data. "
+                  "Se om 5G koster ekstra, og hvornår du faktisk mærker forskellen."),
+            intro="Alle abonnementer her har 5G inkluderet.",
+            udvalg=femg_udvalg, tekstfunktion=_femg_tekst,
+            chips=[("Med 5G", str(len(femg_udvalg))), ("Fra", f"{min(a['pris'] for a in femg_udvalg)} kr.")],
+            tabeltitel="Mobilabonnementer med 5G",
+            ekstra_tabeller=[tabel_pr_datamaengde(), fejllink(), begrebslink(), vejviser("/mobilabonnement-med-5g/")],
+            faq=[
+                {"sp": "Koster 5G ekstra på et mobilabonnement?",
+                 "sv": "Sjældent. Hos de fleste selskaber er 5G inkluderet uden merpris. Se tabellen over "
+                       "prisforskellen pr. datakategori på siden."},
+                {"sp": "Hvad kræver det at bruge 5G?",
+                 "sv": "En telefon, der understøtter 5G, et abonnement med 5G og 5G-dækning, der hvor du er. "
+                       "Mangler én af de tre, kører telefonen på 4G."},
+                {"sp": "Er 5G hurtigere end 4G?",
+                 "sv": "Ja, typisk markant, især i byerne. Men til beskeder, musik og video i HD mærker de fleste "
+                       "ikke forskel. 5G betyder mest ved hotspot og store downloads."},
+                {"sp": "Kan jeg bruge 5G i udlandet?",
+                 "sv": "Det afhænger af selskabet og landet. Mange giver 5G i EU, men tjek selskabets "
+                       "roamingvilkår, før du rejser."},
+            ],
+            links=[("/guides/er-5g-pengene-vaerd/", "Er 5G pengene værd?"),
+                   ("/bredbaand/5g/", "5G internet til hjemmet"),
+                   ("/netvaerk/", "De tre danske mobilnet"),
+                   ("/billigste-mobilabonnement/", "Billigste mobilabonnement")])
+
     # ---------------- Fire nye guides ----------------
     byg_guide("/guides/simkort/", "Simkort",
               "Simkort — størrelser, skift og fejlfinding",
@@ -18760,7 +19505,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                    "sv": "Klag skriftligt og gem dokumentationen. Får du ikke medhold, kan sagen "
                          "indbringes for Teleankenævnet."},
               ],
-              [("/speedtest/", "Test din mobilhastighed"),
+              [("/speedtest/", "Test din internethastighed"),
                ("/daekningskort/", "Tjek dækningen på din adresse"),
                ("/guides/simkort/", "Simkort og eSIM"),
                ("/pin-og-puk-kode/", "Simkortet er spærret?")],
@@ -18864,7 +19609,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
          "sv": f"Medianen på {S['median']} kr. om måneden er det bedste mål for et typisk "
                "abonnement. Betaler du mere, ligger du i den dyre halvdel af markedet."},
         {"sp": "Hvorfor er min regning højere end de annoncerede priser?",
-         "sv": f"Fordi {S['andel_intro']} % af markedet sælges på intropris. Når kampagnen "
+         "sv": f"Fordi {S['andel_intro']} % af abonnementerne i vores sammenligning sælges på intropris. Når kampagnen "
                f"udløber efter i snit {S['gns_intro_mdr']} måneder, stiger prisen med "
                f"gennemsnitligt {S['gns_stigning']} kr. om måneden."},
         {"sp": "Hvor meget data får man for pengene?",
@@ -18901,7 +19646,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                "Vi bruger 12-måneders-prisen, ikke introprisen. Se metoden for formlen."])}
     </section>
     <section class="sektion baand-smal">{laesvidere([
-        ("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+        ("/billigste-mobilabonnement/", "Billigste mobilabonnement — alle abonnementer i sammenligningen"),
         ("/12-maaneders-prisen/", "Sådan beregner vi den reelle pris"),
         ("/mobilabonnement-under-100-kr/", "Abonnementer under 100 kr."),
         ("/guides/prisstigning-mobilabonnement/", "Når prisen stiger — dine rettigheder"),
@@ -19011,13 +19756,13 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement")],
               billede="til-familie",
               altbillede="Familie i parken kigger sammen på mobilen",
-              ekstra=[prisfordeling(), tabel_pr_datamaengde(), tabel_aarsomkostning(),
-                      tabel_billigst_pr_udbyder(), fejllink(), udbydergitter(), statistiktabel(), begrebslink(),
+              ekstra=[familie_regnestykke(), tabel_pr_datamaengde(), tabel_aarsomkostning(),
+                      tabel_billigst_pr_udbyder(), fejllink(), begrebslink(),
                       vejviser("/mobilabonnement-til-familie/"),
                       kilder(["forbrugerombudsmanden", "teleankenaevnet"],
                              ["Priser: vores egen sammenligning, opdateret " + OPDATERET + ".",
-                              "Vi sammenligner ikke familiepakker direkte, da de sjældent "
-                              "offentliggøres med sammenlignelige vilkår."])])
+                              "Familiepakker med fælles datapulje findes ikke i selskabernes "
+                              "prisfeeds, så regnestykket bygger på separate abonnementer."])])
 
     byg_guide("/guides/opsig-mobilabonnement/", "Opsigelse",
               "Sådan opsiger du dit mobilabonnement",
@@ -19118,7 +19863,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                          tabel_aarsomkostning(), fejllink(), begrebslink(),
                          kilder(
                              ["forbrugerombudsmanden", "reklameidentifikation", "teleankenaevnet"],
-                             ["Priser og vilkår: udbydernes egne offentlige prislister, kontrolleret manuelt.",
+                             ["Priser: selskabernes produktfeeds via Adtraction, hentet to gange i døgnet. Vilkår: selskabernes egne sider.",
                               "Gennemsnitspris over 12 mdr.: egen beregning — intropris ganget med "
                               "introperioden plus normalpris for resten, divideret med tolv, plus oprettelse.",
                               "Netværksangivelser: udbydernes egne oplysninger. Hvor de ikke kan "
@@ -19143,7 +19888,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
              "sv": "Skifter du fra 199 til 79 kr. om måneden, sparer du 1.440 kr. om året. For en "
                    "husstand med to abonnementer er det knap 2.900 kr."},
         ],
-        links=[("/billigste-mobilabonnement/", "Billigste mobilabonnement — hele markedet"),
+        links=[("/billigste-mobilabonnement/", "Billigste mobilabonnement — alle abonnementer i sammenligningen"),
                ("/bedste-mobilabonnement/", "Bedste mobilabonnement"),
                ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?"),
                ("/guides/prisstigning-mobilabonnement/", "Når prisen stiger — dine rettigheder")])
@@ -19224,7 +19969,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
               ],
               [("/mobilabonnement-med-fri-data/", "Abonnementer med fri data"),
                ("/daekningskort/", "Tjek dækningen på din adresse"),
-               ("/speedtest/", "Test din mobilhastighed"),
+               ("/speedtest/", "Test din internethastighed"),
                ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?")],
               billede="mobil-eller-bredbaand",
               altbillede="Kvinde sammenligner mobilabonnement og bredbånd derhjemme med router",
@@ -19352,7 +20097,10 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
                ("/guides/hvor-meget-data/", "Hvor meget data har du brug for?")])
 
-    aeldreudvalg = sorted([a for a in ABON if a["data_gb"] <= 15], key=lambda a: gns12(a) or 9e9)
+    # Til ældre: kun selskaber, man kan ringe til. Det er sidens løfte.
+    aeldreudvalg = sorted([a for a in ABON if a["data_gb"] <= 15
+                           and (UMAP[a["udbyder"]].get("kundeservice") or {}).get("tlf")],
+                          key=lambda a: gns12(a) or 9e9)
     byg_kategori(
         sti="/mobilabonnement-til-aeldre/", etiket="Til ældre",
         billede="til-aeldre", spejlvend=False,
@@ -19360,12 +20108,12 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         titel=f"Mobilabonnement til ældre — trygt{fra(D['pris_aeldre'], ' og fra ')}",
         besk=("Find et trygt mobilabonnement til en ældre bruger. Vi forklarer hvorfor "
               "billigst sjældent er bedst her, og hvordan du undgår overraskelser på regningen."),
-        intro=("Små abonnementer uden binding. Bemærk at vi ikke automatisk anbefaler det "
-               "billigste her — kundeservice vejer tungere end de sidste tyve kroner."),
+        intro=("Små abonnementer fra selskaber med telefonisk kundeservice. Selskaber, man kun "
+               "kan kontakte via chat eller mail, er ikke med her."),
         udvalg=aeldreudvalg, tekstfunktion=sider3.aeldre,
         chips=[("Fra", f"{D['pris_aeldre']} kr."), ("112", "virker altid"), ("Uden", "binding")],
         tabeltitel="Små abonnementer der passer til en let bruger",
-        ekstra_tabeller=[tabel_billigst_pr_udbyder(), tabel_pr_datamaengde(), fejllink(),
+        ekstra_tabeller=[tabel_kundeservice_tlf(), tabel_pr_datamaengde(), fejllink(),
                          begrebslink(), vejviser("/mobilabonnement-til-aeldre/")],
         faq=[
             {"sp": "Hvilket mobilabonnement er bedst til ældre?",
@@ -19500,6 +20248,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
     byg_udbyderoversigt()
     for u in UDBYDERE:
         byg_udbyder(u)
+    for u in UDBYDERE:
+        byg_alternativer(u)
 
     # Guides
     byg_bredbaand()
@@ -19546,7 +20296,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                       kilder(
                           ["digst_klage", "teleankenaevnet", "teleindustrien"],
                           ["Nummerportering: en rettighed i Danmark — den nye udbyder håndterer flytningen.",
-                           "Priser og vilkår: udbydernes egne prislister, kontrolleret manuelt.",
+                           "Priser: selskabernes produktfeeds via Adtraction, hentet to gange i døgnet. Vilkår: selskabernes egne sider.",
                            "Tidsangivelser for portering er typiske intervaller, ikke garantier."])])
 
     byg_guide("/guides/hvor-meget-data/", "Hvor meget data",
@@ -19586,14 +20336,15 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
 
     byg_guide("/guides/daekning-og-netvaerk/", "Dækning og netværk",
               "Dækning og netværk i Danmark",
-              f"Mobildækning i Danmark: TDC NET, Telenor og 3",
+              f"Mobildækning i Danmark: TDC NET, Telenor/Norlys og 3",
               "Der findes kun tre mobilnetværk i Danmark. Her er forskellen på dem, og "
               "hvornår den betyder noget for dit valg af abonnement.",
               """<section class="sektion baand-smal artikel">
 <div class="udtag"><p><strong>Kort svar:</strong> Danmark har tre mobilnetværk — TDC NET,
-Telenor og 3. Alle andre selskaber lejer sig ind hos en af dem. TDC NET er mest udbygget og
-stærkest i landdistrikter. 3 er stærk på hastighed i byerne. Telenor ligger derimellem. Bor
-du i en større by, kan du i praksis vælge frit.</p></div>
+TN-Network (ejet af Telenor og Norlys) og 3. Alle andre selskaber lejer sig ind hos en af dem.
+TDC NET har klaret sig bedst i Teknologisk Instituts målinger, som TDC NET selv bestiller, og
+forskellen mærkes mest på landet. Bor du i en større by, kan du i praksis vælge frit — tjek
+netejernes dækningskort for din adresse.</p></div>
 
 <h2>Kun tre net — resten er lejere</h2>
 <p>Det er den vigtigste ting at forstå om det danske mobilmarked. Når du vælger mellem tredive
@@ -19642,7 +20393,7 @@ kælderen — mens du stadig kan fortryde.</p></div>
                   {"sp": "Hvor mange mobilnetværk er der i Danmark?",
                    "sv": "Tre: TDC NET, TN-Network (Telenor og Norlys) og 3. Alle andre mobilselskaber lejer sig ind på et af dem."},
                   {"sp": "Hvilket netværk har den bedste dækning i Danmark?",
-                   "sv": "TDC NET er historisk det mest udbyggede net og står typisk stærkest i landdistrikter, "
+                   "sv": "TDC NET har klaret sig bedst i Teknologisk Instituts målinger (bestilt af TDC NET) og står typisk stærkest i landdistrikter, "
                          "sommerhusområder og indendørs. I byerne er forskellen mellem de tre lille."},
                   {"sp": "Har billige mobilselskaber dårligere dækning?",
                    "sv": "Nej. De lejer sig ind på de samme netværk som de dyre. Nogle aftaler kan dog indeholde "
@@ -19910,7 +20661,11 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
                 "Sådan tjener Telemobil penge — provision og placering",
                 "Telemobil modtager provision fra udvalgte udbydere. Her forklarer vi "
                 "præcis hvordan det fungerer, og hvad det ikke påvirker.",
-                "Forretningsmodel", "Sådan tjener vi penge", indhold.TJENER_PENGE, prioritet="0.6")
+                "Forretningsmodel", "Sådan tjener vi penge",
+                indhold.TJENER_PENGE.replace("[[PROVISION_SELSKABER]]", _og(
+                    sorted({UMAP[a["udbyder"]]["navn"] for a in ABON if a["pris"] > 0}
+                           | ({a["udbyder_navn"] for a in BB} if BB else set())))),
+                prioritet="0.6")
 
     byg_statisk("/metode/", "Vores metode — sådan sammenligner vi mobilabonnementer",
                 "Datagrundlag, beregninger og vurderingskriterier bag Telemobils "

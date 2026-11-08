@@ -29,7 +29,7 @@ FORFATTER = {
 # Menuen viser kun de sider, folk faktisk leder efter. Resten står i footeren.
 # En liste på 22 punkter kan ikke skimmes — den bliver til en mur, man lukker igen.
 SAMMENLIGN_MENU = [
-    ("/billigste-mobilabonnement/", "Billigste abonnement", "Hele markedet sorteret efter pris"),
+    ("/billigste-mobilabonnement/", "Billigste abonnement", "Alle abonnementer sorteret efter pris"),
     ("/bedste-mobilabonnement/", "Bedste abonnement", "Bedst samlet værdi"),
     ("/kampagner/", "Kampagner og tilbud", "Intropriser og gaver lige nu"),
     ("/mobilabonnement-med-fri-data/", "Fri data", "Ubegrænset data i Danmark"),
@@ -39,6 +39,7 @@ SAMMENLIGN_MENU = [
     ("/mobilabonnement-med-lydbog/", "Med lydbog", "Podcast og lydbøger inkluderet"),
     ("/mobilabonnement-med-musik/", "Med musik", "Musik, podcast og lydbøger"),
     ("/mobilabonnement-med-esim/", "Med eSIM", "Klar samme dag"),
+    ("/mobilabonnement-med-5g/", "Med 5G", "Hurtigst hvor der er dækning"),
     ("/mobilabonnement-til-boern/", "Til børn", "Trygt og uden overraskelser"),
     ("/mobilabonnement-under-100-kr/", "Under 100 kr.", "Alle billige abonnementer"),
 ]
@@ -52,9 +53,9 @@ SAMMENLIGN_OEVRIGE = [
     ("/mobilabonnement-til-aeldre/", "Til ældre", "Tryghed frem for laveste pris"),
     ("/taletidskort/", "Taletidskort", "Forudbetalt uden regning"),
     ("/mobilabonnement-1-10-gb/", "1–10 GB", "Til let brug"),
-    ("/mobilabonnement-10-30-gb/", "10–30 GB", "Danmarks mest almindelige"),
-    ("/mobilabonnement-30-50-gb/", "30–50 GB", "Til pendleren"),
-    ("/mobilabonnement-50-gb/", "50 GB og op", "Til storforbrugeren"),
+    ("/mobilabonnement-10-30-gb/", "11–30 GB", "Danmarks mest almindelige"),
+    ("/mobilabonnement-30-50-gb/", "31–49 GB", "Til pendleren"),
+    ("/mobilabonnement-50-gb/", "50–99 GB", "Til storforbrugeren"),
     ("/mobilabonnement-100-gb/", "100 GB og op", "Mobilen som internet"),
 ]
 
@@ -72,7 +73,7 @@ VAERKTOEJER = [
 
 VAERKTOEJER_OEVRIGE = [
     ("/mobilabonnement-med-streaming/tjenester/", "Streaming pr. tjeneste", "Netflix, HBO Max, Disney+ …"),
-    ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor og 3"),
+    ("/netvaerk/", "Mobilnetværk", "TDC NET, Telenor/Norlys og 3"),
     ("/landekoder/", "Landekoder", "Alle telefonkoder med søgning"),
     ("/hvad-koster-et-mobilabonnement/", "Hvad koster det?", "Gennemsnit og statistik"),
     ("/ordbog/", "Teleordbog", "Alle begreber forklaret"),
@@ -111,7 +112,7 @@ OPDATERET_GLOBAL = ""
 # fordi .htaccess sætter Cache-Control: immutable. Nøglen skifter, når filen gør.
 # Skrifterne ligger på vores egen server. Google Fonts sendte hver besøgendes
 # IP-adresse til Google (GDPR) og kostede to ekstra forbindelser.
-SKRIFTER = "@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:200 800;font-display:swap;src:url(/assets/fonts/bricolage-grotesque.woff2) format('woff2-variations'),url(/assets/fonts/bricolage-grotesque.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(/assets/fonts/inter-400.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url(/assets/fonts/inter-500.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(/assets/fonts/inter-600.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url(/assets/fonts/inter-700.woff2) format('woff2')}"
+SKRIFTER = "@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:200 800;font-display:swap;src:url(/assets/fonts/bricolage-grotesque.woff2) format('woff2-variations'),url(/assets/fonts/bricolage-grotesque.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(/assets/fonts/inter-variabel.woff2) format('woff2-variations'),url(/assets/fonts/inter-variabel.woff2) format('woff2')}"
 
 def _filversion(relativ_sti):
     import hashlib
@@ -196,27 +197,45 @@ def opdateret_til_iso(tekst):
 
 def indholdsfortegnelse(html, minimum=4):
     """Bygger ToC af H2'er og giver dem id, så de kan linkes til."""
-    fundne = re.findall(r"<h2>(.*?)</h2>", html, re.S)
-    rene = []
-    for f in fundne:
-        t = re.sub(r"<[^>]+>", "", f).strip()
-        if t and t not in rene:
-            rene.append(t)
-    if len(rene) < minimum:
-        return html, ""
-
+    # Alle H2'er i indholdet — også dem, der allerede har et id, og dem med
+    # markup indeni. Tidligere kom kun nøgne <h2>…</h2> med, så fire-fem
+    # overskrifter pr. side manglede i indholdsfortegnelsen.
     def slug(t):
         s = t.lower()
         for a, b in (("æ", "ae"), ("ø", "oe"), ("å", "aa"), ("é", "e")):
             s = s.replace(a, b)
         s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
-        return s[:60]
+        if len(s) > 60:
+            s = s[:60].rsplit("-", 1)[0]
+        return s
 
-    brugte = {}
-    for t in rene:
-        s = slug(t)
-        brugte[t] = s
-        html = html.replace(f"<h2>{t}</h2>", f'<h2 id="{s}">{t}</h2>', 1)
+    rene, brugte, ids = [], {}, set()
+
+    def tag(m):
+        attrs, indre = m.group(1) or "", m.group(2)
+        t = re.sub(r"<[^>]+>", "", indre).strip()
+        t = re.sub(r"\s+", " ", t)
+        if not t or 'class="fb-titel"' in attrs or "sr-only" in attrs:
+            return m.group(0)
+        mid = re.search(r'id="([^"]+)"', attrs)
+        if mid:
+            s = mid.group(1)
+        else:
+            s = slug(t)
+            base, n = s, 2
+            while s in ids:
+                s, n = f"{base}-{n}", n + 1
+            attrs = f' id="{s}"' + attrs
+        ids.add(s)
+        if t not in brugte:
+            rene.append(t)
+            brugte[t] = s
+        return f"<h2{attrs}>{indre}</h2>"
+
+    ny = re.sub(r"<h2((?:\s[^>]*)?)>(.*?)</h2>", tag, html, flags=re.S)
+    if len(rene) < minimum:
+        return html, ""
+    html = ny
 
     punkter = "".join(f'<li><a href="#{brugte[t]}">{e(t)}</a></li>' for t in rene)
     toc = f'''<nav class="toc" aria-label="Indhold">
@@ -261,6 +280,20 @@ def _logoer_i_hero(hero, efter_hero):
     return hero, ""
 
 
+def kort_beskrivelse(t, maks=158):
+    """Meta description over ~160 tegn bliver klippet af Google midt i en sætning.
+    Vi klipper selv ved sidste hele sætning, der kan være der."""
+    t = " ".join(t.split())
+    if len(t) <= maks:
+        return t
+    cut = t[:maks]
+    for sep in (". ", "! ", "? "):
+        i = cut.rfind(sep)
+        if i >= 80:
+            return cut[:i + 1]
+    return cut[:cut.rfind(" ")].rstrip(",;:—–- ") + "…"
+
+
 def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
           hero=None, efter_hero="", opdateret="", ekstra_hoved="", toc=True,
           og_billede=None):
@@ -272,7 +305,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
         indhold = indhold.replace('<section class="sektion baand-smal artikel">',
                                   f'<section class="sektion baand-smal">{toc}</section>'
                                   '<section class="sektion baand-smal artikel">', 1)
-    minutter = laesetid(indhold)
+    beskrivelse = kort_beskrivelse(beskrivelse)
     opdateret_iso = opdateret_til_iso(opdateret)
     """Bygger en komplet HTML-side."""
     kanonisk = DOMAENE + sti
@@ -363,21 +396,17 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <title>{e(titel)}</title>
 <meta name="description" content="{e(beskrivelse)}">
 <link rel="canonical" href="{kanonisk}">
-<link rel="alternate" hreflang="da-DK" href="{kanonisk}">
-<link rel="alternate" hreflang="x-default" href="{kanonisk}">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
 <meta name="author" content="{e(FORFATTER['navn'])}">
-{"" if sti == "/" else f'<meta name="twitter:label1" content="Estimeret læsetid"><meta name="twitter:data1" content="{minutter} minutter">'}
 <meta property="og:image:width" content="{og_billede[1] if og_billede else 1200}">
 <meta property="og:image:height" content="{og_billede[2] if og_billede else 630}">
 <meta name="geo.region" content="DK">
 <meta name="language" content="Danish">
 <meta name="publisher" content="Telemobil">
-<meta property="article:publisher" content="{DOMAENE}/">
-<meta property="article:modified_time" content="{opdateret_iso}">
+<meta property="article:modified_time" content="{opdateret_iso or OPDATERET_ISO_GLOBAL}">
 <meta name="rating" content="general">
 <meta name="geo.placename" content="Aarhus, Danmark">
-<meta property="og:type" content="{"website" if sti in ("/", "/404.html") else "article"}">
+<meta property="og:type" content="{"article" if sti.startswith("/guides/") and sti.count("/") > 2 and "/side-" not in sti else "website"}">
 <meta property="og:locale" content="da_DK">
 <meta property="og:site_name" content="{SITENAVN}">
 <meta property="og:title" content="{e(titel)}">
@@ -392,6 +421,8 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0B1026">
 <script>document.documentElement.className+=" js";</script>
+<link rel="preload" href="/assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/inter-variabel.woff2" as="font" type="font/woff2" crossorigin>
 <style>{SKRIFTER}{kritisk_css(sti)}</style>
 <link rel="preload" href="/assets/css/telemobil.min.css?v={CSS_V}" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="/assets/css/telemobil.min.css?v={CSS_V}"></noscript>
@@ -558,7 +589,7 @@ def fod(opdateret):
       <span class="fod-jura">
         <a href="/privatlivspolitik/">Privatliv</a>
         <a href="/cookiepolitik/">Cookies</a>
-        <a href="#" data-cookievalg>Cookieindstillinger</a>
+        <button type="button" class="fod-knap" data-cookievalg>Cookieindstillinger</button>
         <a href="/saadan-tjener-vi-penge/">Annonceoplysning</a>
       </span>
     </div>
@@ -610,13 +641,17 @@ def forfatterboks(gennemgået=None):
       <a href="/om/emil-rostgaard/">Om mig</a>
       <a href="{f['linkedin']}" rel="me noopener nofollow" target="_blank">LinkedIn</a>
       <a href="/telemobil-score/">Telemobil-scoren</a>
-      <a href="/metode/">Sådan tester jeg</a>
+      <a href="/metode/">{"Sådan tester jeg" if HAR_TESTS else "Sådan vurderer jeg"}</a>
     </div>
   </div>
 </aside>"""
 
 
-def gennemgangslinje(opdateret, fakta="Priser fra udbydernes egne datafeeds, opdateret to gange i døgnet"):
+OPDATERET_ISO_GLOBAL = ""  # sættes af build.py
+HAR_TESTS = False  # sættes af build.py, når data/tests.json har rigtige tests
+
+
+def gennemgangslinje(opdateret, fakta="Priser fra selskabernes produktfeeds via Adtraction, hentet to gange i døgnet"):
     """Forfatternavnet linker til profilsiden. Et navn uden link kan ikke
     efterprøves — og så er det ikke et tillidssignal, bare en påstand."""
     return f"""<div class="gennemgang">
@@ -763,12 +798,13 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
 
     if intro:
         m = min(a["intro_mdr"], 12)
-        formel = f'{a["intro_pris"]}×{m} + {a["pris"]}×{12 - m}'
+        formel = (f'{a["intro_pris"]}×12' if m >= 12
+                  else f'{a["intro_pris"]}×{m} + {a["pris"]}×{12 - m}')
     else:
         formel = f'{a["pris"]}×12'
     if a.get("oprettelse"):
         formel += f' + {a["oprettelse"]}'
-    formel += " ÷ 12"
+    formel = f"({formel}) ÷ 12"
 
     # ---- Faneblad over kortet: ét budskab, ikke fem -----------------------
     dyn_liste = (dyn or {}).get(a["id"], [])
@@ -1002,9 +1038,21 @@ def filterbar(abonnementer, udbydere_map, forvalg=None, orden="pris"):
 UDVALG_SIDE = []
 
 
+def _selskaber(n):
+    return f"{n} selskab" if n == 1 else f"{n} selskaber"
+
+
 def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
               billigst_id=None, id_attr="sammenlign", vis=10, opdateret=None,
-              forvalg=None):
+              forvalg=None, sorter="aar"):
+    # Én sorteringsregel på hele sitet: snitpris det første år (intro, normalpris
+    # og oprettelse). En side, der bevidst sorterer anderledes, sender sorter=None
+    # og skriver selv, hvad der sorteres efter.
+    if sorter == "aar":
+        abonnementer = sorted(abonnementer,
+                              key=lambda x: ((gns12(x) if x["pris"] > 0 else None) or 9e9))
+        if "sorter" not in undertitel.lower():
+            undertitel = (undertitel.rstrip() + " Sorteret efter snitpris det første år.").strip()
     UDVALG_SIDE.extend(abonnementer)  # bruges til sidens citérbare sætning
     if opdateret is None:
         opdateret = OPDATERET_GLOBAL
@@ -1045,13 +1093,14 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     <p class="opdateret-stribe">
       <span class="op-prik" aria-hidden="true"></span>
       <span><strong>Opdateret {e(opdateret)}</strong> · {len(abonnementer)} {"abonnement" if len(abonnementer) == 1 else "abonnementer"}
-      fra {len({a.get("udbyder") for a in abonnementer})} selskaber, vi samarbejder med. Ikke hele markedet · <a href="/metode/">Sådan rangerer vi</a></span>
+      fra {_selskaber(len({a.get("udbyder") for a in abonnementer}))} med prisaftale via Adtraction · <a href="/metode/#rangering">Sådan rangerer vi</a></span>
     </p>
   </div>
   {filterhtml}
   <div class="listeramme afslør">
-    <p class="liste-afsloering"><strong>Reklamelinks:</strong> Vi får provision, når du bestiller via
-    knapperne. Det koster ikke ekstra og påvirker aldrig rækkefølgen.
+    <p class="liste-afsloering"><strong>Annonce:</strong> Knapperne er reklamelinks. Vi får provision,
+    når du bestiller via dem. Kun selskaber med en aftale har priser her. Det koster ikke ekstra og
+    påvirker aldrig rækkefølgen.
     <a href="/saadan-tjener-vi-penge/">Sådan tjener vi penge</a></p>
     <div class="planliste">{kort}</div>
     <p class="pk-tom" data-tom hidden>Ingen abonnementer matcher filtrene.
@@ -1060,7 +1109,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     <div class="listefod">
       <span>Klik <strong>Se detaljer</strong> for EU-data, pris pr. GB og den reelle
       12-måneders pris, hvor intropris, normalpris og oprettelse regnes sammen.</span>
-      <span>Kilde: udbydernes egne datafeeds</span>
+      <span>Kilde: selskabernes produktfeeds via Adtraction</span>
     </div>
   </div>
   {afsloering(kort=True)}

@@ -258,13 +258,13 @@ beskrivelse, der ligner dig mest.</p>
 
 <h2>Er dyrere abonnementer bedre?</h2>
 
-<p>Ikke på selve mobilforbindelsen. Det er den vigtigste enkeltindsigt på hele markedet:
+<p>Ikke på selve mobilforbindelsen. Det er det vigtigste at forstå om mobilmarkedet:
 der findes kun tre mobilnetværk i Danmark, og alle selskaber lejer sig ind hos en af dem.
 Et abonnement til 49 kr. og et til 299 kr. kan køre på præcis de samme master med præcis
 den samme hastighed.</p>
 
-<p>Det, du betaler ekstra for i den dyre ende, er fire ting: adgang til det mest udbyggede
-net, bemandet kundeservice og fysiske butikker, tillægsydelser som streaming eller
+<p>Det, du betaler ekstra for i den dyre ende, er fire ting: adgang til TDC NET, som har klaret
+sig bedst i målingerne, bemandet kundeservice og fysiske butikker, tillægsydelser som streaming eller
 forsikring, og i nogle tilfælde en prioritering af din trafik, når nettet er belastet.</p>
 
 <p>Om det er pengene værd afhænger fuldstændig af, om du bruger det. Bor du et sted, hvor
@@ -323,9 +323,11 @@ def uden_data(D, t):
 {t['gennemgang']}
 
 <div class="udtag">
-<p><strong>Kort svar:</strong> Mobilabonnement uden data findes stadig i Danmark, men
-udvalget er lille. Priserne starter omkring {kr(D['pris_udendata'])} kr. om måneden for et
-abonnement med taletid og sms. Alternativt findes forbrugsafregnede abonnementer, hvor du
+<p><strong>Kort svar:</strong> {(f"Mobilabonnement uden data findes stadig, men udvalget er lille. "
+f"Priserne starter omkring {kr(D['pris_udendata'])} kr. om måneden for et abonnement med taletid og sms.")
+if D.get('pris_udendata') else
+"Der er ingen abonnementer helt uden data i vores sammenligning lige nu. Et lille dataabonnement "
+"koster ofte det samme, og du kan slå mobildata fra i telefonen."} Alternativt findes forbrugsafregnede abonnementer, hvor du
 betaler 0 kr. i fast pris og kun for de minutter og sms'er, du faktisk bruger. For mange
 er et lille dataabonnement dog reelt billigere end et rent taleabonnement.</p>
 </div>

@@ -5,8 +5,8 @@ Disallow: /data/
 # Rådata til adressetjekket hentes af siden selv — ikke noget at indeksere
 Disallow: /assets/adr/
 
-# Sitet er statisk og let at crawle — ingen grund til at bremse
-User-agent: Googlebot
-Allow: /
+# Gruppen ovenfor gælder alle crawlere, også Googlebot, Bingbot og
+# AI-søgemaskinernes OAI-SearchBot, PerplexityBot og ChatGPT-User. En egen
+# Googlebot-gruppe ville ophæve Disallow-linjerne for Google.
 
 Sitemap: https://telemobil.dk/sitemap.xml
