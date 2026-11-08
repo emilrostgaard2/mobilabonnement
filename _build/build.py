@@ -1121,11 +1121,13 @@ def hero_forside():
         h = 22 + round(78 * a["pris"] / hoejest)
         mast += (f'<b data-navn="{e(u["navn"].split()[0])}" data-pris="{a["pris"]} kr."'
                  f' style="height:{h}%;background:linear-gradient(180deg,{farver[i]}bb,{farver[i]})"></b>')
-    return f"""<section class="hero hero-lys hero-vaelger">
+    return f"""<section class="hero hero-lys hero-vaelger hero-foto">
+  {_hero_foto("billigste")}
   <div class="baand">
     <h1>Sammenlign mobilabonnementer fra danske udbydere</h1>
     <p class="led">Vælg, hvor meget data du bruger. Så viser vi de billigste abonnementer
     regnet på hele året.</p>
+    <p class="hf-tillid"><span>{D['antal']} abonnementer fra {D['antal_udbydere']} selskaber</span><span>Priser opdateret {e(OPDATERET)}</span><span>Ingen betalt placering</span></p>
     {vaelger()}
     <p class="hv-tillid">Opdateret {e(OPDATERET)}<span>·</span>{D['antal']} abonnementer fra
     {D['antal_udbydere']} selskaber<span>·</span>Ingen betalt placering</p>
@@ -1139,23 +1141,54 @@ VAELGER_TRIN = [("u10", "1–10 GB", 1, 10, "/mobilabonnement-1-10-gb/"),
                 ("fri", "Fri data", 9999, 10 ** 9, "/mobilabonnement-med-fri-data/")]
 
 
-def _vaelger_kort(lab, a):
+def _vaelger_kort(lab, a, vinder=False):
+    """Tilbudskort (design B): farvet bånd med logo, pris, første år i alt,
+    tre fordele og knap direkte til selskabet. Det første kort er vinderen."""
     u = UMAP[a["udbyder"]]
     intro = a.get("intro_pris") is not None and a.get("intro_mdr")
+    m = a.get("intro_mdr") or 0
     pris = kr(a["intro_pris"]) if intro else kr(a["pris"])
-    enhed = f" kr./md. i {a['intro_mdr']} md{'r' if a['intro_mdr'] != 1 else ''}." if intro else " kr./md."
-    linje = (f"Herefter {kr(a['pris'])} kr. Snit {kr(round(gns12(a)))} kr./md. år 1." if intro
-             else "Fast pris hele året.")
-    linje += " Ingen binding." if not a["binding"] else f" {a['binding']} mdr. binding."
-    return f"""<div class="vk">
-  <span class="vk-lab">{e(lab)}</span>
-  <img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" width="{round(u['logo_w'] * 22 / u['logo_h'])}" height="22" decoding="async">
-  <b class="vk-navn">{e(skabelon._kortnavn(a, u))}</b>
-  <div class="vk-pris">{pris}<span>{e(enhed)}</span></div>
-  <p class="vk-linje">{e(linje)}</p>
-  <a class="knap knap-primaer vk-knap" href="{a['link']}" rel="sponsored nofollow noopener"
-    target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}">Gå til {e(u['navn'])}</a>
+    enhed = (f"kr./md. de første {m} md{'r' if m != 1 else ''}." if intro else "kr./md.")
+    efter = f"Herefter {kr(a['pris'])} kr./md." if intro else "Fast pris — ingen intropris"
+    g = gns12(a)
+    aar = f"{kr(round(g * 12))} kr." if g is not None else ""
+    spar = round((a["pris"] - a["intro_pris"]) * min(m, 12)) if intro else 0
+    fordele = ["Ingen binding" if not a["binding"] else f"{a['binding']} mdr. binding"]
+    if a.get("tale") == "fri":
+        fordele.append("Fri tale og sms" if a.get("sms") == "fri" else "Fri tale")
+    if a.get("femg") and a["data_gb"] > 0:
+        fordele.append("5G inkluderet")
+    if a.get("esim"):
+        fordele.append("eSIM — klar på få minutter")
+    eu = a.get("eu_gb", 0)
+    if a["data_gb"] > 0 and eu:
+        fordele.append("Fri data i EU" if eu >= 9999 else f"{kr(eu)} GB data i EU")
+    if not a.get("oprettelse"):
+        fordele.append("Ingen oprettelse")
+    li = "".join(f"<li>{e(t)}</li>" for t in fordele[:3])
+    lw = round(u['logo_w'] * 22 / u['logo_h'])
+    return f"""<div class="vk{' vk-vinder' if vinder else ''}">
+  <div class="vk-band"><span class="vk-lab">{e(lab)}</span><span class="vk-lchip"><img src="/assets/img/logoer/{u['logo']}" alt="{e(u['navn'])}" width="{lw}" height="22" decoding="async"></span></div>
+  {f'<span class="vk-spar">Spar {kr(spar)} kr. år 1</span>' if spar > 0 else ''}
+  <div class="vk-ind">
+    <b class="vk-navn">{e(skabelon._kortnavn(a, u))}</b>
+    <div class="vk-pris">{pris}<span>{e(enhed)}</span></div>
+    <p class="vk-linje">{e(efter)}</p>
+    {f'<div class="vk-aar"><span>Første år i alt</span><b>{aar}</b></div>' if aar else ''}
+    <ul class="vk-fordele">{li}</ul>
+    <a class="knap knap-primaer vk-knap" href="{a['link']}" rel="sponsored nofollow noopener"
+      target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}">Gå til {e(u['navn'])} <span aria-hidden="true">→</span></a>
+    <small class="vk-mikro">Annoncelink · du bestiller hos {e(u['navn'])}</small>
+  </div>
 </div>"""
+
+
+def _hero_foto(navn):
+    if not os.path.exists(os.path.join(ROD, "assets", "img", "sider", f"{navn}-1280.webp")):
+        return ""
+    return (f'<img class="hf-bg" src="/assets/img/sider/{navn}-1280.webp" '
+            f'srcset="/assets/img/sider/{navn}-640.webp 640w, /assets/img/sider/{navn}-1280.webp 1280w" '
+            f'sizes="100vw" alt="" fetchpriority="high" decoding="async"><span class="hf-tone" aria-hidden="true"></span>')
 
 
 def hero_kort(etiket, h1, led, udvalg, *, billede=None, links=None, efter_score=False):
@@ -1169,7 +1202,7 @@ def hero_kort(etiket, h1, led, udvalg, *, billede=None, links=None, efter_score=
     def tilfoej(lab, a):
         if a and a["id"] not in valgt and len(kort) < 3:
             valgt.add(a["id"])
-            kort.append(_vaelger_kort(lab, a))
+            kort.append(_vaelger_kort(lab, a, vinder=not kort))
 
     if efter_score:
         top = sorted(k, key=lambda a: (-(telemobil_score(a) or 0), gns12(a) or 9e9))
@@ -1228,7 +1261,7 @@ def vaelger():
                        ("Billigst på TDC NET", daek)]:
             if a and a["id"] not in valgte:
                 valgte.add(a["id"])
-                kort.append(_vaelger_kort(lab, a))
+                kort.append(_vaelger_kort(lab, a, vinder=not kort))
         for a in sorted(k, key=gns12):
             if len(kort) >= 3:
                 break
@@ -18954,14 +18987,37 @@ med kort. Kortlægningen viser, hvilke hastigheder der udbydes på adressen — 
 der leverer dem. Det bekræfter du altid på selskabets eget adressetjek.</p>"""
 
 
-def _bb_hero_kort(lab, a):
-    return f"""<div class="vk">
-  <span class="vk-lab">{e(lab)}</span>
-  {_bb_logo(a).replace(' loading="lazy"', '')}
-  <b class="vk-navn">{e(TEKNOLOGI_KORT.get(a['teknologi'], a['teknologi']))} {kr(a['ned'])}/{kr(a['op'])} Mbit/s</b>
-  <div class="vk-pris">{kr(bb_start(a))}<span> kr./md.{f" i {a['intro_mdr']} mdr." if a.get('intro_pris') else ""}</span></div>
-  <p class="vk-linje">{"Herefter " + kr(a["pris"]) + " kr. " if a.get("intro_pris") else "Fast pris. "}Snit {kr(round(bb_aarspris(a) / 12))} kr./md. år 1.</p>
-  <a class="knap knap-primaer vk-knap" href="{e(a['link'])}" rel="sponsored nofollow noopener" target="_blank" data-udgaaende="{e(a['udbyder'])}">Gå til {e(a['udbyder_navn'])}</a>
+def _bb_fordele(a):
+    f = ["Ingen binding" if not a.get("binding") else f"{a['binding']} mdr. binding"]
+    if not a.get("oprettelse"):
+        f.append("Gratis oprettelse")
+    for x in a.get("fordele") or []:
+        lx = x.lower()
+        if ("oprettelse" not in lx and "binding" not in lx and " kr" not in lx
+                and not re.search(r"bedst|hurtigst|billigst|mest |nr\. ?1", lx)):
+            f.append(x)
+    return f[:3]
+
+
+def _bb_hero_kort(lab, a, vinder=False):
+    """Bredbåndskort i samme design som mobilkortene (design B)."""
+    intro = a.get("intro_pris") and a.get("intro_mdr")
+    m = a.get("intro_mdr") or 0
+    spar = round((a["pris"] - a["intro_pris"]) * min(m, 12)) if intro else 0
+    enhed = f"kr./md. de første {m} md{'r' if m != 1 else ''}." if intro else "kr./md."
+    li = "".join(f"<li>{e(x)}</li>" for x in _bb_fordele(a))
+    return f"""<div class="vk{' vk-vinder' if vinder else ''}">
+  <div class="vk-band"><span class="vk-lab">{e(lab)}</span><span class="vk-lchip">{_bb_logo(a).replace(' loading="lazy"', '')}</span></div>
+  {f'<span class="vk-spar">Spar {kr(spar)} kr. år 1</span>' if spar > 0 else ''}
+  <div class="vk-ind">
+    <b class="vk-navn">{e(TEKNOLOGI_KORT.get(a['teknologi'], a['teknologi']))} {kr(a['ned'])}/{kr(a['op'])} Mbit/s</b>
+    <div class="vk-pris">{kr(bb_start(a))}<span>{e(enhed)}</span></div>
+    <p class="vk-linje">{"Herefter " + kr(a["pris"]) + " kr./md." if intro else "Fast pris — ingen intropris"}</p>
+    <div class="vk-aar"><span>Første år i alt</span><b>{kr(bb_aarspris(a))} kr.</b></div>
+    <ul class="vk-fordele">{li}</ul>
+    <a class="knap knap-primaer vk-knap" href="{e(a['link'])}" rel="sponsored nofollow noopener" target="_blank" data-udgaaende="{e(a['udbyder'])}">Gå til {e(a['udbyder_navn'])} <span aria-hidden="true">→</span></a>
+    <small class="vk-mikro">Annoncelink · du bestiller hos {e(a['udbyder_navn'])}</small>
+  </div>
 </div>"""
 
 
@@ -18989,7 +19045,7 @@ def bb_hero(h1, led, udvalg, fokus=None):
     for lab, a in valg:
         if a["id"] not in set_:
             set_.add(a["id"])
-            kort.append(_bb_hero_kort(lab, a))
+            kort.append(_bb_hero_kort(lab, a, vinder=not kort))
     for a in sorted(udvalg, key=bb_aarspris):
         if len(kort) >= 3:
             break
@@ -18999,10 +19055,21 @@ def bb_hero(h1, led, udvalg, fokus=None):
     data = [{"u": a["udbyder_navn"], "s": a["udbyder"], "w": _logo_w(a["udbyder"], 22),
              "t": a["teknologi"], "n": a["ned"], "o": a["op"], "p": a["pris"],
              "i": a.get("intro_pris") or 0, "m": a.get("intro_mdr") or 0,
-             "a": round(bb_aarspris(a) / 12), "l": a["link"]} for a in (BB or [])]
+             "a": round(bb_aarspris(a) / 12), "y": bb_aarspris(a), "f": _bb_fordele(a), "l": a["link"]} for a in (BB or [])]
     eks = ["Jægergårdsgade 90A, 8000 Aarhus", "Nørrebrogade 12, 2200 København",
            "Vestergade 5, 5000 Odense", "Algade 20, 9000 Aalborg"]
-    return f"""<section class="hero hero-lys hero-vaelger hero-adr" data-fokus="{e(fokus or '')}">
+    tek = ""
+    for tt, navn, sti in (("fiber", "Fibernet", "/bredbaand/fibernet/"), ("coax", "Kabel", "/bredbaand/kabel-internet/"),
+                          ("5g", "5G-internet", "/bredbaand/5g/")):
+        k = [a for a in (BB or []) if a["teknologi"] == tt]
+        if k:
+            akt = ' aria-current="page"' if fokus == tt else ""
+            tek += (f'<a href="{sti}"{akt}>{navn}'
+                    f'<small>fra {kr(round(min(bb_aarspris(a) for a in k) / 12))} kr./md.</small></a>')
+    n_bb = len(BB or [])
+    n_sel = len({a["udbyder"] for a in (BB or [])})
+    return f"""<section class="hero hero-lys hero-vaelger hero-adr hero-foto" data-fokus="{e(fokus or '')}">
+  {_hero_foto("med-streaming")}
   <div class="baand">
     <h1>{e(h1)}</h1>
     <p class="led">{e(led)}</p>
@@ -19016,6 +19083,8 @@ def bb_hero(h1, led, udvalg, fokus=None):
       </div>
       <ul id="adr-forslag" class="adr-forslag" role="listbox" hidden></ul>
     </div>
+    {f'<nav class="hf-tek" aria-label="Typer af internet">{tek}</nav>' if tek else ''}
+    <p class="hf-tillid"><span>{n_bb} tilbud fra {n_sel} selskaber</span><span>Officielle adressedata</span><span>Ingen betalt placering</span></p>
     <div class="adr-resultat" aria-live="polite" hidden></div>
     <div class="seg-res on adr-standard">{"".join(kort)}</div>
     <p class="hv-tillid">Adressedata fra Digitaliseringsstyrelsens Bredbåndskortlægning {BBK['aar']}<span>·</span>Priser opdateret {e(OPDATERET)}<span>·</span>Ingen betalt placering</p>

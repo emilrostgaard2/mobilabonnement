@@ -164,15 +164,20 @@
     }
   }
 
-  function kortHtml(lab, a) {
-    return '<div class="vk"><span class="vk-lab">' + esc(lab) + "</span>" +
-      '<img src="/assets/img/logoer/' + esc(a.s) + '.webp" alt="' + esc(a.u) + '" width="' + a.w + '" height="22" ' +
-      'onerror="var b=document.createElement(\'strong\');b.textContent=this.alt;this.replaceWith(b)">' +
-      '<b class="vk-navn">' + ({ fiber: "Fiber", coax: "Kabel (coax)", "5g": "5G", "4g": "4G" }[a.t] || a.t) +
+  function kortHtml(lab, a, vinder) {
+    var spar = a.i ? (a.p - a.i) * Math.min(a.m, 12) : 0;
+    return '<div class="vk' + (vinder ? " vk-vinder" : "") + '"><div class="vk-band"><span class="vk-lab">' + esc(lab) + "</span>" +
+      '<span class="vk-lchip"><img src="/assets/img/logoer/' + esc(a.s) + '.webp" alt="' + esc(a.u) + '" width="' + a.w + '" height="22" ' +
+      'onerror="var b=document.createElement(\'strong\');b.textContent=this.alt;this.replaceWith(b)"></span></div>' +
+      (spar > 0 ? '<span class="vk-spar">Spar ' + kr(spar) + " kr. år 1</span>" : "") +
+      '<div class="vk-ind"><b class="vk-navn">' + ({ fiber: "Fiber", coax: "Kabel (coax)", "5g": "5G", "4g": "4G" }[a.t] || a.t) +
       " " + kr(a.n) + "/" + kr(a.o) + " Mbit/s</b>" +
-      '<div class="vk-pris">' + kr(a.i || a.p) + "<span> kr./md." + (a.i ? " i " + a.m + " mdr." : "") + "</span></div>" +
-      '<p class="vk-linje">' + (a.i ? "Herefter " + kr(a.p) + " kr. " : "Fast pris. ") + "Snit " + kr(a.a) + " kr./md. år 1.</p>" +
-      '<a class="knap knap-primaer vk-knap" href="' + esc(a.l) + '" rel="sponsored nofollow noopener" target="_blank" data-udgaaende="' + esc(a.s) + '">Tjek hos ' + esc(a.u) + "</a></div>";
+      '<div class="vk-pris">' + kr(a.i || a.p) + "<span>kr./md." + (a.i ? " de første " + a.m + " mdr." : "") + "</span></div>" +
+      '<p class="vk-linje">' + (a.i ? "Herefter " + kr(a.p) + " kr./md." : "Fast pris — ingen intropris") + "</p>" +
+      '<div class="vk-aar"><span>Første år i alt</span><b>' + kr(a.y) + " kr.</b></div>" +
+      '<ul class="vk-fordele">' + (a.f || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" +
+      '<a class="knap knap-primaer vk-knap" href="' + esc(a.l) + '" rel="sponsored nofollow noopener" target="_blank" data-udgaaende="' + esc(a.s) + '">Tjek hos ' + esc(a.u) + ' <span aria-hidden="true">→</span></a>' +
+      '<small class="vk-mikro">Annoncelink · du bestiller hos ' + esc(a.u) + "</small></div></div>";
   }
   function billigst(t, maks) {
     var k = bb.filter(function (a) { return a.t === t && (!maks || a.n <= maks); });
@@ -226,7 +231,8 @@
     if (kdl) tek.push(["coax", "Billigste kabel-internet på adressen", kdl]);
     if (mdl) tek.push(["5g", "Billigste 5G-internet", 0]);
     if (fokus) tek.sort(function (a, b) { return (b[0] === fokus) - (a[0] === fokus); });
-    var kort = tek.map(function (t) { var a = billigst(t[0], t[2]); return a ? kortHtml(t[1], a) : ""; })
+    var nr = 0;
+    var kort = tek.map(function (t) { var a = billigst(t[0], t[2]); return a ? kortHtml(t[1], a, !nr++) : ""; })
       .filter(Boolean).slice(0, 3).join("");
     res.innerHTML = '<div class="adr-kort"><h2>Det kan du få på ' + esc(felt.value) + "</h2><ul>" + liste + "</ul>" +
       '<p class="adr-note">Kilde: Digitaliseringsstyrelsens Bredbåndskortlægning 2026 — hastigheder udbudt til private. ' +
