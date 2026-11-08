@@ -1144,7 +1144,8 @@ def _vaelger_kort(lab, a):
     intro = a.get("intro_pris") is not None and a.get("intro_mdr")
     pris = kr(a["intro_pris"]) if intro else kr(a["pris"])
     enhed = f" kr./md. i {a['intro_mdr']} md{'r' if a['intro_mdr'] != 1 else ''}." if intro else " kr./md."
-    linje = (f"Herefter {kr(a['pris'])} kr." if intro else "Fast pris hele året.")
+    linje = (f"Herefter {kr(a['pris'])} kr. Snit {kr(round(gns12(a)))} kr./md. år 1." if intro
+             else "Fast pris hele året.")
     linje += " Ingen binding." if not a["binding"] else f" {a['binding']} mdr. binding."
     return f"""<div class="vk">
   <span class="vk-lab">{e(lab)}</span>
@@ -1155,6 +1156,52 @@ def _vaelger_kort(lab, a):
   <a class="knap knap-primaer vk-knap" href="{a['link']}" rel="sponsored nofollow noopener"
     target="_blank" data-udgaaende="{e(u['slug'])}" data-abonnement="{e(a['id'])}">Gå til {e(u['navn'])}</a>
 </div>"""
+
+
+def hero_kort(etiket, h1, led, udvalg, *, billede=None, links=None, efter_score=False):
+    """Hero med de tre bedste valg som kort med knap direkte til selskabet.
+    Har siden et billede, ligger det i baggrunden under en mørk toning."""
+    k = [a for a in udvalg if a["pris"] > 0 and not a.get("forbrugsafregnet")]
+    if not k:
+        return hero_side(etiket, h1, led, '<a href="#sammenlign" class="knap knap-primaer">Se priserne</a>')
+    valgt, kort = set(), []
+
+    def tilfoej(lab, a):
+        if a and a["id"] not in valgt and len(kort) < 3:
+            valgt.add(a["id"])
+            kort.append(_vaelger_kort(lab, a))
+
+    if efter_score:
+        top = sorted(k, key=lambda a: (-(telemobil_score(a) or 0), gns12(a) or 9e9))
+        for i, a in enumerate(top[:6]):
+            tilfoej(("Højeste Telemobil-score: " if i == 0 else "Telemobil-score: ")
+                    + f"{telemobil_score(a)}/100", a)
+    else:
+        tilfoej("Billigst over 12 mdr.", min(k, key=lambda a: gns12(a) or 9e9))
+        tilfoej("Laveste startpris", min(k, key=visningspris))
+        fast = [a for a in k if not (a.get("intro_pris") and a.get("intro_mdr"))]
+        if fast:
+            tilfoej("Fast pris uden intro", min(fast, key=lambda a: a["pris"]))
+        for a in sorted(k, key=lambda a: gns12(a) or 9e9):
+            tilfoej("Også billig", a)
+    links = (links or []) + [("#sammenlign", f"Se alle {len(k)}")]
+    chips = "".join(f'<a href="{h}">{e(t)}</a>' for h, t in links)
+    foto = billede and os.path.exists(os.path.join(ROD, "assets", "img", "sider", f"{billede}-1280.webp"))
+    bg = (f'<img class="hk-bg" src="/assets/img/sider/{billede}-1280.webp" '
+          f'srcset="/assets/img/sider/{billede}-640.webp 640w, /assets/img/sider/{billede}-1280.webp 1280w" '
+          f'sizes="100vw" alt="" fetchpriority="high" decoding="async">' if foto else "")
+    orden = "Rangeret efter Telemobil-score" if efter_score else "Sorteret efter snitpris det første år"
+    return f"""<section class="hero hero-kort{' foto' if foto else ' hero-lys'}">
+  {bg}
+  <div class="baand">
+    <span class="hk-etiket">{e(etiket)}</span>
+    <h1>{h1}</h1>
+    <p class="led">{led}</p>
+    <nav class="hk-links" aria-label="Relaterede sammenligninger">{chips}</nav>
+    <div class="seg-res on hk-kort" style="--n:{len(kort)}">{"".join(kort)}</div>
+    <p class="hk-tillid">Priser opdateret {e(OPDATERET)}<span>·</span>{orden}<span>·</span>Ingen betalt placering</p>
+  </div>
+</section>"""
 
 
 def vaelger():
@@ -3402,11 +3449,13 @@ def byg_billigste():
 
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk,
-        hero=hero_side("Sammenligning", f"Billigste mobilabonnement — fra {D['min_normalpris']} kr.",
-                       f"Vi har regnet {D['antal']} abonnementer igennem og fundet, hvad de reelt koster "
-                       "pr. gigabyte. Under tabellen forklarer vi, hvad du skal se efter, "
-                       "og hvilke omkostninger der ikke står i prisen.",
-                       '<a href="#sammenlign" class="knap knap-primaer">Gå til tabellen</a>'),
+        hero=hero_kort("Sammenligning", "Billigste mobilabonnement",
+                       f"{D['antal']} abonnementer fra {D['antal_udbydere']} selskaber — sorteret efter, hvad de "
+                       "reelt koster det første år, så en lav intropris ikke snyder.",
+                       ABON_AAR, billede="billigste",
+                       links=[("/mobilabonnement-under-100-kr/", "Under 100 kr."),
+                              ("/mobilabonnement-med-fri-data/", "Fri data"),
+                              ("/mobilabonnement-uden-binding/", "Uden binding")]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk),
@@ -3479,10 +3528,13 @@ def byg_fridata():
 
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk,
-        hero=hero_side("Fri data", "Billigste mobilabonnement med fri data",
-                       f"Fri data koster fra {D['pris_fri']} kr. om måneden. Her er hvad det dækker, "
-                       "hvad det ikke dækker, og hvordan du regner ud, om du overhovedet har brug for det.",
-                       '<a href="#sammenlign" class="knap knap-primaer">Se priserne</a>'),
+        hero=hero_kort("Fri data", "Billigste mobilabonnement med fri data",
+                       f"{_antal_ab(len(fri))} med fri data fra {len({a['udbyder'] for a in fri})} selskaber — "
+                       "sorteret efter, hvad de reelt koster det første år.",
+                       fri, billede="med-fri-data",
+                       links=[("/mobilabonnement-100-gb/", "100 GB og op"),
+                              ("/mobilabonnement-med-5g/", "Med 5G"),
+                              ("/guides/fri-data-eller-100-gb/", "Fri data eller 100 GB?")]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk), listeld(sorted(fri, key=lambda a: a["pris"]), "Abonnementer med fri data"))],
@@ -3508,8 +3560,7 @@ def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links
 """
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk,
-        hero=hero_side(etiket, h1, intro,
-                       '<a href="#sammenlign" class="knap knap-primaer">Se priserne</a>'),
+        hero=hero_kort(etiket, h1, intro, udvalg, billede=billede),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk), listeld(udvalg, etiket))],
@@ -3548,7 +3599,7 @@ def byg_kategori(*, sti, etiket, h1, titel, besk, intro, udvalg, tekstfunktion,
 """
     return skriv(sti, shell(
         sti=sti, titel=titel, beskrivelse=besk,
-        hero=hero_side(etiket, h1, intro, '<a href="#sammenlign" class="knap knap-primaer">Se priserne</a>', chips),
+        hero=hero_kort(etiket, h1, intro, udvalg, billede=billede, efter_score=(sorter is None and "score" in intro.lower())),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk), listeld(udvalg, etiket))],
@@ -4582,11 +4633,9 @@ def byg_gb_side(slug, navn, lav, hoej, profil, beskrivelse):
                      f"Fra {kr(fra)} kr./md. Vi viser også prisen over 12 måneder, "
                      "så introtilbud ikke skjuler normalprisen."),
         opdateret=OPDATERET,
-        hero=hero_side(f"{navn}", f"Mobilabonnement med {e(navn)}",
-                       e(beskrivelse),
-                       '<a href="#sammenlign" class="knap knap-primaer">Se abonnementerne</a>',
-                       [("Planer", str(len(udvalg))), ("Fra", f"{kr(fra)} kr."),
-                        ("Profil", profil)]),
+        hero=hero_kort(f"{navn}", f"Mobilabonnement med {e(navn)}", e(beskrivelse), udvalg,
+                       links=[(f"/mobilabonnement-{s_}/", n_) for s_, n_, *_ in GB_INTERVALLER
+                              if s_ != slug][:3]),
         efter_hero=logobaand(), krumme=krumme, indhold=krop + faqblok(faq),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, f"Mobilabonnement {navn}", ""),
@@ -8262,11 +8311,15 @@ def _by_slug(navn):
 
 
 def by_statistik_pr_postnr():
-    """{by: {postnr: [navn, adresser, fiber, kabel, 1000+, kun_mobil, mobil_100]}}"""
+    """{by: {postnr: dict}} med tal pr. postnummer, plus 'Hele Danmark' samlet."""
     mappe = os.path.join(ROD, "assets", "adr", "p")
     ud = {}
     if not os.path.isdir(mappe):
         return ud
+    def ny(navn):
+        return {"navn": navn, "n": 0, "fiber": 0, "kabel": 0, "g1000": 0, "g500": 0, "g100": 0,
+                "op100": 0, "kunmobil": 0, "mob100": 0, "mob300": 0, "xdsl": 0, "fast": 0,
+                "fiber1000": 0}
     for fn in sorted(os.listdir(mappe)):
         if not fn.endswith(".json"):
             continue
@@ -8276,18 +8329,28 @@ def by_statistik_pr_postnr():
         except (ValueError, KeyError, OSError):
             continue
         by = next((navn for navn, iv in IP_BYER if any(lo <= pnr <= hi for lo, hi in iv)), None)
-        if not by:
-            continue
-        t = ud.setdefault(by, {}).setdefault(pnr, [d.get("k", ""), 0, 0, 0, 0, 0, 0])
+        maal = [ud.setdefault("Hele Danmark", {}).setdefault(0, ny("Hele Danmark"))]
+        if by:
+            maal.append(ud.setdefault(by, {}).setdefault(pnr, ny(d.get("k", ""))))
         for _, huse in d["v"]:
             for h in huse.split():
                 f = d["f"][int(h.rsplit(":", 1)[1])]
-                t[1] += 1
-                t[2] += f[0] > 0
-                t[3] += f[2] > 0
-                t[4] += max(f[0], f[2], f[4], f[5], f[7]) >= 1000
-                t[5] += (not (f[0] or f[2] or f[4] or f[7])) and f[5] > 0
-                t[6] += f[5] >= 100
+                fdl, ful, kdl, kul, xdl, mdl, mul, tdl = f
+                fast = max(fdl, kdl, xdl, tdl)
+                for t in maal:
+                    t["n"] += 1
+                    t["fiber"] += fdl > 0
+                    t["fiber1000"] += fdl >= 1000
+                    t["kabel"] += kdl > 0
+                    t["xdsl"] += xdl > 0
+                    t["fast"] += tdl > 0
+                    t["g1000"] += max(fast, mdl) >= 1000
+                    t["g500"] += max(fast, mdl) >= 500
+                    t["g100"] += max(fast, mdl) >= 100
+                    t["op100"] += max(ful, kul, mul) >= 100
+                    t["kunmobil"] += (not (fdl or kdl or xdl or tdl)) and mdl > 0
+                    t["mob100"] += mdl >= 100
+                    t["mob300"] += mdl >= 300
     return ud
 
 
@@ -8295,118 +8358,188 @@ def byg_bysider():
     if not BB:
         return []
     data = by_statistik_pr_postnr()
+    dk = (data.get("Hele Danmark") or {}).get(0)
     bygget = []
+
     def pct(a, b):
         return (str(round(a / b * 100, 1)).replace(".", ",") + " %") if b else "–"
-    alle_byer = sorted(data, key=lambda b: -sum(v[1] for v in data[b].values()))
+
+    def sum_by(pn):
+        t = {}
+        for v in pn.values():
+            for k_, x in v.items():
+                if k_ != "navn":
+                    t[k_] = t.get(k_, 0) + x
+        return t
+
+    alle_byer = sorted([b for b in data if b != "Hele Danmark"], key=lambda b: -sum_by(data[b])["n"])
+    totaler = {b: sum_by(data[b]) for b in alle_byer}
     for by in alle_byer:
         pn = data[by]
-        tot = [sum(v[i] for v in pn.values()) for i in range(1, 7)]
-        if tot[0] < 1000:
+        t = totaler[by]
+        if t["n"] < 1000:
             continue
         slug = _by_slug(by)
         sti = f"/internet-priser/{slug}/"
-        fiber_pct = tot[1] / tot[0] * 100
-        kabel_pct = tot[2] / tot[0] * 100
+        n = t["n"]
+
+        # By mod landet
+        sml_rk = ""
+        for lab, k_ in (("Fiber", "fiber"), ("Fiber med 1000 Mbit/s", "fiber1000"),
+                        ("Kabel-tv (coax)", "kabel"), ("Kobber (xDSL)", "xdsl"),
+                        ("Mindst 1000 Mbit/s ned", "g1000"), ("Mindst 100 Mbit/s op", "op100"),
+                        ("Mobilt bredbånd 300+ Mbit/s", "mob300"), ("Kun mobilt bredbånd", "kunmobil")):
+            sml_rk += (f'<tr><td>{e(lab)}</td><td class="tal"><strong>{pct(t[k_], n)}</strong></td>'
+                       f'<td class="tal">{pct(dk[k_], dk["n"]) if dk else "–"}</td></tr>')
+
+        # Billigste pr. teknologi
         tek_rk = ""
-        for t, navn_t, andel in (("fiber", "Fibernet", tot[1]), ("coax", "Kabel-internet (coax)", tot[2]),
-                                 ("5g", "5G-internet (mindst 100 Mbit/s mobilt)", tot[5])):
-            k = [a for a in BB if a["teknologi"] == t]
+        for tk, navn_t, andel in (("fiber", "Fibernet", t["fiber"]), ("coax", "Kabel-internet (coax)", t["kabel"]),
+                                  ("5g", "5G-internet", t["mob100"])):
+            k = [a for a in BB if a["teknologi"] == tk]
             if not k:
                 continue
             b_ = min(k, key=bb_aarspris)
-            tek_rk += (f'<tr><td><strong>{e(navn_t)}</strong></td><td class="tal">{pct(andel, tot[0])}</td>'
+            tek_rk += (f'<tr><td><strong>{e(navn_t)}</strong></td><td class="tal">{pct(andel, n)}</td>'
                        f'<td>{e(b_["udbyder_navn"])} {kr(b_["ned"])}/{kr(b_["op"])} Mbit/s</td>'
                        f'<td class="tal"><strong>{kr(_ip_aar(b_))} kr.</strong></td>'
                        f'<td>{_bb_cta(b_, "Se tilbud")}</td></tr>')
+
+        # Postnumre
+        pn_liste = sorted(((p_, v) for p_, v in pn.items() if v["n"] >= 50), key=lambda x: x[0])
         pn_rk = "".join(
-            f'<tr><td>{p_} {e(v[0])}</td><td class="tal">{kr(v[1])}</td><td class="tal">{pct(v[2], v[1])}</td>'
-            f'<td class="tal">{pct(v[3], v[1])}</td><td class="tal">{pct(v[4], v[1])}</td></tr>'
-            for p_, v in sorted(pn.items()) if v[1] >= 50)
-        andre = [b for b in alle_byer if b != by][:6]
-        andre_links = ", ".join(f'<a href="/internet-priser/{_by_slug(b)}/">internet i {e(b)}</a>' for b in andre)
-        bedst_pn = max(((p_, v) for p_, v in pn.items() if v[1] >= 200), key=lambda x: x[1][2] / x[1][1], default=None)
-        svagest_pn = min(((p_, v) for p_, v in pn.items() if v[1] >= 200), key=lambda x: x[1][2] / x[1][1], default=None)
+            f'<tr><td>{p_} {e(v["navn"])}</td><td class="tal">{kr(v["n"])}</td><td class="tal">{pct(v["fiber"], v["n"])}</td>'
+            f'<td class="tal">{pct(v["kabel"], v["n"])}</td><td class="tal">{pct(v["g1000"], v["n"])}</td>'
+            f'<td class="tal">{pct(v["kunmobil"], v["n"])}</td></tr>' for p_, v in pn_liste)
+        store = [(p_, v) for p_, v in pn.items() if v["n"] >= 200]
+        bedst = max(store, key=lambda x: x[1]["fiber"] / x[1]["n"], default=None)
+        svag = min(store, key=lambda x: x[1]["fiber"] / x[1]["n"], default=None)
         variation = ""
-        if bedst_pn and svagest_pn and bedst_pn[0] != svagest_pn[0]:
-            variation = (f"<p>Dækningen svinger inden for byen: i {bedst_pn[0]} {e(bedst_pn[1][0])} kan "
-                         f"{pct(bedst_pn[1][2], bedst_pn[1][1])} af adresserne få fiber, i {svagest_pn[0]} "
-                         f"{e(svagest_pn[1][0])} {pct(svagest_pn[1][2], svagest_pn[1][1])}. Derfor er "
-                         f"adressetjekket øverst mere præcist end bytallet.</p>")
+        if bedst and svag and bedst[0] != svag[0]:
+            variation = (f"<p>Dækningen svinger inden for byen. I {bedst[0]} {e(bedst[1]['navn'])} kan "
+                         f"{pct(bedst[1]['fiber'], bedst[1]['n'])} af adresserne få fiber, mens det i {svag[0]} "
+                         f"{e(svag[1]['navn'])} er {pct(svag[1]['fiber'], svag[1]['n'])}. Bor du i et af de "
+                         f"svagere områder, er kabel-internet eller 5G ofte alternativet — og adressetjekket "
+                         f"øverst er mere præcist end bytallet.</p>")
+
+        # Placering blandt byerne
+        rang = sorted(alle_byer, key=lambda b: -totaler[b]["fiber"] / max(1, totaler[b]["n"]))
+        plads = rang.index(by) + 1
+        fiber_pct = t["fiber"] / n * 100
+        dk_fiber = dk["fiber"] / dk["n"] * 100 if dk else None
+        ift = ("over" if dk_fiber and fiber_pct > dk_fiber + 0.5 else
+               "under" if dk_fiber and fiber_pct < dk_fiber - 0.5 else "på niveau med")
         billigst = min(BB, key=bb_aarspris)
+        top = sorted(BB, key=bb_aarspris)
+        fiber_k = [a for a in BB if a["teknologi"] == "fiber"]
+        coax_k = [a for a in BB if a["teknologi"] == "coax"]
+        g5_k = [a for a in BB if a["teknologi"] == "5g"]
+        def med(k):
+            return kr(_ip_med([_ip_aar(a) for a in k])) if k else "–"
+
         faq = [
             {"sp": f"Hvor mange i {by} kan få fiber?",
-             "sv": f"{pct(tot[1], tot[0])} af de {kr(tot[0])} adresser i {by} kan få fiber ifølge vores beregning "
-                   f"på Bredbåndskortlægningen {BBK['aar']}. {pct(tot[2], tot[0])} kan få kabel-internet."},
+             "sv": f"{pct(t['fiber'], n)} af de {kr(n)} adresser i {by} kan få fiber ifølge vores beregning på "
+                   f"Bredbåndskortlægningen {BBK['aar']}. Landsgennemsnittet er {pct(dk['fiber'], dk['n']) if dk else '–'}."},
             {"sp": f"Hvad koster internet i {by}?",
-             "sv": f"Listepriserne er som regel de samme i hele landet. Det billigste i vores sammenligning er "
-                   f"{billigst['udbyder_navn']} til {kr(_ip_aar(billigst))} kr. om måneden i snit det første år, "
-                   f"men tjek din adresse, for udvalget afhænger af, hvad der er gravet ned."},
+             "sv": f"Listepriserne er som regel de samme i hele landet. I vores sammenligning koster fibernet i median "
+                   f"{med(fiber_k)} kr., kabel-internet {med(coax_k)} kr. og 5G-internet {med(g5_k)} kr. om måneden i "
+                   f"snit det første år. Det billigste er {billigst['udbyder_navn']} til {kr(_ip_aar(billigst))} kr."},
             {"sp": f"Kan jeg få 1000 Mbit/s i {by}?",
-             "sv": f"{pct(tot[3], tot[0])} af adresserne i {by} kan få mindst 1000 Mbit/s via fiber, "
-                   f"kabel eller fast trådløst."},
+             "sv": f"{pct(t['g1000'], n)} af adresserne i {by} kan få mindst 1000 Mbit/s, og {pct(t['fiber1000'], n)} "
+                   f"kan få det via fiber."},
             {"sp": f"Hvad hvis jeg ikke kan få fiber i {by}?",
-             "sv": f"Så er kabel-internet eller 5G alternativerne. 5G kræver ingen installation og kan bestilles "
-                   f"samme dag. {pct(tot[4], tot[0])} af adresserne i {by} har kun mobilt bredbånd som mulighed."},
+             "sv": f"Så er kabel-internet ({pct(t['kabel'], n)} af adresserne) eller 5G alternativerne. 5G kræver "
+                   f"ingen installation. {pct(t['kunmobil'], n)} af adresserne i {by} har kun mobilt bredbånd som "
+                   f"mulighed."},
+            {"sp": f"Hvilket postnummer i {by} har bedst dækning?",
+             "sv": (f"Målt på fiber er det {bedst[0]} {bedst[1]['navn']} med {pct(bedst[1]['fiber'], bedst[1]['n'])}."
+                    if bedst else "Se tabellen over postnumre på siden.")},
         ]
+
         krop = f"""<section class="sektion baand-smal artikel">
 {gennemgangslinje(OPDATERET, fakta=f"Dækning beregnet ud fra Bredbåndskortlægningen {BBK['aar']}")}
-<div class="udtag"><p><strong>Kort svar:</strong> {pct(tot[1], tot[0])} af de {kr(tot[0])} adresser i {e(by)}
-kan få fiber, og {pct(tot[2], tot[0])} kan få kabel-internet. {pct(tot[3], tot[0])} kan få mindst 1000 Mbit/s.
-Det billigste internet i vores sammenligning koster {kr(_ip_aar(billigst))} kr. om måneden i snit det første år,
-men om det kan leveres, afhænger af din adresse.</p></div>
+<div class="udtag"><p><strong>Kort svar:</strong> {pct(t['fiber'], n)} af de {kr(n)} adresser i {e(by)} kan få
+fiber — {ift} landsgennemsnittet på {pct(dk['fiber'], dk['n']) if dk else '–'} — og {pct(t['kabel'], n)} kan få
+kabel-internet. {pct(t['g1000'], n)} kan få mindst 1000 Mbit/s. Det billigste internet i vores sammenligning koster
+{kr(_ip_aar(billigst))} kr. om måneden i snit det første år, men hvad du kan få, afhænger af din adresse.</p></div>
+
+<h2 id="tilbud">De billigste internettilbud lige nu</h2>
+<p>Priserne er de samme i {e(by)} som i resten af landet — det er udvalget på din adresse, der afgør, hvilke
+du kan få. Tjek adressen øverst, så filtreres listen. Alle {len(BB)} tilbud står på
+<a href="/internet-priser/">internet priser</a>.</p>
+{bb_minitabel(top, maks=6)}
 
 <h2 id="teknologi">Fiber, kabel og 5G i {e(by)}</h2>
-<p>Andelen af adresser i {e(by)}, der kan få hver teknologi, og det billigste tilbud på hver af dem i vores
-sammenligning. {"Fiber dækker de fleste adresser i byen." if fiber_pct >= 80 else "Fiber dækker ikke hele byen, så kabel-internet og 5G er vigtige alternativer." }</p>
+<p>Andelen af adresser i {e(by)} med adgang til hver teknologi og det billigste tilbud på den i vores
+sammenligning. 5G-andelen er adresser med mindst 100 Mbit/s mobilt bredbånd.</p>
 <div class="tabelramme"><table class="datatabel">
 <caption>Internet i {e(by)}: dækning beregnet af Telemobil ud fra Bredbåndskortlægningen {BBK['aar']}, og billigste
 tilbud målt på snitprisen det første år inkl. oprettelse (pr. {e(OPDATERET)}).</caption>
 <thead><tr><th scope="col">Teknologi</th><th scope="col">Adresser med adgang</th><th scope="col">Billigste tilbud</th>
 <th scope="col">Snit/md.</th><th scope="col"><span class="sr-only">Bestil</span></th></tr></thead>
 <tbody>{tek_rk}</tbody></table></div>
+<p>{"Fiber dækker de fleste adresser i " + e(by) + ", så for de fleste er fiber det oplagte valg: samme hastighed begge veje og lav svartid." if fiber_pct >= 80 else "Fiber dækker ikke hele " + e(by) + ", så kabel-internet og 5G er vigtige alternativer."}
+Se priser pr. teknologi på <a href="/bredbaand/fibernet/">fibernet</a>,
+<a href="/bredbaand/kabel-internet/">kabel-internet</a> og <a href="/bredbaand/5g/">5G internet</a>.</p>
+
+<h2 id="landet">{e(by)} sammenlignet med hele landet</h2>
+<p>{e(by)} ligger nummer {plads} af de {len(alle_byer)} største byer målt på fiberdækning.</p>
+<div class="tabelramme"><table class="datatabel">
+<caption>Andel af adresser i {e(by)} og i hele Danmark med adgang til hver teknologi og hastighed.</caption>
+<thead><tr><th scope="col">Adgang til</th><th scope="col">{e(by)}</th><th scope="col">Hele Danmark</th></tr></thead>
+<tbody>{sml_rk}</tbody></table></div>
 
 <h2 id="postnumre">Dækning pr. postnummer i {e(by)}</h2>
 {variation}
 <div class="tabelramme"><table class="datatabel">
-<caption>Andel af adresser pr. postnummer med adgang til fiber, kabel-tv og mindst 1000 Mbit/s.</caption>
+<caption>Andel af adresser pr. postnummer med adgang til fiber, kabel-tv og mindst 1000 Mbit/s, og andelen, der
+kun kan få mobilt bredbånd.</caption>
 <thead><tr><th scope="col">Postnummer</th><th scope="col">Adresser</th><th scope="col">Fiber</th>
-<th scope="col">Kabel-tv</th><th scope="col">1000+ Mbit/s</th></tr></thead>
+<th scope="col">Kabel-tv</th><th scope="col">1000+ Mbit/s</th><th scope="col">Kun mobilt</th></tr></thead>
 <tbody>{pn_rk}</tbody></table></div>
 
 <h2 id="vaelg">Sådan vælger du internet i {e(by)}</h2>
 <ol class="nummerliste">
-  <li><strong>Tjek din adresse</strong> i feltet øverst. Den viser, hvilke teknologier og hastigheder
-  der er udbudt hos dig.</li>
-  <li><strong>Vælg hastighed efter behov</strong> — 100 Mbit/s til en eller to personer, 300–500 til en
+  <li><strong>Tjek din adresse</strong> i feltet øverst. Den viser, hvilke teknologier og hastigheder der er
+  udbudt hos dig.</li>
+  <li><strong>Vælg hastighed efter behov.</strong> 100 Mbit/s rækker til en eller to personer, 300–500 til en
   familie. Se <a href="/guides/god-internethastighed/">hvad er en god internethastighed</a>.</li>
-  <li><strong>Sammenlign på prisen det første år</strong>, ikke på kampagneprisen. Alle tilbud står på
-  <a href="/internet-priser/">internet priser</a>.</li>
-  <li><strong>Bekræft hos selskabet</strong>, før du bestiller. Kortlægningen viser, hvad der er udbudt, ikke
-  hvilket selskab der leverer på netop din adresse.</li>
+  <li><strong>Sammenlign på prisen det første år</strong>, ikke på kampagneprisen, og tjek oprettelse og binding.</li>
+  <li><strong>Bekræft hos selskabet</strong>, før du bestiller. Kortlægningen viser, hvad der er udbudt, ikke hvilket
+  selskab der leverer på netop din adresse.</li>
 </ol>
+<p>Flytter du til {e(by)}, så se <a href="/guides/flyt-internettet/">sådan flytter du internettet med</a>.</p>
 
-<h2 id="andre-byer">Andre byer</h2>
-<p>Se også {andre_links} — eller hele landet på <a href="/internet-priser/">internet priser</a>.</p>
-{bb_guides()}
+<h2 id="om-tallene">Om tallene</h2>
+<p>Dækningen er beregnet af Telemobil ud fra adressedata i Digitaliseringsstyrelsens Bredbåndskortlægning
+{BBK['aar']}: {kr(n)} adgangsadresser i postnumrene {min(pn)}–{max(pn)}. Kortlægningen viser de hastigheder,
+der udbydes til private, men ikke hvilke selskaber der leverer. Priserne kommer fra selskabernes produktfeeds via
+Adtraction og opdateres to gange i døgnet.</p>
 </section>
 <section class="sektion baand-smal">{forfatterboks()}{afsloering()}</section>"""
+        andre = [b for b in alle_byer if b != by][:5]
+        krop = krop.replace("</section>\n<section class=\"sektion baand-smal\">{",
+                            "</section>\n<section class=\"sektion baand-smal\">{", 1)
+        andre_links = " · ".join(f'<a href="/internet-priser/{_by_slug(b)}/">{e(b)}</a>' for b in andre)
+        krop = krop.replace('<h2 id="om-tallene">',
+                            f'<p class="krydslink"><strong>Andre byer:</strong> {andre_links}</p>\n<h2 id="om-tallene">', 1)
         krumme = [("/", "Forside"), ("/internet-priser/", "Internet priser"), (None, f"Internet i {by}")]
         titel = f"Internet i {by}: fiber, kabel og 5G — dækning og priser"
         if len(titel) > 60:
             titel = f"Internet i {by}: dækning og priser"
         skriv(sti, shell(
             sti=sti, titel=titel,
-            beskrivelse=(f"{pct(tot[1], tot[0])} af adresserne i {by} kan få fiber og {pct(tot[2], tot[0])} kabel-internet. "
+            beskrivelse=(f"{pct(t['fiber'], n)} af adresserne i {by} kan få fiber og {pct(t['kabel'], n)} kabel-internet. "
                          f"Se dækning pr. postnummer og det billigste internet. Tjek din adresse."),
             hero=bb_hero(f"Internet i {by}",
                          f"Skriv din adresse i {by} og se, hvad du kan få — fiber, kabel eller 5G — og hvad "
                          f"det koster det første år.", BB),
-            efter_hero="", krumme=krumme, indhold=krop + faqblok(faq), toc=False,
+            efter_hero="", krumme=krumme, indhold=krop + faqblok(faq), toc=True,
             jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                          artikelld(sti, titel, f"Internetdækning og priser i {by}.", emne="Internet"))],
         ), prioritet="0.7", hyppighed="weekly")
-        bygget.append((by, sti, tot[0], pct(tot[1], tot[0])))
+        bygget.append((by, sti, n, pct(t["fiber"], n)))
     return bygget
 
 
@@ -11586,43 +11719,30 @@ def byg_lydbog():
                    or "mofibo" in t.lower() for t in a.get("streaming", []))]
     krumme = [("/", "Forside"), (None, "Med lydbog")]
     fra = min((a["pris"] for a in med), default=0)
+    smaa = sorted([a for a in ABON if a["pris"] > 0 and i_baand(a["data_gb"], 1, 30)],
+                  key=lambda a: gns12(a) or 9e9)[:8]
 
-    tabel = ""
     if med:
-        raekker = ""
-        for a in sorted(med, key=lambda x: x["pris"]):
-            u = UMAP[a["udbyder"]]
-            raekker += f"""<tr>
-  <td><a href="/udbydere/{u['slug']}/"><strong>{e(u['navn'])}</strong></a><br>
-      <span class="tabel-under">{e(_abonavn(a))}</span></td>
-  <td>{e(", ".join(a.get("streaming", [])))}</td>
-  <td class="tal">{gb_tekst(a['data_gb'])}</td>
-  <td class="tal">{kr(a['pris'])} kr.</td>
-</tr>"""
-        tabel = f"""<div class="tabelramme">
-<table class="datatabel">
-  <caption>Abonnementer hvor lydbøger eller podcast indgår. Opdateret
-  {e(OPDATERET)}.</caption>
-  <thead><tr><th scope="col">Abonnement</th><th scope="col">Indhold</th>
-    <th scope="col">Data</th><th scope="col">Pris</th></tr></thead>
-  <tbody>{raekker}</tbody>
-</table>
-</div>"""
+        top_tabel = pristabel(med, UMAP, titel="Mobilabonnementer med lydbog",
+                              undertitel=f"{_antal_ab(len(med))} med lydbøger inkluderet.",
+                              id_attr="sammenlign", vis=10)
+        tabel = (f"<p>{_antal_ab(len(med))} i vores sammenligning har lydbøger med i prisen — se dem i "
+                 f'<a href="#sammenlign">tabellen øverst</a>. Lytter du mest og streamer lidt, er et lille '
+                 f"abonnement plus en lydbogstjeneste ofte billigere. Her er de billigste små "
+                 f"abonnementer til sammenligning.</p>"
+                 + (pristabel(smaa, UMAP, titel="Billigste små abonnementer til lydbøger og podcast",
+                              undertitel="Abonnementer med 1–30 GB.", filtre=False, vis=8,
+                              id_attr="lydbog-smaa") if smaa else ""))
     else:
-        # Ingen pakker med lydbog i feedet. Så viser vi det, der faktisk hjælper en,
-        # der lytter: de billigste små abonnementer, som rækker til lydbøger med god margin.
-        smaa = sorted([a for a in ABON if a["pris"] > 0 and i_baand(a["data_gb"], 1, 30)],
-                      key=lambda a: gns12(a) or 9e9)[:8]
+        top_tabel = (pristabel(smaa, UMAP, titel="Billigste abonnementer til lydbøger og podcast",
+                               undertitel="Abonnementer med 1–30 GB.", id_attr="sammenlign", vis=8)
+                     if smaa else "")
         tabel = ("<p>Selskaberne i vores sammenligning har ingen pakker med lydbog lige nu. "
                  "Du har heller ikke brug for en: en lydbogstjeneste købt for sig plus et lille "
                  "abonnement er som regel billigst, og du beholder tjenesten, når du skifter "
-                 "mobilselskab. Her er de billigste abonnementer, der rækker til lydbøger og "
-                 "podcast med god margin.</p>"
-                 + (pristabel(smaa, UMAP, titel="Billigste abonnementer til lydbøger og podcast",
-                              undertitel="Abonnementer med 1–30 GB.", filtre=False, vis=8,
-                              id_attr="lydbog-abonnementer") if smaa else ""))
+                 "mobilselskab. Se de billigste små abonnementer i tabellen øverst.</p>")
 
-    krop = f"""<section class="sektion baand-smal artikel">
+    krop = top_tabel + f"""<section class="sektion baand-smal artikel">
 {gennemgangslinje(OPDATERET, fakta="Dataforbrug beregnet ud fra tjenesternes egne bitrates")}
 <div class="udtag"><p><strong>Kort svar:</strong> Lydbøger er den letteste form for
 streaming, der findes. En time fylder 0,03 gigabyte — omkring en hundrededel af en
@@ -11719,10 +11839,14 @@ sparer flere hundrede kroner om året i forhold til en stor pakke.</p>
         beskrivelse="Lydbøger fylder 0,03 GB i timen — hundrede gange mindre end video. "
                     "Se hvilke abonnementer der har lydbog med, og hvor lidt data du "
                     "reelt har brug for.",
-        hero=hero_side("Med lydbog", "Mobilabonnement med lydbog",
-                       "Lydbøger er den letteste streaming, der findes. Du behøver "
-                       "ikke et stort abonnement for at lytte."),
-        efter_hero="", krumme=krumme, toc=False,
+        hero=hero_kort("Med lydbog", "Mobilabonnement med lydbog",
+                       "En times lydbog fylder 0,03 GB. Se abonnementerne med lydbøger inkluderet — og "
+                       "om et lille abonnement plus en tjeneste er billigere.",
+                       med or smaa, billede="med-lydbog",
+                       links=[("/mobilabonnement-med-musik/", "Med musik"),
+                              ("/mobilabonnement-med-streaming/", "Med streaming"),
+                              ("/mobilabonnement-1-10-gb/", "1–10 GB")]),
+        efter_hero=logobaand(), krumme=krumme, toc=False,
         indhold=krop + faqblok(faq, "Spørgsmål om lydbøger og mobilabonnement"),
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld("/mobilabonnement-med-lydbog/",

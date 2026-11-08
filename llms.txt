@@ -45,3 +45,4 @@ pr. adresse kommer fra Digitaliseringsstyrelsens Bredbåndskortlægning.
 Telemobil modtager provision fra de selskaber, der har priser i sammenligningen, når en
 bestilling sker via et link. Provisionen afgør, hvem der er med, men ikke rækkefølgen eller
 vurderingerne. Se https://telemobil.dk/saadan-tjener-vi-penge/
+

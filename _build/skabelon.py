@@ -350,12 +350,6 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
   <div class="nav-menu nav-menu-enkel" id="menu-sammenlign">{sammenlign_punkter}</div>
 </div>
 <div class="nav-gruppe">
-  <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-vaerktoej">
-    Værktøjer <span class="pil-ned" aria-hidden="true"></span>
-  </button>
-  <div class="nav-menu nav-menu-enkel" id="menu-vaerktoej">{vaerktoej_punkter}</div>
-</div>
-<div class="nav-gruppe">
   <button type="button" class="nav-knap" aria-expanded="false" aria-controls="menu-bredbaand">
     Bredbånd <span class="pil-ned" aria-hidden="true"></span>
   </button>
