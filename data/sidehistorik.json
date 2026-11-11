@@ -16,27 +16,27 @@
  },
  "/anmeldelser/": {
   "dato": "2026-11-11",
-  "hash": "ec31c9196e07ed58",
+  "hash": "d2578ea058260885",
   "v": 1
  },
  "/bedste-mobilabonnement/": {
   "dato": "2026-11-11",
-  "hash": "be00d7729c80382c",
+  "hash": "f8bdf08c080c31f5",
   "v": 1
  },
  "/billigste-mobilabonnement/": {
   "dato": "2026-11-11",
-  "hash": "2ec08498843cd0c1",
+  "hash": "097972981c5a8c15",
   "v": 1
  },
  "/bredbaand/": {
   "dato": "2026-11-11",
-  "hash": "2db68a025cd2fccc",
+  "hash": "f071954ef7d3852d",
   "v": 1
  },
  "/bredbaand/5g/": {
   "dato": "2026-11-11",
-  "hash": "419d1136eafe62e9",
+  "hash": "3260ccef7074bbfe",
   "v": 1
  },
  "/bredbaand/adressetjek/": {
@@ -46,12 +46,12 @@
  },
  "/bredbaand/fibernet/": {
   "dato": "2026-11-11",
-  "hash": "cd5c7e71c8da27e6",
+  "hash": "938e34af8c2fab83",
   "v": 1
  },
  "/bredbaand/kabel-internet/": {
   "dato": "2026-11-11",
-  "hash": "198bab579f0b86fb",
+  "hash": "51a1f43b8e59b508",
   "v": 1
  },
  "/bredbaand/udbydere/": {
@@ -131,7 +131,7 @@
  },
  "/danskernes-forbrug/": {
   "dato": "2026-11-11",
-  "hash": "49b7f557383903a4",
+  "hash": "79895c422d10e736",
   "v": 1
  },
  "/driftsstatus/": {
@@ -428,62 +428,62 @@
  },
  "/internet-priser/aalborg/": {
   "dato": "2026-11-11",
-  "hash": "43c0ae971e0a572b",
+  "hash": "56c9ecfbe9b889b2",
   "v": 1
  },
  "/internet-priser/aarhus/": {
   "dato": "2026-11-11",
-  "hash": "673a9898fe1bfae2",
+  "hash": "191659099408baf0",
   "v": 1
  },
  "/internet-priser/esbjerg/": {
   "dato": "2026-11-11",
-  "hash": "68b9b42e2eb1b86e",
+  "hash": "f73d86fa02e71ff2",
   "v": 1
  },
  "/internet-priser/herning/": {
   "dato": "2026-11-11",
-  "hash": "3e6e1b66ed7051c6",
+  "hash": "db9bdfe8337583ee",
   "v": 1
  },
  "/internet-priser/horsens/": {
   "dato": "2026-11-11",
-  "hash": "c188426194579fa6",
+  "hash": "69521d9d535b53e7",
   "v": 1
  },
  "/internet-priser/koebenhavn/": {
   "dato": "2026-11-11",
-  "hash": "593611cd1eaf418a",
+  "hash": "5f965d6f89c5a608",
   "v": 1
  },
  "/internet-priser/kolding/": {
   "dato": "2026-11-11",
-  "hash": "5ccc60f0a6e9e412",
+  "hash": "ae23fe9ec5927623",
   "v": 1
  },
  "/internet-priser/odense/": {
   "dato": "2026-11-11",
-  "hash": "3f60ef8e5cfc61cb",
+  "hash": "0392bf7b9761fae5",
   "v": 1
  },
  "/internet-priser/randers/": {
   "dato": "2026-11-11",
-  "hash": "85f32f85e04cb6a6",
+  "hash": "351a7208918549bc",
   "v": 1
  },
  "/internet-priser/roskilde/": {
   "dato": "2026-11-11",
-  "hash": "64b3d21bc9cf9004",
+  "hash": "6bf23368cb2e0b79",
   "v": 1
  },
  "/internet-priser/silkeborg/": {
   "dato": "2026-11-11",
-  "hash": "dde4ab2305ec671b",
+  "hash": "1d469fc1a550e1ef",
   "v": 1
  },
  "/internet-priser/vejle/": {
   "dato": "2026-11-11",
-  "hash": "082d6f8754071d45",
+  "hash": "55a139a94b38216d",
   "v": 1
  },
  "/kampagner/": {
@@ -523,72 +523,72 @@
  },
  "/mobilabonnement-1-10-gb/": {
   "dato": "2026-11-11",
-  "hash": "aaef26d3c28d05dc",
+  "hash": "64b244dd877881a1",
   "v": 1
  },
  "/mobilabonnement-10-30-gb/": {
   "dato": "2026-11-11",
-  "hash": "2be07b50fcfb6365",
+  "hash": "15196960e7990b02",
   "v": 1
  },
  "/mobilabonnement-100-gb/": {
   "dato": "2026-11-11",
-  "hash": "d6ee3a26c2882aa5",
+  "hash": "aac144a45025b811",
   "v": 1
  },
  "/mobilabonnement-30-50-gb/": {
   "dato": "2026-11-11",
-  "hash": "b0d128a871dc93aa",
+  "hash": "5a5a1723c9b2b552",
   "v": 1
  },
  "/mobilabonnement-50-gb/": {
   "dato": "2026-11-11",
-  "hash": "29c1b2490366b786",
+  "hash": "49be0dfd5e9d1b56",
   "v": 1
  },
  "/mobilabonnement-med-5g/": {
   "dato": "2026-11-11",
-  "hash": "8c58293a848164ba",
+  "hash": "afcf7814b1520bb4",
   "v": 1
  },
  "/mobilabonnement-med-disney-plus/": {
   "dato": "2026-11-11",
-  "hash": "1950c8133e509205",
+  "hash": "8006ebedec988c25",
   "v": 1
  },
  "/mobilabonnement-med-esim/": {
   "dato": "2026-11-11",
-  "hash": "ae29ee8d3ed61b5e",
+  "hash": "0277470fe3627603",
   "v": 1
  },
  "/mobilabonnement-med-fri-data/": {
   "dato": "2026-11-11",
-  "hash": "1901fd8229390f38",
+  "hash": "a793482fd0f1f6c5",
   "v": 1
  },
  "/mobilabonnement-med-fri-tale/": {
   "dato": "2026-11-11",
-  "hash": "1f95b78ec31af317",
+  "hash": "c7776ccdb0a59a7d",
   "v": 1
  },
  "/mobilabonnement-med-hbo-max/": {
   "dato": "2026-11-11",
-  "hash": "ec15930c7884e882",
+  "hash": "41058cfc668852e7",
   "v": 1
  },
  "/mobilabonnement-med-lydbog/": {
   "dato": "2026-11-11",
-  "hash": "3f2983ee6be3dc13",
+  "hash": "20a07c93b3b0b0fa",
   "v": 1
  },
  "/mobilabonnement-med-musik/": {
   "dato": "2026-11-11",
-  "hash": "80a2d58959733463",
+  "hash": "e92e821c99a056a5",
   "v": 1
  },
  "/mobilabonnement-med-netflix/": {
   "dato": "2026-11-11",
-  "hash": "c29de028b62e9016",
+  "hash": "0967e81985dc49fb",
   "v": 1
  },
  "/mobilabonnement-med-podimo/": {
@@ -605,37 +605,37 @@
  },
  "/mobilabonnement-med-streaming/": {
   "dato": "2026-11-11",
-  "hash": "f08a6941b0f78a24",
+  "hash": "7cf9b2912c13f96d",
   "v": 1
  },
  "/mobilabonnement-med-streaming/tjenester/": {
   "dato": "2026-11-11",
-  "hash": "756d2e519428a026",
+  "hash": "2ff60f561fcbb080",
   "v": 1
  },
  "/mobilabonnement-med-telefon/": {
   "dato": "2026-11-11",
-  "hash": "3be48f96d89d5454",
+  "hash": "2ba1fd0b08a74a1a",
   "v": 1
  },
  "/mobilabonnement-med-tv2-play/": {
   "dato": "2026-11-11",
-  "hash": "07a891e2ae06f478",
+  "hash": "d6bdea649edffad0",
   "v": 1
  },
  "/mobilabonnement-med-viaplay/": {
   "dato": "2026-11-11",
-  "hash": "d84cc26d3248da7d",
+  "hash": "86a921e93485fde4",
   "v": 1
  },
  "/mobilabonnement-til-aeldre/": {
   "dato": "2026-11-11",
-  "hash": "d7d89863daa1a8a0",
+  "hash": "a627a24f66078e46",
   "v": 1
  },
  "/mobilabonnement-til-boern/": {
   "dato": "2026-11-11",
-  "hash": "0c16b3fe8c383a07",
+  "hash": "6562caacf4fe3edb",
   "v": 1
  },
  "/mobilabonnement-til-erhverv/": {
@@ -650,22 +650,22 @@
  },
  "/mobilabonnement-til-unge/": {
   "dato": "2026-11-11",
-  "hash": "26e88ef00f238d19",
+  "hash": "08a5f7b151663d49",
   "v": 1
  },
  "/mobilabonnement-uden-binding/": {
   "dato": "2026-11-11",
-  "hash": "8f7bec1675fc69f6",
+  "hash": "ddc07313b017b090",
   "v": 1
  },
  "/mobilabonnement-uden-data/": {
   "dato": "2026-11-11",
-  "hash": "a1443239730abe71",
+  "hash": "b232fd7e90ba17c2",
   "v": 1
  },
  "/mobilabonnement-under-100-kr/": {
   "dato": "2026-11-11",
-  "hash": "7407487a0b5b057c",
+  "hash": "59631c8f388f4eb3",
   "v": 1
  },
  "/mobilabonnementer-black-friday/": {
@@ -675,7 +675,7 @@
  },
  "/mobilpriser/": {
   "dato": "2026-11-11",
-  "hash": "2abcea29cfb3777a",
+  "hash": "1cd152bdf07238b7",
   "v": 1
  },
  "/netvaerk/": {
@@ -740,7 +740,7 @@
  },
  "/rettelser/": {
   "dato": "2026-11-11",
-  "hash": "f2959c924446299c",
+  "hash": "c8e588bd637887be",
   "v": 1
  },
  "/saadan-tjener-vi-penge/": {
@@ -840,7 +840,7 @@
  },
  "/taletidskort/": {
   "dato": "2026-11-11",
-  "hash": "4a442dea64ff0a80",
+  "hash": "ad8424f01fdaa09f",
   "v": 1
  },
  "/telemobil-score/": {
