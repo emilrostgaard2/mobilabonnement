@@ -1086,7 +1086,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
 
     filterhtml = filterbar(abonnementer, udbydere_map, forvalg, orden) if filtre else ""
 
-    return f"""<section class="sektion baand" id="{id_attr}">
+    return f"""<section class="sektion baand{' med-rang' if titel.startswith('De 10 ') else ''}" id="{id_attr}">
   <div class="sektion-hoved afslør">
     <div class="sh-tekst">
       <span class="etiket">Sammenligning</span>

@@ -2819,3 +2819,13 @@ body{font-variant-numeric:tabular-nums}
   .tabelramme > table.top10{min-width:0}
   .datatabel.top10 td.tal{white-space:normal}
 }
+
+/* Nummer på kortene i "De 10 billigste/bedste"-listerne */
+.med-rang{counter-reset:rang}
+.med-rang article.plan{counter-increment:rang}
+.med-rang article.plan::before{content:counter(rang);position:absolute;top:-.7rem;left:-.7rem;z-index:2;
+  min-width:2rem;height:2rem;padding:0 .45rem;border-radius:999px;display:grid;place-items:center;
+  background:var(--blaek);color:#fff;font-family:var(--font-display);font-weight:800;font-size:.95rem;
+  box-shadow:0 4px 10px -4px rgba(19,23,53,.5)}
+.med-rang article.plan.fremhaev::before{background:var(--puls-dyb)}
+@media(max-width:700px){.med-rang article.plan::before{top:-.6rem;left:-.3rem;min-width:1.7rem;height:1.7rem;font-size:.85rem}}

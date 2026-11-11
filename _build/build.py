@@ -3574,10 +3574,8 @@ def byg_billigste():
     ]
 
     krop = f"""
-{top10_tabel()}
-
 {pristabel(ABON_AAR, UMAP,
-           titel="Alle mobilabonnementer sorteret efter pris",
+           titel="De 10 billigste mobilabonnementer lige nu",
            undertitel="Sorteret efter den reelle pris i snit det første år, så en lav intropris "
                       "ikke snyder. Vælg \"Laveste startpris\" for at se de laveste intropriser først.",
            billigst_id=bedste_pr_gb['id'])}
@@ -7689,7 +7687,7 @@ def bb_liste(udvalg, *, titel, undertitel, vis=12):
         bb_raekke(a, billigst=(a["id"] == billigst_id), gnsnit_aar=gnsnit)
         for a in sorteret)
     return f"""
-<section class="sektion baand" id="sammenlign" data-bb-liste>
+<section class="sektion baand{' med-rang' if titel.startswith('De ') else ''}" id="sammenlign" data-bb-liste>
   <div class="sektion-hoved afslør">
     <div class="sh-tekst">
       <span class="etiket">Sammenligning</span>
@@ -9548,7 +9546,7 @@ def byg_bredbaand():
         f'{kr(min(bb_mdr_pris(x) for x in pr_tek[n]))} kr./md. i snit. {e(besk)}</li>'
         for n, navn, sti, besk in TEK_SIDER if pr_tek.get(n))
 
-    krop = bb_liste(BB, titel=f"Alle {len(BB)} bredbåndstilbud i {vis_maaned()[0]}",
+    krop = bb_liste(BB, titel=f"De {min(10, len(BB))} billigste bredbånd lige nu",
                     undertitel=f"{_antal_ab(len(BB))} fra {selskaber} selskaber. "
                                f"Sorteret efter hvad de koster det første år, ikke "
                                f"efter tilbudsprisen.") + f"""
@@ -9837,7 +9835,7 @@ forbindelse føles langsommere klokken 20 end klokken 10.</p>""",
     selskaber_her = len({a["udbyder"] for a in udvalg})
     uden_binding = len([a for a in udvalg if not a["binding"]])
 
-    krop = bb_liste(udvalg, titel=f"Alle {seo['kw']}-tilbud i {vis_maaned()[0]}",
+    krop = bb_liste(udvalg, titel=f"De {min(10, len(udvalg))} billigste tilbud på {seo['kw']} lige nu",
                     undertitel=f"{_antal_ab(len(udvalg))} med {navn_s} fra "
                                f"{selskaber_her} selskaber, sorteret efter "
                                f"førsteårsprisen.") + f"""
@@ -19516,7 +19514,7 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                ("/udbydere/lebara/", "Lebara — bedst til opkald til udlandet")])
 
     bedste_udvalg = sorted([a for a in ABON if a["pris"] > 0 and telemobil_score(a) is not None],
-                           key=lambda a: -telemobil_score(a))[:14]
+                           key=lambda a: (-telemobil_score(a), gns12(a) or 9e9))[:10]
     byg_kategori(
         sti="/bedste-mobilabonnement/", etiket="Bedste mobilabonnement",
         billede="bedste", spejlvend=True,
@@ -19529,11 +19527,10 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
                '<a href="/telemobil-score/">Se hvordan scoren beregnes</a>.'),
         udvalg=bedste_udvalg, tekstfunktion=sider.bedste, sorter=None,
         chips=[("Vurderet på", "5 kriterier"), ("Udbydere", str(D['antal_udbydere'])), ("Fra", f"{D['min_pris']} kr.")],
-        tabeltitel="De 14 abonnementer med højest score",
+        tabeltitel="De 10 bedste mobilabonnementer lige nu",
         # Kun blokke, der handler om kvalitet og score. Prisblokkene står på
         # /billigste-mobilabonnement/, så de to sider ikke konkurrerer om de samme svar.
-        foer_tabel=vindere_tabel(),
-        ekstra_tabeller=[loyalty_tabel(), netvaerk_maaling_sektion(),
+        ekstra_tabeller=[score_pr_kategori(), loyalty_tabel(), netvaerk_maaling_sektion(),
                          fejltabel(), begrebstabel(), vejviser('/bedste-mobilabonnement/')],
         faq=[
             {"sp": "Hvad er det bedste mobilabonnement i Danmark?",

@@ -1101,7 +1101,7 @@
     var tom = sektion.querySelector("[data-bb-tom]");
     var flereBoks = sektion.querySelector("[data-bb-flere]");
     var restTekst = sektion.querySelector("[data-bb-rest]");
-    var graense = 12;
+    var graense = 10;
     var kunTilbud = false;
     var valgt = { fart: [], tek: [], pris: [], binding: [], slug: [], ekstra: [] };
 
@@ -1225,7 +1225,7 @@
         var i = valgt[g].indexOf(inp.value);
         if (inp.checked && i === -1) valgt[g].push(inp.value);
         if (!inp.checked && i > -1) valgt[g].splice(i, 1);
-        graense = 12;
+        graense = 10;
         opdater();
       });
     });
@@ -1235,7 +1235,7 @@
       tilbudKnap.addEventListener("click", function () {
         kunTilbud = !kunTilbud;
         tilbudKnap.setAttribute("aria-pressed", kunTilbud ? "true" : "false");
-        graense = 12;
+        graense = 10;
         opdater();
       });
     }
