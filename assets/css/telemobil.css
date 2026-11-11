@@ -2789,3 +2789,33 @@ body{font-variant-numeric:tabular-nums}
 .sh-live{display:flex;align-items:flex-start;gap:.55rem;margin:.6rem 0 0;font-size:.85rem;color:var(--graa);max-width:none}
 .sh-live .op-prik{flex:none;margin-top:.45em}
 .sh-live a{color:inherit}
+
+/* Top 10-tabel */
+.top10-sektion{padding-bottom:0}
+.top10-sektion h2{margin-bottom:.4rem}
+.annonce-linje{font-size:.82rem;color:var(--graa);margin:.2rem 0 .8rem;max-width:none}
+.datatabel.top10 td{vertical-align:middle}
+.t10-link{display:inline-block;white-space:nowrap;background:var(--puls-dyb);color:#fff;font-weight:700;font-size:.85rem;padding:.5rem .8rem;border-radius:8px;text-decoration:none}
+.t10-link:hover{background:#00634A}
+
+/* Cookiebanner fylder mindre på mobil */
+@media(max-width:700px){
+  .cb-indhold{gap:.55rem;padding:.65rem 0}
+  .cb-tekst{min-width:0}
+  .cb-tekst strong{display:none}
+  .cb-tekst p{font-size:.76rem;line-height:1.4}
+  .cb-knapper .knap{padding:.45rem .8rem;font-size:.84rem;min-height:42px}
+}
+.datatabel.top10 th,.datatabel.top10 td{padding:.6rem .7rem}
+.datatabel.top10 th{text-align:left}
+.datatabel.top10 td.tal{white-space:nowrap}
+@media(max-width:700px){
+  .datatabel.top10:not(.vindere) th:nth-child(3),.datatabel.top10:not(.vindere) td:nth-child(3),
+  .datatabel.top10:not(.vindere) th:nth-child(4),.datatabel.top10:not(.vindere) td:nth-child(4),
+  .datatabel.top10:not(.vindere) th:nth-child(6),.datatabel.top10:not(.vindere) td:nth-child(6),
+  .datatabel.vindere th:nth-child(3),.datatabel.vindere td:nth-child(3){display:none}
+  .datatabel.top10 th,.datatabel.top10 td{padding:.55rem .4rem;font-size:.86rem}
+  .t10-link{padding:.45rem .55rem;font-size:.78rem;white-space:normal;text-align:center}
+  .tabelramme > table.top10{min-width:0}
+  .datatabel.top10 td.tal{white-space:normal}
+}

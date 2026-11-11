@@ -29,8 +29,8 @@ FORFATTER = {
 # Menuen viser kun de sider, folk faktisk leder efter. Resten står i footeren.
 # En liste på 22 punkter kan ikke skimmes — den bliver til en mur, man lukker igen.
 SAMMENLIGN_MENU = [
-    ("/billigste-mobilabonnement/", "Billigste abonnement", "Alle abonnementer sorteret efter pris"),
-    ("/bedste-mobilabonnement/", "Bedste abonnement", "Bedst samlet værdi"),
+    ("/billigste-mobilabonnement/", "Billigste mobilabonnement", "Alle abonnementer sorteret efter pris"),
+    ("/bedste-mobilabonnement/", "Bedste mobilabonnement", "Bedst samlet værdi"),
     ("/kampagner/", "Kampagner og tilbud", "Intropriser og gaver lige nu"),
     ("/mobilabonnement-med-fri-data/", "Fri data", "Ubegrænset data i Danmark"),
     ("/mobilabonnement-med-fri-tale/", "Fri tale", "Ubegrænsede opkald og sms"),
@@ -81,8 +81,8 @@ VAERKTOEJER_OEVRIGE = [
 ]
 
 MENU = [
-    ("/billigste-mobilabonnement/", "Billigste abonnement"),
-    ("/bedste-mobilabonnement/", "Bedste abonnement"),
+    ("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
+    ("/bedste-mobilabonnement/", "Bedste mobilabonnement"),
     ("/guides/", "Guides"),
     ("/om-os/", "Om os"),
 ]
@@ -90,11 +90,11 @@ MENU = [
 
 # Bredbåndssektionen har sine egne undersider. Sættes af build.py.
 BREDBAAND_MENU = [
+    ("/bredbaand/", "Billigste bredbånd"),
+    ("/bredbaand/fibernet/", "Billigste fibernet"),
+    ("/bredbaand/5g/", "Billigste 5G internet"),
     ("/internet-priser/", "Internet priser"),
-    ("/bredbaand/", "Bredbånd sammenlignet"),
     ("/bredbaand/udbydere/", "Internetudbydere"),
-    ("/bredbaand/fibernet/", "Fibernet"),
-    ("/bredbaand/5g/", "5G internet"),
     ("/bredbaand/kabel-internet/", "Kabel-internet"),
     ("/bredbaand/adressetjek/", "Tjek din adresse"),
 ]
@@ -287,10 +287,19 @@ def kort_beskrivelse(t, maks=158):
     if len(t) <= maks:
         return t
     cut = t[:maks]
-    for sep in (". ", "! ", "? "):
-        i = cut.rfind(sep)
-        if i >= 80:
-            return cut[:i + 1]
+    # Et punktum efter et tal ("11. november") eller en forkortelse ("pr. GB")
+    # er ikke et sætningsslut.
+    bedst = -1
+    for m in re.finditer(r"[.!?] ", cut):
+        i = m.start()
+        foer = cut[:i].rsplit(" ", 1)[-1].lower()
+        if cut[i] == "." and (foer[-1:].isdigit() or foer in (
+                "pr", "ca", "kr", "md", "mdr", "fx", "inkl", "ekskl", "nov", "dec", "jan", "feb",
+                "mar", "apr", "jun", "jul", "aug", "sep", "okt", "bl.a", "f.eks", "nr", "maks", "min")):
+            continue
+        bedst = i
+    if bedst >= 80:
+        return cut[:bedst + 1]
     return cut[:cut.rfind(" ")].rstrip(",;:—–- ") + "…"
 
 
@@ -1086,7 +1095,7 @@ def pristabel(abonnementer, udbydere_map, *, titel, undertitel, filtre=True,
     </div>
     <p class="opdateret-stribe">
       <span class="op-prik" aria-hidden="true"></span>
-      <span><strong>Opdateret {e(opdateret)}</strong> · {len(abonnementer)} {"abonnement" if len(abonnementer) == 1 else "abonnementer"}
+      <span><strong>Opdateret {e(opdateret)}</strong> · {"Listen viser " if not filtre or sorter is None else ""}{len(abonnementer)} {"abonnement" if len(abonnementer) == 1 else "abonnementer"}
       fra {_selskaber(len({a.get("udbyder") for a in abonnementer}))} med prisaftale via Adtraction · <a href="/metode/#rangering">Sådan rangerer vi</a></span>
     </p>
   </div>

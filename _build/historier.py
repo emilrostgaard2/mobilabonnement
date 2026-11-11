@@ -126,10 +126,10 @@ def historie(noegle, foto, navn, profil_url):
     h = HISTORIER.get(noegle)
     if not h:
         return ""
-    udkast = ""
     if not GODKENDT:
-        udkast = ('<p class="udkast-mark">Udkast — teksten skal gennemskrives, '
-                  'før siden går i luften.</p>')
+        # Historierne er ikke bekræftet af Emil: vis dem slet ikke.
+        return ""
+    udkast = ""
     return f"""<aside class="erfaring">
   <div class="erf-hoved">
     <img src="{foto}" width="56" height="56" alt="{navn}" loading="lazy">

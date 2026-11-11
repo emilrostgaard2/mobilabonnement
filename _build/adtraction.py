@@ -311,6 +311,10 @@ def gem_historik(abonnementer):
     # konkurrent kan give, fordi ingen andre gemmer historik.
     # 56 heltal pr. måling fylder under 1 KB.
     maaling["priser"] = {a["id"]: a["pris"] for a in betalte}
+    # Intropriser gemmes også: [intropris, antal måneder]. Uden dem kan vi ikke
+    # senere vise, om et kampagnetilbud faktisk var billigere end ugen før.
+    maaling["intro"] = {a["id"]: [a["intro_pris"], a["intro_mdr"]] for a in betalte
+                        if a.get("intro_pris") is not None and a.get("intro_mdr")}
 
     # Pr. udbyder gemmes også. Det gør det muligt at skrive "Telmores priser er
     # steget 8 % siden august" på selskabssiden — noget ingen konkurrent kan,
