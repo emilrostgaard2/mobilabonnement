@@ -69,6 +69,7 @@ VAERKTOEJER = [
     ("/hvem-ringer-til-mig/", "Hvem ringer til mig?", "Slå et ukendt nummer op"),
     ("/speedtest/", "Hastighedstest", "Mål din forbindelse"),
     ("/12-maaneders-prisen/", "12-måneders-prisen", "Sådan regner vi"),
+    ("/prisberegner/", "Prisberegner", "Hvad koster dit tilbud reelt?"),
 ]
 
 VAERKTOEJER_OEVRIGE = [
@@ -107,6 +108,35 @@ SCORETAL = None
 NAV_UDBYDERE = []
 HURTIGPRIS = ""
 OPDATERET_GLOBAL = ""
+# {abonnements-id: [(dato "ÅÅÅÅ-MM-DD", normalpris), ...]} — sættes af build.py
+PRISHIST = {}
+_MD_KORT = ["jan.", "feb.", "mar.", "apr.", "maj", "juni", "juli", "aug.", "sep.", "okt.", "nov.", "dec."]
+
+
+def hist_linje(aid, pris_nu):
+    """Lille prisgraf og én linje om normalprisen siden første måling.
+    Vises først, når der er mindst en uges målinger, og kun ud fra egne målinger."""
+    s = PRISHIST.get(aid) or []
+    if len(s) < 7:
+        return ""
+    priser = [p for _, p in s]
+    lo, hi = min(priser), max(priser)
+    aa, mm, dd = s[0][0].split("-")
+    siden = f"{int(dd)}. {_MD_KORT[int(mm) - 1]}"
+    if lo == hi:
+        tekst = f"Normalpris uændret siden {siden}"
+    elif pris_nu <= lo:
+        tekst = f"Laveste normalpris siden {siden} (højest: {kr(hi)} kr.)"
+    else:
+        tekst = f"Laveste normalpris siden {siden}: {kr(lo)} kr."
+    w, h, n = 56, 16, len(priser)
+    sp = (hi - lo) or 1
+    pkt = " ".join(f"{round(i * w / (n - 1), 1)},{round(h - 2 - (p - lo) / sp * (h - 4), 1) if hi != lo else h / 2}"
+                   for i, p in enumerate(priser))
+    return (f'<div class="pk-hist" title="Normalpris målt {n} dage siden {siden}">'
+            f'<svg viewBox="0 0 {w} {h}" width="{w}" height="{h}" aria-hidden="true" focusable="false">'
+            f'<polyline points="{pkt}" fill="none" stroke="currentColor" stroke-width="1.6" '
+            f'stroke-linejoin="round" stroke-linecap="round"/></svg><span>{tekst}</span></div>')
 
 # Uden en versionsnøgle ville browsere holde fast i den gamle CSS og JS i et år,
 # fordi .htaccess sætter Cache-Control: immutable. Nøglen skifter, når filen gør.
@@ -937,6 +967,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
     <div class="pk-pris">
       {prisblok}
       {spar}
+      {hist_linje(a["id"], a["pris"])}
       <button type="button" class="pk-detaljer" aria-expanded="false"
         aria-controls="{panel_id}">Se detaljer</button>
       <a class="knap knap-primaer pk-cta" href="{a['link']}" rel="sponsored nofollow noopener"

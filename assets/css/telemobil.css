@@ -2829,3 +2829,34 @@ body{font-variant-numeric:tabular-nums}
   box-shadow:0 4px 10px -4px rgba(19,23,53,.5)}
 .med-rang article.plan.fremhaev::before{background:var(--puls-dyb)}
 @media(max-width:700px){.med-rang article.plan::before{top:-.6rem;left:-.3rem;min-width:1.7rem;height:1.7rem;font-size:.85rem}}
+
+/* Prishistorik på kortene */
+.pk-hist{display:flex;align-items:center;gap:.45rem;margin-top:.35rem;font-size:.74rem;line-height:1.3;color:var(--graa)}
+.pk-hist svg{flex:none;color:var(--signal)}
+
+/* Prisberegner */
+.pb-felter{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.8rem;margin:1rem 0}
+.pb-felter label{display:flex;flex-direction:column;gap:.3rem;font-size:.84rem;font-weight:600}
+.pb-felter input,.pb-felter select{padding:.7rem .8rem;border:1.5px solid var(--graa-lys);border-radius:10px;font:inherit;font-weight:500;font-size:1rem;background:#fff;min-height:46px}
+.pb-felter input:focus,.pb-felter select:focus{outline:none;border-color:var(--signal)}
+.pb-svar{margin-top:1rem;padding:1.1rem 1.2rem;border-radius:var(--r-m);background:#F7F9FF;border:1px solid var(--graa-lys)}
+.pb-tal{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-bottom:.9rem}
+.pb-tal div{background:#fff;border:1px solid var(--graa-lys);border-radius:12px;padding:.8rem .9rem}
+.pb-tal b{display:block;font-family:var(--font-display);font-size:1.5rem;line-height:1.1}
+.pb-tal span{font-size:.8rem;color:var(--graa)}
+.pb-tal .pb-groen{border-color:var(--puls);background:#F2FFF9}
+.pb-tal .pb-groen b{color:var(--puls-dyb)}
+.pb-liste{list-style:none;padding:0;margin:.6rem 0 0;display:grid;gap:.5rem}
+.pb-liste li{display:grid;grid-template-columns:1fr auto auto;gap:.9rem;align-items:center;background:#fff;border:1px solid var(--graa-lys);border-radius:12px;padding:.7rem .9rem}
+.pb-liste small{display:block;font-size:.76rem;color:var(--graa)}
+.pb-pris{text-align:right;white-space:nowrap}
+.pb-liste .knap{padding:.55rem .9rem;font-size:.86rem;min-height:42px;white-space:nowrap}
+@media(max-width:600px){.pb-liste li{grid-template-columns:1fr auto}.pb-liste .knap{grid-column:1/-1;justify-content:center}}
+.plan .pk-pris .pk-hist{grid-column:1 / -1}
+@media (max-width:700px){
+  .plan .pk-pris > *{grid-column:1}
+  .plan .pk-pris .pk-cta{grid-column:2}
+  .plan .pk-pris .pk-hist,.plan .pk-pris .pk-sml,.plan .pk-pris .pk-kilde{grid-column:1 / -1}
+}
+.mini-beregner{max-width:820px;margin-inline:auto}
+.mini-beregner .vt-hoved h2{font-size:clamp(1.35rem,2.4vw,1.7rem)}

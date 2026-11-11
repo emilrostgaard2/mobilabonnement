@@ -506,6 +506,26 @@ def med_maaned(titel, maks=58):
 
 OPDATERET = dansk_dato(IDAG)
 skabelon.OPDATERET_GLOBAL = OPDATERET
+
+
+def _indlaes_prishist():
+    """Normalpris pr. abonnement pr. måledag, til grafen på kortene."""
+    ud = {}
+    for fil, noegle in (("prishistorik.json", None), ("bb_prishistorik.json", "pris")):
+        try:
+            with open(os.path.join(ROD, "data", fil), encoding="utf-8") as f:
+                maal = json.load(f).get("maalinger", [])
+        except (FileNotFoundError, ValueError):
+            continue
+        for m in maal:
+            for aid, v in (m.get("priser") or {}).items():
+                p = v.get(noegle) if isinstance(v, dict) else v
+                if isinstance(p, (int, float)):
+                    ud.setdefault(aid, []).append((m["dato"], p))
+    return ud
+
+
+skabelon.PRISHIST = _indlaes_prishist()
 ISO = IDAG.isoformat()
 skabelon.OPDATERET_ISO_GLOBAL = ISO
 
@@ -3394,6 +3414,84 @@ def binding_tekst(a):
 
 # --------------------------------------------------------------- FORSIDE
 
+def forside_guide():
+    """Kort guide og pristabel pr. datamængde under sammenligningen på forsiden.
+    Alle tal er regnet ud fra feedet ved hvert build."""
+    import statistics
+    betalte = [a for a in ABON if a["pris"] > 0 and gns12(a) is not None]
+    grupper = [(n, lo, hi, f"/mobilabonnement-{s}/") for s, (n, lo, hi) in GB_BAAND.items()]
+    grupper.append(("Fri data", 9999, 9999, "/mobilabonnement-med-fri-data/"))
+    rk = ""
+    for navn, lo, hi, sti_ in grupper:
+        k = [a for a in betalte if i_baand(a["data_gb"], lo, hi)]
+        if not k:
+            continue
+        rk += (f'<tr><td><strong><a href="{sti_}">{e(navn)}</a></strong></td><td class="tal">{len(k)}</td>'
+               f'<td class="tal"><strong>{kr(round(min(gns12(a) for a in k)))} kr.</strong></td>'
+               f'<td class="tal">{kr(round(statistics.median(a["pris"] for a in k)))} kr.</td>'
+               f'<td class="tal">{kr(max(a["pris"] for a in k))} kr.</td></tr>')
+    med_intro = [a for a in betalte if a.get("intro_pris") is not None and a.get("intro_mdr")]
+    eks = ""
+    if med_intro:
+        a = min(med_intro, key=gns12)
+        u = UMAP[a["udbyder"]]
+        m = a["intro_mdr"]
+        ialt = round(gns12(a) * 12)
+        eks = f"""<h3>Intropris og normalpris: et regneeksempel</h3>
+<p>{len(med_intro)} af de {len(betalte)} abonnementer i sammenligningen har en intropris. Tag
+{e(u['navn'])} {e(skabelon._kortnavn(a, u))}: {kr(a['intro_pris'])} kr. om måneden i {m} måneder og derefter
+{kr(a['pris'])} kr. Det første år koster det {kr(ialt)} kr. i alt, altså {kr(round(gns12(a)))} kr. om måneden
+i snit{' inkl. oprettelse' if a.get('oprettelse') else ''}. Fra år to betaler du normalprisen, {kr(a['pris'] * 12)} kr. om året.
+Derfor sorterer vi efter prisen for hele det første år og viser normalprisen ved siden af.
+<a href="/12-maaneders-prisen/">Sådan regner vi 12-måneders-prisen</a>.</p>"""
+    net = {}
+    for a in betalte:
+        net.setdefault(netlabel(UMAP[a["udbyder"]]), set()).add(a["udbyder"])
+    _dele = [f"{len(v)} på {e(k.replace('-nettet', '').replace('Nettet fra 3', 'nettet fra 3'))}"
+             for k, v in sorted(net.items(), key=lambda x: -len(x[1]))]
+    nettekst = (", ".join(_dele[:-1]) + " og " + _dele[-1]) if len(_dele) > 1 else "".join(_dele)
+    return f"""<section class="sektion baand-smal artikel" id="guide">
+<h2>Sådan sammenligner du mobilabonnementer</h2>
+<p>Et mobilabonnement består af fire ting: datamængde, taletid, det net selskabet sender på, og
+hvad der følger med af ekstra som EU-data og streaming. Prisen følger først og fremmest
+datamængden. Vælg derfor datamængde først, og sammenlign så prisen for hele det første år blandt de
+abonnementer, der er tilbage.</p>
+
+<h3>Priser pr. datamængde</h3>
+<table><caption>Mobilpriser pr. datamængde i Telemobils sammenligning, {e(OPDATERET)}. Billigste er snitprisen
+pr. måned det første år; median og dyreste er normalprisen pr. måned.</caption>
+<thead><tr><th scope="col">Datamængde</th><th scope="col">Abonnementer</th><th scope="col">Billigste, snit år 1</th>
+<th scope="col">Median normalpris</th><th scope="col">Dyreste normalpris</th></tr></thead>
+<tbody>{rk}</tbody></table>
+
+{eks}
+
+<h3>Hvor meget data har du brug for?</h3>
+<p>Et dansk mobilabonnement brugte i gennemsnit 26,9 GB om måneden i andet halvår 2024 ifølge
+<a href="https://digst.dk/media/vt2epygl/hovedresultater-2h24.pdf" rel="noopener">Digitaliseringsstyrelsens telestatistik</a>.
+Dit eget tal står i telefonen: på iPhone under Indstillinger → Mobilnetværk, på Android typisk under
+Indstillinger → Netværk og internet → Dataforbrug. Kig på de seneste tre måneder, og læg lidt oveni.
+Er du mest på wi-fi, kan du klare dig med langt mindre end gennemsnittet.
+<a href="/guides/hvor-meget-data/">Guide: hvor meget data har du brug for?</a></p>
+
+<h3>Hvilket net bruger selskabet?</h3>
+<p>Der er tre landsdækkende mobilnet i Danmark: TDC NET, TN-Network (Telenor og Norlys) og nettet fra 3.
+Alle andre selskaber lejer sig ind på et af dem, så dækningen følger nettet og ikke mærket på simkortet.
+Af selskaberne i sammenligningen er {nettekst}. Tjek dækningen på din adresse, før du skifter:
+<a href="/daekningskort/">dækningstjek</a> og <a href="/netvaerk/">oversigt over mobilnettene</a>.</p>
+
+<h3>Sådan skifter du selskab</h3>
+<ol>
+<li>Tjek, om du har binding hos dit nuværende selskab. For private må bindingen højst være seks måneder.</li>
+<li>Bestil hos det nye selskab, og vælg at flytte dit nummer med. Det nye selskab opsiger det gamle
+abonnement og flytter nummeret for dig.</li>
+<li>Sæt det nye simkort i, eller aktivér eSIM, den dag nummeret flytter.</li>
+</ol>
+<p><a href="/guides/skift-mobilselskab/">Guide: skift mobilselskab trin for trin</a> ·
+<a href="/guides/nummerflytning/">nummerflytning</a></p>
+</section>"""
+
+
 def byg_forside():
     sti = "/"
     titel = med_maaned(f"Sammenlign mobilabonnementer — fra {D['min_normalpris']} kr./md.")
@@ -3463,7 +3561,11 @@ def byg_forside():
                       "Skift sortering eller filtrér på data, pris og net.",
            billigst_id=bedste_pr_gb['id'])}
 
+{mini_beregner()}
+
 {hf_hvordan()}
+
+{forside_guide()}
 
 {quiz()}
 
@@ -3579,6 +3681,8 @@ def byg_billigste():
            undertitel="Sorteret efter den reelle pris i snit det første år, så en lav intropris "
                       "ikke snyder. Vælg \"Laveste startpris\" for at se de laveste intropriser først.",
            billigst_id=bedste_pr_gb['id'])}
+
+{mini_beregner()}
 
 {sidebillede("billigste")}
 
@@ -3707,10 +3811,10 @@ def byg_fridata():
 # --------------------------------------------------------------- NICHESIDER
 
 def byg_niche(sti, etiket, h1, titel, besk, intro, udvalg, brodtekst, faq, links,
-              billede=None, spejlvend=False, forvalg=None):
+              billede=None, spejlvend=False, forvalg=None, tabeltitel=None, efter_liste=""):
     krumme = [("/", "Forside"), (None, etiket)]
     krop = f"""
-{pristabel(udvalg, UMAP, titel=f"Billigste — {etiket.lower()}", undertitel=intro,
+{pristabel(udvalg, UMAP, titel=tabeltitel or f"Billigste — {etiket.lower()}", undertitel=intro,
            billigst_id=udvalg[0]['id'] if udvalg else None, forvalg=forvalg)}
 {sidebillede(billede, spejlvend=spejlvend) if billede else ""}
 <section class="sektion baand-smal artikel">{gennemgangslinje(OPDATERET)}{brodtekst}
@@ -5562,6 +5666,132 @@ def byg_daekningstjek():
     ), prioritet="0.7")
 
 
+def _pb_data():
+    """Dagens abonnementer som JSON til beregnerne i browseren."""
+    betalte = [a for a in ABON if a["pris"] > 0 and gns12(a) is not None and not a.get("forbrugsafregnet")]
+    data = [{"n": UMAP[a["udbyder"]]["navn"], "k": skabelon._kortnavn(a, UMAP[a["udbyder"]]),
+             "g": a["data_gb"], "p": a["pris"], "s": round(gns12(a), 2), "y": round(gns12(a) * 12),
+             "t": netlabel(UMAP[a["udbyder"]]), "l": a["link"], "u": a["udbyder"], "i": a["id"]}
+            for a in betalte]
+    return ('<script type="application/json" id="pb-data">'
+            + json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + "</script>")
+
+
+def mini_beregner():
+    """Lille udgave af overbetalingstjekket til forsiden og billigste-siden."""
+    return f"""<section class="sektion baand">
+  <div class="vaerktoej mini-beregner" data-overbetaling data-ob-antal="1">
+    <div class="vt-hoved">
+      <h2>Betaler du for meget i dag?</h2>
+      <p class="led">Skriv din pris og din datamængde. Så regner vi ud, hvad du kan spare det første år.</p>
+    </div>
+    <div class="pb-felter">
+      <label>Din pris pr. md. i dag<input type="number" inputmode="numeric" min="0" data-ob="pris" placeholder="fx 199"></label>
+      <label>Din datamængde<select data-ob="gb">
+        <option value="5">Op til 5 GB</option><option value="10">10 GB</option><option value="20" selected>20 GB</option>
+        <option value="30">30 GB</option><option value="50">50 GB</option><option value="100">100 GB</option>
+        <option value="9999">Fri data</option></select></label>
+    </div>
+    <div class="pb-svar" data-ob-svar aria-live="polite" hidden></div>
+    <p class="vt-note"><strong>Annonce:</strong> Knappen i resultatet er et reklamelink. Rækkefølgen er beregnet ud fra pris.
+    <a href="/prisberegner/">Åbn den fulde prisberegner</a>, hvor du også kan regne på et konkret tilbud og vælge net.</p>
+  </div>
+  {_pb_data()}
+</section>"""
+
+
+def byg_prisberegner():
+    """To beregnere, der kører i browseren på dagens priser: totalpris for et
+    tilbud og et tjek af, om man betaler for meget."""
+    sti = "/prisberegner/"
+    krumme = [("/", "Forside"), (None, "Prisberegner")]
+    betalte = [a for a in ABON if a["pris"] > 0 and gns12(a) is not None and not a.get("forbrugsafregnet")]
+    data = [{"n": UMAP[a["udbyder"]]["navn"], "k": skabelon._kortnavn(a, UMAP[a["udbyder"]]),
+             "g": a["data_gb"], "p": a["pris"], "s": round(gns12(a), 2), "y": round(gns12(a) * 12),
+             "t": netlabel(UMAP[a["udbyder"]]), "l": a["link"], "u": a["udbyder"], "i": a["id"]}
+            for a in betalte]
+    net = sorted({d["t"] for d in data})
+    faq = [
+        {"sp": "Hvordan regner beregneren totalprisen?",
+         "sv": "Intropris gange antal intromåneder, plus normalpris i resten af de 12 måneder, plus oprettelse. "
+               "Det er samme regnestykke, som alle priser på Telemobil er sorteret efter."},
+        {"sp": "Hvilke abonnementer sammenligner I med?",
+         "sv": f"De {len(betalte)} mobilabonnementer fra {D['antal_udbydere']} selskaber, som Telemobil har priser på. "
+               f"Priserne hentes automatisk fra selskabernes datafeeds og er senest opdateret {OPDATERET}. "
+               "Selskaber uden prisaftale er ikke med, så der kan findes billigere abonnementer andre steder."},
+        {"sp": "Gemmer I de tal, jeg skriver?",
+         "sv": "Nej. Beregningen sker i din egen browser, og tallene bliver ikke sendt til os."},
+    ]
+    krop = f"""
+<section class="sektion baand">
+  <div class="vaerktoej" data-prisberegner>
+    <div class="vt-hoved">
+      <h2 id="tilbud">Hvad koster dit tilbud reelt?</h2>
+      <p class="led">Skriv tallene fra et tilbud, du har set. Så får du prisen for hele det første år og ser,
+      hvor mange abonnementer i vores sammenligning der er billigere.</p>
+    </div>
+    <div class="pb-felter">
+      <label>Intropris pr. md.<input type="number" inputmode="numeric" min="0" data-pb="intro" placeholder="fx 49"></label>
+      <label>Antal måneder med intropris<input type="number" inputmode="numeric" min="0" max="12" data-pb="mdr" placeholder="fx 3"></label>
+      <label>Normalpris pr. md.<input type="number" inputmode="numeric" min="0" data-pb="pris" placeholder="fx 129"></label>
+      <label>Oprettelse<input type="number" inputmode="numeric" min="0" data-pb="opr" placeholder="0"></label>
+      <label>Data i GB (valgfrit)<input type="number" inputmode="numeric" min="0" data-pb="gb" placeholder="fx 30"></label>
+    </div>
+    <div class="pb-svar" data-pb-svar aria-live="polite" hidden></div>
+    <p class="vt-note">Har tilbuddet ingen intropris, så udfyld kun normalprisen. Udfylder du data, sammenligner vi
+    kun med abonnementer, der har mindst lige så meget data.</p>
+  </div>
+</section>
+
+<section class="sektion baand">
+  <div class="vaerktoej" data-overbetaling>
+    <div class="vt-hoved">
+      <h2 id="betaler-for-meget">Betaler du for meget for dit mobilabonnement?</h2>
+      <p class="led">Skriv, hvad du betaler i dag, og hvor meget data du har. Så viser vi de billigste abonnementer
+      med mindst lige så meget data — og hvad du kan spare det første år.</p>
+    </div>
+    <div class="pb-felter">
+      <label>Din pris pr. md. i dag<input type="number" inputmode="numeric" min="0" data-ob="pris" placeholder="fx 199"></label>
+      <label>Din datamængde<select data-ob="gb">
+        <option value="5">Op til 5 GB</option><option value="10">10 GB</option><option value="20" selected>20 GB</option>
+        <option value="30">30 GB</option><option value="50">50 GB</option><option value="100">100 GB</option>
+        <option value="9999">Fri data</option></select></label>
+      <label>Net<select data-ob="net"><option value="">Alle net</option>
+        {"".join(f'<option value="{e(n)}">{e(n)}</option>' for n in net)}</select></label>
+    </div>
+    <div class="pb-svar" data-ob-svar aria-live="polite" hidden></div>
+    <p class="vt-note"><strong>Annonce:</strong> Knapperne i resultatet er reklamelinks. Rækkefølgen er beregnet ud fra
+    pris og kan ikke købes. Husk at tjekke binding og opsigelsesvarsel hos dit nuværende selskab.</p>
+  </div>
+  {_pb_data()}
+</section>
+
+<section class="sektion baand-smal artikel">
+<h2>Sådan læser du resultatet</h2>
+<p>Beregnerne bruger de samme priser som resten af Telemobil, opdateret {e(OPDATERET)}: {len(betalte)} abonnementer
+fra {D['antal_udbydere']} selskaber. "Første år i alt" er intropris, normalpris og oprettelse lagt sammen for
+12 måneder. Besparelsen er forskellen mellem det, du betaler i dag på et år, og hvad det billigste alternativ
+koster det første år. Fra år to gælder normalprisen, som står ved hvert forslag.</p>
+<p>Se også <a href="/billigste-mobilabonnement/">billigste mobilabonnement</a>,
+<a href="/12-maaneders-prisen/">sådan regner vi 12-måneders-prisen</a> og
+<a href="/guides/betaler-du-for-meget/">guiden: betaler du for meget?</a></p>
+</section>
+"""
+    return skriv(sti, shell(
+        sti=sti, titel="Prisberegner: hvad koster dit mobiltilbud reelt?",
+        beskrivelse=("Regn ud, hvad et mobiltilbud koster det første år, og tjek om du betaler for meget. "
+                     f"Sammenlignet med {len(betalte)} abonnementer fra {D['antal_udbydere']} selskaber."),
+        opdateret=OPDATERET,
+        hero=hero_side("Værktøj", "Prisberegner til mobilabonnement",
+                       "Regn ud, hvad et tilbud koster for hele det første år, og se om du betaler for meget i dag.",
+                       "", [("Sammenligner med", f"{len(betalte)} abonnementer"), ("Opdateret", OPDATERET), ("Pris", "gratis")]),
+        efter_hero="", krumme=krumme, indhold=krop + faqblok(faq),
+        jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
+                     vaerktoejld(sti, "Prisberegner til mobilabonnement",
+                                 "Beregn totalprisen for et mobiltilbud og sammenlign med dagens priser."))],
+    ), prioritet="0.7")
+
+
 def byg_speedtest():
     sti = "/speedtest/"
     krumme = [("/", "Forside"), (None, "Hastighedstest")]
@@ -7393,6 +7623,7 @@ def bb_raekke(a, *, billigst=False, gnsnit_aar=None):
     <div class="pk-pris">
       {prisblok}
       {spar}
+      {skabelon.hist_linje(a["id"], a["pris"])}
       <button type="button" class="pk-detaljer" aria-expanded="false"
         aria-controls="{panel_id}">Se detaljer</button>
       <a class="knap knap-primaer pk-cta" href="{a['link']}"
@@ -19410,8 +19641,12 @@ kategori. <a href="/guides/hvor-meget-data/">Se hele guiden til dataforbrug</a>.
         f"Mobilabonnement uden binding — priser fra {min(a['pris'] for a in ubinding)} kr./md.",
         "Sammenlign mobilabonnementer uden binding, sorteret efter reel pris over 12 måneder. "
         "Skift når du vil — og se, hvad loven siger om binding.",
-        "Alle abonnementer her kan opsiges med kort varsel. Sorteret efter prisen i snit det første år.",
-        ubinding,
+        (f"{'Alle ' + str(len(ubinding)) if len(ubinding) == D['antal'] else str(len(ubinding)) + ' af ' + str(D['antal'])} "
+         f"abonnementer i sammenligningen er uden binding. Her er de ti billigste, sorteret efter prisen i snit "
+         f"det første år. <a href=\"/billigste-mobilabonnement/\">Se alle på siden med billigste mobilabonnement</a>."),
+        # Alle abonnementer i sammenligningen er uden binding. Den fulde liste står
+        # på billigste-siden; her vises de ti billigste, så siden ikke er en kopi.
+        ubinding[:10],
         """<h2>Hvad betyder "uden binding" egentlig?</h2>
 <p>Uden binding betyder, at du ikke har forpligtet dig til at blive kunde i en bestemt
 periode. Du kan opsige, når du vil, typisk med løbende måned plus et kort varsel, der
@@ -19469,7 +19704,8 @@ den nye udbyder og oplys dit nummer — så håndterer de opsigelsen automatisk.
         [("/billigste-mobilabonnement/", "Billigste mobilabonnement"),
          ("/guides/skift-mobilselskab/", "Sådan skifter du mobilselskab"),
          ("/udbydere/", "Alle udbydere")],
-        forvalg={"binding": ["0"]}, billede="uden-binding", spejlvend=True)
+        forvalg={"binding": ["0"]}, billede="uden-binding", spejlvend=True,
+        tabeltitel=f"De {min(10, len(ubinding))} billigste mobilabonnementer uden binding lige nu")
 
     # ---------------- Seks nye kategorisider ----------------
     fritale = sorted([a for a in ABON if a["tale"] == "fri"], key=lambda a: a["pris"])
@@ -20572,6 +20808,7 @@ hjemmet</a>.</p>
     byg_hvem_ringer()
     byg_daekningstjek()
     byg_speedtest()
+    byg_prisberegner()
 
     # Sæsonside — oprettes i god tid, så den er indekseret inden november
     # (Black Friday bygges nu af byg_q4() sammen med de tre Q4-guides)
@@ -20964,7 +21201,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
   <p>Mange udbydere udleverer simkort med en standard-PIN. Beholder du den, kan enhver, der
   får fat i dit kort, sætte det i en anden telefon og modtage dine sms'er — herunder koder
   fra bank og MitID.</p>
-  <p>Ændr PIN-koden på iPhone under Indstillinger → Mobil → SIM-PIN, og på Android under
+  <p>Ændr PIN-koden på iPhone under Indstillinger → Mobil → SIM-PIN, og på Android typisk under
   Indstillinger → Sikkerhed → SIM-kortlås. Vælg noget, du husker, men som ikke er din
   fødselsdato.</p>
 

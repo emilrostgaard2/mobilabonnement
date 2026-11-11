@@ -1388,3 +1388,82 @@
   bar.querySelector(".sml-vis").addEventListener("click", vis);
   dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
 })();
+
+/* ---- Prisberegner: totalpris for et tilbud og overbetalingstjek ---- */
+(function () {
+  var kilde = document.getElementById("pb-data");
+  if (!kilde) return;
+  var planer;
+  try { planer = JSON.parse(kilde.textContent); } catch (e) { return; }
+  function kr(v) { return Math.round(v).toLocaleString("da-DK"); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function tal(el) { var v = parseFloat(String(el.value).replace(",", ".")); return isFinite(v) && v >= 0 ? v : null; }
+  function forslag(a) {
+    return '<li><span><strong>' + esc(a.n) + "</strong> " + esc(a.k) + '<small>' + esc(a.t) + " · normalpris " + kr(a.p) +
+      " kr./md.</small></span><span class=\"pb-pris\"><strong>" + kr(a.y) + ' kr.</strong><small>første år</small></span>' +
+      '<a class="knap knap-primaer" href="' + esc(a.l) + '" rel="sponsored nofollow noopener" target="_blank" data-udgaaende="' +
+      esc(a.u) + '" data-abonnement="' + esc(a.i) + '">Gå til ' + esc(a.n) + "</a></li>";
+  }
+
+  var b1 = document.querySelector("[data-prisberegner]");
+  if (b1) {
+    var f = {}; b1.querySelectorAll("[data-pb]").forEach(function (el) { f[el.getAttribute("data-pb")] = el; });
+    var svar = b1.querySelector("[data-pb-svar]");
+    var regn = function () {
+      var pris = tal(f.pris);
+      if (pris === null || pris === 0) { svar.hidden = true; return; }
+      var mdr = Math.min(12, tal(f.mdr) || 0), intro = tal(f.intro), opr = tal(f.opr) || 0, gb = tal(f.gb);
+      if (intro === null) mdr = 0;
+      var ialt = (intro || 0) * mdr + pris * (12 - mdr) + opr, snit = ialt / 12;
+      var pulje = planer.filter(function (a) { return gb === null || gb === 0 || a.g >= gb; });
+      var billigere = pulje.filter(function (a) { return a.s < snit; }).sort(function (x, y) { return x.s - y.s; });
+      var h = '<div class="pb-tal"><div><b>' + kr(ialt) + ' kr.</b><span>første år i alt</span></div><div><b>' + kr(snit) +
+        ' kr.</b><span>pr. md. i snit</span></div><div><b>' + kr(pris * 12) + " kr.</b><span>pr. år fra år to</span></div></div>";
+      if (!pulje.length) {
+        h += "<p>Vi har ingen abonnementer med så meget data at sammenligne med.</p>";
+      } else if (!billigere.length) {
+        h += "<p><strong>Tilbuddet er billigere det første år end alle " + pulje.length + " abonnementer</strong> i vores sammenligning" +
+          (gb ? " med mindst " + kr(gb) + " GB" : "") + ".</p>";
+      } else {
+        h += "<p><strong>" + billigere.length + " af " + pulje.length + " abonnementer</strong> i vores sammenligning" +
+          (gb ? " med mindst " + kr(gb) + " GB" : "") + " er billigere det første år. De tre billigste:</p><ul class=\"pb-liste\">" +
+          billigere.slice(0, 3).map(forslag).join("") + "</ul>";
+      }
+      svar.innerHTML = h; svar.hidden = false;
+    };
+    b1.addEventListener("input", regn);
+  }
+
+  var b2 = document.querySelector("[data-overbetaling]");
+  if (b2) {
+    var antal = parseInt(b2.getAttribute("data-ob-antal"), 10) || 3;
+    var g = {}; b2.querySelectorAll("[data-ob]").forEach(function (el) { g[el.getAttribute("data-ob")] = el; });
+    var svar2 = b2.querySelector("[data-ob-svar]");
+    var tjek = function () {
+      var pris = tal(g.pris);
+      if (pris === null || pris === 0) { svar2.hidden = true; return; }
+      var gb = parseFloat(g.gb.value), net = g.net ? g.net.value : "";
+      var pulje = planer.filter(function (a) { return a.g >= gb && (!net || a.t === net); })
+        .sort(function (x, y) { return x.s - y.s; });
+      var h;
+      if (!pulje.length) {
+        h = "<p>Vi har ingen abonnementer med den datamængde på det net i sammenligningen.</p>";
+      } else {
+        var bedst = pulje[0], spar = pris * 12 - bedst.y;
+        if (spar > 0) {
+          h = '<div class="pb-tal"><div class="pb-groen"><b>' + kr(spar) + ' kr.</b><span>kan du spare det første år</span></div><div><b>' +
+            kr(pris * 12) + ' kr.</b><span>betaler du på et år i dag</span></div><div><b>' + kr(bedst.y) +
+            " kr.</b><span>koster det billigste det første år</span></div></div>" +
+            (bedst.p >= pris ? "<p>Bemærk: normalprisen fra år to er " + kr(bedst.p) + " kr./md., altså ikke lavere end din pris i dag.</p>" : "") +
+            "<p>" + (antal === 1 ? "Det billigste" : "De billigste") + " med mindst samme datamængde:</p>";
+        } else {
+          h = "<p><strong>Du betaler ikke for meget.</strong> Ingen af de " + pulje.length +
+            " abonnementer med mindst samme datamængde er billigere det første år. De nærmeste:</p>";
+        }
+        h += '<ul class="pb-liste">' + pulje.slice(0, antal).map(forslag).join("") + "</ul>";
+      }
+      svar2.innerHTML = h; svar2.hidden = false;
+    };
+    b2.addEventListener("input", tjek); b2.addEventListener("change", tjek);
+  }
+})();
