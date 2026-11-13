@@ -1,31 +1,6 @@
 {
- "hentet": "2026-11-12",
+ "hentet": "2026-11-13",
  "abonnementer": [
-  {
-   "id": "bb-891414",
-   "udbyder": "cbb",
-   "udbyder_navn": "CBB",
-   "navn": "5G internet",
-   "teknologi": "5g",
-   "ned": 950,
-   "op": 90,
-   "pris": 299,
-   "intro_pris": 99,
-   "intro_mdr": 2,
-   "oprettelse": 0,
-   "binding": 6,
-   "seks_maaneder": 1794,
-   "seks_maaneder_tilbud": 594,
-   "net": "CBB",
-   "fordele": [
-    "Klar på 2 min",
-    "Inklusiv gratis lånerouter",
-    "Nem installation uden kabler"
-   ],
-   "kampagnetekst": "99 kr/md første 2 mdr",
-   "logo_url": "https://adtraction.com/image.htm?imgId=1700024852",
-   "link": "https://on.cbb.dk/t/t?a=1700024858&as=2102885611&t=2&tk=1&url=https://www.cbb.dk/shop/internet/"
-  },
   {
    "id": "bb-566679",
    "udbyder": "hiper",
@@ -143,30 +118,6 @@
    "kampagnetekst": null,
    "logo_url": "https://adtraction.com/image.htm?imgId=1697234449",
    "link": "https://at.yousee.dk/t/t?a=1697234454&as=2102885611&t=2&tk=1&url=https://yousee.dk/shop/internet"
-  },
-  {
-   "id": "bb-12546",
-   "udbyder": "eesy",
-   "udbyder_navn": "eesy",
-   "navn": "5G internet",
-   "teknologi": "5g",
-   "ned": 950,
-   "op": 90,
-   "pris": 299,
-   "intro_pris": 99,
-   "intro_mdr": 4,
-   "oprettelse": 0,
-   "binding": 6,
-   "seks_maaneder": 1794,
-   "seks_maaneder_tilbud": 994,
-   "net": "TDC",
-   "fordele": [
-    "Danmarks bedste 5G dækning fra TDC NET",
-    "Inkl gratis lånerouter"
-   ],
-   "kampagnetekst": "99 kr/md første 4 mdr",
-   "logo_url": "https://adtraction.com/image.htm?imgId=1700040942",
-   "link": "https://on.eesy.dk/t/t?a=1700040947&as=2102885611&t=2&tk=1&url=https://eesy.dk/rabat/5g-internet"
   },
   {
    "id": "bb-1239821",
@@ -313,6 +264,30 @@
    "kampagnetekst": "179 kr/md første 9 mdr",
    "logo_url": "https://adtraction.com/image.htm?imgId=1666103636",
    "link": "https://go.adt284.net/t/t?a=1666103641&as=2102885611&t=2&tk=1&url=https://www.oister.dk/internet/5g/"
+  },
+  {
+   "id": "bb-12546",
+   "udbyder": "eesy",
+   "udbyder_navn": "eesy",
+   "navn": "5G internet",
+   "teknologi": "5g",
+   "ned": 950,
+   "op": 90,
+   "pris": 299,
+   "intro_pris": 179,
+   "intro_mdr": 6,
+   "oprettelse": 0,
+   "binding": 6,
+   "seks_maaneder": 1794,
+   "seks_maaneder_tilbud": 1074,
+   "net": "TDC",
+   "fordele": [
+    "Danmarks bedste 5G dækning fra TDC NET",
+    "Inkl gratis lånerouter"
+   ],
+   "kampagnetekst": "179 kr/md første 6 mdr",
+   "logo_url": "https://adtraction.com/image.htm?imgId=1700040942",
+   "link": "https://on.eesy.dk/t/t?a=1700040947&as=2102885611&t=2&tk=1&url=https://eesy.dk/rabat/5g-internet"
   },
   {
    "id": "bb-123982",
