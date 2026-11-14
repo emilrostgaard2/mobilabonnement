@@ -439,7 +439,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 <meta property="article:modified_time" content="{opdateret_iso or OPDATERET_ISO_GLOBAL}">
 <meta name="rating" content="general">
 <meta name="geo.placename" content="Aarhus, Danmark">
-<meta property="og:type" content="{"article" if sti.startswith("/guides/") and sti.count("/") > 2 and "/side-" not in sti else "website"}">
+<meta property="og:type" content="{"article" if sti == "/internet-priser/" or (sti.startswith("/guides/") and sti.count("/") > 2 and "/side-" not in sti) else "website"}">
 <meta property="og:locale" content="da_DK">
 <meta property="og:site_name" content="{SITENAVN}">
 <meta property="og:title" content="{e(titel)}">

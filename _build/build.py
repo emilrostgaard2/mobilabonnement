@@ -3005,6 +3005,32 @@ TEK_SIDER = [
 ]
 
 
+_FRAGT_RE = re.compile(r"(?:forsendelse|fragt)\D{0,12}(\d{2,4})\s*kr", re.I)
+_DATA_RE = re.compile(r"(\d[\d.]*)\s*GB\b", re.I)
+
+
+def bb_fragt(a):
+    """Fragt af router, når selskabet oplyser den som fast beløb ("Forsendelse 99 kr.").
+
+    Den står ikke i et felt for sig i feedet, kun i fordelslisten. Den er en del af
+    det, kunden betaler det første år, så den regnes med ligesom oprettelsen."""
+    for f in a.get("fordele") or []:
+        m = _FRAGT_RE.search(f)
+        if m:
+            return int(m.group(1))
+    return 0
+
+
+def bb_engangs(a):
+    return (a.get("oprettelse") or 0) + bb_fragt(a)
+
+
+def bb_data_gb(a):
+    """Dataloft i GB, når abonnementets navn oplyser et ("5G internet - 500 GB")."""
+    m = _DATA_RE.search(a.get("navn") or "")
+    return int(m.group(1).replace(".", "")) if m else None
+
+
 def bb_aarspris(a):
     """Hvad abonnementet koster det første år, inklusive oprettelse.
 
@@ -3013,7 +3039,7 @@ def bb_aarspris(a):
     rækkefølgen om på næsten hele markedet."""
     mdr = min(a.get("intro_mdr") or 0, 12)
     intro = a.get("intro_pris") or a["pris"]
-    return intro * mdr + a["pris"] * (12 - mdr) + a.get("oprettelse", 0)
+    return intro * mdr + a["pris"] * (12 - mdr) + bb_engangs(a)
 
 
 
@@ -7256,7 +7282,7 @@ def bb_mdr_pris(a):
     # strukturerede felter, bliver alle produkter behandlet ens.
     mdr = min(a.get("intro_mdr") or 0, 6)
     intro = a.get("intro_pris") or a["pris"]
-    total = intro * mdr + a["pris"] * (6 - mdr) + a.get("oprettelse", 0)
+    total = intro * mdr + a["pris"] * (6 - mdr) + bb_engangs(a)
     return round(total / 6)
 
 
@@ -7508,6 +7534,8 @@ def bb_raekke(a, *, billigst=False, gnsnit_aar=None):
         formel = f'{a["pris"]}×12'
     if a.get("oprettelse"):
         formel += f' + {a["oprettelse"]}'
+    if bb_fragt(a):
+        formel += f' + {bb_fragt(a)}'
     formel = f"({formel}) ÷ 12"
 
     if a.get("kampagnetekst"):
@@ -8064,7 +8092,7 @@ def vis_maaned():
 def bb_total(a, mdr):
     m = min(a.get("intro_mdr") or 0, mdr)
     intro = a.get("intro_pris") or a["pris"]
-    return intro * m + a["pris"] * (mdr - m) + a.get("oprettelse", 0)
+    return intro * m + a["pris"] * (mdr - m) + bb_engangs(a)
 
 
 def bb_start(a):
@@ -8405,24 +8433,6 @@ def _ip_tek_grupper():
 IP_TEK_STI = {"fiber": "/bredbaand/fibernet/", "5g": "/bredbaand/5g/", "coax": "/bredbaand/kabel-internet/"}
 
 
-def ip_tabel_teknologi():
-    rk = ""
-    for t, k in _ip_tek_grupper():
-        navn = TEK_NAVN.get(t, t)
-        link = (f'<a href="{IP_TEK_STI[t]}"><strong>{e(navn)}</strong></a>' if t in IP_TEK_STI
-                else f"<strong>{e(navn)}</strong>")
-        aar = [_ip_aar(a) for a in k]
-        norm = [a["pris"] for a in k]
-        rk += f"""<tr><td>{link}<br><span class="tabel-under">{len(k)} tilbud</span></td>
-<td class="tal">{kr(min(aar))} kr.</td><td class="tal"><strong>{kr(_ip_med(aar))} kr.</strong></td>
-<td class="tal">{kr(max(aar))} kr.</td><td class="tal">{kr(_ip_med(norm))} kr.</td></tr>"""
-    return f"""<div class="tabelramme"><table class="datatabel">
-<caption>Internetpriser pr. teknologi i vores sammenligning. Snit år 1 er tilbudspris, normalpris
-og oprettelse over 12 måneder delt med 12. Normalprisen er den, du betaler efter tilbuddet.</caption>
-<thead><tr><th scope="col">Teknologi</th><th scope="col">Laveste, snit år 1</th>
-<th scope="col">Median, snit år 1</th><th scope="col">Højeste, snit år 1</th>
-<th scope="col">Median normalpris</th></tr></thead>
-<tbody>{rk}</tbody></table></div>"""
 
 
 def ip_tabel_hastighed():
@@ -8472,57 +8482,8 @@ def _bb_tp(slug):
 
 
 
-def ip_tabel_selskaber():
-    g = {}
-    for a in BB:
-        g.setdefault(a["udbyder"], []).append(a)
-    rk = ""
-    for slug, k in sorted(g.items(), key=lambda x: min(_ip_aar(a) for a in x[1])):
-        tek = ", ".join(sorted({TEK_NAVN.get(a["teknologi"], a["teknologi"]) for a in k}))
-        norm = sorted(a["pris"] for a in k)
-        fart = sorted(a["ned"] for a in k)
-        spaend = f"{kr(norm[0])}–{kr(norm[-1])} kr." if norm[0] != norm[-1] else f"{kr(norm[0])} kr."
-        fspaend = f"{kr(fart[0])}–{kr(fart[-1])}" if fart[0] != fart[-1] else f"{kr(fart[0])}"
-        rk += f"""<tr><td><a href="/bredbaand/udbydere/{slug}/">{_bb_logo(k[0])}</a><br><span class="tabel-under">{e(tek)}</span></td>
-<td class="tal">{len(k)}</td><td class="tal">{fspaend} Mbit/s</td>
-<td class="tal">{spaend}</td>
-<td class="tal"><strong>{kr(min(_ip_aar(a) for a in k))} kr.</strong></td>
-<td class="tal">{_bb_tp(slug)}</td></tr>"""
-    return f"""<div class="tabelramme"><table class="datatabel">
-<caption>Internetpriser hos hvert selskab i vores sammenligning: spændet i normalpris, det billigste
-abonnement regnet på hele det første år og selskabets Trustpilot-score (aflæst {BB_TP_HENTET}).
-Hos flere selskaber dækker Trustpilot-profilen hele firmaet, ikke kun internet.</caption>
-<thead><tr><th scope="col">Selskab</th><th scope="col">Tilbud</th><th scope="col">Hastigheder</th>
-<th scope="col">Normalpris</th><th scope="col">Billigst, snit år 1</th><th scope="col">Trustpilot</th></tr></thead>
-<tbody>{rk}</tbody></table></div>"""
 
 
-def ip_tabel_husstand():
-    """Hvad en typisk husstand bør regne med at betale — koblet til hastighedsbehov."""
-    profiler = [
-        ("1 person, streaming og mail", 50, 150),
-        ("Par eller lille familie", 100, 500),
-        ("Familie med flere skærme og hjemmearbejde", 300, 1000),
-        ("Gaming, store filer og mange enheder", 1000, 10 ** 6),
-    ]
-    rk = ""
-    for navn, lo, hi in profiler:
-        k = [a for a in BB if lo <= a["ned"] <= hi]
-        if navn.startswith("Gaming"):
-            k = [a for a in k if a["teknologi"] == "fiber"] or k
-        if not k:
-            continue
-        b = min(k, key=bb_aarspris)
-        hast = f"{lo}–{hi} Mbit/s" if hi < 10 ** 6 else f"{lo} Mbit/s og op"
-        rk += f"""<tr><td><strong>{e(navn)}</strong><br><span class="tabel-under">{hast}</span></td>
-<td class="tal">{kr(_ip_med([_ip_aar(a) for a in k]))} kr.</td>
-<td>{_bb_logo(b)}<br><span class="tabel-under">{_bb_fart(b)} · {kr(_ip_aar(b))} kr./md. i snit</span></td></tr>"""
-    return f"""<div class="tabelramme"><table class="datatabel">
-<caption>Hvad internet koster for forskellige husstande. Medianen er det typiske prisniveau;
-billigste valg er det laveste i vores sammenligning lige nu.</caption>
-<thead><tr><th scope="col">Husstand</th><th scope="col">Typisk pris, snit år 1</th>
-<th scope="col">Billigste valg</th></tr></thead>
-<tbody>{rk}</tbody></table></div>"""
 
 
 def ip_tabel_netejer():
@@ -8588,43 +8549,6 @@ helt år på normalpris i forhold til tilbudsprisen.</caption>
 <tbody>{rk}</tbody></table></div>"""
 
 
-def ip_prisudvikling():
-    """Median normalpris første og seneste måledag fra bb_prishistorik.json."""
-    try:
-        h = json.load(open(os.path.join(ROD, "data", "bb_prishistorik.json"), encoding="utf-8"))
-        m = h.get("maalinger") or []
-    except (FileNotFoundError, ValueError):
-        return ""
-    if len(m) < 2:
-        return ""
-    foer, nu = m[0], m[-1]
-    if foer["dato"] == nu["dato"]:
-        return ""
-    def med(maal, tek=None):
-        v = [p["pris"] for p in maal["priser"].values() if tek is None or p.get("tek") == tek]
-        return _ip_med(v) if v else None
-    rk = ""
-    for tek, navn in [(None, "Alle"), ("fiber", "Fibernet"), ("coax", "Kabel-internet"), ("5g", "5G internet")]:
-        a, b = med(foer, tek), med(nu, tek)
-        if not a or not b:
-            continue
-        d = b - a
-        rk += (f'<tr><td><strong>{e(navn)}</strong></td><td class="tal">{kr(a)} kr.</td>'
-               f'<td class="tal">{kr(b)} kr.</td><td class="tal">{("+" if d > 0 else "")}{kr(d)} kr.</td></tr>')
-    if not rk:
-        return ""
-    d1 = dansk_dato(date.fromisoformat(foer["dato"]))
-    d2 = dansk_dato(date.fromisoformat(nu["dato"]))
-    return f"""<h2 id="prisudvikling">Er internet blevet dyrere? Prisudviklingen</h2>
-{ip_graf_prisudvikling()}
-<p>Vi gemmer alle internetpriser hver dag. Tabellen sammenligner medianen af normalpriserne
-den {d1} med i dag. Den viser, om prisniveauet bevæger sig, og ikke kun om der er kommet nye
-kampagner.</p>
-<div class="tabelramme"><table class="datatabel">
-<caption>Median normalpris {e(d1)} og {e(d2)}, {len(m)} måledage.</caption>
-<thead><tr><th scope="col">Teknologi</th><th scope="col">{e(d1)}</th><th scope="col">{e(d2)}</th>
-<th scope="col">Ændring</th></tr></thead><tbody>{rk}</tbody></table></div>
-<p>Hele historikken for mobilabonnementer ligger i <a href="/prisarkiv/">prisarkivet</a>.</p>"""
 
 
 # ------------------------------------------------------------ INTERNET PRISER: EKSTRA DATA
@@ -8632,7 +8556,7 @@ kampagner.</p>
 # Bredbåndskortlægningens adressedata, som adressetjekket også bruger.
 
 IP_BYER = [
-    ("København", [(1000, 2450)]), ("Aarhus", [(8000, 8270)]), ("Odense", [(5000, 5270)]),
+    ("København", [(1000, 1799), (2100, 2450), (2500, 2500), (2700, 2700), (2720, 2720)]), ("Aarhus", [(8000, 8270)]), ("Odense", [(5000, 5270)]),
     ("Aalborg", [(9000, 9220)]), ("Esbjerg", [(6700, 6715)]), ("Randers", [(8900, 8960)]),
     ("Kolding", [(6000, 6000)]), ("Horsens", [(8700, 8700)]), ("Vejle", [(7100, 7120)]),
     ("Roskilde", [(4000, 4000)]), ("Herning", [(7400, 7400)]), ("Silkeborg", [(8600, 8600)]),
@@ -8692,13 +8616,13 @@ def ip_tabel_byer():
         _nv = f'<a href="{_bs}">{e(navn)}</a>' if _bs else e(navn)
         rk += (f'<tr{stil}><td><strong>{_nv}</strong></td><td class="tal">{kr(t[0])}</td>'
                f'<td class="tal">{pct(t[1], t[0])}</td><td class="tal">{pct(t[2], t[0])}</td>'
-               f'<td class="tal">{pct(t[3], t[0])}</td><td class="tal">{pct(t[4], t[0])}</td></tr>')
+               f'<td class="tal">{pct(t[3], t[0])}</td></tr>')
     return f"""<div class="tabelramme"><table class="datatabel">
 <caption>Andel af adresser, der kan få hver teknologi, beregnet af Telemobil ud fra adressedata i
 Digitaliseringsstyrelsens Bredbåndskortlægning {BBK['aar']}. Adresser er adgangsadresser, og byerne er
-afgrænset efter postnumre. "Kun mobilt" er adresser uden fiber, kabel-tv, kobber og fast trådløst.</caption>
+afgrænset efter postnumre.</caption>
 <thead><tr><th scope="col">By</th><th scope="col">Adresser</th><th scope="col">Fiber</th>
-<th scope="col">Kabel-tv</th><th scope="col">Mindst 1000 Mbit/s</th><th scope="col">Kun mobilt</th></tr></thead>
+<th scope="col">Kabel-tv</th><th scope="col">Mindst 1000 Mbit/s</th></tr></thead>
 <tbody>{rk}</tbody></table></div>"""
 
 
@@ -8965,7 +8889,7 @@ IP_GEBYRER = [
      "https://yousee.dk/hjaelp/artikler/engangsbetalinger-og-gebyrer"),
     ("Telenor", "0", "0–49", "19", "49", "100", "1.500 (5G: 3.000)", "995",
      "https://www.telenor.dk/kundeservice/kob-og-regning/regning/gebyrer-pa-din-regning/"),
-    ("Norlys", "0", "99", "15", "59", "Ikke oplyst", "Ikke oplyst", "Gebyr findes, beløb ikke oplyst",
+    ("Norlys", "99", "99", "15", "59", "Ikke oplyst", "Ikke oplyst", "Gebyr findes, beløb ikke oplyst",
      "https://norlys.dk/internet/bredbaandsfakta/"),
     ("Hiper", "0–299*", "0", "Tilbydes ikke (kun kort)", "–", "Ikke oplyst", "599–2.800", "699",
      "https://www.hiper.dk/hjaelp/abonnement-og-regning/abonnement/returner-udstyr"),
@@ -8980,19 +8904,6 @@ IP_GEBYRER = [
 ]
 
 
-def ip_tabel_gebyrer():
-    rk = "".join(
-        f'<tr><td><a href="{k}" rel="noopener nofollow" target="_blank"><strong>{e(n)}</strong></a></td>'
-        + "".join(f'<td class="tal">{e(v)}</td>' for v in vals) + "</tr>"
-        for n, *vals, k in IP_GEBYRER)
-    return f"""<div class="tabelramme"><table class="datatabel">
-<caption>Gebyrer hos internetselskaberne i kroner, aflæst på selskabernes egne prislister og
-hjælpesider {TJEKKET}. Klik på selskabet for kilden. *Hiper skriver 0 kr. i oprettelse på
-bredbåndssiden, men 299 kr. på siden om fiberinstallation.</caption>
-<thead><tr><th scope="col">Selskab</th><th scope="col">Oprettelse</th><th scope="col">Fragt</th>
-<th scope="col">Betalings&shy;service</th><th scope="col">Papir/giro</th><th scope="col">Rykker</th>
-<th scope="col">Router ikke retur</th><th scope="col">Forgæves tekniker</th></tr></thead>
-<tbody>{rk}</tbody></table></div>"""
 
 
 def ip_noegletal():
@@ -9001,9 +8912,9 @@ def ip_noegletal():
     kamp = len([a for a in BB if a.get("intro_pris") and a["intro_pris"] < a["pris"]])
     fliser = [
         (f"{kr(_ip_med(aar))} kr.", "Medianpris pr. md. det første år"),
-        (f"{kr(round(sum(norm) / len(norm)))} kr.", "Gennemsnitlig normalpris"),
+        (f"{kr(_ip_med(norm))} kr.", "Medianpris pr. md. efter tilbuddet"),
         (f"{kr(min(aar))} kr.", "Billigste pr. md. det første år"),
-        (f"{round(kamp / len(BB) * 100)} %", "Har en kampagnepris"),
+        (f"{round(kamp / len(BB) * 100)} %", "Har en tilbudspris"),
         (f"{len(BB)}", f"Tilbud fra {len({a['udbyder'] for a in BB})} selskaber"),
     ]
     return '<div class="ip-fliser">' + "".join(
@@ -9014,25 +8925,6 @@ def _mindstepris(a):
     return bb_total(a, max(a.get("binding") or 0, 1))
 
 
-def ip_tabel_top10():
-    rk = ""
-    for i, a in enumerate(sorted(BB, key=bb_aarspris)[:10], 1):
-        rk += f"""<tr><td class="tal">{i}</td>
-<td>{_bb_logo(a)}<br><span class="tabel-under">{e(TEK_NAVN.get(a['teknologi'], a['teknologi']))} · {kr(a['ned'])}/{kr(a['op'])} Mbit/s</span></td>
-<td class="tal">{kr(bb_start(a))} kr.{('<br><span class="tabel-under">' + str(a['intro_mdr']) + ' mdr.</span>') if a.get('intro_pris') else ''}</td>
-<td class="tal">{kr(a['pris'])} kr.</td>
-<td class="tal">{kr(_mindstepris(a))} kr.<br><span class="tabel-under">{(str(a['binding']) + ' mdr. binding') if a.get('binding') else 'ingen binding'}</span></td>
-<td class="tal"><strong>{kr(_ip_aar(a))} kr.</strong></td>
-<td class="tal">{kr(bb_total(a, 24))} kr.</td>
-<td>{_bb_cta(a, "Se tilbud")}</td></tr>"""
-    return f"""<div class="tabelramme"><table class="datatabel">
-<caption>Top 10 billigste internet målt på prisen det første år. Mindsteprisen er vores beregning:
-oprettelse plus bindingsperioden eller mindst én måned. Selskabets egen mindstepris kan være
-højere, hvis opsigelsesvarslet er længere. 24 mdr. er den samlede pris over to år.</caption>
-<thead><tr><th scope="col">#</th><th scope="col">Abonnement</th><th scope="col">Startpris</th>
-<th scope="col">Normalpris</th><th scope="col">Mindstepris</th><th scope="col">Snit år 1</th>
-<th scope="col">24 mdr. i alt</th><th scope="col"><span class="sr-only">Bestil</span></th></tr></thead>
-<tbody>{rk}</tbody></table></div>"""
 
 
 def ip_graf_prisudvikling():
@@ -9105,7 +8997,7 @@ def ip_beregnere():
     for navn, lo, hi in HASTIGHEDSTRIN:
         k = [a for a in BB if lo <= a["ned"] <= hi]
         if k:
-            b = min(k, key=bb_aarspris)
+            b = min([a for a in k if not bb_data_gb(a)] or k, key=bb_aarspris)
             trin.append({"n": navn, "m": _ip_med([_ip_aar(a) for a in k]), "b": _ip_aar(b),
                          "np": b["pris"], "u": b["udbyder_navn"], "lo": lo, "hi": hi})
     if not trin:
@@ -9147,10 +9039,337 @@ def ip_beregnere():
 }})();
 </script>
 </div>
-<p class="tabel-under">Beregnerne bruger de samme priser som tabellerne på siden. Anbefalingen regner med
+<p class="tabel-under">Anbefalingen regner med
 cirka 10 Mbit/s pr. person, 15 Mbit/s pr. 4K-stream (Netflix' anbefaling) og 20 Mbit/s ekstra til
-videomøder, rundet op til næste hastighedstrin. Spil kræver lav svartid mere end hastighed, så
-med online spil foreslår vi mindst 300 Mbit/s og helst fiber.</p>"""
+videomøder, rundet op til næste hastighedstrin. Tallet pr. person er vores
+tommelfingerregel. Spil kræver lav svartid mere end høj hastighed, så til online spil foreslår vi
+fiber eller kabel frem for mobilt internet.</p>"""
+
+
+
+
+
+def _ip_kvartil(v, q):
+    """Kvartil med lineær interpolation. q=0.25 er nedre kvartil."""
+    v = sorted(v)
+    if not v:
+        return 0
+    pos = (len(v) - 1) * q
+    lo = int(pos)
+    hi = min(lo + 1, len(v) - 1)
+    return round(v[lo] + (v[hi] - v[lo]) * (pos - lo))
+
+
+def _ip_24(a):
+    """Hvad abonnementet koster pr. måned, når man bliver i to år."""
+    return round(bb_total(a, 24) / 24)
+
+
+def _ip_loft(a):
+    """' · 500 GB data' til underlinjen, når abonnementet har et dataloft."""
+    g = bb_data_gb(a)
+    return f" · {kr(g)} GB data" if g else ""
+
+
+def _ip_n(k, ental="tilbud", flertal="tilbud"):
+    return f"{len(k)} {ental if len(k) == 1 else flertal}"
+
+
+def ip_tabel_teknologi():
+    def raekke(navn_html, k, klasse=""):
+        aar = [_ip_aar(a) for a in k]
+        pr100 = _ip_med([_ip_aar(a) / a["ned"] * 100 for a in k if a["ned"]])
+        return f"""<tr{klasse}><th scope="row">{navn_html}<br><span class="tabel-under">{_ip_n(k)}</span></th>
+<td class="tal">{kr(min(aar))} kr.</td><td class="tal"><strong>{kr(_ip_med(aar))} kr.</strong></td>
+<td class="tal">{kr(max(aar))} kr.</td><td class="tal">{kr(_ip_med([a['pris'] for a in k]))} kr.</td>
+<td class="tal">{kr(_ip_med([_ip_24(a) for a in k]))} kr.</td><td class="tal">{kr(pr100)} kr.</td></tr>"""
+    rk = ""
+    for t, k in _ip_tek_grupper():
+        navn = TEK_NAVN.get(t, t)
+        link = f'<a href="{IP_TEK_STI[t]}">{e(navn)}</a>' if t in IP_TEK_STI else e(navn)
+        rk += raekke(link, k)
+    rk += raekke("Alle teknologier", BB, ' class="sum"')
+    return f"""<div class="tabelramme"><table class="datatabel">
+<caption>Internetpriser pr. teknologi i kr. pr. måned, beregnet af Telemobil på {len(BB)} tilbud hentet
+{e(bb_dato())}. Snit år 1 er tilbudspris, normalpris, oprettelse og fragt over 12 måneder delt med 12.
+Med få tilbud i en gruppe flytter et enkelt nyt tilbud medianen meget.</caption>
+<thead><tr><th scope="col">Teknologi</th><th scope="col">Billigste, snit år 1</th>
+<th scope="col">Median, snit år 1</th><th scope="col">Dyreste, snit år 1</th>
+<th scope="col">Median normalpris</th><th scope="col">Median over 24 mdr.</th>
+<th scope="col">Kr. pr. 100 Mbit/s</th></tr></thead>
+<tbody>{rk}</tbody></table></div>"""
+
+
+def ip_figur_teknologi():
+    """Prikdiagram: ét punkt pr. tilbud, medianen markeret. HTML frem for SVG,
+    så teksten bliver ved med at kunne læses på en telefon."""
+    grupper = _ip_tek_grupper()
+    alle = [_ip_aar(a) for a in BB]
+    lo = min(alle) // 50 * 50
+    hi = -(-max(alle) // 50) * 50
+    if hi == lo:
+        hi += 50
+
+    def pos(v):
+        return f"{(v - lo) / (hi - lo) * 100:.1f}"
+    rk = ""
+    for t, k in grupper:
+        v = sorted(_ip_aar(a) for a in k)
+        med = _ip_med(v)
+        prikker = "".join(f'<i style="left:{pos(x)}%"></i>' for x in v)
+        rk += (f'<div class="ips-r"><span class="ips-n">{e(TEKNOLOGI_KORT.get(t, t))}</span>'
+               f'<div class="ips-b">{prikker}<b style="left:{pos(med)}%"><span>{kr(med)}</span></b></div></div>')
+    trin = "".join(f'<span style="left:{pos(x)}%">{kr(x)}</span>' for x in range(lo, hi + 1, 50))
+    tekst = ", ".join(f"{TEKNOLOGI_KORT.get(t, t)} {kr(_ip_med([_ip_aar(a) for a in k]))} kr."
+                      for t, k in grupper)
+    return f"""<figure class="ip-figur">
+<div class="ip-strip" role="img" aria-label="Internetpriser pr. teknologi, median i snit det første år: {e(tekst)}">
+{rk}
+<div class="ips-r ips-akse"><span class="ips-n">kr./md.</span><div class="ips-b">{trin}</div></div>
+</div>
+<figcaption>Hvert punkt er ét internetabonnement, placeret efter prisen pr. måned i snit det første år.
+Stregen med tal er medianen: {e(tekst)} Priser hentet {e(bb_dato())}.</figcaption></figure>"""
+
+
+def ip_tabel_tre_tal():
+    start = [a["intro_pris"] for a in BB if a.get("intro_pris") and a["intro_pris"] < a["pris"]]
+    rk = [
+        ("Tilbudspris", f"Den nedsatte pris de første måneder hos de {len(start)} abonnementer, der har en. "
+                        "Det er det tal, annoncerne viser.",
+         _ip_med(start) if start else _ip_med([a["pris"] for a in BB])),
+        ("Normalpris", "Prisen pr. måned, når tilbuddet er udløbet. Den betaler du resten af tiden.",
+         _ip_med([a["pris"] for a in BB])),
+        ("Snit år 1", "Alt, du betaler de første 12 måneder inklusive oprettelse og fragt, delt med 12.",
+         _ip_med([_ip_aar(a) for a in BB])),
+        ("Snit over 24 mdr.", "Det samme regnestykke over to år. Viser prisen, hvis du bliver hængende.",
+         _ip_med([_ip_24(a) for a in BB])),
+    ]
+    return f"""<div class="tabelramme"><table class="datatabel">
+<caption>De fire pristal for internet og medianen af hvert tal for de {len(BB)} tilbud i vores
+sammenligning, hentet {e(bb_dato())}.</caption>
+<thead><tr><th scope="col">Pristal</th><th scope="col">Hvad det dækker</th>
+<th scope="col">Median pr. md.</th></tr></thead><tbody>""" + "".join(
+        f'<tr><th scope="row">{e(n)}</th><td>{e(h)}</td><td class="tal"><strong>{kr(v)} kr.</strong></td></tr>'
+        for n, h, v in rk) + "</tbody></table></div>"
+
+
+def ip_tabel_aar12():
+    def raekke(navn, k, klasse=""):
+        a1 = _ip_med([bb_aarspris(a) for a in k])
+        a2 = _ip_med([a["pris"] * 12 for a in k])
+        t24 = _ip_med([bb_total(a, 24) for a in k])
+        d = a2 - a1
+        return (f'<tr{klasse}><th scope="row">{e(navn)}</th><td class="tal">{kr(a1)} kr.</td>'
+                f'<td class="tal">{kr(a2)} kr.</td>'
+                f'<td class="tal"><strong>{"+" if d > 0 else ""}{kr(d)} kr.</strong></td>'
+                f'<td class="tal">{kr(t24)} kr.</td></tr>')
+    rk = "".join(raekke(TEK_NAVN.get(t, t), k) for t, k in _ip_tek_grupper())
+    rk += raekke("Alle teknologier", BB, ' class="sum"')
+    return f"""<div class="tabelramme"><table class="datatabel">
+<caption>Hvad internet koster i alt det første år, det andet år og over to år. Medianer i kr. for
+tilbuddene i vores sammenligning, hentet {e(bb_dato())}. År 1 er inklusive oprettelse og fragt, år 2 er
+12 måneder på normalpris. Forskellen er forskellen mellem de to medianer.</caption>
+<thead><tr><th scope="col">Teknologi</th><th scope="col">År 1 i alt</th><th scope="col">År 2 i alt</th>
+<th scope="col">Forskel</th><th scope="col">24 mdr. i alt</th></tr></thead>
+<tbody>{rk}</tbody></table></div>"""
+
+
+def ip_tabel_top10():
+    rk = ""
+    for i, a in enumerate(sorted(BB, key=bb_aarspris)[:10], 1):
+        rk += f"""<tr><td class="tal">{i}</td>
+<td>{_bb_logo(a)}<br><span class="tabel-under">{e(TEK_NAVN.get(a['teknologi'], a['teknologi']))} · {kr(a['ned'])}/{kr(a['op'])} Mbit/s{_ip_loft(a)}</span></td>
+<td class="tal">{kr(bb_start(a))} kr.{('<br><span class="tabel-under">i ' + str(a['intro_mdr']) + ' mdr.</span>') if a.get('intro_pris') else ''}</td>
+<td class="tal">{kr(a['pris'])} kr.</td>
+<td class="tal"><strong>{kr(_ip_aar(a))} kr.</strong></td>
+<td class="tal">{kr(bb_total(a, 24))} kr.</td>
+<td class="tal">{(str(a['binding']) + ' mdr.') if a.get('binding') else 'Ingen'}</td>
+<td>{_bb_cta(a, "Se tilbud")}</td></tr>"""
+    return f"""<div class="tabelramme"><table class="datatabel">
+<caption>De 10 billigste internetabonnementer i vores sammenligning, sorteret efter prisen pr. måned i
+snit det første år inklusive oprettelse og fragt. Priser hentet {e(bb_dato())}. 24 mdr. er den samlede
+pris over to år.</caption>
+<thead><tr><th scope="col">Nr.</th><th scope="col">Abonnement</th><th scope="col">Tilbudspris</th>
+<th scope="col">Normalpris</th><th scope="col">Snit år 1</th><th scope="col">24 mdr. i alt</th>
+<th scope="col">Binding</th><th scope="col"><span class="sr-only">Bestil</span></th></tr></thead>
+<tbody>{rk}</tbody></table></div>"""
+
+
+def ip_tabel_selskaber():
+    g = {}
+    for a in BB:
+        g.setdefault(a["udbyder"], []).append(a)
+    rk = ""
+    for slug, k in sorted(g.items(), key=lambda x: min(_ip_aar(a) for a in x[1])):
+        tek = ", ".join(sorted({TEKNOLOGI_KORT.get(a["teknologi"], a["teknologi"]) for a in k}))
+        bind = sorted({a.get("binding") or 0 for a in k})
+        bindtekst = ("Ingen" if bind == [0] else
+                     (f"{bind[-1]} mdr." if 0 not in bind else f"0–{bind[-1]} mdr."))
+        rk += f"""<tr><td><a href="/bredbaand/udbydere/{slug}/">{_bb_logo(k[0])}</a><br><span class="tabel-under">{e(tek)} · {_ip_n(k)}</span></td>
+<td class="tal">{_spaend([a['ned'] for a in k])} Mbit/s</td>
+<td class="tal">{_spaend([a['pris'] for a in k])} kr.</td>
+<td class="tal"><strong>{kr(min(_ip_aar(a) for a in k))} kr.</strong></td>
+<td class="tal">{_spaend([bb_engangs(a) for a in k])} kr.</td>
+<td class="tal">{bindtekst}</td>
+<td class="tal">{_bb_tp(slug)}</td></tr>"""
+    return f"""<div class="tabelramme"><table class="datatabel">
+<caption>Internetpriser hos hvert selskab i vores sammenligning, billigste først. Priser hentet
+{e(bb_dato())}. Oprettelse er inklusive fragt, når selskabet oplyser den. Trustpilot-score aflæst
+{BB_TP_HENTET}; hos flere selskaber dækker profilen hele firmaet, ikke kun internet.</caption>
+<thead><tr><th scope="col">Selskab</th><th scope="col">Hastigheder</th>
+<th scope="col">Normalpris</th><th scope="col">Billigst, snit år 1</th><th scope="col">Oprettelse</th>
+<th scope="col">Binding</th><th scope="col">Trustpilot</th></tr></thead>
+<tbody>{rk}</tbody></table></div>"""
+
+
+def ip_tabel_husstand():
+    """Hvad en typisk husstand bør regne med at betale — koblet til hastighedsbehov."""
+    profiler = [
+        ("1 person, streaming og mail", 50, 150),
+        ("Par eller lille familie", 100, 500),
+        ("Familie med flere skærme og hjemmearbejde", 300, 1000),
+        ("Gaming, store filer og mange enheder", 1000, 10 ** 6),
+    ]
+    rk = ""
+    for navn, lo, hi in profiler:
+        k = [a for a in BB if lo <= a["ned"] <= hi]
+        if navn.startswith("Gaming"):
+            k = [a for a in k if a["teknologi"] == "fiber"] or k
+        if not k:
+            continue
+        # Et abonnement med dataloft er ikke et ærligt "billigste valg" til en husstand,
+        # der streamer på flere skærme. Vælg det billigste uden loft, når der er et.
+        b = min([a for a in k if not bb_data_gb(a)] or k, key=bb_aarspris)
+        hast = f"{lo}–{kr(hi)} Mbit/s" if hi < 10 ** 6 else f"{kr(lo)} Mbit/s på fiber"
+        rk += f"""<tr><th scope="row">{e(navn)}<br><span class="tabel-under">{hast}</span></th>
+<td class="tal">{kr(_ip_med([_ip_aar(a) for a in k]))} kr.</td>
+<td>{_bb_logo(b)}<br><span class="tabel-under">{_bb_fart(b)}{_ip_loft(b)} · {kr(_ip_aar(b))} kr./md. i snit</span></td></tr>"""
+    return f"""<div class="tabelramme"><table class="datatabel">
+<caption>Hvad internet koster for forskellige husstande. Medianen er det typiske prisniveau for
+hastigheden; billigste valg er det laveste uden oplyst dataloft i vores sammenligning, hentet {e(bb_dato())}.</caption>
+<thead><tr><th scope="col">Husstand</th><th scope="col">Typisk pris, snit år 1</th>
+<th scope="col">Billigste valg uden oplyst dataloft</th></tr></thead>
+<tbody>{rk}</tbody></table></div>"""
+
+
+def ip_tabel_gebyrer():
+    med = {a["udbyder_navn"].lower() for a in BB}
+    raekker = [r for r in IP_GEBYRER if r[0].lower() in med]
+    har = {r[0].lower() for r in raekker}
+    mangler = sorted({a["udbyder_navn"] for a in BB if a["udbyder_navn"].lower() not in har})
+    rk = "".join(
+        f'<tr><th scope="row"><a href="{k}" rel="noopener nofollow" target="_blank">{e(n)}</a></th>'
+        + "".join(f'<td class="tal">{e(v)}</td>' for v in vals) + "</tr>"
+        for n, *vals, k in raekker)
+    rest = (f" Vi har endnu ikke aflæst gebyrerne hos {_og_liste(mangler)}." if mangler else "")
+    return f"""<div class="tabelramme"><table class="datatabel">
+<caption>Gebyrer hos internetselskaberne i kroner, aflæst på selskabernes egne prislister og
+hjælpesider {TJEKKET}. Klik på selskabet for kilden. *Hiper skriver 0 kr. i oprettelse på
+bredbåndssiden, men 299 kr. på siden om fiberinstallation.{rest}</caption>
+<thead><tr><th scope="col">Selskab</th><th scope="col">Oprettelse</th><th scope="col">Fragt</th>
+<th scope="col">Betalings&shy;service</th><th scope="col">Papir/giro</th><th scope="col">Rykker</th>
+<th scope="col">Router ikke retur</th><th scope="col">Forgæves tekniker</th></tr></thead>
+<tbody>{rk}</tbody></table></div>"""
+
+
+def _og_liste(v):
+    v = list(v)
+    return v[0] if len(v) == 1 else ", ".join(v[:-1]) + " og " + v[-1]
+
+
+def ip_figur_daekning():
+    """Officielle dækningstal som vandrette søjler. Tallene står som tekst i hver række."""
+    rk = [
+        ("Mindst 100/30 Mbit/s", BBK["100_30"]),
+        ("Mindst 1000 Mbit/s download", BBK["1000"]),
+        ("Fibernet", BBK["fiber"]),
+        ("Kabel-tv-net (coax)", BBK["kabel"]),
+        ("Kobber (xDSL)", BBK["xdsl"]),
+    ]
+    def pct(v):
+        return str(v).replace(".", ",")
+    rader = "".join(
+        f'<div class="ipd-r"><span class="ipd-n">{e(n)}</span>'
+        f'<span class="ipd-b"><i style="width:{v}%"></i></span><b>{pct(v)} %</b></div>' for n, v in rk)
+    tekst = ", ".join(f"{n} {pct(v)} %" for n, v in rk)
+    return f"""<figure class="ip-figur">
+<div class="ip-daek" role="img" aria-label="Andel af boliger og virksomheder, der kan få hver type internet: {e(tekst)}">{rader}</div>
+<figcaption>Andel af boliger og virksomheder i Danmark, der kan få hver type internet. Kilde:
+{e(BBK['kilde'])}.</figcaption></figure>"""
+
+
+IP_UDLAND = [
+    # land, gennemsnitspris i USD pr. måned, placering af 214 (1 = billigst)
+    ("Storbritannien", "31,43", 70), ("Danmark", "46,08", 102), ("Tyskland", "47,59", 105),
+    ("Sverige", "50,30", 120), ("Finland", "57,18", 133), ("Holland", "58,04", 135),
+    ("USA", "80,00", 167), ("Norge", "85,96", 176),
+]
+
+
+def ip_tabel_udland():
+    rk = "".join(
+        f'<tr{" class=" + chr(34) + "sum" + chr(34) if land == "Danmark" else ""}><th scope="row">{e(land)}</th>'
+        f'<td class="tal">{pris} USD</td><td class="tal">{plads}</td></tr>'
+        for land, pris, plads in IP_UDLAND)
+    return f"""<div class="tabelramme"><table class="datatabel">
+<caption>Gennemsnitlig pris pr. måned for fast bredbånd i udvalgte lande. Kilde: Broadband Genie,
+Global Broadband Price League 2026, priser indsamlet 27. januar til 10. februar 2026 og omregnet til
+amerikanske dollar. Placering 1 er det billigste af 214 lande.</caption>
+<thead><tr><th scope="col">Land</th><th scope="col">Gennemsnit pr. md.</th>
+<th scope="col">Placering af 214</th></tr></thead><tbody>{rk}</tbody></table></div>"""
+
+
+def ip_udvikling():
+    """Egen måleserie. Med én måledag vises udgangspunktet i stedet for en tom graf."""
+    try:
+        h = json.load(open(os.path.join(ROD, "data", "bb_prishistorik.json"), encoding="utf-8"))
+        m = [x for x in (h.get("maalinger") or []) if x.get("priser")]
+    except (FileNotFoundError, ValueError):
+        m = []
+
+    def med(maal, tek=None):
+        v = [p["pris"] for p in maal["priser"].values() if tek is None or p.get("tek") == tek]
+        return _ip_med(v) if v else None
+    rækker = [(None, "Alle teknologier"), ("fiber", "Fibernet"), ("coax", "Kabel-internet"),
+              ("5g", "5G internet")]
+    if len(m) >= 2 and m[0]["dato"] != m[-1]["dato"]:
+        foer, nu = m[0], m[-1]
+        d1 = dansk_dato(date.fromisoformat(foer["dato"]))
+        d2 = dansk_dato(date.fromisoformat(nu["dato"]))
+        rk = ""
+        for tek, navn in rækker:
+            a, b = med(foer, tek), med(nu, tek)
+            if not a or not b:
+                continue
+            d = b - a
+            rk += (f'<tr><th scope="row">{e(navn)}</th><td class="tal">{kr(a)} kr.</td>'
+                   f'<td class="tal">{kr(b)} kr.</td>'
+                   f'<td class="tal">{("+" if d > 0 else "")}{kr(d)} kr.</td></tr>')
+        a, b = med(foer), med(nu)
+        if a and b and rk:
+            retning = ("uændret" if a == b else
+                       (f"steget {kr(b - a)} kr." if b > a else f"faldet {kr(a - b)} kr."))
+            return f"""<p>Median-normalprisen for internet er {retning} fra {e(d1)} til {e(d2)}: fra
+{kr(a)} til {kr(b)} kr. om måneden i vores sammenligning. Vi gemmer alle priser hver dag, og
+tallene bygger på {len(m)} måledage. Normalprisen viser, om prisniveauet flytter sig, og ikke kun
+om der er kommet nye kampagner.</p>
+{ip_graf_prisudvikling()}
+<div class="tabelramme"><table class="datatabel">
+<caption>Median normalpris pr. måned {e(d1)} og {e(d2)}, beregnet af Telemobil på {len(m)} måledage.</caption>
+<thead><tr><th scope="col">Teknologi</th><th scope="col">{e(d1)}</th><th scope="col">{e(d2)}</th>
+<th scope="col">Ændring</th></tr></thead><tbody>{rk}</tbody></table></div>"""
+    start = dansk_dato(date.fromisoformat(m[0]["dato"])) if m else bb_dato()
+    tek = dict(_ip_tek_grupper())
+    dele = [f"{_tek_lille(TEK_NAVN.get(t, t))} {kr(_ip_med([a['pris'] for a in tek[t]]))} kr."
+            for t in ("fiber", "coax", "5g") if tek.get(t)]
+    return f"""<p>Vi kan endnu ikke sige, om internetpriserne stiger eller falder, for vores egen
+måleserie begynder {e(start)}. Udgangspunktet er en median-normalpris på
+{kr(_ip_med([a['pris'] for a in BB]))} kr. om måneden for alle tilbud{(" (" + ", ".join(dele) + ")") if dele else ""}.
+Vi gemmer priserne hver dag, og tabellen med udviklingen kommer her på siden, når der er flere
+måledage at sammenligne.</p>"""
+
+
+IP_IKKE_MED = [("telenor", "Telenor"), ("fastspeed", "Fastspeed"), ("waoo", "Waoo"), ("altibox", "Altibox")]
 
 
 def byg_internet_priser():
@@ -9158,280 +9377,436 @@ def byg_internet_priser():
         return
     sti = IP_STI
     maaned, aar = vis_maaned()
+    hentet = bb_dato()
+    n = len(BB)
     aarv = [_ip_aar(a) for a in BB]
     norm = [a["pris"] for a in BB]
     med_aar, med_norm = _ip_med(aarv), _ip_med(norm)
-    billigst = min(BB, key=bb_aarspris)
+    _raa = [bb_aarspris(a) / 12 for a in BB]
+    p25, p75 = _ip_kvartil(_raa, .25), _ip_kvartil(_raa, .75)
+    snit_aar = round(sum(aarv) / n)
+    rang = sorted(BB, key=bb_aarspris)
+    billigst = rang[0]
+    uden_loft = [a for a in rang if not bb_data_gb(a)]
+    billigst_fri = uden_loft[0] if uden_loft else billigst
     selskaber = len({a["udbyder"] for a in BB})
-    opr = [a.get("oprettelse", 0) for a in BB]
-    gratis_opr = len([x for x in opr if not x])
+    eng = [bb_engangs(a) for a in BB]
+    gratis_opr = len([x for x in eng if not x])
     uden_binding = len([a for a in BB if not a.get("binding")])
+    maks_binding = max((a.get("binding") or 0) for a in BB)
     it = ip_intro_tal()
     t1000 = [a for a in BB if a["ned"] >= 1000]
+    t1000_fri = [a for a in t1000 if not bb_data_gb(a)]
     t_lav = [a for a in BB if a["ned"] <= 150]
     tek = dict(_ip_tek_grupper())
-    SIDE_CITAT[sti] = (f"Internet koster i {maaned} {aar} typisk {kr(med_aar)} kr. om måneden i snit "
-                       f"det første år og {kr(med_norm)} kr. i normalpris, viser Telemobils sammenligning "
-                       f"af {len(BB)} tilbud fra {selskaber} selskaber.")
+    loft_top10 = [a for a in rang[:10] if bb_data_gb(a)]
+    a1_med = _ip_med([bb_aarspris(a) for a in BB])
+    a2_med = _ip_med([a["pris"] * 12 for a in BB])
+    med24 = _ip_med([_ip_24(a) for a in BB])
 
-    fiber_linje = ""
-    if tek.get("fiber"):
-        fiber_linje = (f' <a href="/bredbaand/fibernet/">Fibernet</a> koster typisk '
-                       f'{kr(_ip_med([_ip_aar(a) for a in tek["fiber"]]))} kr.')
-    g5_linje = ""
-    if tek.get("5g"):
-        g5_linje = (f' {"" if fiber_linje else "Prisen på "}<a href="/bredbaand/5g/">5G internet</a> {"" if fiber_linje else "er typisk "}'
-                    f'{kr(_ip_med([_ip_aar(a) for a in tek["5g"]]))} kr.')
+    def tmed(t):
+        return _ip_med([_ip_aar(a) for a in tek[t]])
 
-    intro_sek = ""
+    def navn(a):
+        # Enkelte feednavne er en reklamelinje ("1000 GB til kun 229 kr/md"). Brug teknologien i stedet.
+        if re.search(r"\bkr\b", a["navn"], re.I):
+            g = bb_data_gb(a)
+            return f"{a['udbyder_navn']} {TEK_NAVN.get(a['teknologi'], a['teknologi'])}" + (f" med {kr(g)} GB" if g else "")
+        return f"{a['udbyder_navn']} {a['navn']}"
+
+    loft_saetning = ""
+    if bb_data_gb(billigst) and billigst_fri is not billigst:
+        loft_saetning = (f" Det har et loft på {kr(bb_data_gb(billigst))} GB data om måneden. Det billigste "
+                         f"uden oplyst dataloft er {navn(billigst_fri)} til {kr(_ip_aar(billigst_fri))} kr.")
+
+    # ---------------------------------------------------------------- nøglefund
+    fund = []
+    tekdele = [f"{TEK_NAVN.get(t, t).lower() if t != '5g' else '5G internet'} {kr(tmed(t))} kr."
+               for t in ("fiber", "5g", "coax") if tek.get(t)]
+    if tekdele:
+        _t = _og_liste(tekdele)
+        fund.append(f"<strong>Pr. teknologi:</strong> {_t[0].upper() + _t[1:]} om måneden i "
+                    f"snit det første år (median).")
     if it:
-        intro_sek = f"""<h2 id="normalpris">Hvad stiger prisen til efter tilbuddet?</h2>
-<p>{it['andel']} % af internettilbuddene i vores sammenligning har en tilbudspris. Typisk varer
-den {it['mdr_med']} måneder, og bagefter stiger prisen med {kr(it['stig_med'])} kr. om måneden i
-median. Den største stigning er {kr(it['stig_max'])} kr. om måneden hos
-{e(it['stoerst']['udbyder_navn'])}. Det er derfor, vi altid viser normalprisen ved siden af
-tilbudsprisen og sorterer efter <a href="/12-maaneders-prisen/">prisen over 12 måneder</a>.</p>
-{ip_tabel_stigning()}
-<p>Har du haft samme internet i mere end et år, betaler du næsten med sikkerhed normalpris. Det
-er her, de fleste kan spare: ring og bed om den aktuelle pris, eller skift, når bindingen er
-udløbet. Se <a href="/guides/internet-uden-binding/">hvad du skal vide om internet uden
-binding</a>.</p>"""
+        fund.append(f"<strong>Tilbudspriser:</strong> {it['antal']} af {n} tilbud har en nedsat pris de "
+                    f"første måneder. Når den udløber, stiger prisen med {kr(it['stig_med'])} kr. om "
+                    f"måneden i median.")
+    if a2_med > a1_med:
+        fund.append(f"<strong>År 2 er dyrere:</strong> Det andet år koster i median {kr(a2_med)} kr. mod "
+                    f"{kr(a1_med)} kr. det første år. For det enkelte abonnement er stigningen i median "
+                    f"{kr(_ip_med([a['pris'] * 12 - bb_aarspris(a) for a in BB]))} kr.")
+    if t1000 and t_lav:
+        fund.append(f"<strong>Hastighed:</strong> 1000 Mbit/s koster i median "
+                    f"{kr(_ip_med([_ip_aar(a) for a in t1000]))} kr. om måneden det første år. "
+                    f"Abonnementer op til 150 Mbit/s koster {kr(_ip_med([_ip_aar(a) for a in t_lav]))} kr.")
+    _fri = ([a for a in rang if not a.get("binding") and not bb_data_gb(a)]
+            or [a for a in rang if not a.get("binding")])
+    if _fri and _fri[0] is not billigst:
+        fund.append(f"<strong>Uden binding:</strong> Det billigste uden binding er {e(navn(_fri[0]))} til "
+                    f"{kr(_ip_aar(_fri[0]))} kr. om måneden.")
+    fund.append(f"<strong>Binding og oprettelse:</strong> {uden_binding} af {n} tilbud er uden binding, "
+                f"og {gratis_opr} har hverken oprettelse eller fragt ifølge prisfeedet.")
+    fund.append(f"<strong>Dækning:</strong> {str(BBK['fiber']).replace('.', ',')} % af boliger og "
+                f"virksomheder kan få fibernet, og {str(BBK['1000']).replace('.', ',')} % kan få mindst "
+                f"1000 Mbit/s (Bredbåndskortlægning {BBK['aar']}).")
+    fund_html = "".join(f"<li>{x}</li>" for x in fund)
 
-    # Den fulde liste med tilbudskort står på /bredbaand/. Denne side er
-    # statistiksiden: prisniveau, median og udvikling — ikke en kopi af listen.
+    # ---------------------------------------------------------------- pr. teknologi
+    tek_sek = ""
+    if tek.get("fiber"):
+        k = tek["fiber"]
+        sym = len([a for a in k if a["op"] >= a["ned"]])
+        tek_sek += f"""<h3 id="fiber">Hvad koster fibernet?</h3>
+<p>Fibernet koster typisk {kr(tmed('fiber'))} kr. om måneden i snit det første år, og normalprisen
+er i median {kr(_ip_med([a['pris'] for a in k]))} kr. De {len(k)} fibertilbud i vores sammenligning
+ligger fra {kr(min(_ip_aar(a) for a in k))} til {kr(max(_ip_aar(a) for a in k))} kr. om måneden, og
+{"alle" if sym == len(k) else f"{sym} af dem"} har samme hastighed op og ned. Se <a href="/bredbaand/fibernet/">billigste
+fibernet</a>.</p>"""
+    if tek.get("5g"):
+        k = tek["5g"]
+        loft = len([a for a in k if bb_data_gb(a)])
+        tek_sek += f"""<h3 id="5g">Hvad koster 5G internet?</h3>
+<p>5G internet koster typisk {kr(tmed('5g'))} kr. om måneden i snit det første år, og normalprisen
+er i median {kr(_ip_med([a['pris'] for a in k]))} kr. De {len(k)} tilbud ligger fra
+{kr(min(_ip_aar(a) for a in k))} til {kr(max(_ip_aar(a) for a in k))} kr. om måneden.{f" {loft} af dem har et dataloft, som står i abonnementets navn." if loft else ""}
+Hastigheden er en maksimal hastighed, som afhænger af dækningen hos dig. Se
+<a href="/bredbaand/5g/">billigste 5G internet</a>.</p>"""
+    if tek.get("coax"):
+        k = tek["coax"]
+        tek_sek += f"""<h3 id="kabel">Hvad koster kabel-internet (coax)?</h3>
+<p>Internet via kabel-tv-nettet koster typisk {kr(tmed('coax'))} kr. om måneden i snit det første
+år, og normalprisen er i median {kr(_ip_med([a['pris'] for a in k]))} kr. Der er {_ip_n(k)} i
+vores sammenligning, fra {kr(min(_ip_aar(a) for a in k))} til {kr(max(_ip_aar(a) for a in k))} kr.
+om måneden. Se <a href="/bredbaand/kabel-internet/">billigste kabel-internet</a>.</p>"""
+
+    # ---------------------------------------------------------------- tre tal + stigning
+    eks = ""
+    if it:
+        x = it["stoerst"]
+        m = min(x["intro_mdr"], 12)
+        led = f"{x['intro_pris']} × {m} + {x['pris']} × {12 - m}"
+        if bb_engangs(x):
+            led += f" + {bb_engangs(x)}"
+        eks = f"""<p><strong>Regneeksempel:</strong> {e(navn(x))} koster {kr(x['intro_pris'])} kr. om
+måneden i {x['intro_mdr']} måneder og derefter {kr(x['pris'])} kr. Snitprisen det første år er
+({led}) ÷ 12 = {kr(_ip_aar(x))} kr. om måneden. Tilbudsprisen siger altså {kr(x['intro_pris'])} kr.,
+men regningen for hele året er {kr(bb_aarspris(x))} kr.</p>"""
+    stig_sek = ""
+    if it:
+        stig_sek = f"""<h2 id="normalpris">Hvad stiger prisen til efter tilbuddet?</h2>
+<p>Prisen stiger i median med {kr(it['stig_med'])} kr. om måneden, når tilbudsperioden udløber: fra en
+tilbudspris på {kr(_ip_med([a['intro_pris'] for a in BB if a.get('intro_pris') and a['intro_pris'] < a['pris']]))} kr. til en normalpris på {kr(_ip_med([a['pris'] for a in BB if a.get('intro_pris') and a['intro_pris'] < a['pris']]))} kr.
+{it['antal']} af de {n} internettilbud i vores sammenligning har en tilbudspris, og den varer typisk
+{it['mdr_med']} måneder. Den største stigning er {kr(it['stig_max'])} kr. om måneden hos
+{e(it['stoerst']['udbyder_navn'])}.</p>
+{ip_tabel_stigning()}
+<h3 id="aar-2">År 1 mod år 2: hvad koster det at blive hængende?</h3>
+<p>Det andet år koster i median {kr(a2_med)} kr., mens det første år koster {kr(a1_med)} kr. inklusive
+oprettelse og fragt. Bliver du i to år, lander prisen på {kr(med24)} kr. om måneden i median. Det er derfor,
+det kan betale sig at sammenligne igen, når tilbuddet udløber.</p>
+{ip_tabel_aar12()}
+<p>Har du haft samme internet i mere end et år, betaler du normalpris. Ring og spørg efter den
+aktuelle pris, eller skift, når bindingen er udløbet. Se <a href="/12-maaneders-prisen/">hvorfor vi
+sorterer efter prisen over 12 måneder</a>.</p>"""
+
+    # ---------------------------------------------------------------- 1000 Mbit
+    t1000_sek = ""
+    if t1000:
+        dele = []
+        for t, etiket in (("fiber", "på fiber"), ("coax", "på kabel-tv-nettet"), ("5g", "på 5G")):
+            k = [a for a in t1000 if a["teknologi"] == t]
+            if k:
+                dele.append(f"{kr(_ip_med([_ip_aar(a) for a in k]))} kr. {etiket} ({_ip_n(k)})")
+        b = min(t1000_fri or t1000, key=bb_aarspris)
+        t1000_sek = f"""<h3 id="1000-mbit">Hvad koster 1000 Mbit internet?</h3>
+<p>1000 Mbit/s koster i median {kr(_ip_med([_ip_aar(a) for a in t1000]))} kr. om måneden i snit det
+første år, når vi regner på de {len(t1000)} tilbud med mindst 1000 Mbit/s download.{(" Fordelt på teknologi er medianen " + _og_liste(dele) + ".") if dele else ""}
+Det billigste uden oplyst dataloft er {e(navn(b))} til {kr(_ip_aar(b))} kr. På fiber og kabel er 1000 Mbit/s
+en fast forbindelse. På 5G er det den højeste hastighed, nettet kan give, og den afhænger af
+dækningen på adressen.</p>"""
+
+    lofter = sorted({bb_data_gb(a) for a in BB if bb_data_gb(a)})
+    loft_raad = (f"""  <li><strong>Hold øje med dataloftet på mobilt internet.</strong> {len([a for a in BB if bb_data_gb(a)])} af
+  tilbuddene i vores sammenligning har et loft på {_og_liste([kr(x) for x in lofter]).replace(" og ", " eller ")} GB om måneden.</li>""" if lofter else "")
+    ikke_med = [nv for s, nv in IP_IKKE_MED if s not in {a["udbyder"] for a in BB}]
+    st = ip_by_statistik().get("Hele Danmark")
+    by_note = ""
+    if st and st[0]:
+        by_note = (f" Vores egen optælling dækker {kr(st[0])} adgangsadresser. En etageejendom tæller som én "
+                   f"adresse, uanset hvor mange lejligheder den har. Derfor er andelen med kabel-tv lavere pr. "
+                   f"adresse ({str(round(st[2] / st[0] * 100, 1)).replace('.', ',')} %) end pr. bolig og "
+                   f"virksomhed ({str(BBK['kabel']).replace('.', ',')} %).")
+
     krop = f"""
-<section class="sektion baand-smal artikel">
-{gennemgangslinje(OPDATERET, fakta=f"{len(BB)} internetpriser hentet fra udbydernes datafeed")}
-<div class="udtag"><p><strong>Kort svar:</strong> Internet koster i {maaned} {aar} typisk
-{kr(med_aar)} kr. om måneden i snit det første år og {kr(med_norm)} kr. om måneden i normalpris,
-når vi regner på alle {len(BB)} tilbud i vores sammenligning. Det billigste er
-{e(billigst['udbyder_navn'])} {e(billigst['navn'])} til {kr(_ip_aar(billigst))} kr. om måneden i
-snit, og det dyreste lander på {kr(max(aarv))} kr. Hastigheden og teknologien afgør det meste af
-prisen.</p></div>
-<div class="bb-nu"><span class="bb-nu-maerke">Typisk pris</span>
-<p>Internet koster lige nu typisk <strong>{kr(med_aar)} kr./md.</strong> det første år og
-{kr(med_norm)} kr./md. i normalpris. Vil du bare have det billigste, så se
-<a href="/bredbaand/">billigste internet og bredbånd</a>.</p></div>
+<section class="sektion baand-smal artikel ip-side">
+{gennemgangslinje(OPDATERET, fakta=f"{n} internetpriser fra {selskaber} selskaber, hentet {hentet}")}
+<p class="ip-kort" id="kort-svar"><strong>Internet koster i {maaned} {aar} typisk {kr(med_aar)} kr. om
+måneden i snit det første år og {kr(med_norm)} kr. om måneden derefter.</strong> Den midterste halvdel af de {n}
+internetabonnementer i vores sammenligning ligger mellem {kr(p25)} og {kr(p75)} kr. Det billigste koster
+{kr(min(aarv))} kr. og det dyreste {kr(max(aarv))} kr. om måneden.</p>
 {ip_noegletal()}
+<div class="ip-fund">
+<h2 id="noeglefund">Internetpriser lige nu: det viser tallene</h2>
+<ul>{fund_html}</ul>
+<p class="ip-fund-note">Beregnet af Telemobil på {n} tilbud fra {selskaber} selskaber, hentet {e(hentet)}.
+Vi har ikke testet forbindelserne selv, og selskaber uden prisfeed er ikke med.
+<a href="#metode">Sådan har vi regnet</a>.</p>
+</div>
+<p class="ip-cta"><a class="knap knap-primaer" href="#top-10">Se de 10 billigste lige nu</a>
+<a class="knap knap-linje" href="/bredbaand/adressetjek/">Tjek hvad du kan få på din adresse</a></p>
 
 <h2 id="om-maaneden">Hvad koster internet om måneden?</h2>
-<p>Medianprisen er {kr(med_aar)} kr. om måneden, når tilbudspris, normalpris og oprettelse
-regnes over det første år. Halvdelen af tilbuddene er billigere, halvdelen dyrere. Ser du kun
-på normalprisen, som er den, du betaler efter kampagnen, er medianen {kr(med_norm)} kr.{(" " + " og ".join(x.strip() for x in (fiber_linje, g5_linje) if x)) if (fiber_linje or g5_linje) else ""}</p>
+<p>Internet koster typisk {kr(med_aar)} kr. om måneden, når tilbudspris, normalpris, oprettelse og
+fragt regnes sammen over det første år. Det er medianen: halvdelen af tilbuddene er billigere,
+halvdelen dyrere. Gennemsnittet er {kr(snit_aar)} kr. Normalprisen, som du betaler efter tilbuddet,
+er i median {kr(med_norm)} kr. om måneden.</p>
+{ip_figur_teknologi()}
 {ip_tabel_teknologi()}
-<p>Forskellen mellem teknologierne handler mindre om pris end om, hvad der er gravet ned hos
-dig. Skriv din adresse øverst på siden for at se, hvad du kan få. Forklaringen på forskellene
-står i guiden <a href="/guides/5g-internet-eller-fiber/">5G internet eller fiber</a> og i
+<p>Der er {kr(max(tmed(t) for t in tek) - min(tmed(t) for t in tek))} kr. om måneden mellem den billigste og den dyreste teknologi målt på
+medianen. Det afgørende er, hvad der er gravet ned hos dig, for du kan kun vælge mellem de net, der
+når din adresse. Forskellene er forklaret i
+<a href="/guides/5g-internet-eller-fiber/">5G internet eller fiber</a> og
 <a href="/guides/coax-internet/">hvad er coax internet</a>.</p>
+{tek_sek}
 
-<h2 id="top-10">Prisniveauet i bunden: de ti laveste internetpriser</h2>
-<p>De ti laveste priser i vores sammenligning, uanset teknologi, målt på hvad de koster i snit det
-første år. Mindsteprisen og prisen over to år viser, hvad du faktisk forpligter dig til, og hvad det
-koster, hvis du bliver hængende.</p>
+<h2 id="tre-tal">Tilbudspris, normalpris og snit år 1: sådan læser du en internetpris</h2>
+<p>En internetpris er sjældent ét tal. Tilbudsprisen gælder de første måneder, normalprisen resten
+af tiden, og snitprisen det første år samler det hele til ét tal, der kan sammenlignes på tværs af
+selskaber. Vi sorterer efter snitprisen det første år, fordi det er den, du faktisk betaler.</p>
+{ip_tabel_tre_tal()}
+{eks}
+
+<h2 id="top-10">De 10 billigste internetabonnementer lige nu</h2>
+<p>Det billigste internet lige nu er {e(navn(billigst))} til {kr(_ip_aar(billigst))} kr. om måneden i
+snit det første år.{e(loft_saetning)} Tabellen viser de ti laveste priser uanset teknologi.{f" {len(loft_top10)} af de ti har et dataloft, som står under abonnementets navn." if loft_top10 else ""}</p>
 {ip_tabel_top10()}
-<p><a class="knap knap-primaer" href="/bredbaand/">Se alle {len(BB)} tilbud: billigste bredbånd</a></p>
+<p><a class="knap knap-primaer" href="/bredbaand/">Se alle {n} tilbud: billigste bredbånd</a></p>
 
-<h2 id="beregn">Beregn: betaler du for meget, og hvor hurtigt skal det være?</h2>
-<p>Skriv hvad du betaler i dag, eller hvordan jeres husstand bruger internettet, så regner vi det
-ud med dagens priser.</p>
-{ip_beregnere()}
+{stig_sek}
 
 <h2 id="pr-hastighed">Internetpriser pr. hastighed</h2>
-<p>Mere hastighed koster mere, men ikke i samme takt. {f"Et abonnement på 1000 Mbit/s koster i median {kr(_ip_med([_ip_aar(a) for a in t1000]))} kr. om måneden" if t1000 else ""}{f", mens de langsomste op til 150 Mbit/s koster {kr(_ip_med([_ip_aar(a) for a in t_lav]))} kr." if t1000 and t_lav else "."} Prisen pr. 100 Mbit/s falder derfor kraftigt, jo hurtigere
-forbindelsen er.</p>
+<p>Mere hastighed koster ikke ret meget mere. {f"Abonnementer med 1000 Mbit/s koster i median {kr(_ip_med([_ip_aar(a) for a in t1000]))} kr. om måneden" if t1000 else ""}{f", og de langsomste op til 150 Mbit/s koster {kr(_ip_med([_ip_aar(a) for a in t_lav]))} kr." if t1000 and t_lav else "."}
+Prisen pr. 100 Mbit/s falder derfor kraftigt, jo hurtigere forbindelsen er.</p>
 {ip_tabel_hastighed()}
-<p>Det betyder ikke, at alle har brug for 1000 Mbit/s. Se hvad din husstand faktisk bruger i
-guiden <a href="/guides/god-internethastighed/">hvad er en god internethastighed</a>.</p>
-
-<h2 id="husstand">Hvad skal din husstand regne med at betale?</h2>
+{t1000_sek}
+<h3 id="husstand">Hvad skal din husstand regne med at betale?</h3>
+<p>Bor du alene og bruger internettet til streaming og mail, er de billigste abonnementer nok. Er I
+flere, der streamer, arbejder hjemmefra og spiller online, er det upload og stabilitet, der afgør
+valget. Se <a href="/guides/god-internethastighed/">hvad der er en god internethastighed</a> og
+<a href="/guides/dataforbrug-husstand/">hvor meget data en husstand bruger</a>.</p>
 {ip_tabel_husstand()}
-<p>Bor du alene og bruger internettet til streaming og mail, er de billigste abonnementer nok.
-Er I flere, der streamer, arbejder hjemmefra og spiller online, er det upload og stabilitet, der
-afgør valget, og så betaler fiber sig. Se også <a href="/guides/dataforbrug-husstand/">hvor meget data en husstand bruger</a>.</p>
 
-{intro_sek}
+<h2 id="beregn">Beregn: betaler du for meget for dit internet?</h2>
+<p>Skriv, hvad du betaler i dag, eller hvordan jeres husstand bruger internettet. Beregnerne bruger
+de samme priser som tabellerne på siden.</p>
+{ip_beregnere()}
 
-<h2 id="selskaber">Sammenlign internetpriser hos alle udbydere</h2>
-<p>{selskaber} selskaber er med i vores sammenligning. Spændet i normalpris viser, hvor
-forskelligt de prissætter samme type forbindelse.</p>
+<h2 id="selskaber">Internetpriser hos {selskaber} udbydere</h2>
+<p>{selskaber} selskaber er med i vores sammenligning. Tabellen viser hvert selskabs hastigheder,
+spændet i normalpris, det billigste abonnement regnet på hele det første år, oprettelse og binding.
+Klik på et selskab for at se alle dets abonnementer.</p>
 {ip_tabel_selskaber()}
 
 {ip_tabel_netejer()}
 
-<h2 id="ekstra">Det koster ekstra: gebyrer, router og installation</h2>
-<p>Månedsprisen er ikke hele regningen. {(f"Alle {len(BB)} tilbud i vores sammenligning har gratis oprettelse lige nu." if not max(opr) else f"{gratis_opr} af {len(BB)} tilbud har gratis oprettelse, mens resten koster op til {kr(max(opr))} kr.")} Oprettelse
-står med i vores snitpris, men står ofte med småt hos selskaberne.</p>
-<h3 id="gebyrer">Gebyrer hos de største internetselskaber</h3>
+<h2 id="ekstra">Gebyrer, router og installation: det koster ekstra</h2>
+<p>{gratis_opr} af {n} tilbud har hverken oprettelse eller fragt ifølge prisfeedet.{f" Hos resten koster det op til {kr(max(eng))} kr. som engangsbeløb." if max(eng) else ""}
+Oprettelse er regnet med i vores snitpris, og fragt er regnet med, når prisfeedet oplyser den.
+Gebyrerne i tabellen herunder er aflæst på selskabernes egne sider og er ikke regnet med, fordi de
+afhænger af, hvordan du bestiller og betaler, og om du sender routeren retur.</p>
 {ip_tabel_gebyrer()}
-<p>Det dyreste er næsten altid en router, der ikke bliver sendt retur, og betalingsgebyrer, der
-løber hver måned. Vælg kortbetaling eller MobilePay, hvor det er gratis — 15 kr. i
-Betalingsservice-gebyr er 180 kr. om året.</p>
 <ul class="pilliste">
-  <li><strong>Oprettelse:</strong> {(f"fra 0 til {kr(max(opr))} kr. i vores sammenligning." if max(opr) else "gratis hos alle i vores sammenligning lige nu, men tjek det ved bestilling.")} Med seks
-  måneders binding svarer 300 kr. i oprettelse til 50 kr. ekstra om måneden.</li>
-  <li><strong>Router:</strong> oftest inkluderet, men nogle udlejer den. Skal den returneres ved
-  opsigelse, kan en glemt router koste dyrt — se <a href="/guides/opsig-internet/">sådan
-  opsiger du internet</a>.</li>
-  <li><strong>Installation af fiber:</strong> er der ikke fiber i huset endnu, kan
-  fiberselskabet tage betaling for at grave det ind. Det er en engangsudgift ud over
-  abonnementet.</li>
-  <li><strong>Bedre wifi:</strong> rækker routeren ikke til hele huset, er det en ekstra
-  udgift. Se <a href="/guides/internetforstaerker/">om du skal vælge extender, mesh eller ny
-  router</a>.</li>
+  <li><strong>Betalingsgebyr:</strong> løber hver måned. 15 kr. i gebyr for Betalingsservice er 180 kr.
+  om året. Vælg kortbetaling, hvor den er gratis.</li>
+  <li><strong>Router:</strong> er oftest med som lån og skal sendes retur, når du opsiger. Se
+  <a href="/guides/opsig-internet/">sådan opsiger du internet</a>.</li>
+  <li><strong>Installation af fiber:</strong> er der ikke fiber i huset endnu, kan netejeren tage
+  betaling for at grave det ind. Det er en engangsudgift ud over abonnementet.</li>
+  <li><strong>Bedre wifi:</strong> rækker routeren ikke til hele huset, er det en ekstra udgift. Se
+  <a href="/guides/internetforstaerker/">extender, mesh eller ny router</a>.</li>
 </ul>
 
-<h2 id="binding">Binding og uden binding</h2>
-<p>{(f"Alle {len(BB)}" if uden_binding == len(BB) else f"{uden_binding} af {len(BB)}")} internettilbud i vores sammenligning er uden binding. Har et
-tilbud binding, er det højst seks måneder, som er det længste, private må bindes. Mindsteprisen
-er det, du samlet betaler i bindingsperioden inklusive oprettelse. Uden binding kan du skifte,
-så snart tilbudsprisen udløber. Se mere i <a href="/guides/internet-uden-binding/">internet uden
-binding</a>.</p>
-
-<h2 id="adresse">Internetpriser på din adresse og i din by</h2>
-<p>Hvad internet koster hos dig, afhænger af, hvad der er gravet ned. Skriv din adresse i
-feltet øverst på siden. Adressetjekket bruger Digitaliseringsstyrelsens Bredbåndskortlægning
-og viser, om du kan få fiber, kabel eller 5G, og de billigste tilbud på hver af dem. Bekræft
-altid hos selskabet, før du bestiller.</p>
-<p>Listepriserne er som regel de samme i hele landet, men udvalget er forskelligt, og nogle
-priser afhænger af, hvilket net du bor på. Tabellen viser, hvor
-stor en del af adresserne i de største byer der kan få hver teknologi:</p>
+<h2 id="adresse">Internetpriser på din adresse</h2>
+<p>Listepriserne er som regel de samme i hele landet. Det, der skifter fra adresse til adresse, er
+udvalget: hvilke net der når frem, og dermed hvilke selskaber du kan vælge imellem.
+<a href="/bredbaand/adressetjek/">Adressetjekket</a> bruger Digitaliseringsstyrelsens
+Bredbåndskortlægning og viser de billigste tilbud på det, du kan få. Bekræft altid hos selskabet,
+før du bestiller.</p>
+{ip_figur_daekning()}
+<h3 id="byer">Dækning i de største byer</h3>
+<p>Tabellen viser, hvor stor en del af adresserne i de største byer der kan få hver teknologi.{by_note}</p>
 {ip_tabel_byer()}
-{by_links_sektion()}
-<p>Kan du kun få mobilt internet, er <a href="/bredbaand/5g/">5G internet</a> dit bedste bud. Se
-alle muligheder på din egen adresse på <a href="/bredbaand/adressetjek/">hvilket internet kan jeg
-få</a>.</p>
+<p>Klik på en by for at se dækningen pr. postnummer og de billigste tilbud dér.</p>
+<h3 id="fordeling">Hvor mange har fiber, kabel og kobber?</h3>
+<p>Af de faste bredbåndsabonnementer i Danmark kørte 53,9 % på fiber, 29,3 % på kabel-tv-nettet og
+8,2 % på kobber i andet halvår 2024, viser Digitaliseringsstyrelsens Telestatistik. Medio 2024
+havde 36,4 % af abonnementerne mindst 1 Gbit/s download. Kobbernettet er ved at blive lukket, og TDC NET
+lukker efter planen de sidste forbindelser i 2029. Har du DSL i dag, kan det betale sig at se på
+fiber, kabel eller <a href="/bredbaand/5g/">5G internet</a>.</p>
 
-{ip_prisudvikling()}
+<h2 id="udvikling">Stiger eller falder internetpriserne?</h2>
+{ip_udvikling()}
+<p>Hele historikken for mobilabonnementer ligger i <a href="/prisarkiv/">prisarkivet</a>.</p>
 
-<h2 id="prisstigning">Må dit internetselskab sætte prisen op?</h2>
-<p>Ja, men selskabet skal varsle en prisstigning mindst en måned før, og du har ret til at opsige
-uden omkostninger indtil en måned efter varslet, medmindre ændringen udelukkende er til din fordel.
-Det står i slutbrugerbekendtgørelsens § 6. Får du
-et varsel, er det det rigtige tidspunkt at sammenligne. Se også
-<a href="/guides/opsig-internet/">sådan opsiger du internet</a>.</p>
+<h2 id="udland">Danske internetpriser sammenlignet med udlandet</h2>
+<p>Danmark ligger midt i feltet. I Broadband Genies opgørelse fra 2026 koster fast bredbånd i
+Danmark 46,08 dollar om måneden i gennemsnit, hvilket giver en plads som nummer 102 af 214 lande.
+Det er billigere end i Sverige, Finland og Norge, men dyrere end i Storbritannien.</p>
+{ip_tabel_udland()}
+<p>EU's telemyndigheder i BEREC har opgjort det billigste tilbud i hvert medlemsland. I 2024 var
+EU-gennemsnittet 21,91 euro om måneden for 200–999 Mbit/s og 30,19 euro for mindst 1 Gbit/s, justeret
+for købekraft. Tallene er opgjort på andre måder end vores og kan ikke sammenlignes direkte med
+kronepriserne på denne side.</p>
 
-<h2 id="fordeling">Hvor mange har fiber, coax og DSL?</h2>
-<p>Af alle faste bredbåndsabonnementer i Danmark kørte 53,9 % på fiber, 29,3 % på kabel-tv og
-8,2 % på kobber (xDSL) i andet halvår 2024. Kobbernettet er ved at blive lukket — TDC NET lukker de
-sidste forbindelser efter planen i 2029 — så har du DSL i dag, betaler det sig at se på fiber, coax
-eller 5G.</p>
+<h2 id="regler">Regler: binding, opsigelse og prisstigninger</h2>
+<h3 id="binding">Hvor længe kan du bindes?</h3>
+<p>Private kan højst bindes i seks måneder. {uden_binding} af {n} internettilbud i vores sammenligning
+er helt uden binding{f", og resten har {maks_binding} måneders binding" if maks_binding and uden_binding < n else ""}.
+Mindsteprisen er det, du samlet betaler i bindingsperioden inklusive oprettelse, og selskabet skal
+oplyse den, før du bestiller. Se <a href="/guides/internet-uden-binding/">internet uden binding</a>.</p>
+<h3 id="prisstigning">Må dit internetselskab sætte prisen op?</h3>
+<p>Ja, men selskabet skal varsle en prisstigning mindst en måned før. Du kan opsige uden omkostninger
+indtil en måned efter varslet, medmindre ændringen udelukkende er til din fordel. Det står i
+slutbrugerbekendtgørelsens § 6. Får du et varsel, er det et godt tidspunkt at sammenligne priser.</p>
 
 <h2 id="laveste-pris">Sådan får du den laveste internetpris</h2>
 <ol class="nummerliste">
-  <li><strong>Tjek adressen.</strong> Sammenlign kun det, du kan få leveret. Adressetjekket
-  øverst bruger Digitaliseringsstyrelsens Bredbåndskortlægning.</li>
-  <li><strong>Regn på hele året.</strong> En startpris på 99 kr. kan ende dyrere end et
-  abonnement til 199 kr. uden kampagne.</li>
-  <li><strong>Køb ikke mere hastighed, end I bruger.</strong> Springet fra 500 til 1000 Mbit/s
-  mærkes sjældent ved streaming.</li>
-  <li><strong>Sæt en påmindelse, når kampagnen udløber.</strong> Så kan du skifte eller
-  forhandle, før normalprisen rammer.</li>
-  <li><strong>Overvej 5G, hvis du er få personer.</strong> Uden gravearbejde og ofte uden
-  oprettelse. Se <a href="/bredbaand/5g/">5G internet sammenlignet</a>.</li>
+  <li><strong>Tjek adressen.</strong> Sammenlign kun det, du kan få leveret.</li>
+  <li><strong>Regn på hele året.</strong> Et tilbud til 99 kr. kan ende dyrere end et abonnement
+  med fast pris, når normalprisen og oprettelsen er regnet med.</li>
+  <li><strong>Køb ikke mere hastighed, end I bruger.</strong> Brug beregneren længere oppe.</li>
+  <li><strong>Sæt en påmindelse, når tilbuddet udløber.</strong> Så kan du skifte eller forhandle,
+  før normalprisen rammer.</li>
+{loft_raad}
 </ol>
 
-<h2>Sådan har vi beregnet internetpriserne</h2>
-<p>Priserne hentes automatisk fra selskabernes egne datafeeds to gange i døgnet. Snitprisen år 1
-er tilbudspris gange tilbudsmåneder plus normalpris resten af året plus oprettelse, delt med 12.
-Medianen er den midterste pris, når alle tilbud stilles op i rækkefølge, og bliver ikke trukket
-skævt af enkelte meget dyre abonnementer. Vi viser kun selskaber, vi har datafeed fra, så tallene
-dækker ikke hele markedet. Læs mere om <a href="/metode/">vores metode</a>.</p>
+<h2 id="metode">Sådan har vi beregnet internetpriserne</h2>
+<p>Priserne kommer fra selskabernes egne produktfeeds, som vi henter automatisk to gange i døgnet.
+Tallene på siden er beregnet på de {n} tilbud, der lå i feedet {e(hentet)}. Snitprisen det første år
+er tilbudspris gange tilbudsmåneder plus normalpris resten af året plus oprettelse og oplyst fragt,
+delt med 12. Medianen er den midterste pris, når alle tilbud stilles op i rækkefølge, og den bliver
+ikke trukket skævt af enkelte dyre abonnementer. Læs mere om <a href="/metode/">vores metode</a>.</p>
+<h3 id="ikke-med">Det dækker tallene ikke</h3>
+<ul class="pilliste">
+  <li><strong>Hele markedet.</strong> Vi viser kun selskaber, vi har prisfeed fra.{f" {_og_liste(ikke_med)} er for eksempel ikke med." if ikke_med else ""}</li>
+  <li><strong>Lokale priser.</strong> Kampagner, der kun gælder bestemte adresser eller net, og rabat
+  ved samlekøb med tv, mobil eller el er ikke regnet med.</li>
+  <li><strong>Målt hastighed.</strong> Hastighederne er selskabernes egne oplysninger. Vi har ikke
+  testet forbindelserne.</li>
+  <li><strong>Løbende gebyrer.</strong> Betalingsgebyrer og gebyr for en router, der ikke sendes
+  retur, er ikke med i snitprisen.</li>
+</ul>
+<h3 id="ord">Ordforklaring</h3>
+<dl class="ip-ord">
+  <dt>Normalpris</dt><dd>Prisen pr. måned uden tilbud. Den gælder, når tilbudsperioden er slut.</dd>
+  <dt>Tilbudspris</dt><dd>En nedsat pris de første måneder af abonnementet.</dd>
+  <dt>Snit år 1</dt><dd>Alt, du betaler de første 12 måneder, delt med 12.</dd>
+  <dt>Median</dt><dd>Den midterste pris. Halvdelen af tilbuddene er billigere, halvdelen dyrere.</dd>
+  <dt>Mindstepris</dt><dd>Det mindste, du kommer til at betale i alt: oprettelse plus betalingen i bindings- og opsigelsesperioden.</dd>
+  <dt>Symmetrisk hastighed</dt><dd>Samme hastighed op og ned, for eksempel 1000/1000 Mbit/s.</dd>
+</dl>
+<div class="ip-data" id="data">
+<h3>Brug tallene</h3>
+<p>Alle priser bag siden kan hentes som <a href="/aabne-data/internetpriser.csv" download>internetpriser.csv</a>
+og må bruges frit med kildeangivelse (CC BY 4.0). Skriv for eksempel: <em>Kilde: Telemobil.dk,
+Internet priser, {e(hentet)}.</em> Flere datasæt ligger under <a href="/aabne-data/">åbne data</a>.</p>
+</div>
 
-{kilder(["telestat_2h24", "slutbrugerbek", "slutbruger_binding", "tdcnet_kobber", "bbk"])}
+{kilder(["bbk", "telestat_2h24_bb", "bbgenie_2026", "berec_2026", "slutbrugerbek", "slutbruger_binding", "tdcnet_kobber", "netflix_hastighed"],
+        egne=[f"Prisfeeds fra {selskaber} internetselskaber, hentet {e(hentet)}. Alle medianer, spænd og snitpriser er beregnet af Telemobil."])}
 {forfatterboks()}
 </section>"""
 
     faq = [
         {"sp": "Hvad koster internet om måneden?",
          "sv": f"Internet koster typisk {kr(med_aar)} kr. om måneden i snit det første år og "
-               f"{kr(med_norm)} kr. i normalpris, viser vores sammenligning af {len(BB)} tilbud. "
-               f"Det billigste koster {kr(_ip_aar(billigst))} kr. om måneden i snit."},
-        {"sp": "Hvad koster fiber internet om måneden?",
-         "sv": (f"Fibernet koster i median {kr(_ip_med([_ip_aar(a) for a in tek['fiber']]))} kr. om "
-                f"måneden i snit det første år, og det billigste "
-                f"{kr(min(_ip_aar(a) for a in tek['fiber']))} kr.") if tek.get("fiber")
-               else "Se fibernet sammenlignet for de aktuelle priser."},
-        {"sp": "Hvad koster 1000 Mbit internet?",
-         "sv": (f"1000 Mbit/s koster i median {kr(_ip_med([_ip_aar(a) for a in t1000]))} kr. om "
-                f"måneden i snit det første år. Billigste 1000 Mbit/s er "
-                f"{kr(min(_ip_aar(a) for a in t1000))} kr.") if t1000
-               else "Der er ingen 1000 Mbit/s-tilbud i sammenligningen lige nu."},
-        {"sp": "Hvorfor stiger prisen på internet efter et halvt år?",
-         "sv": "Mange tilbud har en nedsat pris de første måneder. Bagefter betaler du "
-               "normalprisen. Regn derfor altid på prisen over hele året, og skift eller "
-               "forhandl, når tilbuddet udløber."},
-        {"sp": "Er der oprettelse på internet?",
-         "sv": (f"Alle {len(BB)} tilbud i vores sammenligning har gratis oprettelse lige nu."
-                if not max(opr) else
-                f"{gratis_opr} af {len(BB)} tilbud i vores sammenligning har gratis oprettelse. "
-                f"Resten koster op til {kr(max(opr))} kr. engang.")},
-        {"sp": "Hvad er gennemsnitsprisen for internet?",
-         "sv": f"Den gennemsnitlige normalpris er {kr(round(sum(norm) / len(norm)))} kr. om måneden og "
-               f"medianen {kr(med_norm)} kr. i vores sammenligning af {len(BB)} tilbud."},
-        {"sp": "Hvad er mindstepris på internet?",
-         "sv": "Mindsteprisen er det, du som minimum betaler i en eventuel bindingsperiode inklusive "
-               "oprettelse. Uden binding består den af oprettelse plus det, du betaler i opsigelsesperioden. "
-               "Selskabet skal oplyse mindsteprisen, før du bestiller."},
+               f"{kr(med_norm)} kr. i normalpris. Det viser vores sammenligning af {n} tilbud fra "
+               f"{selskaber} selskaber, hentet {hentet}."},
+        {"sp": "Hvad er en normal pris for internet?",
+         "sv": f"Den midterste halvdel af tilbuddene koster mellem {kr(p25)} og {kr(p75)} kr. om måneden i snit det "
+               f"første år. Har du haft dit abonnement i mere end et år, så sammenlign i stedet med "
+               f"normalprisen, som i median er {kr(med_norm)} kr. om måneden."},
+        {"sp": "Hvem har det billigste internet lige nu?",
+         "sv": f"Lige nu er det {navn(billigst)} til {kr(_ip_aar(billigst))} kr. om måneden i snit det "
+               f"første år.{loft_saetning}"},
+        {"sp": "Hvad koster fibernet om måneden?",
+         "sv": (f"Fibernet koster i median {kr(tmed('fiber'))} kr. om måneden i snit det første år. Det "
+                f"billigste fibertilbud koster {kr(min(_ip_aar(a) for a in tek['fiber']))} kr.")
+               if tek.get("fiber") else "Se billigste fibernet for de aktuelle priser."},
         {"sp": "Er 5G internet billigere end fiber?",
-         "sv": (f"I vores sammenligning koster 5G internet i median "
-                f"{kr(_ip_med([_ip_aar(a) for a in tek['5g']]))} kr. og fibernet "
-                f"{kr(_ip_med([_ip_aar(a) for a in tek['fiber']]))} kr. om måneden i snit det første år.")
+         "sv": (f"5G internet koster i median {kr(tmed('5g'))} kr. om måneden i snit det første år, og "
+                f"fibernet koster {kr(tmed('fiber'))} kr. Flere af de billigste 5G-abonnementer har et "
+                f"dataloft, og hastigheden afhænger af dækningen på adressen.")
                if tek.get("5g") and tek.get("fiber") else "Se priserne pr. teknologi i tabellen på siden."},
-        {"sp": "Hvem leverer det billigste internet?",
-         "sv": f"Lige nu {billigst['udbyder_navn']} med {billigst['navn']} til {kr(_ip_aar(billigst))} kr. "
-               f"om måneden i snit det første år."},
-        {"sp": "Hvilke gebyrer er der på internet?",
-         "sv": "De typiske er oprettelse, fragt af router, betalingsgebyr ved Betalingsservice eller "
-               "girokort, rykkergebyr og betaling for en router, der ikke sendes retur. Se tabellen "
-               "over gebyrer hos de største selskaber."},
-        {"sp": "Skal jeg betale for routeren?",
-         "sv": "Oftest er routeren inkluderet som lån, men den skal sendes retur, når du opsiger. Glemmer "
-               "du det, kan den blive opkrævet."},
+        {"sp": "Hvorfor stiger prisen på internet efter nogle måneder?",
+         "sv": (f"{it['antal']} af {n} tilbud har en nedsat pris de første måneder, typisk "
+                f"{it['mdr_med']}. Bagefter betaler du normalprisen, som i median er "
+                f"{kr(it['stig_med'])} kr. højere om måneden.") if it else
+               "Mange tilbud har en nedsat pris de første måneder. Bagefter betaler du normalprisen."},
+        {"sp": "Hvad er forskellen på median og gennemsnit?",
+         "sv": f"Medianen er den midterste pris, og gennemsnittet er alle priser lagt sammen og delt med "
+               f"antallet. Lige nu er medianen {kr(med_aar)} kr. og gennemsnittet {kr(snit_aar)} kr. for "
+               f"månedsprisen det første år. Vi bruger medianen, fordi enkelte dyre abonnementer ikke "
+               f"trækker den skævt."},
+        {"sp": "Hvilke gebyrer kommer oven i månedsprisen?",
+         "sv": f"De typiske er oprettelse, fragt af router, betalingsgebyr, rykkergebyr og betaling for en "
+               f"router, der ikke sendes retur. {gratis_opr} af {n} tilbud har hverken oprettelse eller "
+               f"fragt ifølge prisfeedet."},
         {"sp": "Er internet dyrere på landet?",
-         "sv": "Listepriserne er som regel de samme, men nogle afhænger af, hvilket net du bor på. "
-               "Den store forskel er udvalget: færre adresser på landet kan få fiber og kabel-tv, så 5G "
-               "kan være det eneste valg."},
+         "sv": "Listepriserne er som regel de samme i hele landet. Forskellen er udvalget: kabel-tv-nettet "
+               "findes mest i byerne, og på nogle adresser er mobilt internet det eneste valg."},
         {"sp": "Hvordan får jeg en lavere internetpris?",
-         "sv": "Vælg den laveste hastighed, der dækker jeres forbrug, sammenlign på prisen over "
-               "12 måneder, og skift, når kampagnen udløber. For en eller to personer kan 5G "
-               "internet være billigst, fordi der ingen gravearbejde er."},
+         "sv": "Vælg den laveste hastighed, der dækker jeres forbrug, sammenlign på prisen over 12 måneder, "
+               "og skift eller forhandl, når tilbuddet udløber."},
     ]
 
-    _typ = kr(_ip_med([_ip_aar(a) for a in BB]))
-    titel = f"Internet priser {maaned} {aar}: typisk {_typ} kr./md."
+    titel = f"Internet priser {maaned} {aar}: typisk {kr(med_aar)} kr./md."
+    beskrivelse = (f"Internet koster typisk {kr(med_aar)} kr./md. det første år og {kr(med_norm)} kr. "
+                   f"derefter. Se priser på {n} abonnementer med fiber, kabel og 5G fra {selskaber} selskaber.")
+    feed_iso = (BREDBAAND.get("hentet") or ISO)[:10]
     skriv(sti, shell(
-        sti=sti, titel=titel,
-        beskrivelse=(f"Internet koster typisk {kr(med_aar)} kr./md. (median, {OPDATERET}). Se "
-                     f"internetpriser for {len(BB)} fiber-, 5G- og kabeltilbud: pris pr. hastighed, "
-                     f"normalpris og prisen det første år. Tjek din adresse."),
+        sti=sti, titel=titel, beskrivelse=beskrivelse,
         hero=bb_hero("Internet priser",
-                     "Skriv din adresse og se, hvad internet koster hos dig — med pris pr. "
-                     "hastighed, normalpris og hvad det koster det første år.", BB),
+                     "Se hvad internet koster lige nu: typisk pris, pris pr. hastighed og teknologi, "
+                     "normalpris efter tilbuddet og de billigste abonnementer.", BB),
         efter_hero="", krumme=[("/", "Forside"), ("/bredbaand/", "Bredbånd"), (None, "Internet priser")],
         indhold=krop + faqblok(faq), toc=True,
         jsonld=[graf(ORG, PERSON, WEBSITE,
+                     {"@type": "WebPage", "@id": DOMAENE + sti + "#webpage", "url": DOMAENE + sti,
+                      "name": titel, "description": beskrivelse, "inLanguage": "da-DK",
+                      "isPartOf": {"@id": DOMAENE + "/#website"},
+                      "about": {"@type": "Thing", "name": "Internetpriser i Danmark"},
+                      "mainEntity": {"@id": DOMAENE + sti + "#datasaet"},
+                      "dateModified": sidst_aendret(sti)[0]},
                      krummeld([("/", "Forside"), ("/bredbaand/", "Bredbånd"),
                                (sti, "Internet priser")]),
                      faqld(faq),
-                     bb_listeld(BB, "Internet priser"),
-                     artikelld(sti, "Internet priser",
-                               "Hvad internet koster i Danmark: median, spænd, pris pr. hastighed "
-                               "og teknologi, beregnet på alle tilbud i Telemobils sammenligning."),
+                     bb_listeld(rang[:10], "De 10 billigste internetabonnementer lige nu"),
+                     artikelld(sti, "Internet priser: hvad koster internet om måneden?",
+                               "Hvad internet koster i Danmark: median, spænd, pris pr. hastighed, "
+                               "teknologi og udbyder, beregnet på alle tilbud i Telemobils sammenligning."),
                      {"@type": "Dataset", "@id": DOMAENE + sti + "#datasaet",
                       "name": f"Internetpriser i Danmark, {maaned} {aar}",
-                      "description": (f"Normalpris, kampagnepris, oprettelse og snitpris det første år for "
-                                      f"{len(BB)} internetabonnementer fra {selskaber} danske selskaber, "
-                                      f"opdateret to gange i døgnet."),
+                      "description": (f"Normalpris, tilbudspris, oprettelse, fragt, binding og snitpris det "
+                                      f"første år for {n} internetabonnementer fra {selskaber} danske "
+                                      f"selskaber, hentet fra selskabernes produktfeeds {hentet}."),
                       "url": DOMAENE + sti,
+                      "keywords": ["internetpriser", "bredbåndspriser", "fibernet", "5G internet",
+                                   "kabel-internet", "Danmark"],
                       "creator": {"@id": DOMAENE + "/#organisation"},
+                      "publisher": {"@id": DOMAENE + "/#organisation"},
                       "license": "https://creativecommons.org/licenses/by/4.0/",
                       "isAccessibleForFree": True, "inLanguage": "da-DK",
+                      "temporalCoverage": feed_iso,
+                      "measurementTechnique": "Automatisk indhentning fra udbydernes produktfeeds",
                       "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv",
                                         "contentUrl": DOMAENE + "/aabne-data/internetpriser.csv"}],
-                      "spatialCoverage": "Danmark", "dateModified": ISO,
-                      "variableMeasured": ["Normalpris", "Kampagnepris", "Oprettelse",
-                                           "Snitpris første år", "Hastighed ned", "Hastighed op"]})],
+                      "spatialCoverage": "Danmark", "dateModified": feed_iso,
+                      "variableMeasured": ["Normalpris", "Tilbudspris", "Oprettelse", "Fragt",
+                                           "Snitpris første år", "Hastighed ned", "Hastighed op",
+                                           "Binding", "Dataloft"]})],
     ), prioritet="0.9", hyppighed="daily")
+
 
 
 
@@ -15757,6 +16132,15 @@ KILDER.update({
                        "Båndbredde pr. deltager i videomøder"),
     "steam_forza": ("Steam — Forza Horizon 5", "https://store.steampowered.com/app/1551360/Forza_Horizon_5/",
                     "Eksempel på spilstørrelse: 110 GB"),
+    "telestat_2h24_bb": ("Digitaliseringsstyrelsen — Telestatistik 2. halvår 2024",
+                         "https://digst.dk/media/vt2epygl/hovedresultater-2h24.pdf",
+                         "Faste bredbåndsabonnementer fordelt på fiber, kabel-tv og kobber, og andelen med mindst 1 Gbit/s"),
+    "bbgenie_2026": ("Broadband Genie — Global Broadband Price League 2026",
+                     "https://broadband.co.uk/global-broadband-price-league",
+                     "Gennemsnitspris for fast bredbånd i 214 lande, indsamlet januar–februar 2026"),
+    "berec_2026": ("BEREC — Europe's Telecom Reality Check, BoR (26) 137",
+                   "https://www.berec.europa.eu/en/news/press-releases/europes-telecom-sector-delivers-great-value-for-money-and-shows-progress-but-still-has-ground-to-cover-on-some-dimensions",
+                   "EU-gennemsnit for billigste bredbåndstilbud 2024, købekraftsjusteret"),
     "telestat_2h24": ("Digitaliseringsstyrelsen — Telestatistik 2. halvår 2024",
                       "https://digst.dk/media/vt2epygl/hovedresultater-2h24.pdf",
                       "524,8 GB pr. fast bredbåndsabonnement pr. måned"),
@@ -18210,11 +18594,12 @@ def byg_aabne_data():
             w = csv.writer(f)
             w.writerow(["dato", "selskab", "abonnement", "teknologi", "ned_mbit", "op_mbit",
                         "normalpris_kr", "intropris_kr", "intro_maaneder", "oprettelse_kr",
-                        "binding_mdr", "snit_foerste_aar_kr"])
+                        "binding_mdr", "snit_foerste_aar_kr", "fragt_kr", "dataloft_gb"])
             for a in sorted(BB, key=lambda a: (a["udbyder_navn"], a["pris"])):
-                w.writerow([ISO, a["udbyder_navn"], a["navn"], a["teknologi"], a["ned"], a["op"],
+                w.writerow([(BREDBAAND.get("hentet") or ISO)[:10], a["udbyder_navn"], a["navn"], a["teknologi"], a["ned"], a["op"],
                             a["pris"], a.get("intro_pris") or "", a.get("intro_mdr") or 0,
-                            a.get("oprettelse", 0), a.get("binding", 0), _ip_aar(a)])
+                            a.get("oprettelse", 0), a.get("binding", 0), _ip_aar(a),
+                            bb_fragt(a), bb_data_gb(a) or ""])
     start = maal[0]["dato"] if maal else ISO
     bb_raekke = (f"""<tr><td><a href="/aabne-data/internetpriser.csv" download><strong>internetpriser.csv</strong></a><br>
 <a href="/aabne-data/internetpriser-excel.csv" download>Excel-udgave</a></td>
