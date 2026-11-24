@@ -1,0 +1,39 @@
+{
+ "_om": "Emil Rostgaards egne vurderinger. Udkast skrevet med hjælp, læst og godkendt af Emil 24. november 2026. Vises som boks på siden. 'foer' angiver et sted i siden, når den ikke har en forfatterlinje.",
+ "vurderinger": {
+  "/": {
+   "foer": "<h2 id=\"saadan-sammenligner-du-mobilabonnementer\">",
+   "tekst": "Skulle jeg vælge i dag, ville jeg tage det billigste abonnement med 20–30 GB uden binding. Det dækker de fleste, og uden binding kan jeg skifte, den dag der kommer noget billigere.",
+   "dato": "2026-11-24"
+  },
+  "/billigste-mobilabonnement/": {
+   "tekst": "De fleste kigger på prisen de første måneder. Jeg regner altid på hele det første år, for et tilbud til 49 kr. i to måneder kan sagtens være dyrere end et abonnement med fast pris.",
+   "dato": "2026-11-24"
+  },
+  "/mobilabonnement-med-fri-data/": {
+   "tekst": "Fri data giver mening, hvis du bruger mobilen som internet derhjemme eller deler net til en computer hver dag. Gennemsnitsdanskeren bruger omkring 27 GB om måneden, så de fleste betaler for noget, de aldrig rører.",
+   "dato": "2026-11-24"
+  },
+  "/bedste-mobilabonnement/": {
+   "tekst": "For mig er det bedste abonnement det billigste, der dækker dit faktiske forbrug på et net, der virker, hvor du bor. Alt derudover er pynt. Jeg ville hellere have et abonnement uden binding til ti kroner mere end et, jeg sidder fast i.",
+   "dato": "2026-11-24"
+  },
+  "/sammenlign/": {
+   "tekst": "Den typiske fejl er at sammenligne månedspriser på tværs af selskaber uden at se, hvor længe tilbuddet varer, og hvad oprettelsen koster. To abonnementer til 99 kr. kan ende flere hundrede kroner fra hinanden på et år.",
+   "dato": "2026-11-24"
+  },
+  "/bredbaand/": {
+   "tekst": "Kan jeg få fiber, vælger jeg fiber, for hastigheden er den samme hver dag. Kabel er næsten lige så godt til det halve besvær, hvis stikket allerede sidder i væggen. 5G ville jeg kun vælge, hvis jeg bor til leje eller ikke kan få de to andre.",
+   "dato": "2026-11-24"
+  },
+  "/internet-priser/": {
+   "tekst": "Det dyreste, folk glemmer, er år to. De fleste tilbud stiger omkring 150 kr. om måneden, når tilbudsperioden udløber, og så betaler man fuld pris resten af tiden uden at opdage det.",
+   "dato": "2026-11-24"
+  },
+  "/om/emil-rostgaard/": {
+   "foer": "<h2 id=\"hvorfor-jeg-startede-telemobil\">",
+   "tekst": "Årene med prisportaler har lært mig, at selskaberne konkurrerer på den pris, der står i annoncen, og ikke på den, du ender med at betale. Derfor er næsten alle tilbud bygget ens: lav pris i starten, fuld pris bagefter. Den, der regner på hele året, vinder næsten altid over den, der vælger det laveste tal.",
+   "dato": "2026-11-24"
+  }
+ }
+}

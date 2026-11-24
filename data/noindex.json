@@ -1,0 +1,14 @@
+{
+ "_om": "Sider uden en eneste visning i Google i 90 dage (Search Console, 26. aug.–22. nov. 2026). De er bygget på skabelon og sættes til noindex,follow, så de ikke tæller som tyndt indhold. Siderne findes stadig, og links til dem virker. Fjern en side fra listen for at få den indekseret igen.",
+ "sider": [
+  "/sammenlign/oister-vs-flexii/", "/sammenlign/oister-vs-greentel/", "/sammenlign/oister-vs-eesy/",
+  "/sammenlign/cbb-mobil-vs-oister/", "/sammenlign/eesy-vs-telmore/", "/sammenlign/yousee-vs-oister/",
+  "/sammenlign/duka-vs-cbb-mobil/", "/sammenlign/eesy-vs-yousee/",
+  "/udbydere/cbb-mobil/alternativer/", "/udbydere/yousee/alternativer/", "/udbydere/telmore/alternativer/",
+  "/udbydere/oister/alternativer/", "/udbydere/lebara/alternativer/", "/udbydere/duka/alternativer/",
+  "/udbydere/eesy/alternativer/", "/udbydere/flexii/alternativer/",
+  "/driftsstatus/cbb-mobil/", "/driftsstatus/yousee/", "/driftsstatus/telmore/", "/driftsstatus/oister/",
+  "/driftsstatus/lebara/", "/driftsstatus/greentel/", "/driftsstatus/duka/", "/driftsstatus/lyca-mobile/",
+  "/driftsstatus/eesy/"
+ ]
+}

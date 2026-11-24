@@ -2915,3 +2915,10 @@ body{font-variant-numeric:tabular-nums}
   .ip-cta .knap{width:100%;text-align:center;justify-content:center}
 }
 .ip-side .datatabel td.tal{white-space:nowrap}
+
+/* ---------- Emils vurdering ---------- */
+.emils-vurdering{display:grid;grid-template-columns:56px 1fr;gap:1rem;align-items:start;background:#fff;border:1px solid #E3E7F2;border-left:4px solid #3D5AFE;border-radius:14px;padding:1.1rem 1.2rem;margin:1.2rem 0}
+.emils-vurdering img{border-radius:50%;width:56px;height:56px;object-fit:cover}
+.emils-vurdering h2{font-size:1.05rem;margin:0 0 .35rem;padding:0;border:0}
+.emils-vurdering p{margin:0;max-width:none}
+.emils-vurdering .ev-af{font-size:.85rem;color:#5B6178;margin-top:.5rem}

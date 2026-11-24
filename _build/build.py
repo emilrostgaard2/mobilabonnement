@@ -201,6 +201,81 @@ def _pak_tabeller(html):
     return ud
 
 
+def _laes_data(navn, noegle):
+    try:
+        with open(os.path.join(ROD, "data", navn), encoding="utf-8") as f:
+            return json.load(f).get(noegle) or {}
+    except (FileNotFoundError, ValueError):
+        return {}
+
+
+GENNEMGAAET = _laes_data("gennemgang.json", "sider")
+VURDERINGER = _laes_data("vurderinger.json", "vurderinger")
+OMTALE = _laes_data("omtale.json", "omtale") or []
+
+
+def _dato_fra_iso(iso):
+    try:
+        return dansk_dato(date.fromisoformat(iso))
+    except (TypeError, ValueError):
+        return ""
+
+
+def _vurderingsboks(v):
+    vd = _dato_fra_iso(v.get("dato"))
+    return f"""
+<aside class="emils-vurdering">
+  <img src="{skabelon.FORFATTER['billede']}" width="56" height="56" alt="{e(skabelon.FORFATTER['navn'])}" loading="lazy">
+  <div><h2>Min vurdering</h2>
+  <p>{e(v['tekst'])}</p>
+  <p class="ev-af"><a href="/om/emil-rostgaard/">{e(skabelon.FORFATTER['navn'])}</a>{(", " + e(vd)) if vd else ""}</p></div>
+</aside>
+"""
+
+
+def _indsaet_gennemgang(sti, html):
+    """'Gennemgået af' og Emils egen vurdering. Begge dele vises kun, når de står i
+    datafilerne — altså når han selv har læst siden eller selv har godkendt teksten."""
+    mrk = '<div class="gennemgang">'
+    d = _dato_fra_iso(GENNEMGAAET.get(sti))
+    if d and mrk in html:
+        html = html.replace(mrk, mrk + f'\n  <span>Gennemgået af <b>{e(skabelon.FORFATTER["navn"])}</b> {e(d)}</span>', 1)
+    v = VURDERINGER.get(sti)
+    if v and v.get("tekst"):
+        foer = v.get("foer")
+        if foer and foer in html:
+            # Sider uden forfatterlinje: boksen sættes foran et navngivet sted i siden.
+            i = html.index(foer)
+            html = html[:i] + _vurderingsboks(v) + html[i:]
+        elif mrk in html:
+            slut = html.index("</div>", html.index(mrk)) + 6
+            html = html[:slut] + _vurderingsboks(v) + html[slut:]
+        else:
+            print(f"  ADVARSEL: vurdering til {sti} har ingen plads på siden")
+    return html
+
+
+def _med_omtale(krop):
+    """Sæt omtalen ind sidst i den første sektion på en statisk side."""
+    o = omtale_sektion()
+    if not o:
+        return krop
+    i = krop.find("</section>")
+    return krop[:i] + o + "\n" + krop[i:] if i >= 0 else krop + o
+
+
+def omtale_sektion(h="h2"):
+    if not OMTALE:
+        return ""
+    li = "".join(
+        f'<li><strong>{e(o["medie"])}:</strong> <a href="{e(o["url"])}" rel="noopener" target="_blank">{e(o["titel"])}</a>'
+        f'{(" (" + _dato_fra_iso(o.get("dato")) + ")") if _dato_fra_iso(o.get("dato")) else ""}</li>'
+        for o in OMTALE)
+    return f"""<{h} id="omtale">Omtalt i medierne</{h}>
+<p>Journalister har brugt Telemobils tal og vurderinger i disse artikler:</p>
+<ul class="pilliste">{li}</ul>"""
+
+
 def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
     # Kategoriteksterne indeholder pladsholdere til tabeller, der først kan
     # beregnes her. Løses ét sted frem for i hver enkelt sidebygger.
@@ -208,6 +283,7 @@ def skriv(sti, html, prioritet="0.7", hyppighed="weekly", i_sitemap=True):
         html = indsaet_kattabeller(html)
     html = _pak_tabeller(html)
     html = _indsaet_citat(sti, html)
+    html = _indsaet_gennemgang(sti, html)
     skabelon.UDVALG_SIDE.clear()
     html = _ret_ampersand(html)
     html = _fjern_dobbelt_maerke(html).replace("[[FRI_BEV]]", str(D["fri_bev"]))
@@ -296,7 +372,18 @@ def _fjern_dobbelt_maerke(html):
 def _tynd_side(sti):
     # Driftsstatus-siderne er IKKE længere noindex: Search Console viste klik på
     # "er telmore nede"/"flexii driftsstatus" (okt. 2026). Kun sideinddeling.
-    return re.fullmatch(r"/guides/side-\d+/", sti) is not None
+    return re.fullmatch(r"/guides/side-\d+/", sti) is not None or sti in NOINDEX
+
+
+def _laes_noindex():
+    try:
+        with open(os.path.join(ROD, "data", "noindex.json"), encoding="utf-8") as f:
+            return set(json.load(f).get("sider") or [])
+    except (FileNotFoundError, ValueError):
+        return set()
+
+
+NOINDEX = _laes_noindex()
 
 
 def sidst_aendret(sti):
@@ -21609,7 +21696,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
     byg_statisk("/om-os/", "Om Telemobil — sådan sammenligner vi mobilpriser",
                 "Telemobil sammenligner danske mobilabonnementer. Læs om vores "
                 "metode, redaktionelle principper og hvem der står bag.",
-                "Om os", "Om Telemobil", indhold.OM_OS, prioritet="0.6")
+                "Om os", "Om Telemobil", _med_omtale(indhold.OM_OS), prioritet="0.6")
 
     byg_statisk("/saadan-tjener-vi-penge/",
                 "Sådan tjener Telemobil penge — provision og placering",
@@ -21811,7 +21898,7 @@ have data i udlandet, og det kræver ingen udskiftning af kort.</p>
 </section>"""
     byg_statisk("/presse/", "Presse — data og fakta om mobilpriser fra Telemobil",
                 "Information til journalister om Telemobil: vores prisdata, nøgletal, metode og hvordan du må citere og bruge vores tal.",
-                "Presse", "Presse og fakta", presse_krop, prioritet="0.3")
+                "Presse", "Presse og fakta", _med_omtale(presse_krop), prioritet="0.3")
 
     privat_krop = """<section class="sektion baand-smal artikel">
   <h2>Cookies</h2>
