@@ -1,0 +1,16 @@
+{
+ "_om": "Priser lagt ind i hånden, når et selskabs datafeed halter efter selskabets egen hjemmeside. Hver rettelse har kilde, aflæsningsdato og udløbsdato og falder selv væk efter udløb, eller når feedet viser samme tilbudspris. Rettelsen mærkes på kortet.",
+ "rettelser": [
+  {"udbyder": "cbb-mobil", "kilde": "cbb.dk", "url": "https://www.cbb.dk/shop/mobilabonnementer", "aflaest": "2026-11-25", "udloeber": "2026-11-30",
+   "match": {"data_gb": 9999, "pris": 219},
+   "saet": {"intro_pris": 99, "intro_mdr": 12, "eu_gb": 40}},
+  {"udbyder": "cbb-mobil", "kilde": "cbb.dk", "url": "https://www.cbb.dk/shop/mobilabonnementer", "aflaest": "2026-11-25", "udloeber": "2026-11-30",
+   "match": {"data_gb": 30, "pris": 149},
+   "ny": {"id": "cbb-mobil-manuel-30gb", "navn": "CBB 30 GB"},
+   "saet": {"intro_pris": 99, "intro_mdr": 12, "eu_gb": 30}},
+  {"udbyder": "cbb-mobil", "kilde": "cbb.dk", "url": "https://www.cbb.dk/shop/mobilabonnementer", "aflaest": "2026-11-25", "udloeber": "2026-11-30",
+   "match": {"data_gb": 100, "pris": 149},
+   "ny": {"id": "cbb-mobil-manuel-100gb", "navn": "CBB 100 GB"},
+   "saet": {"intro_pris": 99, "intro_mdr": 12, "eu_gb": 30}}
+ ]
+}

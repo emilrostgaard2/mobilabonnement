@@ -475,6 +475,45 @@ except (FileNotFoundError, ValueError):
 site = indlaes("site.json")
 ud_data = indlaes("udbydere.json")
 ab_data = indlaes("abonnementer.json")
+
+
+def _manuelle_priser(liste):
+    """Læg håndaflæste priser oven på feedet (data/manuelle_priser.json).
+
+    Bruges kun, når et selskabs feed halter efter selskabets egen hjemmeside. En
+    rettelse gælder til og med udløbsdatoen og falder væk af sig selv, så snart
+    feedet viser samme tilbudspris. Abonnementet mærkes, så læseren kan se det."""
+    import datetime as _dt
+    try:
+        with open(os.path.join(ROD, "data", "manuelle_priser.json"), encoding="utf-8") as f:
+            rettelser = json.load(f).get("rettelser") or []
+    except (FileNotFoundError, ValueError):
+        return
+    i_dag = _dt.date.today().isoformat()
+    for r in rettelser:
+        if i_dag > r.get("udloeber", ""):
+            continue
+        m, saet = r.get("match") or {}, r.get("saet") or {}
+        egne = [a for a in liste if a["udbyder"] == r["udbyder"] and not a.get("streaming")]
+        ramt = [a for a in egne if all(a.get(k) == v for k, v in m.items())]
+        maerke = {"kilde": r["kilde"], "url": r.get("url"), "aflaest": r["aflaest"]}
+        if ramt:
+            for a in ramt:
+                if a.get("intro_pris") == saet.get("intro_pris") and a.get("intro_mdr") == saet.get("intro_mdr"):
+                    continue  # feedet har indhentet hjemmesiden
+                a.update(saet)
+                a["manuel"] = maerke
+        elif r.get("ny") and egne:
+            ny = dict(egne[0])
+            ny.update(m)
+            ny.update(r["ny"])
+            ny.update(saet)
+            ny["badge"] = None
+            ny["manuel"] = maerke
+            liste.append(ny)
+
+
+_manuelle_priser(ab_data["abonnementer"])
 LANDE = indlaes("landekoder.json")["landekoder"]
 
 UDBYDERE = ud_data["udbydere"]
@@ -11844,6 +11883,9 @@ let abonnementet er at opsige.</p>
 er ingen manuel justering af enkeltabonnementer. Vi modtager provision fra
 udvalgte udbydere, når nogen bestiller via vores links — det ændrer hverken
 scoren eller rækkefølgen i tabellerne.</p>
+<p>Priserne er en anden sag end scoren: Hvis et selskabs datafeed halter efter selskabets egen
+hjemmeside, kan vi lægge den aktuelle pris ind i hånden. Abonnementet er så mærket med kilde og
+dato, og rettelsen falder væk, når feedet er opdateret, eller kampagnen slutter.</p>
 <p>Læs hvordan forretningsmodellen fungerer i
 <a href="/saadan-tjener-vi-penge/">sådan tjener vi penge</a>.</p>
 
@@ -18403,6 +18445,43 @@ def _tests():
 
 TESTS = _tests()
 skabelon.HAR_TESTS = bool(TESTS)
+
+BLACK_WEEK_SLUT = "2026-11-30"
+
+
+def _black_week_stribe():
+    """Smal stribe øverst under Black Week. Viser det billigste fri data-abonnement
+    regnet på hele det første år — valgt af tallene, ikke af os — og slukker selv
+    efter kampagneugen. Linket er et reklamelink og er mærket som sådan."""
+    import datetime as _dt
+    if _dt.date.today().isoformat() > BLACK_WEEK_SLUT:
+        return ""
+    fri = [a for a in ABON if a["data_gb"] >= 9999 and not a.get("streaming")
+           and not a.get("forbrugsafregnet") and gns12(a) is not None
+           and a.get("intro_pris") and (a.get("intro_mdr") or 0) >= 6]
+    if not fri:
+        return ""
+    a = min(fri, key=lambda x: (round(gns12(x) * 12),
+                                -((UMAP[x["udbyder"]].get("trustpilot") or {}).get("score") or 0)))
+    u = UMAP[a["udbyder"]]
+    return f"""<div class="bw"><style>.bw{{background:#141A33;color:#fff;font:500 .95rem/1.35 Inter,system-ui,sans-serif}}
+.bw-i{{display:flex;align-items:center;justify-content:center;gap:.5rem .9rem;padding:.6rem 1rem;flex-wrap:wrap;text-align:center}}
+.bw b{{background:#FFD54A;color:#141A33;border-radius:99px;padding:.15rem .65rem;font-size:.78rem;font-weight:800;letter-spacing:.02em;white-space:nowrap}}
+.bw a{{color:#fff;font-weight:700;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}}
+.bw a.bw-alle{{font-weight:500;opacity:.85}}
+.bw small{{font-size:.72rem;opacity:.7;white-space:nowrap}}
+@media(max-width:640px){{.bw{{font-size:.86rem}}.bw-i{{gap:.3rem .6rem;padding:.55rem .75rem}}.bw a.bw-alle{{display:none}}}}</style>
+<div class="bw-i"><b>BLACK WEEK</b>
+<span>Fri data {kr(a['intro_pris'])} kr./md. i {a['intro_mdr']} mdr. hos {e(u['navn'])}</span>
+<a href="{a['link']}" rel="sponsored nofollow noopener" target="_blank">Se tilbuddet →</a>
+<small>Annoncelink</small>
+<a class="bw-alle" href="/mobilabonnementer-black-friday/">Alle Black Week-tilbud</a></div></div>"""
+
+
+skabelon.TOPSTRIBE = _black_week_stribe()
+skabelon.TOPSTRIBE_SIDER = {"/", "/billigste-mobilabonnement/", "/bedste-mobilabonnement/",
+                            "/mobilabonnement-med-fri-data/", "/sammenlign/",
+                            "/mobilabonnementer-black-friday/"}
 
 
 def _median_af(vaerdier):

@@ -690,6 +690,11 @@ METODE = """
 opdateringsdatoen fremgår øverst på hver side. Vilkår, der ikke står i feedet — fx fair use
 og kundeservice — kontrollerer vi selv på selskabernes sider og skriver datoen ved.</p>
 
+<p>Halter et selskabs datafeed efter selskabets egen hjemmeside, for eksempel under en kort
+kampagne, lægger vi den aktuelle pris ind i hånden. Abonnementet er så mærket med «Pris aflæst
+på» efterfulgt af kilde og dato. Rettelsen falder væk af sig selv, når feedet er opdateret,
+eller kampagnen slutter.</p>
+
 <p>Hvor en udbyder markedsfører en tidsbegrænset kampagnepris, viser vi både kampagneprisen
 og normalprisen, når begge er oplyst. Er kampagneperioden kortere end tolv måneder,
 regner vi med normalprisen i vores sammenligninger, fordi det er den pris, du kommer til at

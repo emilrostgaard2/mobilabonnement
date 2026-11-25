@@ -113,6 +113,26 @@ PRISHIST = {}
 _MD_KORT = ["jan.", "feb.", "mar.", "apr.", "maj", "juni", "juli", "aug.", "sep.", "okt.", "nov.", "dec."]
 
 
+TOPSTRIBE = ""
+TOPSTRIBE_SIDER = set()
+
+
+def _kort_dato(iso):
+    try:
+        aa, mm, dd = iso.split("-")
+        return f"{int(dd)}. {_MD_KORT[int(mm) - 1]}"
+    except (ValueError, IndexError, AttributeError):
+        return ""
+
+
+def _kildetekst(a, u):
+    m = a.get("manuel")
+    if m:
+        return (f"Pris aflæst på {e(m['kilde'])} {e(_kort_dato(m['aflaest']))}, "
+                f"fordi {e(u['navn'])}s datafeed viste en ældre pris")
+    return f"Pris fra {e(u['navn'])}s datafeed, hentet {e(OPDATERET_GLOBAL)}"
+
+
 def hist_linje(aid, pris_nu):
     """Lille prisgraf og én linje om normalprisen siden første måling.
     Vises først, når der er mindst en uges målinger, og kun ud fra egne målinger."""
@@ -463,7 +483,7 @@ def shell(*, sti, titel, beskrivelse, indhold, jsonld=None, krumme=None,
 </head>
 <body>
 <a class="spring" href="#indhold">Spring til indhold</a>
-
+{TOPSTRIBE if sti in TOPSTRIBE_SIDER else ""}
 <header class="hoved">
   <div class="baand">
     <a href="/" class="logo" aria-label="Telemobil forside">
@@ -920,6 +940,8 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
                     f'<div class="pk-under">Fast pris</div>')
     if not forbrug and aar:
         prisblok += f'<div class="pk-under">{kr(aar)} kr. det første år</div>'
+    if a.get("manuel"):
+        prisblok += f'<div class="pk-manuel">Pris aflæst på {e(a["manuel"]["kilde"])} {e(_kort_dato(a["manuel"]["aflaest"]))}</div>'
 
     spar = ""
     if gnsnit_aar and not forbrug and aar and aar < gnsnit_aar:
@@ -981,7 +1003,7 @@ def prisrække(a, u, billigst_pr_gb=False, gnsnit_aar=None, dyn=None,
     {advarhtml}
     <div class="pk-panelfod">
       <label class="pk-sml"><input type="checkbox" class="sml-boks" value="{e(a['id'])}"> Sammenlign</label>
-      <small class="pk-kilde">Pris fra {e(u['navn'])}s datafeed, hentet {e(OPDATERET_GLOBAL)}</small>
+      <small class="pk-kilde">{_kildetekst(a, u)}</small>
       <span class="pk-formel" title="Sådan er gennemsnittet beregnet">{formel}</span>
       <a href="/udbydere/{u['slug']}/">Læs vores gennemgang af {e(u['navn'])}</a>
     </div>
