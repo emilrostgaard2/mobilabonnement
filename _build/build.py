@@ -14823,7 +14823,7 @@ def _bf_kampagnetabel(maks=12):
         spar = a["pris"] * 12 + a.get("oprettelse", 0) - _samlet(a, 12)
         raekker += f"""<tr>
   <td class="tal">{i}</td>
-  <td>{_hvem(a)}</td>
+  <td>{_hvem(a)}{('<br><span class="pk-manuel">Pris aflæst på ' + e(a['manuel']['kilde']) + ' ' + e(skabelon._kort_dato(a['manuel']['aflaest'])) + '</span>') if a.get('manuel') else ''}</td>
   <td class="tal"><strong>{kr(a['intro_pris'])} kr.</strong><br>
       <span class="tabel-under">i {a['intro_mdr']} md{'r' if a['intro_mdr'] != 1 else ''}.</span></td>
   <td class="tal">{kr(a['pris'])} kr.</td>
@@ -15234,8 +15234,8 @@ uden binding</a>, så du kan skifte, når kampagnen slutter.</p>
     hero = hero_side("Black Friday", h1, besk,
                      '<a href="#tilbud" class="knap knap-primaer">Se tilbuddene</a>')
     return skriv(sti, shell(
-        sti=sti, titel=titel, beskrivelse=besk, hero=hero, efter_hero=logobaand(),
-        krumme=krumme, indhold=brod + faqblok(faq),
+        sti=sti, titel=titel, beskrivelse=besk, hero=hero, efter_hero="",
+        krumme=krumme, indhold=brod + faqblok(faq), toc=False,
         jsonld=[graf(ORG, PERSON, WEBSITE, krummeld(krumme), faqld(faq),
                      artikelld(sti, titel, besk, emne="Black Friday mobilabonnement"),
                      listeld(kamp or sorted(betalte, key=gns12),
