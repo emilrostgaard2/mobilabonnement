@@ -749,7 +749,8 @@ ORG = {
     "name": SITENAVN,
     "alternateName": "telemobil.dk",
     "url": DOMAENE + "/",
-    "description": ("Dansk prissammenligning af mobilabonnementer, finansieret af provision. Vi gennemgår "
+    "description": ("Dansk prissammenligning af mobilabonnementer og internet til hjemmet (fiber, kabel og "
+                    "5G), finansieret af provision. Vi gennemgår "
                     "udbydernes vilkår, beregner den reelle pris over 12 måneder og skriver "
                     "både fordele og ulemper."),
     "logo": {"@type": "ImageObject", "url": DOMAENE + "/assets/img/telemobil-logo.png",
@@ -768,6 +769,8 @@ ORG = {
     } if site.get("firma", {}).get("cvr") else None,
     "foundingDate": site.get("udgivet", ISO)[:4],
     "areaServed": {"@type": "Country", "name": "Danmark"},
+    "knowsAbout": ["Mobilabonnementer", "Bredbånd", "Fibernet", "5G-internet", "Kabel-internet",
+                   "Internetpriser", "Prissammenligning"],
     "address": {
         "@type": "PostalAddress",
         "streetAddress": "Lundbyesgade 13",
@@ -832,8 +835,8 @@ WEBSITE = {
     "url": DOMAENE + "/",
     "name": SITENAVN,
     "inLanguage": "da-DK",
-    "description": ("Sammenlign mobilabonnementer fra de danske selskaber, vi har prisdata fra, på pris, data, "
-                    "netværk og reelle omkostninger over 12 måneder."),
+    "description": ("Sammenlign mobilabonnementer og internet fra de danske selskaber, vi har prisdata fra, "
+                    "på pris, data, hastighed, netværk og reelle omkostninger over 12 måneder."),
     "copyrightHolder": {"@id": DOMAENE + "/#organisation"},
     "publisher": {"@id": DOMAENE + "/#organisation"},
 }
@@ -3644,11 +3647,48 @@ abonnement og flytter nummeret for dig.</li>
 </section>"""
 
 
+def forside_internet():
+    """Indgang til internetsektionen fra forsiden, med dagens tal fra bredbåndsfeedet."""
+    if not BB:
+        return ""
+    tek = {}
+    for a in BB:
+        tek.setdefault(a["teknologi"], []).append(a)
+
+    def fra(t):
+        return round(min(bb_aarspris(a) for a in tek[t]) / 12)
+    aarv = sorted(round(bb_aarspris(a) / 12) for a in BB)
+    median = aarv[len(aarv) // 2] if len(aarv) % 2 else round((aarv[len(aarv) // 2 - 1] + aarv[len(aarv) // 2]) / 2)
+    selskaber = len({a["udbyder"] for a in BB})
+    fliser = [("/bredbaand/", "Billigste bredbånd", f"Alle {len(BB)} tilbud sorteret efter pris")]
+    for t, sti, navn in (("fiber", "/bredbaand/fibernet/", "Fibernet"), ("5g", "/bredbaand/5g/", "5G internet"),
+                         ("coax", "/bredbaand/kabel-internet/", "Kabel-internet")):
+        if tek.get(t):
+            fliser.append((sti, navn, f"Fra {kr(fra(t))} kr./md. i snit det første år"))
+    fliser += [
+        ("/internet-priser/", "Internet priser", "Hvad koster internet lige nu?"),
+        ("/bredbaand/adressetjek/", "Tjek din adresse", "Se hvad du kan få, hvor du bor"),
+        ("/bredbaand/udbydere/", "Internetudbydere", f"{selskaber} selskaber side om side"),
+        ("/bredbaand/guides/", "Guides til internet", "Hastighed, wifi, flytning og opsigelse"),
+    ]
+    return f"""
+<section class="sektion baand behov" id="internet">
+  <h2>Sammenlign internet og bredbånd</h2>
+  <p class="led">Telemobil sammenligner også internet til hjemmet. Lige nu følger vi {len(BB)} abonnementer
+  fra {selskaber} selskaber, og internet koster typisk {kr(median)} kr. om måneden i snit det første år.</p>
+  <div class="behov-gitter">
+    {"".join(f'<a class="behov-flise" href="{h}"><b>{e(t)}</b><span>{e(u)}</span></a>' for h, t, u in fliser)}
+  </div>
+</section>
+"""
+
+
 def byg_forside():
     sti = "/"
     titel = med_maaned(f"Sammenlign mobilabonnementer — fra {D['min_normalpris']} kr./md.")
     besk = (f"Sammenlign {D['antal']} mobilabonnementer fra {D['antal_udbydere']} udbydere. "
-            f"Normalpris fra {D['min_normalpris']} kr./md. Vi viser intropris, normalpris og snitpris over 12 mdr.")
+            f"Normalpris fra {D['min_normalpris']} kr./md. Vi viser intropris, normalpris og snitpris over 12 mdr."
+            + (" Sammenlign også internet og bredbånd." if BB else ""))
 
     faq = [
         {"sp": "Hvordan sammenligner jeg mobilabonnementer bedst?",
@@ -3733,10 +3773,12 @@ def byg_forside():
       ("/mobilabonnement-til-boern/", "Til børn", "Datastop og lav pris"),
       ("/mobilabonnement-til-aeldre/", "Til ældre", "Enkelt og billigt"),
       ("/mobilabonnement-med-streaming/", "Med streaming", "Netflix, Viaplay og HBO Max"),
-      ("/bredbaand/", "Bredbånd", "Fiber, 5G og kabel"),
+      ("/mobilabonnement-med-esim/", "Med eSIM", "Klar samme dag"),
     ])}
   </div>
 </section>
+
+{forside_internet()}
 
 <section class="sektion baand">
   <div class="sektion-hoved afslør">
@@ -4675,7 +4717,8 @@ def byg_netvaerksoversigt():
   <p>5G er værd at prioritere i tre situationer: hvis du henter meget store filer, hvis du
   bruger telefonen som hotspot til arbejde, eller hvis du bor et sted med overbelastet 4G.
   Dækningen er stadig mest udbygget i byerne, og 5G er ikke automatisk inkluderet i alle
-  abonnementer — tjek det enkelte produkt.</p>
+  abonnementer — tjek det enkelte produkt. Skal 5G erstatte bredbåndet derhjemme, er det
+  ikke telefonen, men et <a href="/bredbaand/5g/">5G-bredbånd med router</a>, du skal sammenligne.</p>
 
   <h2>Sådan tjekker du dækningen på din adresse</h2>
   <ol class="trin">
@@ -6389,10 +6432,11 @@ def byg_udbyder(u):
   billigste mobilabonnement</a>.</p>
   {vs_links(u)}
   {f'<p>Se også <a href="/kampagner/{u["slug"]}/">{e(u["navn"])}s aktuelle kampagner</a> regnet om til pris over 12 måneder.</p>' if u["slug"] in KAMPAGNE_UDBYDERE else ""}
-  {(lambda bb_u: f'<p>{e(u["navn"])} sælger også internet derhjemme. Se {e(u["navn"])}s '
-    f'{len(bb_u)} bredbåndstilbud sammenlignet med resten af markedet under '
+  {(lambda bb_u: f'<p>{e(u["navn"])} sælger også internet derhjemme. Se priser og hastigheder på '
+    f'<a href="/bredbaand/udbydere/{bb_u[0]["udbyder"]}/">{e(u["navn"].replace(" Mobil", ""))} internet</a>, '
+    f'eller sammenlign med resten af markedet under '
     f'<a href="/bredbaand/">billigste bredbånd</a>.</p>' if bb_u else "")(
-    [a for a in (BB or []) if a["udbyder"] == u["slug"]])}
+    [a for a in (BB or []) if a["udbyder"] in (u["slug"], u["slug"].replace("-mobil", ""))])}
 
   {udbyder_kundeservice(u)}
 
@@ -6523,11 +6567,28 @@ def _rens_ekstra(sti, ekstra):
     return ud
 
 
+# Guides, der handler om internet til hjemmet. De hører til bredbåndssektionen:
+# brødkrummen går gennem /bredbaand/, og de står samlet på /bredbaand/guides/.
+INTERNET_GUIDER_GRUPPER = [
+    ("Vælg det rigtige internet", [
+        "/guides/5g-internet-eller-fiber/", "/guides/coax-internet/", "/guides/god-internethastighed/",
+        "/guides/dataforbrug-husstand/", "/guides/mobilabonnement-eller-bredbaand/",
+        "/guides/mobilt-bredbaand/", "/guides/internet-uden-binding/"]),
+    ("Når internettet driller", [
+        "/guides/langsomt-internet/", "/guides/internetforstaerker/", "/guides/ping-og-svartid/",
+        "/guides/del-internet-fra-mobil/"]),
+    ("Flyt, opsig og sommerhus", [
+        "/guides/flyt-internettet/", "/guides/opsig-internet/", "/guides/internet-i-sommerhus/"]),
+]
+INTERNET_GUIDER = {s for _, l in INTERNET_GUIDER_GRUPPER for s in l}
+
+
 def byg_guide(sti, etiket, h1, titel, besk, brodtekst, faq, links, billede=None,
               altbillede="", ekstra=None):
     if ekstra:
         ekstra = _rens_ekstra(sti, ekstra)
-    krumme = [("/", "Forside"), ("/guides/", "Guides")]
+    krumme = ([("/", "Forside"), ("/bredbaand/", "Bredbånd"), ("/bredbaand/guides/", "Guides til internet")]
+              if sti in INTERNET_GUIDER and BB else [("/", "Forside"), ("/guides/", "Guides")])
     if sti in GUIDE_FORAELDRE:
         krumme.append(GUIDE_FORAELDRE[sti])
     krumme.append((None, etiket))
@@ -8495,6 +8556,8 @@ def bb_guides(aktuel=""):
         ("/guides/del-internet-fra-mobil/", "Del internet fra mobilen"),
         ("/speedtest/", "Test din hastighed"),
         ("/daekningskort/", "Dækningstjek for 5G og 4G"),
+        ("/bredbaand/udbydere/", "Alle internetudbydere side om side"),
+        ("/bredbaand/guides/", "Alle guides til internet"),
     ]
     li = "".join(f'<li><a href="{s}">{e(t)}</a></li>' for s, t in links
                  if s != aktuel and (not s.startswith("/guides/") or s in GUIDE_STIER_BYGGET or not GUIDE_STIER_BYGGET))
@@ -9730,7 +9793,8 @@ de samme priser som tabellerne på siden.</p>
 <h2 id="selskaber">Internetpriser hos {selskaber} udbydere</h2>
 <p>{selskaber} selskaber er med i vores sammenligning. Tabellen viser hvert selskabs hastigheder,
 spændet i normalpris, det billigste abonnement regnet på hele det første år, oprettelse og binding.
-Klik på et selskab for at se alle dets abonnementer.</p>
+Klik på et selskab for at se alle dets abonnementer, eller se dem side om side under
+<a href="/bredbaand/udbydere/">internetudbydere</a>.</p>
 {ip_tabel_selskaber()}
 
 {ip_tabel_netejer()}
@@ -10115,6 +10179,56 @@ hvis du bestiller via et link, men det ændrer ikke rækkefølgen. Læs mere om
     ), prioritet="0.7", hyppighed="daily")
 
 
+def byg_bb_guidehub():
+    """/bredbaand/guides/ — alle guides om internet samlet ét sted i bredbåndssektionen."""
+    if not BB:
+        return
+    sti = "/bredbaand/guides/"
+    opslag = {g[0]: g for g in GUIDER}
+    bygget = GUIDE_STIER_BYGGET or set(opslag)
+    blokke, alle = "", []
+    for overskrift, stier in INTERNET_GUIDER_GRUPPER:
+        kort = [opslag[s] for s in stier if s in opslag and s in bygget]
+        if not kort:
+            continue
+        alle += kort
+        blokke += f"""<h2>{e(overskrift)}</h2>
+<div class="behov-gitter">
+{"".join(f'<a class="behov-flise" href="{g[0]}"><b>{e(g[1])}</b><span>{e(g[2])}</span></a>' for g in kort)}
+</div>
+"""
+    if not alle:
+        return
+    titel = "Guides til internet og bredbånd"
+    besk = (f"{len(alle)} guides om internet til hjemmet: fiber, kabel eller 5G, hvilken hastighed I har brug "
+            "for, langsomt wifi, flytning og opsigelse.")
+    krumme = [("/", "Forside"), ("/bredbaand/", "Bredbånd"), (None, "Guides til internet")]
+    krop = f"""
+<section class="sektion baand behov">
+<p class="led">Her er vores {len(alle)} guides om internet til hjemmet samlet. De forklarer forskellen på
+fiber, kabel og 5G, hvor meget hastighed en husstand har brug for, og hvad du gør, når forbindelsen er
+langsom, eller du skal flytte. Vil du se priserne med det samme, så gå til
+<a href="/bredbaand/">billigste bredbånd</a> eller <a href="/internet-priser/">internet priser</a>.</p>
+{blokke}
+<h2 id="vaerktoejer">Værktøjer</h2>
+<div class="behov-gitter">
+<a class="behov-flise" href="/bredbaand/adressetjek/"><b>Tjek din adresse</b><span>Se hvilke net der når frem til dig</span></a>
+<a class="behov-flise" href="/speedtest/"><b>Hastighedstest</b><span>Mål din forbindelse lige nu</span></a>
+<a class="behov-flise" href="/internet-priser/#beregn"><b>Betaler du for meget?</b><span>Sammenlign din pris med markedet</span></a>
+</div>
+</section>"""
+    skriv(sti, shell(
+        sti=sti, titel=titel, beskrivelse=besk,
+        hero=hero_side("Bredbånd", titel, "Alt om at vælge, bruge og skifte internet, samlet ét sted."),
+        efter_hero="", krumme=krumme, indhold=krop, toc=False,
+        jsonld=[graf(ORG, WEBSITE, krummeld([("/", "Forside"), ("/bredbaand/", "Bredbånd"), (sti, "Guides til internet")]),
+                     {"@type": "CollectionPage", "@id": DOMAENE + sti + "#side", "url": DOMAENE + sti,
+                      "name": titel, "description": besk, "inLanguage": "da-DK",
+                      "isPartOf": {"@id": DOMAENE + "/#website"},
+                      "hasPart": [{"@type": "Article", "url": DOMAENE + g[0], "headline": g[1]} for g in alle]})],
+    ), prioritet="0.6", hyppighed="weekly")
+
+
 def byg_bb_udbydere():
     if not BB:
         return
@@ -10486,6 +10600,7 @@ ikke har adgang til priser for. Læs mere om
         byg_bredbaand_type(noegle, navn, sti, besk, udvalg)
     BYSIDER[:] = byg_bysider()
     byg_internet_priser()
+    byg_bb_guidehub()
     byg_bb_udbydere()
     byg_bb_adressetjek()
 
@@ -10929,7 +11044,8 @@ mobilabonnementer</a>, hvor du kan filtrere på datamængde.</p>
 <h2>Bredbåndsmarkedet i tal</h2>
 {tabel_bredbaand_tal()}
 <p>Bemærk, at bredbåndspriserne er regnet over hele det første år, hvor
-tilbudspris, normalpris og oprettelse indgår. Sammenligner man kun på
+tilbudspris, normalpris og oprettelse indgår. De enkelte tal står i oversigten over
+<a href="/internet-priser/">internetpriser lige nu</a>. Sammenligner man kun på
 tilbudsprisen, ser markedet markant billigere ud, end det er.</p>
 
 <h2>Hvor meget data bruger danskerne?</h2>
@@ -11030,7 +11146,8 @@ lav score af grunde, der intet har med mobil at gøre.</p>
 <h3>Hvem der er med</h3>
 <p>Vi har datafeed fra en stor del af de danske selskaber, men ikke alle. Særligt
 på bredbånd findes der lokale fiberselskaber, som kun leverer i bestemte områder,
-og som vi ikke har prisdata fra. Tjek altid din adresse hos selskaberne.</p>
+og som vi ikke har prisdata fra. Se, hvad der kan leveres hos dig, i vores
+<a href="/bredbaand/adressetjek/">adressetjek</a>, og tjek altid adressen hos selskaberne selv.</p>
 
 <h2>Hvorfor vi offentliggør tallene</h2>
 <p>Fordi de findes i forvejen, og fordi de er svære at finde samlet. Udbyderne
@@ -12201,6 +12318,10 @@ nummer.</p>
 ikke har det, er det telefonen eller simkortet. Vi har samlet fejlsøgningen i
 guiden til <a href="/guides/mobil-virker-ikke/">hvad du gør, når mobilen ikke
 virker</a>.</p>
+<p>Er det i stedet internettet derhjemme, der driller, så mål forbindelsen med en
+<a href="/speedtest/">hastighedstest</a>, og brug guiden til
+<a href="/guides/langsomt-internet/">langsomt internet</a> til at finde ud af, om fejlen
+ligger hos dig eller hos udbyderen.</p>
 
 {forfatterboks()}
 </section>"""
@@ -15713,7 +15834,8 @@ hvis du bruger dobbelt så meget som gennemsnittet, er der stadig luft.</p>
 altid af én af tre grunde:</p>
 <ul class="pilliste">
   <li><strong>Mobilen er internet derhjemme.</strong> Bruger du telefonen som hotspot til
-  bærbar eller tv, fordi du ikke har bredbånd, kan forbruget løbe op i flere hundrede GB.</li>
+  bærbar eller tv, fordi du ikke har bredbånd, kan forbruget løbe op i flere hundrede GB. Se
+  <a href="/guides/dataforbrug-husstand/">hvor mange GB en husstand bruger</a>.</li>
   <li><strong>Meget video uden wi-fi.</strong> En times video i HD hver dag på mobilnettet
   løber op i omkring 90 GB om måneden.</li>
   <li><strong>Flere enheder deler forbindelsen.</strong> Familien på ferie i sommerhuset,
@@ -20085,20 +20207,11 @@ def main():
         skabelon.BREDBAAND_MENU = [
             (h, t) for h, t in skabelon.BREDBAAND_MENU
             if not h.startswith("/bredbaand/")
-            or h == "/bredbaand/"
+            or h in ("/bredbaand/", "/bredbaand/udbydere/", "/bredbaand/adressetjek/",
+                     "/bredbaand/guides/")
             or any(h == f"/bredbaand/{sti}/" and n in tek
                    for n, _, sti, _ in TEK_SIDER)
         ]
-    # Sæsonlink: Black Friday-siden får et link fra menuen på alle sider i
-    # perioden op til og under Black Week. Det er det stærkeste interne signal,
-    # siden kan få, og det forsvinder af sig selv efter sæsonen.
-    if date(IDAG.year, 9, 15) <= IDAG <= date(IDAG.year, 12, 5):
-        _bf = ("/mobilabonnementer-black-friday/", f"Black Friday {IDAG.year}",
-               "Tilbud regnet over 12 mdr.")
-        if _bf not in skabelon.SAMMENLIGN_MENU:
-            _i = next((i for i, m in enumerate(skabelon.SAMMENLIGN_MENU)
-                       if m[0] == "/kampagner/"), 2)
-            skabelon.SAMMENLIGN_MENU.insert(_i + 1, _bf)
     skabelon.SCOREMAERKAT = scoremaerkat
     skabelon.SCORETAL = lambda a: telemobil_score(a) or 0
     skabelon.HURTIGPRIS = hurtigpris_dialog()
@@ -21500,7 +21613,9 @@ virkelighedstjek, som intet kort kan matche.</li>
 <p>5G giver højere hastigheder og lavere forsinkelse, men for almindelig brug — sociale
 medier, streaming, navigation — mærker de fleste ikke stor forskel fra et velfungerende
 4G-net. 5G er værd at prioritere, hvis du henter meget store filer, bruger telefonen som
-hotspot til arbejde, eller bor et sted med overbelastet 4G.</p>
+hotspot til arbejde, eller bor et sted med overbelastet 4G. Overvejer du 5G som erstatning for
+bredbåndet derhjemme, har vi sammenlignet de to i
+<a href="/guides/5g-internet-eller-fiber/">5G internet eller fiber</a>.</p>
 <p>Vær opmærksom på, at 5G ikke automatisk er inkluderet i alle abonnementer, og at
 dækningen stadig er mest udbygget i byerne.</p>
 

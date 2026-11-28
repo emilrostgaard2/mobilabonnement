@@ -326,7 +326,8 @@ alle selskaber kører på et af landets tre mobilnet.</p>
 kan en fælles pulje være praktisk. Det er den ene reelle fordel.</li>
 <li><strong>Én regning.</strong> Administrativt lettere, hvis I er mange.</li>
 <li><strong>Samlerabat med bredbånd eller tv.</strong> Har I i forvejen andre produkter hos
-samme selskab, kan den samlede pris blive konkurrencedygtig.</li>
+samme selskab, kan den samlede pris blive konkurrencedygtig. Tjek dog først, hvad
+<a href="/bredbaand/">det billigste bredbånd</a> koster hver for sig.</li>
 <li><strong>Kundeservice ét sted.</strong> Værd noget, hvis I ikke selv vil håndtere fire
 forskellige selskaber.</li>
 </ul>

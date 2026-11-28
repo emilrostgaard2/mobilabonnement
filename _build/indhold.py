@@ -202,7 +202,8 @@ dataroaming fra og bruge et lokalt eSIM i stedet.</p>
   <div class="kort">
     <h3>Hjemmearbejdende uden fastnet</h3>
     <p>Bruger du mobilen som hotspot til laptop, skal du op i fri data eller mindst 100 GB.
-    Regn med at et hotspot-tungt hjemmekontor sagtens kan bruge 150 GB om måneden.</p>
+    Regn med at et hotspot-tungt hjemmekontor sagtens kan bruge 150 GB om måneden. Så meget, at
+    <a href="/guides/mobilt-bredbaand/">mobilt bredbånd med egen router</a> er værd at regne på.</p>
   </div>
 </div>
 
@@ -574,6 +575,11 @@ fordi produktet er kompliceret. Det er svært at gennemskue, fordi det er indret
 tal, der kan sammenlignes, og skriver ærligt om, hvad forskellene reelt betyder. Vi tror
 på, at en god sammenligningsside skal kunne fortælle dig, at du ikke behøver det dyre
 produkt — også når vi tjener mere på det dyre.</p>
+
+<p>Vi sammenligner både mobilabonnementer og internet til hjemmet. Fiber, kabel og 5G-internet
+regnes efter samme metode som mobil: tilbudspris, normalpris, oprettelse og fragt lagt sammen over
+det første år. Se <a href="/bredbaand/">billigste bredbånd</a> og
+<a href="/internet-priser/">hvad internet koster lige nu</a>.</p>
 
 <h2>Sådan arbejder vi</h2>
 

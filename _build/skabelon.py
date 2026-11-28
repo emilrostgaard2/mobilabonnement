@@ -23,7 +23,8 @@ FORFATTER = {
     "bio": ("Jeg har arbejdet med digitale sammenligningstjenester og "
             "forbrugerøkonomi siden 2018 og står bag flere danske prisportaler. "
             "Jeg læser selv udbydernes abonnementsvilkår igennem, og jeg har "
-            "skrevet den metode, alle tal på Telemobil bygger på."),
+            "skrevet den metode, alle tal på Telemobil bygger på, både for "
+            "mobilabonnementer og internet."),
 }
 
 # Menuen viser kun de sider, folk faktisk leder efter. Resten står i footeren.
@@ -94,10 +95,12 @@ BREDBAAND_MENU = [
     ("/bredbaand/", "Billigste bredbånd"),
     ("/bredbaand/fibernet/", "Billigste fibernet"),
     ("/bredbaand/5g/", "Billigste 5G internet"),
+    ("/bredbaand/kabel-internet/", "Kabel-internet"),
     ("/internet-priser/", "Internet priser"),
     ("/bredbaand/udbydere/", "Internetudbydere"),
-    ("/bredbaand/kabel-internet/", "Kabel-internet"),
     ("/bredbaand/adressetjek/", "Tjek din adresse"),
+    ("/speedtest/", "Hastighedstest"),
+    ("/bredbaand/guides/", "Guides til internet"),
 ]
 
 # Sættes af build.py til scoremaerkat(). Uden den vises intet — skabelonen
@@ -528,7 +531,7 @@ def bredbaandsfod():
     if not BREDBAAND_MENU:
         return ""
     return f"""      <div>
-        <div class="fodtitel">Bredbånd</div>
+        <div class="fodtitel">Internet og bredbånd</div>
         <ul>
           <li><a href="/bredbaand/">Billigste bredbånd</a></li>
           {"".join(f'<li><a href="{h}">{e(FOD_BB_NAVNE.get(h, t))}</a></li>' for h, t in punkter)}
@@ -563,7 +566,7 @@ def fod(opdateret):
           <span class="logo-maerke" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <span class="logo-tekst">Tele<em>mobil</em></span>
         </a>
-        <p>Dansk sammenligning af mobilabonnementer. Vi beregner
+        <p>Dansk sammenligning af mobilabonnementer og internet. Vi beregner
         <a href="/12-maaneders-prisen/">12-måneders-prisen</a> — den reelle pris, når
         intropris, normalpris og oprettelse regnes sammen.</p>
         <p class="fod-adresse">

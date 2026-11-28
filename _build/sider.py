@@ -246,7 +246,8 @@ beskrivelse, der ligner dig mest.</p>
   <p>Dækning i tog og bil svinger. TDC NET står historisk stærkest langs jernbanen.
   Vælg mindst 50 GB, da du bruger data uden wi-fi hver dag.</p></div>
   <div class="kort"><h3>Storforbruger uden fastnet</h3>
-  <p>Bruger du mobilen som hjemmets internet via hotspot, er fri data det rigtige. Tjek
+  <p>Bruger du mobilen som hjemmets internet via hotspot, er fri data det rigtige. Se dog først, om
+  <a href="/guides/mobilabonnement-eller-bredbaand/">mobilabonnement eller bredbånd</a> er billigst for jer. Tjek
   at hotspot er tilladt i vilkårene, og se på EU-loftet.</p></div>
   <div class="kort"><h3>Let bruger og senior</h3>
   <p>5–10 GB rækker langt. Til gengæld er telefonisk kundeservice ofte mere værd end de
